@@ -1,4 +1,4 @@
-import { listContacts, createContact, removeContact } from './actions'
+import { listContacts, createContact, removeContact, editContact } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,22 +37,53 @@ export default async function ContactsAdminPage() {
         <tbody>
           {contacts.map((c) => (
             <tr key={c.id} className="border-t">
-              <td>{c.role}</td>
-              <td>{c.name}</td>
-              <td>{c.phone}</td>
-              <td>{c.email}</td>
-              <td>{c.sortOrder}</td>
-              <td>
-                <form
-                  action={async () => {
-                    'use server'
-                    await removeContact(c.id)
-                  }}
-                >
-                  <button type="submit" className="text-red-600">
-                    Delete
-                  </button>
-                </form>
+              <td colSpan={6}>
+                <div className="flex flex-wrap items-center gap-2 py-1">
+                  <form action={editContact} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={c.id} />
+                    <input
+                      name="role"
+                      defaultValue={c.role}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      name="name"
+                      defaultValue={c.name}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      name="phone"
+                      defaultValue={c.phone}
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      name="email"
+                      defaultValue={c.email}
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      type="number"
+                      name="sortOrder"
+                      defaultValue={c.sortOrder}
+                      className="w-28 rounded border px-2 py-1"
+                    />
+                    <button type="submit" className="rounded bg-emerald-700 px-3 py-1 text-white">
+                      Save
+                    </button>
+                  </form>
+                  <form
+                    action={async () => {
+                      'use server'
+                      await removeContact(c.id)
+                    }}
+                  >
+                    <button type="submit" className="text-red-600">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           ))}

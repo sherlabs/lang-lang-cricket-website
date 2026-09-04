@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -12,6 +15,8 @@ const links = [
 ]
 
 export function SiteNav() {
+  const [open, setOpen] = useState(false)
+
   return (
     <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -26,7 +31,30 @@ export function SiteNav() {
             </Link>
           ))}
         </nav>
+        <button
+          type="button"
+          aria-label="Toggle navigation menu"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="rounded p-2 text-xl leading-none md:hidden"
+        >
+          ☰
+        </button>
       </div>
+      {open && (
+        <nav className="flex flex-col gap-1 border-t bg-white px-4 py-3 text-sm font-medium md:hidden">
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className="rounded px-2 py-2 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }

@@ -1,4 +1,4 @@
-import { listDocuments, createDocument, removeDocument } from './actions'
+import { listDocuments, createDocument, removeDocument, editDocument } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,29 +26,54 @@ export default async function DocumentsAdminPage() {
           <tr>
             <th>Category</th>
             <th>Title</th>
+            <th>File</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {docs.map((d) => (
             <tr key={d.id} className="border-t">
-              <td>{d.category}</td>
-              <td>
-                <a href={d.url} target="_blank" className="underline">
-                  {d.title}
-                </a>
-              </td>
-              <td>
-                <form
-                  action={async () => {
-                    'use server'
-                    await removeDocument(d.id)
-                  }}
-                >
-                  <button type="submit" className="text-red-600">
-                    Delete
-                  </button>
-                </form>
+              <td colSpan={4}>
+                <div className="flex flex-wrap items-center gap-2 py-1">
+                  <form action={editDocument} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={d.id} />
+                    <select
+                      name="category"
+                      defaultValue={d.category}
+                      required
+                      className="rounded border px-2 py-1"
+                    >
+                      <option>Codes of Conduct</option>
+                      <option>Policies</option>
+                      <option>Child Safety</option>
+                      <option>Game Day</option>
+                      <option>CCCA Directory</option>
+                    </select>
+                    <input
+                      name="title"
+                      defaultValue={d.title}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <a href={d.url} target="_blank" className="underline">
+                      current file
+                    </a>
+                    <input type="file" name="file" accept="application/pdf" />
+                    <button type="submit" className="rounded bg-emerald-700 px-3 py-1 text-white">
+                      Save
+                    </button>
+                  </form>
+                  <form
+                    action={async () => {
+                      'use server'
+                      await removeDocument(d.id)
+                    }}
+                  >
+                    <button type="submit" className="text-red-600">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           ))}

@@ -1,4 +1,4 @@
-import { listSponsors, createSponsor, removeSponsor } from './actions'
+import { listSponsors, createSponsor, removeSponsor, editSponsor } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,25 +34,52 @@ export default async function SponsorsAdminPage() {
         <tbody>
           {items.map((s) => (
             <tr key={s.id} className="border-t">
-              <td>{s.tier}</td>
-              <td>{s.name}</td>
-              <td>
-                <a href={s.logoUrl} target="_blank" className="underline">
-                  logo
-                </a>
-              </td>
-              <td>{s.linkUrl}</td>
-              <td>
-                <form
-                  action={async () => {
-                    'use server'
-                    await removeSponsor(s.id)
-                  }}
-                >
-                  <button type="submit" className="text-red-600">
-                    Delete
-                  </button>
-                </form>
+              <td colSpan={5}>
+                <div className="flex flex-wrap items-center gap-2 py-1">
+                  <form action={editSponsor} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={s.id} />
+                    <select
+                      name="tier"
+                      defaultValue={s.tier}
+                      required
+                      className="rounded border px-2 py-1"
+                    >
+                      <option>Platinum</option>
+                      <option>Gold</option>
+                      <option>Silver</option>
+                      <option>Bronze</option>
+                    </select>
+                    <input
+                      name="name"
+                      defaultValue={s.name}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <a href={s.logoUrl} target="_blank" className="underline">
+                      current logo
+                    </a>
+                    <input type="file" name="file" accept="image/*" />
+                    <input
+                      name="linkUrl"
+                      defaultValue={s.linkUrl}
+                      placeholder="Link URL"
+                      className="rounded border px-2 py-1"
+                    />
+                    <button type="submit" className="rounded bg-emerald-700 px-3 py-1 text-white">
+                      Save
+                    </button>
+                  </form>
+                  <form
+                    action={async () => {
+                      'use server'
+                      await removeSponsor(s.id)
+                    }}
+                  >
+                    <button type="submit" className="text-red-600">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           ))}

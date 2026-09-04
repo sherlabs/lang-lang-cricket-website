@@ -12,6 +12,7 @@ const actions = makeCrudActions<typeof sponsors.$inferSelect>(db as never, spons
 
 export const listSponsors = actions.list
 export const removeSponsor = actions.remove
+export const updateSponsor = actions.update
 
 export async function createSponsor(formData: FormData) {
   const file = formData.get('file') as File
@@ -22,4 +23,18 @@ export async function createSponsor(formData: FormData) {
     logoUrl,
     linkUrl: String(formData.get('linkUrl')),
   } as never)
+}
+
+export async function editSponsor(formData: FormData) {
+  const id = Number(formData.get('id'))
+  const data: Record<string, unknown> = {
+    tier: String(formData.get('tier')),
+    name: String(formData.get('name')),
+    linkUrl: String(formData.get('linkUrl')),
+  }
+  const file = formData.get('file') as File | null
+  if (file && file.size > 0) {
+    data.logoUrl = await uploadFile(file, 'sponsors')
+  }
+  await updateSponsor(id, data as never)
 }

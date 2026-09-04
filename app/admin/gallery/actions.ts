@@ -12,6 +12,7 @@ const actions = makeCrudActions<typeof galleryPhotos.$inferSelect>(db as never, 
 
 export const listGalleryPhotos = actions.list
 export const removeGalleryPhoto = actions.remove
+export const updateGalleryPhoto = actions.update
 
 export async function createGalleryPhoto(formData: FormData) {
   const file = formData.get('file') as File
@@ -21,4 +22,17 @@ export async function createGalleryPhoto(formData: FormData) {
     caption: String(formData.get('caption')),
     sortOrder: Number(formData.get('sortOrder')),
   } as never)
+}
+
+export async function editGalleryPhoto(formData: FormData) {
+  const id = Number(formData.get('id'))
+  const data: Record<string, unknown> = {
+    caption: String(formData.get('caption')),
+    sortOrder: Number(formData.get('sortOrder')),
+  }
+  const file = formData.get('file') as File | null
+  if (file && file.size > 0) {
+    data.url = await uploadFile(file, 'gallery')
+  }
+  await updateGalleryPhoto(id, data as never)
 }

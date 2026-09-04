@@ -1,6 +1,12 @@
-import { listFixtures, createFixture, removeFixture } from './actions'
+import { listFixtures, createFixture, removeFixture, editFixture } from './actions'
 
 export const dynamic = 'force-dynamic'
+
+function toDatetimeLocal(date: Date | string) {
+  const d = new Date(date)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 export default async function FixturesAdminPage() {
   const items = await listFixtures()
@@ -50,23 +56,62 @@ export default async function FixturesAdminPage() {
         <tbody>
           {items.map((f) => (
             <tr key={f.id} className="border-t">
-              <td>{f.team}</td>
-              <td>{f.opponent}</td>
-              <td>{f.venue}</td>
-              <td>{new Date(f.matchDate).toLocaleString()}</td>
-              <td>{f.isResult ? 'Yes' : 'No'}</td>
-              <td>{f.resultSummary}</td>
-              <td>
-                <form
-                  action={async () => {
-                    'use server'
-                    await removeFixture(f.id)
-                  }}
-                >
-                  <button type="submit" className="text-red-600">
-                    Delete
-                  </button>
-                </form>
+              <td colSpan={7}>
+                <div className="flex flex-wrap items-center gap-2 py-1">
+                  <form
+                    action={editFixture}
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <input type="hidden" name="id" value={f.id} />
+                    <input
+                      name="team"
+                      defaultValue={f.team}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      name="opponent"
+                      defaultValue={f.opponent}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      name="venue"
+                      defaultValue={f.venue}
+                      className="rounded border px-2 py-1"
+                    />
+                    <input
+                      type="datetime-local"
+                      name="matchDate"
+                      defaultValue={toDatetimeLocal(f.matchDate)}
+                      required
+                      className="rounded border px-2 py-1"
+                    />
+                    <label className="flex items-center gap-1 text-sm">
+                      <input type="checkbox" name="isResult" defaultChecked={f.isResult} />
+                      Result
+                    </label>
+                    <input
+                      name="resultSummary"
+                      defaultValue={f.resultSummary}
+                      placeholder="Result summary"
+                      className="rounded border px-2 py-1"
+                    />
+                    <button type="submit" className="rounded bg-emerald-700 px-3 py-1 text-white">
+                      Save
+                    </button>
+                  </form>
+                  <form
+                    action={async () => {
+                      'use server'
+                      await removeFixture(f.id)
+                    }}
+                  >
+                    <button type="submit" className="text-red-600">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           ))}
