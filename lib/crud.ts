@@ -22,11 +22,11 @@ export function makeCrudActions<Row extends { id: number }>(
       revalidate()
     },
     async update(id: number, data: Partial<Omit<Row, 'id' | 'createdAt'>>) {
-      await db.update(table).set(data as object).where(eq(table as never, id))
+      await db.update(table).set(data as object).where(eq(table.id as never, id))
       revalidate()
     },
     async remove(id: number) {
-      await db.delete(table).where(eq(table as never, id))
+      await db.delete(table).where(eq(table.id as never, id))
       revalidate()
     },
   }
