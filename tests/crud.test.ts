@@ -1,5 +1,18 @@
-import { describe, it, expect, vi } from 'vitest'
-import { eq } from 'drizzle-orm'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// Setup: track eq calls for testing
+const eqCalls: Array<[unknown, unknown]> = []
+
+vi.mock('drizzle-orm', async () => {
+  const actual = await vi.importActual<typeof import('drizzle-orm')>('drizzle-orm')
+  return {
+    ...actual,
+    eq: vi.fn((col: unknown, val: unknown) => {
+      eqCalls.push([col, val])
+      return actual.eq(col, val)
+    }),
+  }
+})
 
 describe('lib/crud makeCrudActions', () => {
   it('create/list/update/remove round-trip through the provided db handle', async () => {
@@ -44,44 +57,26 @@ describe('lib/crud makeCrudActions', () => {
     expect(await actions.list()).toEqual([])
   })
 
-  it('update and remove pass table.id column reference to where clause', async () => {
-    // This test verifies that update/remove use table.id (column) not table (whole object)
-    // by ensuring the whereCondition passed has properties of eq(table.id, id)
-    let updateWhereConditionReceived: unknown
-    let deleteWhereConditionReceived: unknown
-
-    const fakeTable = {
-      id: { name: 'id' },
-    }
-
+  it('update and remove call eq() with the id column, not the table', async () => {
+    const fakeTable = { id: { name: 'id' } }
     const fakeDb = {
       select: () => ({ from: () => [] }),
       insert: () => ({ values: () => Promise.resolve() }),
-      update: () => ({
-        set: () => ({
-          where: (condition: unknown) => {
-            updateWhereConditionReceived = condition
-            return Promise.resolve()
-          },
-        }),
-      }),
-      delete: () => ({
-        where: (condition: unknown) => {
-          deleteWhereConditionReceived = condition
-          return Promise.resolve()
-        },
-      }),
+      update: () => ({ set: () => ({ where: () => Promise.resolve() }) }),
+      delete: () => ({ where: () => Promise.resolve() }),
     }
+
+    eqCalls.length = 0
 
     const { makeCrudActions } = await import('@/lib/crud')
     const actions = makeCrudActions(fakeDb as never, fakeTable as never, () => {})
 
     await actions.update(1, { name: 'Test' })
-    // The condition should be the result of eq(table.id, 1)
-    expect(updateWhereConditionReceived).toBeDefined()
+    expect(eqCalls).toContainEqual([fakeTable.id, 1])
+
+    eqCalls.length = 0
 
     await actions.remove(1)
-    // The condition should be the result of eq(table.id, 1)
-    expect(deleteWhereConditionReceived).toBeDefined()
+    expect(eqCalls).toContainEqual([fakeTable.id, 1])
   })
 })
