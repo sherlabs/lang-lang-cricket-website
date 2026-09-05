@@ -86,6 +86,19 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply scroll-smooth font-sans;
+  }
+  ::selection {
+    background: #f5b700;
+    color: #0b0b0d;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-dark;
+  }
+  .container-site {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
 }

@@ -10,6 +10,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          black: "#0B0B0D",
+          ink: "#17171A",
+          charcoal: "#26262B",
+          gold: "#F5B700",
+          "gold-dark": "#C99400",
+          "gold-light": "#FFD966",
+          "gold-pale": "#FFF4CC",
+          cream: "#FAF7EF",
+          stone: "#F3F1EA",
+        },
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -60,6 +71,14 @@ const config: Config = {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+      },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(11,11,13,0.04), 0 8px 24px -12px rgba(11,11,13,0.18)",
+        "card-hover": "0 2px 4px rgba(11,11,13,0.06), 0 18px 40px -16px rgba(11,11,13,0.28)",
       },
       borderRadius: {
         lg: "var(--radius)",

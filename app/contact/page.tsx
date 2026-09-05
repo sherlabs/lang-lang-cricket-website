@@ -1,31 +1,96 @@
+import { asc } from 'drizzle-orm'
+import { Mail, MapPin, ShieldCheck } from 'lucide-react'
+import { FacebookIcon } from '@/components/icons'
 import { db } from '@/db'
 import { committeeContacts } from '@/db/schema'
-import { asc } from 'drizzle-orm'
+import { PageHeader } from '@/components/page-header'
+import { CommitteeCards } from '@/components/committee-cards'
+import { SectionHeading } from '@/components/section-heading'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  title: 'Contact | Lang Lang Cricket Club',
+}
+
+const CLUB_EMAIL = 'langlangcricketclub@gmail.com'
+
 export default async function ContactPage() {
   const contacts = await db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder))
+
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="mb-8 text-3xl font-bold">Contact</h1>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {contacts.map((c) => (
-          <div key={c.id} className="rounded-lg border p-4">
-            <p className="font-semibold">{c.role}</p>
-            <p>{c.name}</p>
-            {c.phone && <p className="text-sm text-gray-600">Ph. {c.phone}</p>}
-            {c.email && (
-              <a href={`mailto:${c.email}`} className="text-sm text-emerald-700 underline">
-                {c.email}
-              </a>
-            )}
+    <main>
+      <PageHeader
+        eyebrow="Contact"
+        title="Get in touch with the club"
+        intro="Questions about joining, junior registrations, coaching or sponsorship? Email the club or contact a committee member directly."
+      />
+
+      <section className="container-site -mt-8 grid gap-4 sm:grid-cols-3">
+        <a
+          href={`mailto:${CLUB_EMAIL}`}
+          className="group rounded-2xl bg-brand-gold p-6 text-brand-black shadow-card transition hover:-translate-y-0.5 hover:shadow-card-hover"
+        >
+          <Mail className="h-6 w-6" aria-hidden />
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-black/60">Email</p>
+          <p className="mt-1 break-all font-bold">{CLUB_EMAIL}</p>
+        </a>
+        <div className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5">
+          <MapPin className="h-6 w-6 text-brand-gold-dark" aria-hidden />
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Home ground</p>
+          <p className="mt-1 font-bold text-brand-black">Caldermeade, Victoria</p>
+        </div>
+        <div className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5">
+          <FacebookIcon className="h-6 w-6 text-brand-gold-dark" />
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Social</p>
+          <p className="mt-1 font-bold text-brand-black">Find us on Facebook</p>
+          <p className="mt-1 text-sm text-neutral-600">Match schedules, results and club news.</p>
+        </div>
+      </section>
+
+      <section className="container-site py-20">
+        <SectionHeading
+          eyebrow="Committee"
+          title="Meet the committee"
+          intro="The volunteers who run the club. Our Child Safety Officer is your first point of contact for any safeguarding concern."
+        />
+        <CommitteeCards contacts={contacts} className="mt-10" />
+
+        <div className="mt-8 flex items-start gap-3 rounded-2xl bg-brand-stone p-5 text-sm text-neutral-700 ring-1 ring-brand-black/5">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-gold-dark" aria-hidden />
+          <p>
+            Lang Lang Cricket Club follows Cricket Australia&apos;s Safeguarding Children and Young People
+            Framework and a Member Protection Policy. Our policies and codes of conduct are available on
+            the{' '}
+            <a href="/documents" className="font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4">
+              Documents &amp; Policies
+            </a>{' '}
+            page.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-brand-cream py-20">
+        <div className="container-site grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
+          <SectionHeading
+            eyebrow="Find us"
+            title="Caldermeade, Victoria"
+            intro="Our modern home ground in Caldermeade was developed with support from Cardinia Shire Council and Community Bank Lang Lang."
+          />
+          <div className="overflow-hidden rounded-3xl bg-brand-stone shadow-card ring-1 ring-brand-black/5">
+            <iframe
+              title="Map of Caldermeade, Victoria"
+              src="https://www.google.com/maps?q=Caldermeade%2C+Victoria%2C+Australia&z=12&output=embed"
+              width="100%"
+              height="380"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="block h-[380px] w-full border-0"
+            />
           </div>
-        ))}
-      </div>
-      <p className="mt-8 text-gray-700">
-        Caldermeade, Victoria — follow us on Facebook for match schedules and updates.
-      </p>
+        </div>
+      </section>
     </main>
   )
 }

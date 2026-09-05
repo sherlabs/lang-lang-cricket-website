@@ -16,8 +16,19 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Lang Lang Cricket Club",
-  description: "Lang Lang Cricket Club — junior and senior cricket in Caldermeade, Victoria.",
+  metadataBase: new URL("https://lang-lang-cricket-website.vercel.app"),
+  title: {
+    default: "Lang Lang Cricket Club",
+    template: "%s",
+  },
+  description:
+    "Lang Lang Cricket Club — junior and senior cricket in Caldermeade, Victoria. A welcoming community club for beginners through to experienced players.",
+  openGraph: {
+    title: "Lang Lang Cricket Club",
+    description: "Junior and senior cricket in Caldermeade, Victoria.",
+    images: ["/assets/branding/hero.jpg"],
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -28,10 +39,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
       >
         <SiteNav />
-        {children}
+        <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>
     </html>

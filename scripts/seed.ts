@@ -27,17 +27,16 @@ async function main() {
   )
 
   await db.insert(sponsors).values([
-    { tier: 'Platinum', name: 'Platinum Sponsor', logoUrl: '/assets/sponsors/platinum-01.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 1', logoUrl: '/assets/sponsors/gold-01.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 2', logoUrl: '/assets/sponsors/gold-02.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 3', logoUrl: '/assets/sponsors/gold-03.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 4', logoUrl: '/assets/sponsors/gold-04.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 5', logoUrl: '/assets/sponsors/gold-05.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Gold Sponsor 6', logoUrl: '/assets/sponsors/gold-06.png', linkUrl: '' },
-    { tier: 'Silver', name: 'Dan Quinn', logoUrl: '/assets/sponsors/silver-01.jpg', linkUrl: '' },
+    { tier: 'Platinum', name: 'Bendigo Bank – Community Bank Lang Lang', logoUrl: '/assets/sponsors/gold-01.png', linkUrl: 'https://www.bendigobank.com.au' },
+    { tier: 'Gold', name: 'Si.Co Contracting', logoUrl: '/assets/sponsors/gold-02.png', linkUrl: '' },
+    { tier: 'Gold', name: 'Shoreline Pest Control', logoUrl: '/assets/sponsors/gold-03.png', linkUrl: '' },
+    { tier: 'Gold', name: 'Sunscape Solar', logoUrl: '/assets/sponsors/gold-04.png', linkUrl: 'https://www.sunscapesolar.com.au' },
+    { tier: 'Gold', name: 'Burke Bond Partners', logoUrl: '/assets/sponsors/gold-05.png', linkUrl: 'https://www.burkebond.com.au' },
+    { tier: 'Gold', name: 'David Jansz Security', logoUrl: '/assets/sponsors/gold-06.png', linkUrl: '' },
+    { tier: 'Silver', name: 'Dan Quinn Plumbing', logoUrl: '/assets/sponsors/silver-01.jpg', linkUrl: '' },
     { tier: 'Silver', name: 'Big Dogg', logoUrl: '/assets/sponsors/silver-02.png', linkUrl: '' },
-    { tier: 'Silver', name: 'Lang Lang Fish and Chips', logoUrl: '/assets/sponsors/silver-03.jpg', linkUrl: '' },
-    { tier: 'Silver', name: 'LLS', logoUrl: '/assets/sponsors/silver-04.jpg', linkUrl: '' },
+    { tier: 'Bronze', name: 'Lang Lang Fish and Chips', logoUrl: '/assets/sponsors/silver-03.jpg', linkUrl: '' },
+    { tier: 'Bronze', name: 'Lang Lang Sands', logoUrl: '/assets/sponsors/silver-04.jpg', linkUrl: '' },
   ])
 
   await db.insert(committeeContacts).values([

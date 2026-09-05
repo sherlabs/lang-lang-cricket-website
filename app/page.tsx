@@ -1,65 +1,252 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import { ArrowRight, Users, Trophy, ShieldCheck, Landmark, Mail } from 'lucide-react'
+import { asc } from 'drizzle-orm'
 import { db } from '@/db'
-import { sponsors, committeeContacts } from '@/db/schema'
+import { sponsors, committeeContacts, galleryPhotos } from '@/db/schema'
+import { SectionHeading } from '@/components/section-heading'
+import { CommitteeCards } from '@/components/committee-cards'
+import { SponsorStrip } from '@/components/sponsor-logos'
 
 export const dynamic = 'force-dynamic'
 
+const highlights = [
+  {
+    icon: Users,
+    title: 'Juniors and seniors',
+    body: 'Teams for kids picking up a bat for the first time through to experienced senior cricketers.',
+  },
+  {
+    icon: Trophy,
+    title: 'Everyone gets a game',
+    body: 'A friendly, welcoming club where beginners and seasoned players train and play side by side.',
+  },
+  {
+    icon: Landmark,
+    title: 'A modern home ground',
+    body: 'Our Caldermeade facility was developed with support from Cardinia Shire Council and Community Bank Lang Lang.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Safe for young players',
+    body: "We follow Cricket Australia's Safeguarding Children and Young People Framework and a Member Protection Policy.",
+  },
+]
+
 export default async function HomePage() {
-  const [sponsorRows, contacts] = await Promise.all([
+  const [sponsorRows, contacts, photos] = await Promise.all([
     db.select().from(sponsors),
-    db.select().from(committeeContacts),
+    db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder)),
+    db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
   ])
 
   return (
     <main>
-      <section className="relative h-[420px] w-full">
+      {/* Hero */}
+      <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px]">
         <Image
           src="/assets/branding/hero.jpg"
-          alt="Lang Lang Cricket Club"
+          alt="The Lang Lang Cricket Club pavilion and oval at Caldermeade"
           fill
-          className="object-cover"
           priority
+          sizes="100vw"
+          className="object-cover object-[center_60%]"
         />
-        <div className="absolute inset-0 flex items-center bg-black/40">
-          <div className="mx-auto max-w-3xl px-4 text-white">
-            <h1 className="text-4xl font-bold">Lang Lang Cricket Club</h1>
-            <p className="mt-3 text-lg">
-              A vibrant cricket community in Caldermeade, Victoria — for players of every age.
-            </p>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-black/90 via-brand-black/60 to-brand-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-black/80 via-transparent to-transparent" />
+
+        <div className="container-site relative flex min-h-[560px] flex-col justify-end pb-16 pt-20 sm:min-h-[640px] sm:pb-24">
+          <div className="mb-6 inline-flex w-fit items-center gap-3 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-xs font-medium backdrop-blur">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white p-0.5">
+              <Image src="/assets/branding/logo.png" alt="" width={20} height={25} className="h-5 w-auto" />
+            </span>
+            Junior &amp; senior cricket in Caldermeade, Victoria
+          </div>
+          <h1 className="max-w-3xl text-balance text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            Play your cricket <span className="text-brand-gold">with Lang Lang</span>.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75 sm:text-xl">
+            A community club with room for every player, from first-time juniors to seasoned seniors,
+            based at a modern home ground in Caldermeade.
+          </p>
+          <div className="mt-9 flex flex-wrap gap-3">
+            <a
+              href="mailto:langlangcricketclub@gmail.com"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
+            >
+              <Mail className="h-4 w-4" aria-hidden />
+              Get in touch
+            </a>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:border-brand-gold hover:text-brand-gold"
+            >
+              Meet the committee
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-4 py-12 leading-relaxed">
-        <p>
-          Lang Lang Cricket Club is a family-friendly club offering both junior and senior cricket,
-          with a strong focus on developing talent and building community. Our state-of-the-art
-          facility in Caldermeade is supported by Cardinia Shire and the local Bendigo Bank.
-        </p>
-      </section>
+      {/* About */}
+      <section className="container-site grid gap-12 py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-28">
+        <div>
+          <SectionHeading
+            eyebrow="About the club"
+            title="Local cricket, played the right way."
+            intro="Lang Lang Cricket Club fields junior and senior sides out of Caldermeade, in Victoria's south-east. We are a club built by volunteers and families, and we make a point of being welcoming whether you are learning the basics or have played for decades."
+          />
+          <p className="mt-5 max-w-2xl leading-relaxed text-neutral-600">
+            Our home ground is a modern facility developed with support from Cardinia Shire Council and
+            Bendigo Bank&apos;s Community Bank Lang Lang. Off the field, the club is committed to a safe
+            and respectful environment for everyone: we follow Cricket Australia&apos;s Safeguarding Children
+            and Young People Framework and a Member Protection Policy that sets clear standards for
+            members, coaches and volunteers.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/history"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-charcoal"
+            >
+              Our history
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+            <Link
+              href="/documents"
+              className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
+            >
+              Policies &amp; documents
+            </Link>
+          </div>
+        </div>
 
-      <section className="bg-gray-50 py-12">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-4 md:grid-cols-4">
-          {contacts.map((c) => (
-            <div key={c.id} className="rounded-lg bg-white p-4 text-center shadow-sm">
-              <p className="font-semibold">{c.role}</p>
-              <p>{c.name}</p>
-              {c.phone && <p className="text-sm text-gray-600">{c.phone}</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {highlights.map((h) => (
+            <div
+              key={h.title}
+              className="rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-black text-brand-gold">
+                <h.icon className="h-5 w-5" aria-hidden />
+              </span>
+              <h3 className="mt-4 font-bold tracking-tight text-brand-black">{h.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{h.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {sponsorRows.length > 0 && (
-        <section className="mx-auto max-w-5xl px-4 py-12">
-          <h2 className="mb-6 text-center text-xl font-semibold">Our Sponsors</h2>
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {sponsorRows.map((s) => (
-              <img key={s.id} src={s.logoUrl} alt={s.name} className="h-16 object-contain" />
-            ))}
+      {/* Gallery teaser */}
+      {photos.length > 0 && (
+        <section className="bg-brand-black py-20 text-white lg:py-24">
+          <div className="container-site">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="eyebrow text-brand-gold">Around the club</p>
+                <h2 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+                  Life at Lang Lang
+                </h2>
+              </div>
+              <Link
+                href="/gallery"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-brand-gold transition hover:text-brand-gold-light"
+              >
+                View the full gallery
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+            <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              {photos.map((p, i) => (
+                <li
+                  key={p.id}
+                  className={i === 0 ? 'col-span-2 row-span-2 sm:col-span-2 sm:row-span-2' : ''}
+                >
+                  <Link href="/gallery" className="group block overflow-hidden rounded-xl">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.url}
+                      alt={p.caption || 'Lang Lang Cricket Club'}
+                      loading="lazy"
+                      className="aspect-square h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}
+
+      {/* Committee */}
+      <section className="bg-brand-cream py-20 lg:py-24">
+        <div className="container-site">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <SectionHeading
+              eyebrow="Committee"
+              title="The people running the club"
+              intro="Volunteers who keep the season ticking over. Reach out to any of them with questions about playing, coaching or helping out."
+            />
+            <Link
+              href="/contact"
+              className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-dark"
+            >
+              Contact page
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
+          <CommitteeCards contacts={contacts} className="mt-12" />
+        </div>
+      </section>
+
+      {/* Sponsors */}
+      {sponsorRows.length > 0 && (
+        <section className="container-site py-20 lg:py-24">
+          <SectionHeading
+            align="center"
+            eyebrow="Our sponsors"
+            title="Backed by local businesses"
+            intro="The club is only possible thanks to the businesses that support us every season."
+          />
+          <SponsorStrip sponsors={sponsorRows} className="mt-12" />
+          <div className="mt-10 text-center">
+            <Link
+              href="/sponsors"
+              className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
+            >
+              See all sponsors
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* CTA */}
+      <section className="container-site pb-4">
+        <div className="relative overflow-hidden rounded-3xl bg-brand-black px-8 py-14 text-white sm:px-14 sm:py-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-brand-gold/20 blur-3xl"
+          />
+          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-xl">
+              <p className="eyebrow text-brand-gold">Join us</p>
+              <h2 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+                Keen to play, coach or volunteer?
+              </h2>
+              <p className="mt-3 text-white/70">
+                Send the club an email and we will point you to the right person.
+              </p>
+            </div>
+            <a
+              href="mailto:langlangcricketclub@gmail.com"
+              className="inline-flex w-fit items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
+            >
+              <Mail className="h-4 w-4" aria-hidden />
+              langlangcricketclub@gmail.com
+            </a>
+          </div>
+        </div>
+      </section>
     </main>
   )
 }
