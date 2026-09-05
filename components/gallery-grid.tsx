@@ -41,7 +41,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
 
   if (photos.length === 0) {
     return (
-      <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-neutral-500">
+      <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
         Photos will appear here once they are added by the committee.
       </p>
     )
@@ -65,7 +65,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
               type="button"
               onClick={() => setIndex(i)}
               aria-label={p.caption ? `View photo: ${p.caption}` : `View photo ${i + 1}`}
-              className="block h-full w-full focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold"
+              className="block h-full w-full cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-brand-gold"
             >
               <img
                 src={p.url}
@@ -73,12 +73,12 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
                 loading={i < 8 ? 'eager' : 'lazy'}
                 className="aspect-square h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
               />
-              <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-black/70 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
-              <span className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-black opacity-0 shadow transition group-hover:opacity-100">
+              <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-black/70 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
+              <span className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-black opacity-0 shadow transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
                 <Maximize2 className="h-4 w-4" aria-hidden />
               </span>
               {p.caption && (
-                <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 p-3 text-left text-sm font-medium text-white opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 p-3 text-left text-sm font-medium text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
                   {p.caption}
                 </span>
               )}
@@ -98,8 +98,8 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
           <button
             type="button"
             onClick={close}
-            aria-label="Close"
-            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black"
+            aria-label="Close photo viewer"
+            className="absolute right-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
           >
             <X className="h-5 w-5" aria-hidden />
           </button>
@@ -113,7 +113,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
                   step(-1)
                 }}
                 aria-label="Previous photo"
-                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black sm:left-6"
+                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black sm:left-6"
               >
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </button>
@@ -124,7 +124,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
                   step(1)
                 }}
                 aria-label="Next photo"
-                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black sm:right-6"
+                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black sm:right-6"
               >
                 <ChevronRight className="h-6 w-6" aria-hidden />
               </button>
@@ -141,9 +141,9 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
               alt={current.caption || 'Lang Lang Cricket Club'}
               className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
             />
-            <figcaption className="mt-4 flex items-center gap-3 text-sm text-white/80">
+            <figcaption className="mt-4 flex flex-wrap items-center justify-center gap-3 px-2 text-center text-sm text-white/85">
               {current.caption && <span>{current.caption}</span>}
-              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs tabular-nums text-white/70">
+              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs tabular-nums text-white/85">
                 {index! + 1} / {photos.length}
               </span>
             </figcaption>

@@ -25,7 +25,9 @@ export default async function SponsorsPage() {
 
       <section className="container-site space-y-20 py-16 lg:py-24">
         {groups.length === 0 && (
-          <p className="text-sm text-neutral-500">Sponsor details will be published soon.</p>
+          <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
+            Sponsor details will be published soon.
+          </p>
         )}
         {groups.map(({ tier, items }) => {
           const style = TIER_STYLES[tier] ?? TIER_STYLES.Bronze
@@ -40,10 +42,10 @@ export default async function SponsorsPage() {
                 >
                   {tier}
                 </span>
-                <h2 id={`tier-${tier}`} className="text-2xl font-bold tracking-tight text-brand-black">
+                <h2 id={`tier-${tier}`} className="display text-3xl text-brand-black sm:text-4xl">
                   {tier} {items.length === 1 ? 'sponsor' : 'sponsors'}
                 </h2>
-                <span className="hidden text-sm text-neutral-500 sm:inline">{style.blurb}</span>
+                <span className="hidden text-sm text-brand-grey sm:inline">{style.blurb}</span>
                 <span className="ml-auto hidden h-px flex-1 bg-brand-black/10 sm:block" />
               </div>
               <div className={cn('grid gap-5', style.grid)}>
@@ -55,14 +57,18 @@ export default async function SponsorsPage() {
           )
         })}
 
-        <div className="rounded-3xl bg-brand-black px-8 py-12 text-white sm:px-12">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative overflow-hidden rounded-3xl bg-brand-black px-8 py-14 text-white sm:px-14 sm:py-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-brand-gold/20 blur-3xl"
+          />
+          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <p className="eyebrow text-brand-gold">Become a sponsor</p>
-              <h2 className="mt-2 text-balance text-3xl font-bold tracking-tight">
+              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
                 Put your business in front of the local community.
               </h2>
-              <p className="mt-3 text-white/70">
+              <p className="mt-4 text-white/80">
                 Sponsorship packages are available at every tier. Drop the committee a line to find out
                 more.
               </p>

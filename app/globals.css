@@ -80,7 +80,13 @@
   }
   * {
     @apply border-border;
-    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+    outline-color: #f5b700;
+  }
+  /* Visible, brand-coloured keyboard focus ring on every focusable element. */
+  :focus-visible {
+    outline: 2px solid #f5b700;
+    outline-offset: 3px;
+    border-radius: 0.25rem;
   }
   body {
     @apply bg-background text-foreground;
@@ -96,7 +102,11 @@
 
 @layer components {
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-dark;
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-deep;
+  }
+  /* Display type: condensed athletic face for hero titles, section titles and wordmarks. */
+  .display {
+    @apply font-heading font-bold uppercase leading-none tracking-wide;
   }
   .container-site {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;

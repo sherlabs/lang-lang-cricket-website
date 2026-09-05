@@ -43,7 +43,7 @@ export default async function HomePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px]">
+      <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px] lg:min-h-[700px]">
         <Image
           src="/assets/branding/hero.jpg"
           alt="The Lang Lang Cricket Club pavilion and oval at Caldermeade"
@@ -55,17 +55,17 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-brand-black/90 via-brand-black/60 to-brand-black/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-black/80 via-transparent to-transparent" />
 
-        <div className="container-site relative flex min-h-[560px] flex-col justify-end pb-16 pt-20 sm:min-h-[640px] sm:pb-24">
+        <div className="container-site relative flex min-h-[560px] flex-col justify-end pb-16 pt-24 sm:min-h-[640px] sm:pb-24 lg:min-h-[700px]">
           <div className="mb-6 inline-flex w-fit items-center gap-3 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-xs font-medium backdrop-blur">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white p-0.5">
               <Image src="/assets/branding/logo.png" alt="" width={20} height={25} className="h-5 w-auto" />
             </span>
             Junior &amp; senior cricket in Caldermeade, Victoria
           </div>
-          <h1 className="max-w-3xl text-balance text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-            Play your cricket <span className="text-brand-gold">with Lang Lang</span>.
+          <h1 className="display max-w-4xl text-balance text-6xl sm:text-7xl lg:text-8xl">
+            Play your cricket <span className="text-brand-gold">with Lang Lang</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75 sm:text-xl">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
             A community club with room for every player, from first-time juniors to seasoned seniors,
             based at a modern home ground in Caldermeade.
           </p>
@@ -89,14 +89,14 @@ export default async function HomePage() {
       </section>
 
       {/* About */}
-      <section className="container-site grid gap-12 py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-28">
+      <section className="container-site grid gap-12 py-20 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-20 lg:py-28">
         <div>
           <SectionHeading
             eyebrow="About the club"
             title="Local cricket, played the right way."
             intro="Lang Lang Cricket Club fields junior and senior sides out of Caldermeade, in Victoria's south-east. We are a club built by volunteers and families, and we make a point of being welcoming whether you are learning the basics or have played for decades."
           />
-          <p className="mt-5 max-w-2xl leading-relaxed text-neutral-600">
+          <p className="mt-5 max-w-2xl leading-relaxed text-brand-grey">
             Our home ground is a modern facility developed with support from Cardinia Shire Council and
             Bendigo Bank&apos;s Community Bank Lang Lang. Off the field, the club is committed to a safe
             and respectful environment for everyone: we follow Cricket Australia&apos;s Safeguarding Children
@@ -124,13 +124,13 @@ export default async function HomePage() {
           {highlights.map((h) => (
             <div
               key={h.title}
-              className="rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale"
+              className="group rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale hover:ring-brand-gold/40"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-black text-brand-gold">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-black text-brand-gold transition group-hover:bg-brand-gold group-hover:text-brand-black">
                 <h.icon className="h-5 w-5" aria-hidden />
               </span>
               <h3 className="mt-4 font-bold tracking-tight text-brand-black">{h.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{h.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-brand-grey">{h.body}</p>
             </div>
           ))}
         </div>
@@ -138,18 +138,18 @@ export default async function HomePage() {
 
       {/* Gallery teaser */}
       {photos.length > 0 && (
-        <section className="bg-brand-black py-20 text-white lg:py-24">
+        <section className="bg-brand-black py-20 text-white lg:py-28">
           <div className="container-site">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="eyebrow text-brand-gold">Around the club</p>
-                <h2 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+                <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
                   Life at Lang Lang
                 </h2>
               </div>
               <Link
                 href="/gallery"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-brand-gold transition hover:text-brand-gold-light"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-gold transition hover:text-brand-gold-light"
               >
                 View the full gallery
                 <ArrowRight className="h-4 w-4" aria-hidden />
@@ -161,13 +161,13 @@ export default async function HomePage() {
                   key={p.id}
                   className={i === 0 ? 'col-span-2 row-span-2 sm:col-span-2 sm:row-span-2' : ''}
                 >
-                  <Link href="/gallery" className="group block overflow-hidden rounded-xl">
+                  <Link href="/gallery" className="group block overflow-hidden rounded-xl bg-brand-ink ring-1 ring-white/10 transition hover:ring-brand-gold/60">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={p.url}
                       alt={p.caption || 'Lang Lang Cricket Club'}
                       loading="lazy"
-                      className="aspect-square h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      className="aspect-square h-full w-full object-cover opacity-95 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
                     />
                   </Link>
                 </li>
@@ -178,7 +178,7 @@ export default async function HomePage() {
       )}
 
       {/* Committee */}
-      <section className="bg-brand-cream py-20 lg:py-24">
+      <section className="bg-brand-cream py-20 lg:py-28">
         <div className="container-site">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeading
@@ -188,7 +188,7 @@ export default async function HomePage() {
             />
             <Link
               href="/contact"
-              className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-dark"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
             >
               Contact page
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -200,7 +200,7 @@ export default async function HomePage() {
 
       {/* Sponsors */}
       {sponsorRows.length > 0 && (
-        <section className="container-site py-20 lg:py-24">
+        <section className="container-site py-20 lg:py-28">
           <SectionHeading
             align="center"
             eyebrow="Our sponsors"
@@ -221,7 +221,7 @@ export default async function HomePage() {
       )}
 
       {/* CTA */}
-      <section className="container-site pb-4">
+      <section className="container-site pb-4 pt-4">
         <div className="relative overflow-hidden rounded-3xl bg-brand-black px-8 py-14 text-white sm:px-14 sm:py-16">
           <div
             aria-hidden
@@ -230,19 +230,19 @@ export default async function HomePage() {
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <p className="eyebrow text-brand-gold">Join us</p>
-              <h2 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
                 Keen to play, coach or volunteer?
               </h2>
-              <p className="mt-3 text-white/70">
+              <p className="mt-4 text-white/80">
                 Send the club an email and we will point you to the right person.
               </p>
             </div>
             <a
               href="mailto:langlangcricketclub@gmail.com"
-              className="inline-flex w-fit items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
+              className="inline-flex w-fit max-w-full items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
-              <Mail className="h-4 w-4" aria-hidden />
-              langlangcricketclub@gmail.com
+              <Mail className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="break-all">langlangcricketclub@gmail.com</span>
             </a>
           </div>
         </div>

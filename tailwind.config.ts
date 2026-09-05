@@ -18,8 +18,13 @@ const config: Config = {
           "gold-dark": "#C99400",
           "gold-light": "#FFD966",
           "gold-pale": "#FFF4CC",
+          // Darkened gold for small text on light backgrounds (>= 4.5:1 on white and gold-pale).
+          "gold-deep": "#8A6500",
           cream: "#FAF7EF",
           stone: "#F3F1EA",
+          // Warm neutrals for body/muted copy so we never reach for Tailwind's default greys.
+          grey: "#5A5A62",
+          "grey-light": "#6E6E76",
         },
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -73,8 +78,15 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
+      },
+      // One easing/duration for every `transition` on the site.
+      transitionDuration: {
+        DEFAULT: "200ms",
+      },
+      transitionTimingFunction: {
+        DEFAULT: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
       boxShadow: {
         card: "0 1px 2px rgba(11,11,13,0.04), 0 8px 24px -12px rgba(11,11,13,0.18)",
