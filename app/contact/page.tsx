@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { asc } from 'drizzle-orm'
-import { Mail, MapPin, ShieldCheck } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Mail01Icon, MapPinIcon, ShieldCheckIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 import { db } from '@/db'
 import { committeeContacts } from '@/db/schema'
@@ -32,12 +33,12 @@ export default async function ContactPage() {
           href={`mailto:${CLUB_EMAIL}`}
           className="group rounded-2xl bg-brand-gold p-6 text-brand-black shadow-card transition hover:-translate-y-0.5 hover:shadow-card-hover"
         >
-          <Mail className="h-6 w-6" aria-hidden />
+          <HugeiconsIcon icon={Mail01Icon} className="h-6 w-6" aria-hidden />
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-black/75">Email</p>
           <p className="mt-1 break-all font-bold underline decoration-brand-black/0 decoration-2 underline-offset-4 transition group-hover:decoration-brand-black">{CLUB_EMAIL}</p>
         </a>
         <div className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5">
-          <MapPin className="h-6 w-6 text-brand-gold-deep" aria-hidden />
+          <HugeiconsIcon icon={MapPinIcon} className="h-6 w-6 text-brand-gold-deep" aria-hidden />
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-grey-light">Home ground</p>
           <p className="mt-1 font-bold text-brand-black">Caldermeade, Victoria</p>
         </div>
@@ -58,7 +59,7 @@ export default async function ContactPage() {
         <CommitteeCards contacts={contacts} className="mt-12" />
 
         <div className="mt-8 flex items-start gap-3 rounded-2xl bg-brand-gold-pale p-5 text-sm text-brand-charcoal ring-1 ring-brand-gold/30">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-gold-deep" aria-hidden />
+          <HugeiconsIcon icon={ShieldCheckIcon} className="mt-0.5 h-5 w-5 shrink-0 text-brand-gold-deep" aria-hidden />
           <p>
             Lang Lang Cricket Club follows Cricket Australia&apos;s Safeguarding Children and Young People
             Framework and a Member Protection Policy. Our policies and codes of conduct are available on

@@ -1,5 +1,6 @@
 import { asc } from 'drizzle-orm'
-import { CalendarDays, MapPin, ExternalLink, Trophy } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { CalendarDaysIcon, MapPinIcon, ExternalLinkIcon, TrophyIcon } from '@hugeicons/core-free-icons'
 import { db } from '@/db'
 import { fixtures } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
@@ -57,7 +58,7 @@ export default async function FixturesPage() {
           className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
         >
           Full ladder and draw on PlayHQ
-          <ExternalLink className="h-4 w-4" aria-hidden />
+          <HugeiconsIcon icon={ExternalLinkIcon} className="h-4 w-4" aria-hidden />
           <span className="sr-only">(opens in a new tab)</span>
         </a>
       </PageHeader>
@@ -90,12 +91,12 @@ export default async function FixturesPage() {
                     </p>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-grey">
                       <span className="inline-flex items-center gap-1.5">
-                        <CalendarDays className="h-4 w-4 text-brand-gold-deep" aria-hidden />
+                        <HugeiconsIcon icon={CalendarDaysIcon} className="h-4 w-4 text-brand-gold-deep" aria-hidden />
                         {formatDate(date)}
                       </span>
                       {f.venue && (
                         <span className="inline-flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-brand-gold-deep" aria-hidden />
+                          <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4 text-brand-gold-deep" aria-hidden />
                           {f.venue}
                         </span>
                       )}
@@ -131,14 +132,14 @@ export default async function FixturesPage() {
                     aria-hidden
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold-pale text-brand-gold-deep"
                   >
-                    <Trophy className="h-4 w-4" />
+                    <HugeiconsIcon icon={TrophyIcon} className="h-4 w-4" />
                   </span>
                 </div>
                 {f.resultSummary && (
                   <p className="mt-3 text-sm leading-relaxed text-brand-charcoal">{f.resultSummary}</p>
                 )}
                 <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-grey">
-                  <CalendarDays className="h-3.5 w-3.5 text-brand-gold-deep" aria-hidden />
+                  <HugeiconsIcon icon={CalendarDaysIcon} className="h-3.5 w-3.5 text-brand-gold-deep" aria-hidden />
                   {formatDate(new Date(f.matchDate))}
                 </p>
               </li>

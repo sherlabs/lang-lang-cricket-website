@@ -1,6 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Users, Trophy, ShieldCheck, Landmark, Mail } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  ArrowRight01Icon,
+  UserGroupIcon,
+  TrophyIcon,
+  ShieldCheckIcon,
+  BankIcon,
+  Mail01Icon,
+} from '@hugeicons/core-free-icons'
 import { asc } from 'drizzle-orm'
 import { db } from '@/db'
 import { sponsors, committeeContacts, galleryPhotos } from '@/db/schema'
@@ -12,22 +20,22 @@ export const dynamic = 'force-dynamic'
 
 const highlights = [
   {
-    icon: Users,
+    icon: UserGroupIcon,
     title: 'Juniors and seniors',
     body: 'Teams for kids picking up a bat for the first time through to experienced senior cricketers.',
   },
   {
-    icon: Trophy,
+    icon: TrophyIcon,
     title: 'Everyone gets a game',
     body: 'A friendly, welcoming club where beginners and seasoned players train and play side by side.',
   },
   {
-    icon: Landmark,
+    icon: BankIcon,
     title: 'A modern home ground',
     body: 'Our Caldermeade facility was developed with support from Cardinia Shire Council and Community Bank Lang Lang.',
   },
   {
-    icon: ShieldCheck,
+    icon: ShieldCheckIcon,
     title: 'Safe for young players',
     body: "We follow Cricket Australia's Safeguarding Children and Young People Framework and a Member Protection Policy.",
   },
@@ -74,7 +82,7 @@ export default async function HomePage() {
               href="mailto:langlangcricketclub@gmail.com"
               className="inline-flex items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
-              <Mail className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
               Get in touch
             </a>
             <Link
@@ -82,7 +90,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:border-brand-gold hover:text-brand-gold"
             >
               Meet the committee
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
         </div>
@@ -109,7 +117,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 rounded-md bg-brand-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-charcoal"
             >
               Our history
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
             <Link
               href="/documents"
@@ -127,7 +135,7 @@ export default async function HomePage() {
               className="group rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale hover:ring-brand-gold/40"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-black text-brand-gold transition group-hover:bg-brand-gold group-hover:text-brand-black">
-                <h.icon className="h-5 w-5" aria-hidden />
+                <HugeiconsIcon icon={h.icon} className="h-5 w-5" aria-hidden />
               </span>
               <h3 className="mt-4 font-bold tracking-tight text-brand-black">{h.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-brand-grey">{h.body}</p>
@@ -152,7 +160,7 @@ export default async function HomePage() {
                 className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-gold transition hover:text-brand-gold-light"
               >
                 View the full gallery
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
               </Link>
             </div>
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
@@ -191,7 +199,7 @@ export default async function HomePage() {
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
             >
               Contact page
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
           <CommitteeCards contacts={contacts} className="mt-12" />
@@ -214,7 +222,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
             >
               See all sponsors
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
         </section>
@@ -241,7 +249,7 @@ export default async function HomePage() {
               href="mailto:langlangcricketclub@gmail.com"
               className="inline-flex w-fit max-w-full items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
-              <Mail className="h-4 w-4 shrink-0" aria-hidden />
+              <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 shrink-0" aria-hidden />
               <span className="break-all">langlangcricketclub@gmail.com</span>
             </a>
           </div>

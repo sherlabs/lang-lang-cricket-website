@@ -1,4 +1,5 @@
-import { Mail, Phone } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Mail01Icon, CallIcon } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 export type Contact = {
@@ -51,7 +52,7 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
                     href={`tel:${c.phone.replace(/\s+/g, '')}`}
                     className="inline-flex min-h-9 items-center gap-2 rounded-md transition hover:text-brand-black"
                   >
-                    <Phone className="h-3.5 w-3.5 shrink-0 text-brand-gold-deep" aria-hidden />
+                    <HugeiconsIcon icon={CallIcon} className="h-3.5 w-3.5 shrink-0 text-brand-gold-deep" aria-hidden />
                     {c.phone}
                   </a>
                 </li>
@@ -62,7 +63,7 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
                     href={`mailto:${c.email}`}
                     className="inline-flex min-h-9 items-center gap-2 break-all rounded-md transition hover:text-brand-black"
                   >
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-brand-gold-deep" aria-hidden />
+                    <HugeiconsIcon icon={Mail01Icon} className="h-3.5 w-3.5 shrink-0 text-brand-gold-deep" aria-hidden />
                     {c.email}
                   </a>
                 </li>

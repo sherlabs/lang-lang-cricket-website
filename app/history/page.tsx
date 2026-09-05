@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 
 export const metadata = {
@@ -71,7 +72,7 @@ export default function HistoryPage() {
               className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
             >
               Contact the club
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
         </div>

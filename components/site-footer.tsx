@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, MapPin } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 
 const links = [
@@ -62,7 +63,7 @@ export function SiteFooter() {
           <p className="display mb-5 text-lg text-brand-gold">Find us</p>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-2.5 text-white/80">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
+              <HugeiconsIcon icon={MapPinIcon} className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
               Caldermeade, Victoria, Australia
             </li>
             <li>
@@ -70,7 +71,7 @@ export function SiteFooter() {
                 href="mailto:langlangcricketclub@gmail.com"
                 className="flex items-start gap-2.5 text-white/80 transition hover:text-brand-gold"
               >
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
+                <HugeiconsIcon icon={Mail01Icon} className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
                 <span className="break-all">langlangcricketclub@gmail.com</span>
               </a>
             </li>

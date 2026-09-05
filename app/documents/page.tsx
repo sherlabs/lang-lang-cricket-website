@@ -1,5 +1,14 @@
 import { asc } from 'drizzle-orm'
-import { Download, FileText, ShieldCheck, ScrollText, ClipboardList, BookOpen, Scale } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  Download01Icon,
+  FileTextIcon,
+  ShieldCheckIcon,
+  ScrollIcon,
+  ClipboardListIcon,
+  BookOpen01Icon,
+  JusticeScale01Icon,
+} from '@hugeicons/core-free-icons'
 import { db } from '@/db'
 import { documents } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
@@ -12,25 +21,25 @@ export const metadata = {
 
 const CATEGORY_ORDER = ['Codes of Conduct', 'Policies', 'Child Safety', 'Game Day', 'CCCA Directory']
 
-const CATEGORY_META: Record<string, { icon: typeof FileText; blurb: string }> = {
+const CATEGORY_META: Record<string, { icon: typeof FileTextIcon; blurb: string }> = {
   'Codes of Conduct': {
-    icon: Scale,
+    icon: JusticeScale01Icon,
     blurb: 'Expected behaviour for players, parents and juniors across the Cardinia Casey Cricket Association.',
   },
   Policies: {
-    icon: ScrollText,
+    icon: ScrollIcon,
     blurb: 'Cricket Victoria and CCCA policies covering weather, social media, screening and complaints.',
   },
   'Child Safety': {
-    icon: ShieldCheck,
+    icon: ShieldCheckIcon,
     blurb: 'Safeguarding children and young people is a core commitment of the club.',
   },
   'Game Day': {
-    icon: ClipboardList,
+    icon: ClipboardListIcon,
     blurb: 'Practical checklists for training and match days.',
   },
   'CCCA Directory': {
-    icon: BookOpen,
+    icon: BookOpen01Icon,
     blurb: 'Association contacts and club listings for the current season.',
   },
 }
@@ -77,13 +86,13 @@ export default async function DocumentsPage() {
           </p>
         )}
         {categories.map(({ cat, items }) => {
-          const meta = CATEGORY_META[cat] ?? { icon: FileText, blurb: '' }
+          const meta = CATEGORY_META[cat] ?? { icon: FileTextIcon, blurb: '' }
           const Icon = meta.icon
           return (
             <section key={cat} id={slug(cat)} className="scroll-mt-28 grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-12">
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-black text-brand-gold">
-                  <Icon className="h-5 w-5" aria-hidden />
+                  <HugeiconsIcon icon={Icon} className="h-5 w-5" aria-hidden />
                 </span>
                 <h2 className="display mt-4 text-3xl text-brand-black sm:text-4xl">{cat}</h2>
                 {meta.blurb && <p className="mt-2 text-sm leading-relaxed text-brand-grey">{meta.blurb}</p>}
@@ -99,7 +108,7 @@ export default async function DocumentsPage() {
                       aria-label={`${d.title} (PDF, opens in a new tab)`}
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-stone text-brand-black/70 transition group-hover:bg-white">
-                        <FileText className="h-5 w-5" aria-hidden />
+                        <HugeiconsIcon icon={FileTextIcon} className="h-5 w-5" aria-hidden />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium text-brand-black">{d.title}</span>
@@ -109,7 +118,7 @@ export default async function DocumentsPage() {
                         aria-hidden
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-grey-light transition group-hover:bg-brand-black group-hover:text-brand-gold"
                       >
-                        <Download className="h-4 w-4" />
+                        <HugeiconsIcon icon={Download01Icon} className="h-4 w-4" />
                       </span>
                     </a>
                   </li>

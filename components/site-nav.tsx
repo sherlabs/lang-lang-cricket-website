@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Mail } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Menu01Icon, Cancel01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 const links = [
@@ -75,7 +76,7 @@ export function SiteNav() {
             href="mailto:langlangcricketclub@gmail.com"
             className="ml-2 inline-flex items-center gap-2 rounded-md bg-brand-gold px-3.5 py-2 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
           >
-            <Mail className="h-4 w-4" aria-hidden />
+            <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
             Get in touch
           </a>
         </nav>
@@ -88,7 +89,11 @@ export function SiteNav() {
           onClick={() => setOpen((o) => !o)}
           className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md text-white transition hover:bg-white/10 md:hidden"
         >
-          {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+          {open ? (
+            <HugeiconsIcon icon={Cancel01Icon} className="h-5 w-5" aria-hidden />
+          ) : (
+            <HugeiconsIcon icon={Menu01Icon} className="h-5 w-5" aria-hidden />
+          )}
         </button>
       </div>
 
@@ -121,7 +126,7 @@ export function SiteNav() {
             href="mailto:langlangcricketclub@gmail.com"
             className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-brand-gold px-4 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
           >
-            <Mail className="h-4 w-4" aria-hidden />
+            <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
             Get in touch
           </a>
         </nav>

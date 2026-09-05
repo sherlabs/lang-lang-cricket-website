@@ -1,4 +1,5 @@
-import { Mail } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Mail01Icon } from '@hugeicons/core-free-icons'
 import { db } from '@/db'
 import { sponsors } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
@@ -77,7 +78,7 @@ export default async function SponsorsPage() {
               href="mailto:langlangcricketclub@gmail.com?subject=Sponsorship%20enquiry"
               className="inline-flex w-fit items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
-              <Mail className="h-4 w-4" aria-hidden />
+              <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
               Enquire about sponsorship
             </a>
           </div>

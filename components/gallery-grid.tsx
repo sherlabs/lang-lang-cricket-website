@@ -2,7 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ChevronLeftIcon, ChevronRightIcon, Cancel01Icon, Maximize02Icon } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 export type GalleryPhoto = {
@@ -75,7 +76,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
               />
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-black/70 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
               <span className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-black opacity-0 shadow transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
-                <Maximize2 className="h-4 w-4" aria-hidden />
+                <HugeiconsIcon icon={Maximize02Icon} className="h-4 w-4" aria-hidden />
               </span>
               {p.caption && (
                 <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 p-3 text-left text-sm font-medium text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
@@ -101,7 +102,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
             aria-label="Close photo viewer"
             className="absolute right-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
           >
-            <X className="h-5 w-5" aria-hidden />
+            <HugeiconsIcon icon={Cancel01Icon} className="h-5 w-5" aria-hidden />
           </button>
 
           {photos.length > 1 && (
@@ -115,7 +116,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
                 aria-label="Previous photo"
                 className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black sm:left-6"
               >
-                <ChevronLeft className="h-6 w-6" aria-hidden />
+                <HugeiconsIcon icon={ChevronLeftIcon} className="h-6 w-6" aria-hidden />
               </button>
               <button
                 type="button"
@@ -126,7 +127,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
                 aria-label="Next photo"
                 className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-gold hover:text-brand-black focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black sm:right-6"
               >
-                <ChevronRight className="h-6 w-6" aria-hidden />
+                <HugeiconsIcon icon={ChevronRightIcon} className="h-6 w-6" aria-hidden />
               </button>
             </>
           )}
