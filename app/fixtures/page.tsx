@@ -52,12 +52,12 @@ export default async function FixturesPage() {
         intro="Upcoming games and recent results for our junior and senior sides."
       >
         <a
-          href="https://www.playhq.com/cricket-australia"
+          href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
         >
-          Full ladder and draw on PlayHQ
+          Full fixtures, ladders, results &amp; scorecards on PlayHQ
           <HugeiconsIcon icon={ExternalLinkIcon} className="h-4 w-4" aria-hidden />
           <span className="sr-only">(opens in a new tab)</span>
         </a>
@@ -107,7 +107,15 @@ export default async function FixturesPage() {
             })}
             {upcoming.length === 0 && (
               <li className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-                No fixtures entered yet. Check PlayHQ for the latest draw.
+                No fixtures entered yet.{' '}
+                <a
+                  href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black"
+                >
+                  Check PlayHQ for the latest draw.
+                </a>
               </li>
             )}
           </ul>
@@ -146,7 +154,15 @@ export default async function FixturesPage() {
             ))}
             {results.length === 0 && (
               <li className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-                No results entered yet.
+                No results entered yet.{' '}
+                <a
+                  href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black"
+                >
+                  See past results and scorecards on PlayHQ.
+                </a>
               </li>
             )}
           </ul>
