@@ -7,17 +7,17 @@ import { PageHeader } from '@/components/page-header'
 import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
 import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
 import type { Scorecard } from '@/lib/playhq/types'
-import { formatIsoMelbourne, PLAYHQ_CLUB_URL } from '@/lib/playhq/format'
+import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 900
 
-type Props = { params: { gameId: string } }
+type Props = { params: { gameId: string }; searchParams: { season?: string } }
 
 const isMissing = (e: unknown) => e instanceof PlayHQError && (e.status === 400 || e.status === 404)
 
-async function load(gameId: string): Promise<Scorecard | null> {
+async function load(gameId: string, seasonHint?: string): Promise<Scorecard | null> {
   try {
-    return await getGameSummaryAuto(gameId)
+    return await getGameSummaryAuto(gameId, seasonHint)
   } catch (e) {
     if (isMissing(e)) return null
     throw e
@@ -61,15 +61,16 @@ function buildResult(sc: Scorecard): string | null {
   return `${c} v ${p}`
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const sc = await load(params.gameId).catch(() => null)
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const sc = await load(params.gameId, searchParams.season).catch(() => null)
   if (!sc) return { title: 'Scorecard | Lang Lang Cricket Club' }
   const { club, opp } = sides(sc)
   return { title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club` }
 }
 
-export default async function GamePage({ params }: Props) {
-  const sc = await load(params.gameId)
+export default async function GamePage({ params, searchParams }: Props) {
+  const { season: seasonHint } = searchParams
+  const sc = await load(params.gameId, seasonHint)
   if (!sc) notFound()
 
   const { club, opp } = sides(sc)
@@ -99,7 +100,7 @@ export default async function GamePage({ params }: Props) {
         {result && <p className="mt-6 max-w-2xl text-xl font-bold text-white">{result}</p>}
         {sc.toss && <p className="mt-2 text-sm text-white/75">{sc.toss}</p>}
         <Link
-          href="/fixtures"
+          href={seasonHref('/fixtures', seasonHint ?? null)}
           className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />

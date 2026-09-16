@@ -7,7 +7,7 @@ import { SeasonPicker } from '@/components/playhq/season-picker'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { resolveSeason, getClubGames, getLadder, isFinished, mapLimit, resultSentence, sortResults, sortUpcoming } from '@/lib/playhq'
 import type { ClubTeam, Game, Ladder } from '@/lib/playhq/types'
-import { formatLocalDate } from '@/lib/playhq/format'
+import { formatLocalDate, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 1800
 
@@ -51,7 +51,7 @@ function TeamCard({ team, ladder, games }: { team: ClubTeam; ladder: Ladder | nu
   return (
     <li>
       <Link
-        href={`/teams/${team.id}`}
+        href={seasonHref(`/teams/${team.id}`, team.seasonName)}
         className="group flex h-full flex-col rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover hover:ring-brand-gold/40"
       >
         <p className="eyebrow">{team.gradeName ?? 'Grade not yet assigned'}</p>

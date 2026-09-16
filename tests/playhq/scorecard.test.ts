@@ -111,3 +111,16 @@ describe('dismissalText', () => {
     expect(dismissalText(undefined, 'OUT', name)).toBe('out')
   })
 })
+
+describe('junior scorecard never exposes a surname', () => {
+  it('two-day fixture mapped as junior contains no raw lastName anywhere in innings', () => {
+    const raw = twoDay.data as RawGameSummary
+    const j = mapScorecard(raw, ORG, true)
+    const text = JSON.stringify(j.innings).toLowerCase()
+    const surnames = [...new Set(raw.appearances.map((a) => a.lastName))].filter((l) => l.length > 1)
+    expect(surnames.length).toBeGreaterThan(10)
+    for (const l of surnames) expect(text, `surname ${l} leaked`).not.toContain(l.toLowerCase())
+    // and a senior mapping does contain them, so the check is meaningful
+    expect(JSON.stringify(sc.innings).toLowerCase()).toContain(surnames[0].toLowerCase())
+  })
+})

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CalendarDaysIcon, Clock01Icon, MapPinIcon, TrophyIcon, ExternalLinkIcon } from '@hugeicons/core-free-icons'
 import type { Game } from '@/lib/playhq/types'
-import { formatLocalDate, formatLocalTime, dateParts } from '@/lib/playhq/format'
+import { formatLocalDate, formatLocalTime, dateParts, seasonHref } from '@/lib/playhq/format'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -10,6 +10,8 @@ type Props = {
   variant: 'upcoming' | 'result'
   resultText?: string
   showTeam?: boolean
+  /** Season group name; carried to the scorecard so it can resolve the club team (and junior flag) cheaply. */
+  season?: string | null
 }
 
 function HomeAway({ isHome }: { isHome: boolean }) {
@@ -27,7 +29,7 @@ function Meta({ game }: { game: Game }) {
   return <p className="mt-1 text-xs text-brand-grey-light">{bits.join(' · ')}</p>
 }
 
-export function GameCard({ game, variant, resultText, showTeam = true }: Props) {
+export function GameCard({ game, variant, resultText, showTeam = true, season }: Props) {
   const venue = [game.venueName, game.venueSuburb].filter(Boolean).join(', ')
   const time = formatLocalTime(game.localTime)
 
@@ -90,7 +92,7 @@ export function GameCard({ game, variant, resultText, showTeam = true }: Props) 
 
   return (
     <Link
-      href={`/fixtures/${game.id}`}
+      href={seasonHref(`/fixtures/${game.id}`, season ?? null)}
       className="block rounded-2xl border-l-4 border-brand-gold bg-white p-5 shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover hover:ring-brand-gold/40"
     >
       <div className="flex items-start justify-between gap-4">

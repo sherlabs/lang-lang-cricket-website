@@ -8,14 +8,15 @@ import { SectionHeading } from '@/components/section-heading'
 import { GameCard } from '@/components/playhq/game-card'
 import { LadderTable } from '@/components/playhq/ladder-table'
 import { PlayerStatsTables } from '@/components/playhq/player-stats-tables'
+import { seasonHref } from '@/lib/playhq/format'
 import { findClubTeam, getClubTeams, getTeamGames, getLadder, getTeamPlayerStats, isFinished, resultSentence, sortResults, sortUpcoming } from '@/lib/playhq'
 
 export const revalidate = 1800
 
-type Props = { params: { teamId: string } }
+type Props = { params: { teamId: string }; searchParams: { season?: string } }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const found = await findClubTeam(params.teamId).catch(() => null)
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const found = await findClubTeam(params.teamId, searchParams.season).catch(() => null)
   const name = found?.team.name ?? 'Team'
   return { title: `${name} | Lang Lang Cricket Club` }
 }
@@ -36,8 +37,9 @@ function Note({ children }: { children: React.ReactNode }) {
   return <p className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">{children}</p>
 }
 
-export default async function TeamPage({ params }: Props) {
-  const found = await findClubTeam(params.teamId)
+export default async function TeamPage({ params, searchParams }: Props) {
+  const { season: seasonHint } = searchParams
+  const found = await findClubTeam(params.teamId, seasonHint)
   if (!found) notFound()
   const { team, season } = found
 
@@ -57,7 +59,7 @@ export default async function TeamPage({ params }: Props) {
     <main>
       <PageHeader eyebrow={`${team.seasonName} · ${team.gradeName ?? team.competitionName}`} title={team.name}>
         <Link
-          href="/teams"
+          href={seasonHref('/teams', team.seasonName)}
           className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
@@ -100,7 +102,7 @@ export default async function TeamPage({ params }: Props) {
               <ul className="mt-6 space-y-4">
                 {results.map((g) => (
                   <li key={g.id}>
-                    <GameCard game={g} variant="result" resultText={resultSentence(g)} showTeam={false} />
+                    <GameCard game={g} variant="result" resultText={resultSentence(g)} showTeam={false} season={team.seasonName} />
                   </li>
                 ))}
                 {results.length === 0 && <li><Note>No results yet.</Note></li>}

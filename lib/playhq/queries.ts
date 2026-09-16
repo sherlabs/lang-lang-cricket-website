@@ -66,9 +66,16 @@ export async function getTeamPlayerStats(team: ClubTeam, games: Game[]): Promise
   return { stats: aggregatePlayers(ok, team.id, team.isJunior), gamesCounted: ok.length }
 }
 
-export async function findClubTeam(teamId: string) {
+/**
+ * Locate a club team across season groups. `seasonHint` (a season group name,
+ * usually from `?season=`) is tried first so the common path is one lookup;
+ * otherwise every group is scanned.
+ */
+export async function findClubTeam(teamId: string, seasonHint?: string | null) {
   const groups = await getSeasonGroups()
-  for (const season of groups) {
+  const hinted = seasonHint ? groups.find((g) => g.name === seasonHint) : undefined
+  const ordered = hinted ? [hinted, ...groups.filter((g) => g !== hinted)] : groups
+  for (const season of ordered) {
     const team = (await getClubTeams(season)).find((t) => t.id === teamId)
     if (team) return { team, season }
   }
@@ -80,9 +87,17 @@ export function isJuniorGrade(gradeName: string) {
 }
 export { isFinished }
 
-export async function getGameSummaryAuto(gameId: string): Promise<Scorecard | null> {
+/**
+ * Scorecard for a game id with the junior flag derived from the club team's
+ * season (the spec's source of truth), OR'd with the grade-name heuristic.
+ * Fails closed: if the club team can't be resolved, names are abbreviated.
+ */
+export async function getGameSummaryAuto(gameId: string, seasonHint?: string | null): Promise<Scorecard | null> {
   const res = await phqFetch<{ data: RawGameSummary }>(`/v2/games/${gameId}/summary`, { revalidate: TTL.gameLive, tags: ['playhq-game'] })
   const raw = res.data
-  if (!raw.teams.some((t) => t.organisation?.id === PLAYHQ_ORG_ID)) return null
-  return mapScorecard(raw, PLAYHQ_ORG_ID, isJuniorGrade(raw.grade?.name ?? ''))
+  const clubSide = raw.teams.find((t) => t.organisation?.id === PLAYHQ_ORG_ID)
+  if (!clubSide) return null
+  const found = await findClubTeam(clubSide.id, seasonHint)
+  const isJunior = found ? found.team.isJunior || isJuniorGrade(raw.grade?.name ?? '') : true
+  return mapScorecard(raw, PLAYHQ_ORG_ID, isJunior)
 }

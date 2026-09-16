@@ -92,7 +92,7 @@ export default async function FixturesPage({ searchParams }: Props) {
             <ul className="mt-8 space-y-4">
               {results.map((g) => (
                 <li key={g.id}>
-                  <GameCard game={g} variant="result" resultText={resultSentence(g)} showTeam />
+                  <GameCard game={g} variant="result" resultText={resultSentence(g)} showTeam season={season.name} />
                 </li>
               ))}
               {results.length === 0 && (
