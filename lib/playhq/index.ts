@@ -16,5 +16,5 @@ export {
   isFinished,
 } from './queries'
 export { resultSentence, sortUpcoming, sortResults } from './games'
-export { clubWickets } from './scorecard'
+export { clubWickets, isInningsPlayed } from './scorecard'
 export { displayName } from './names'

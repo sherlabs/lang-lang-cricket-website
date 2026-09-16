@@ -51,3 +51,16 @@ describe('aggregatePlayers', () => {
     expect(s.reduce((n, p) => n + p.catches, 0)).toBeGreaterThan(0)
   })
 })
+
+describe('placeholder innings', () => {
+  it('ignores unplayed 2nd innings (0 overs, openers not out 0) when counting innings / not-outs', () => {
+    expect(sc.innings.length).toBe(4)
+    const stats = aggregatePlayers([sc], LL_B)
+    for (const p of stats) {
+      expect(p.batting.innings).toBeLessThanOrEqual(1)
+      expect(p.batting.notOuts).toBeLessThanOrEqual(1)
+    }
+    const notOutZero = stats.filter((p) => p.batting.innings === 1 && p.batting.notOuts === 1 && p.batting.balls === 0)
+    expect(notOutZero).toEqual([])
+  })
+})

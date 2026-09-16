@@ -5,8 +5,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, CalendarDaysIcon, ExternalLinkIcon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
-import { getGameSummaryAuto, PlayHQError } from '@/lib/playhq'
-import type { Innings, Scorecard } from '@/lib/playhq/types'
+import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
+import type { Scorecard } from '@/lib/playhq/types'
 import { formatIsoMelbourne, PLAYHQ_CLUB_URL } from '@/lib/playhq/format'
 
 export const revalidate = 900
@@ -29,10 +29,6 @@ function sides(sc: Scorecard) {
   const opp = sc.teams.find((t) => t.id !== club.id) ?? club
   return { club, opp }
 }
-
-/** PlayHQ returns placeholder 2nd innings for two-day games that never went there; hide those. */
-const played = (i: Innings) =>
-  i.total.overs > 0 || i.total.runs > 0 || i.total.wickets > 0 || i.batting.some((b) => b.balls > 0 || b.runs > 0)
 
 /** `${runs}` per innings joined with ` & ` — e.g. `4/237 dec & 8/120`. */
 function totalsFor(sc: Scorecard, teamId: string) {

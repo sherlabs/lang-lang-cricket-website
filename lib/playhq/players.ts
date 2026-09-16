@@ -1,5 +1,6 @@
 import type { PlayerSeasonStats, Scorecard } from './types'
 import { displayName } from './names'
+import { isInningsPlayed } from './scorecard'
 
 export function oversToBalls(overs: number): number {
   const whole = Math.floor(overs)
@@ -37,6 +38,7 @@ export function aggregatePlayers(scorecards: Scorecard[], teamId: string, isJuni
       byAppearance.set(id, e); byName.set(e.name, e)
     }
     for (const inn of sc.innings) {
+      if (!isInningsPlayed(inn)) continue
       if (inn.battingTeamId === teamId) {
         for (const b of inn.batting) {
           const e = byAppearance.get(b.appearanceId); if (!e) continue

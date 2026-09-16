@@ -93,3 +93,11 @@ export function clubWickets(sc: Scorecard, clubTeamId: string) {
     clubDeclared: club?.total.declared ?? false, opponentDeclared: opp?.total.declared ?? false,
   }
 }
+
+/**
+ * PlayHQ returns placeholder 2nd innings for two-day games that never went there
+ * (0 overs, 0 runs, two openers "not out 0"). Treat those as not played.
+ */
+export function isInningsPlayed(i: Innings): boolean {
+  return i.total.overs > 0 || i.total.runs > 0 || i.total.wickets > 0 || i.batting.some((b) => b.balls > 0 || b.runs > 0)
+}
