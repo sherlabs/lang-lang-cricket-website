@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
+    "gallery:add": "tsx --env-file=.env.local scripts/add-gallery-photos.ts",
+    "sponsors:reset": "tsx --env-file=.env.local scripts/reset-sponsors.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {

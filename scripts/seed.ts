@@ -1,5 +1,6 @@
 import { db } from '../db'
 import { documents, galleryPhotos, sponsors, committeeContacts } from '../db/schema'
+import { SPONSORS } from './sponsors-data'
 
 async function main() {
   await db.insert(documents).values([
@@ -21,23 +22,16 @@ async function main() {
     { category: 'CCCA Directory', title: 'CCCA Directory 25/26', url: '/assets/documents/ccca-directory-25-26.pdf' },
   ])
 
-  const galleryFiles = Array.from({ length: 16 }, (_, i) => `photo-${String(i + 1).padStart(2, '0')}.jpg`)
+  // photo-17..76 (WebP, newest) come first; photo-01..16 are the original JPGs.
+  const galleryFiles = [
+    ...Array.from({ length: 60 }, (_, i) => `photo-${i + 17}.webp`),
+    ...Array.from({ length: 16 }, (_, i) => `photo-${String(i + 1).padStart(2, '0')}.jpg`),
+  ]
   await db.insert(galleryPhotos).values(
     galleryFiles.map((f, i) => ({ url: `/assets/gallery/${f}`, caption: '', sortOrder: i }))
   )
 
-  await db.insert(sponsors).values([
-    { tier: 'Platinum', name: 'Bendigo Bank – Community Bank Lang Lang', logoUrl: '/assets/sponsors/gold-01.png', linkUrl: 'https://www.bendigobank.com.au' },
-    { tier: 'Gold', name: 'Si.Co Contracting', logoUrl: '/assets/sponsors/gold-02.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Shoreline Pest Control', logoUrl: '/assets/sponsors/gold-03.png', linkUrl: '' },
-    { tier: 'Gold', name: 'Sunscape Solar', logoUrl: '/assets/sponsors/gold-04.png', linkUrl: 'https://www.sunscapesolar.com.au' },
-    { tier: 'Gold', name: 'Burke Bond Partners', logoUrl: '/assets/sponsors/gold-05.png', linkUrl: 'https://www.burkebond.com.au' },
-    { tier: 'Gold', name: 'David Jansz Security', logoUrl: '/assets/sponsors/gold-06.png', linkUrl: '' },
-    { tier: 'Silver', name: 'Dan Quinn Plumbing', logoUrl: '/assets/sponsors/silver-01.jpg', linkUrl: '' },
-    { tier: 'Silver', name: 'Big Dogg', logoUrl: '/assets/sponsors/silver-02.png', linkUrl: '' },
-    { tier: 'Bronze', name: 'Lang Lang Fish and Chips', logoUrl: '/assets/sponsors/silver-03.jpg', linkUrl: '' },
-    { tier: 'Bronze', name: 'Lang Lang Sands', logoUrl: '/assets/sponsors/silver-04.jpg', linkUrl: '' },
-  ])
+  await db.insert(sponsors).values(SPONSORS)
 
   await db.insert(committeeContacts).values([
     { role: 'President', name: 'Eddie Duiker', phone: '0423 465 992', email: 'langlangcricketclub@gmail.com', sortOrder: 0 },

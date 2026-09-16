@@ -1,38 +1,49 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { del } from '@vercel/blob'
+import { asc, eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { galleryPhotos } from '@/db/schema'
-import { makeCrudActions } from '@/lib/crud'
-import { uploadFile } from '@/lib/blob'
 
-const actions = makeCrudActions<typeof galleryPhotos.$inferSelect>(db as never, galleryPhotos, () =>
+function revalidate() {
   revalidatePath('/gallery')
-)
+  revalidatePath('/')
+  revalidatePath('/admin/gallery')
+}
 
-export const listGalleryPhotos = actions.list
-export const removeGalleryPhoto = actions.remove
-export const updateGalleryPhoto = actions.update
+export async function listGalleryPhotos() {
+  return db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder))
+}
 
-export async function createGalleryPhoto(formData: FormData) {
-  const file = formData.get('file') as File
-  const url = await uploadFile(file, 'gallery')
-  await actions.create({
-    url,
-    caption: String(formData.get('caption')),
-    sortOrder: Number(formData.get('sortOrder')),
-  } as never)
+/** Register already-uploaded blob URLs. New photos go to the front so they show on the homepage. */
+export async function addGalleryPhotos(urls: string[], caption = '') {
+  const clean = urls.filter((u) => typeof u === 'string' && u.includes('.blob.vercel-storage.com'))
+  if (clean.length === 0) return
+  await db.update(galleryPhotos).set({ sortOrder: sql`${galleryPhotos.sortOrder} + ${clean.length}` })
+  await db.insert(galleryPhotos).values(clean.map((url, i) => ({ url, caption, sortOrder: i })))
+  revalidate()
 }
 
 export async function editGalleryPhoto(formData: FormData) {
   const id = Number(formData.get('id'))
-  const data: Record<string, unknown> = {
-    caption: String(formData.get('caption')),
-    sortOrder: Number(formData.get('sortOrder')),
+  await db
+    .update(galleryPhotos)
+    .set({
+      caption: String(formData.get('caption') ?? ''),
+      sortOrder: Number(formData.get('sortOrder') ?? 0),
+    })
+    .where(eq(galleryPhotos.id, id))
+  revalidate()
+}
+
+export async function removeGalleryPhoto(id: number) {
+  const [row] = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id))
+  if (!row) return
+  await db.delete(galleryPhotos).where(eq(galleryPhotos.id, id))
+  // Photos uploaded through admin live in Vercel Blob; bundled /assets ones are static files.
+  if (row.url.includes('.blob.vercel-storage.com')) {
+    await del(row.url).catch(() => {})
   }
-  const file = formData.get('file') as File | null
-  if (file && file.size > 0) {
-    data.url = await uploadFile(file, 'gallery')
-  }
-  await updateGalleryPhoto(id, data as never)
+  revalidate()
 }

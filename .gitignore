@@ -37,3 +37,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw photo drops (processed into public/assets/gallery)
+new-images/
+.env*
+
+# raw sponsor logo drops (processed into public/assets/sponsors)
+logos/

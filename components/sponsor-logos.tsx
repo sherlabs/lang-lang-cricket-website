@@ -9,7 +9,8 @@ export type Sponsor = {
   linkUrl: string
 }
 
-export const TIER_ORDER = ['Platinum', 'Gold', 'Silver', 'Bronze'] as const
+export const TIER_ORDER = ['Platinum', 'Gold', 'Silver', 'Bronze', 'Player'] as const
+export const TIERS: readonly string[] = TIER_ORDER
 
 export const TIER_STYLES: Record<
   string,
@@ -43,6 +44,32 @@ export const TIER_STYLES: Record<
     badge: 'bg-brand-gold-pale text-brand-gold-deep',
     blurb: 'Local businesses in our corner.',
   },
+  Player: {
+    grid: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6',
+    logo: 'h-10 sm:h-12',
+    card: 'p-4 rounded-lg',
+    badge: 'bg-brand-ink text-white',
+    blurb: 'Getting individual players onto the park.',
+  },
+}
+
+/** Logo image, or the sponsor name as text when no logo has been uploaded yet. */
+function SponsorMark({ sponsor, className }: { sponsor: Sponsor; className: string }) {
+  if (!sponsor.logoUrl) {
+    return (
+      <span className={cn('flex items-center text-center text-sm font-semibold text-brand-black', className)}>
+        {sponsor.name}
+      </span>
+    )
+  }
+  return (
+    <img
+      src={sponsor.logoUrl}
+      alt={`${sponsor.name} logo`}
+      loading="lazy"
+      className={cn('w-auto max-w-full object-contain', className)}
+    />
+  )
 }
 
 export function groupByTier(rows: Sponsor[]) {
@@ -53,14 +80,7 @@ export function groupByTier(rows: Sponsor[]) {
 
 export function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: string }) {
   const style = TIER_STYLES[tier] ?? TIER_STYLES.Bronze
-  const img = (
-    <img
-      src={sponsor.logoUrl}
-      alt={`${sponsor.name} logo`}
-      loading="lazy"
-      className={cn('w-auto max-w-full object-contain', style.logo)}
-    />
-  )
+  const img = <SponsorMark sponsor={sponsor} className={style.logo} />
   const base = cn(
     'flex items-center justify-center bg-white shadow-card ring-1 ring-brand-black/5 transition',
     style.card
@@ -88,17 +108,24 @@ export function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: string 
 
 /** Compact, single-row logo strip used on the home page. */
 export function SponsorStrip({ sponsors, className }: { sponsors: Sponsor[]; className?: string }) {
-  const ordered = groupByTier(sponsors).flatMap((g) => g.items)
+  // A business can sponsor at more than one tier; show its logo once, at its highest tier.
+  const seen = new Set<string>()
+  const ordered = groupByTier(sponsors)
+    .flatMap((g) => g.items)
+    .filter((s) => {
+      const key = s.name.trim().toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   return (
     <div className={cn('flex flex-wrap items-center justify-center gap-x-10 gap-y-6', className)}>
       {ordered.map((s) => {
         const img = (
-          <img
-            src={s.logoUrl}
-            alt={`${s.name} logo`}
-            loading="lazy"
+          <SponsorMark
+            sponsor={s}
             className={cn(
-              'w-auto max-w-[160px] object-contain opacity-80 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0',
+              'max-w-[160px] opacity-80 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0',
               s.tier === 'Platinum' ? 'h-16 sm:h-20' : s.tier === 'Gold' ? 'h-12 sm:h-14' : 'h-9 sm:h-10'
             )}
           />
