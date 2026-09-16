@@ -52,6 +52,17 @@ describe('aggregatePlayers', () => {
   })
 })
 
+describe('coaches', () => {
+  it('a coach appearance never becomes a player row', () => {
+    const raw = twoDay.data as RawGameSummary
+    const coach = raw.appearances.find((a) => a.roleType === 'Coach')!
+    const stats = aggregatePlayers([mapScorecard(raw, ORG, false)], coach.teamId)
+    expect(stats.find((p) => p.key === `${coach.firstName}|${coach.lastName}`.toLowerCase())).toBeUndefined()
+    const playerKeys = new Set(raw.appearances.filter((a) => a.roleType === 'Player').map((a) => `${a.firstName}|${a.lastName}`.toLowerCase()))
+    for (const p of stats) expect(playerKeys.has(p.key), `${p.key} is not a Player`).toBe(true)
+  })
+})
+
 describe('placeholder innings', () => {
   it('ignores unplayed 2nd innings (0 overs, openers not out 0) when counting innings / not-outs', () => {
     expect(sc.innings.length).toBe(4)

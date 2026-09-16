@@ -30,7 +30,8 @@ const ordinal = (n: number) => (n === 1 ? '1st' : n === 2 ? '2nd' : `${n}th`)
 
 export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: boolean): Scorecard {
   const players: Scorecard['players'] = {}
-  for (const a of raw.appearances) if (a.visible !== false) players[a.id] = { firstName: a.firstName, lastName: a.lastName, teamId: a.teamId }
+  // Fail closed: only visible Players. Coaches/officials are listed as appearances too.
+  for (const a of raw.appearances) if (a.roleType === 'Player' && a.visible === true) players[a.id] = { firstName: a.firstName, lastName: a.lastName, teamId: a.teamId }
   const name = (id: string) => (players[id] ? displayName(players[id], isJunior) : 'Unknown')
   const teamName = (id: string) => raw.teams.find((t) => t.id === id)?.name ?? 'Unknown'
 

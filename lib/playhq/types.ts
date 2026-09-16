@@ -55,7 +55,7 @@ export type Scorecard = {
   teams: { id: string; name: string; isHome: boolean; outcome: string | null; isClub: boolean }[]
   toss: string | null                                  // "Lang Lang B Grade won the toss and elected to bowl"
   innings: Innings[]
-  players: Record<string, { firstName: string; lastName: string; teamId: string }>   // appearanceId → player, visible only
+  players: Record<string, { firstName: string; lastName: string; teamId: string }>   // appearanceId → player; visible Players only (no coaches)
 }
 export type PlayerSeasonStats = {
   key: string; name: string; games: number

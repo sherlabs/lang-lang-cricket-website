@@ -68,9 +68,17 @@ describe('mapScorecard (two-day)', () => {
     const hidden = { ...raw, appearances: raw.appearances.map((a, i) => (i === 0 ? { ...a, visible: false } : a)) }
     const s = mapScorecard(hidden, ORG, false)
     expect(s.players[raw.appearances[0].id]).toBeUndefined()
-    // fixture has one duplicate appearance id (e5000322-...), so unique ids < appearances.length
-    const uniqueIds = new Set(raw.appearances.map((a) => a.id)).size
-    expect(Object.keys(s.players).length).toBe(uniqueIds - 1)
+    const uniquePlayerIds = new Set(raw.appearances.filter((a) => a.roleType === 'Player').map((a) => a.id)).size
+    expect(raw.appearances[0].roleType).toBe('Player')
+    expect(Object.keys(s.players).length).toBe(uniquePlayerIds - 1)
+  })
+  it('players map excludes coaches and appearances not explicitly visible', () => {
+    const raw = twoDay.data as RawGameSummary
+    const coaches = raw.appearances.filter((a) => a.roleType !== 'Player')
+    expect(coaches.length).toBeGreaterThan(0)
+    for (const c of coaches) expect(sc.players[c.id]).toBeUndefined()
+    const unset = { ...raw, appearances: raw.appearances.map((a, i) => (i === 0 ? { ...a, visible: undefined as unknown as boolean } : a)) }
+    expect(mapScorecard(unset, ORG, false).players[raw.appearances[0].id]).toBeUndefined()
   })
   it('junior flag abbreviates names', () => {
     const j = mapScorecard(twoDay.data as RawGameSummary, ORG, true)
