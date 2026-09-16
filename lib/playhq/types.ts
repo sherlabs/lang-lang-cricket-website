@@ -18,7 +18,7 @@ export type RawPeriod = { id: string; name: string; sequenceNo: number; teams: R
 export type RawGameSummary = {
   id: string; status: string; type: string
   grade: { id: string; name: string }; round: { name: string; abbreviatedName: string; isFinalRound: boolean } | null
-  schedule: { day: number; dateTime: string }[]
+  schedule: { day: number | null; dateTime: string }[]
   teams: { id: string; name: string; isHomeTeam: boolean; outcome: string | null; organisation: { id: string; name: string } }[]
   appearances: RawAppearance[]
   coinToss: { winningTeamId: string | null; preference: 'BAT' | 'BOWL' | null } | null
