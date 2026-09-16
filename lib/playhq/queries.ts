@@ -56,7 +56,12 @@ export async function getLadder(gradeId: string, clubTeamIds: Set<string>): Prom
 
 export async function getTeamPlayerStats(team: ClubTeam, games: Game[]): Promise<{ stats: PlayerSeasonStats[]; gamesCounted: number }> {
   const finals = games.filter((g) => g.status === 'FINAL')
-  const cards = await mapLimit(finals, 5, (g) => getGameSummary(g.id, team.isJunior, 'FINAL').catch(() => null))
+  const cards = await mapLimit(finals, 5, (g) =>
+    getGameSummary(g.id, team.isJunior, 'FINAL').catch((err) => {
+      console.error('[playhq] game summary failed', g.id, err instanceof Error ? err.message : err)
+      return null
+    })
+  )
   const ok = cards.filter((c): c is Scorecard => c !== null)
   return { stats: aggregatePlayers(ok, team.id, team.isJunior), gamesCounted: ok.length }
 }

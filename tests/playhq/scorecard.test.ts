@@ -47,6 +47,16 @@ describe('mapScorecard (two-day)', () => {
     expect(i1.fallOfWickets[0]).toMatchObject({ wicket: 1, runs: 96 })
     expect(i1.fallOfWickets[0].name.length).toBeGreaterThan(2)
   })
+  it('fall of wickets omits invisible appearances', () => {
+    const raw = twoDay.data as RawGameSummary
+    const firstFowId = raw.periods.find((p) => p.sequenceNo === 1)!.teams
+      .find((t) => t.discipline === 'BATTING')!.fallOfWickets![0].appearanceId
+    const hidden = { ...raw, appearances: raw.appearances.map((a) => (a.id === firstFowId ? { ...a, visible: false } : a)) }
+    const s = mapScorecard(hidden, ORG, false)
+    const i1 = s.innings[0]
+    expect(i1.fallOfWickets.some((f) => f.wicket === 1 && f.runs === 96)).toBe(false)
+    expect(i1.fallOfWickets.every((f) => f.name !== 'Unknown')).toBe(true)
+  })
   it('bowling lines only for bowlers with overs', () => {
     const i2 = sc.innings[1]
     expect(i2.bowling.length).toBe(6)

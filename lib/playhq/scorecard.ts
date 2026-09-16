@@ -68,7 +68,9 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
       batting, didNotBat, bowling,
       extras: { total: stat(s, 'TOTAL_EXTRAS'), wides: stat(s, 'EXTRA_WIDES'), noBalls: stat(s, 'EXTRA_NO_BALLS'), byes: stat(s, 'EXTRA_BYES'), legByes: stat(s, 'EXTRA_LEG_BYES'), penalty: stat(s, 'EXTRA_PENALTY_RUNS') },
       total: { runs: stat(s, 'TOTAL_SCORE'), wickets: stat(s, 'TOTAL_OUTS'), overs: stat(s, 'TOTAL_OVERS'), declared: bat.status === 'DECLARED', allOut: bat.status === 'ALL_OUT' || stat(s, 'TOTAL_OUTS') >= 10 },
-      fallOfWickets: (bat.fallOfWickets ?? []).map((f) => ({ wicket: f.sequenceNo, runs: f.runs, name: name(f.appearanceId) })),
+      fallOfWickets: (bat.fallOfWickets ?? [])
+        .filter((f) => players[f.appearanceId])
+        .map((f) => ({ wicket: f.sequenceNo, runs: f.runs, name: name(f.appearanceId) })),
     }
   })
 
