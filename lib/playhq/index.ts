@@ -1,5 +1,5 @@
 export * from './types'
-export { PlayHQError } from './client'
+export { PlayHQError, mapLimit } from './client'
 export {
   TTL,
   getSeasonGroups,

@@ -12,6 +12,7 @@ const links = [
   { href: '/', label: 'Home' },
   { href: '/history', label: 'History' },
   { href: '/fixtures', label: 'Fixtures & Results' },
+  { href: '/teams', label: 'Teams' },
   { href: '/documents', label: 'Documents & Policies' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
