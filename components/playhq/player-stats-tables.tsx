@@ -28,17 +28,18 @@ export function PlayerStatsTables({ stats, gamesCounted }: { stats: PlayerSeason
       </p>
       <Panel title="Batting & fielding">
         <Table>
+          <caption className="sr-only">Batting and fielding, this season</caption>
           <TableHeader>
             <TableRow className="border-brand-black/10 hover:bg-transparent">
-              <TableHead className={head}>Player</TableHead>
-              <TableHead className={cn(head, num)}>M</TableHead>
-              <TableHead className={cn(head, num)}>Inns</TableHead>
-              <TableHead className={cn(head, num)}>NO</TableHead>
-              <TableHead className={cn(head, num)}>Runs</TableHead>
-              <TableHead className={cn(head, num)}>HS</TableHead>
-              <TableHead className={cn(head, num)}>Avg</TableHead>
-              <TableHead className={cn(head, num)}>SR</TableHead>
-              <TableHead className={cn(head, num)}>Ct</TableHead>
+              <TableHead scope="col" className={head}>Player</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>M</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>Inns</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>NO</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>Runs</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>HS</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>Avg</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>SR</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>Ct</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,16 +65,17 @@ export function PlayerStatsTables({ stats, gamesCounted }: { stats: PlayerSeason
       {bowling.length > 0 && (
         <Panel title="Bowling">
           <Table>
+            <caption className="sr-only">Bowling, this season</caption>
             <TableHeader>
               <TableRow className="border-brand-black/10 hover:bg-transparent">
-                <TableHead className={head}>Player</TableHead>
-                <TableHead className={cn(head, num)}>O</TableHead>
-                <TableHead className={cn(head, num)}>M</TableHead>
-                <TableHead className={cn(head, num)}>R</TableHead>
-                <TableHead className={cn(head, num)}>W</TableHead>
-                <TableHead className={cn(head, num)}>Best</TableHead>
-                <TableHead className={cn(head, num)}>Avg</TableHead>
-                <TableHead className={cn(head, num)}>Econ</TableHead>
+                <TableHead scope="col" className={head}>Player</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>O</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>M</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>R</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>W</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>Best</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>Avg</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>Econ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

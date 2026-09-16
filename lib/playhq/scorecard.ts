@@ -21,7 +21,8 @@ export function dismissalText(event: Event | undefined, status: string | null, n
     case 'RUN_OUT': return fielder ? `run out (${name(fielder)})` : 'run out'
     case 'HIT_WICKET': return `hit wicket b ${b}`
     case 'RETIRED_HURT': return 'retired hurt'
-    case 'RETIRED': case 'RETIRED_OUT': return 'retired out'
+    case 'RETIRED': return 'retired'
+    case 'RETIRED_OUT': return 'retired out'
     default: return event.type.toLowerCase().replace(/_/g, ' ')
   }
 }

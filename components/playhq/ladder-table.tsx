@@ -19,12 +19,13 @@ export function LadderTable({ ladder }: { ladder: Ladder }) {
   return (
     <div className="rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5">
       <Table>
+        <caption className="sr-only">Ladder</caption>
         <TableHeader>
           <TableRow className="border-brand-black/10 hover:bg-transparent">
-            <TableHead className={cn('w-12 text-brand-grey', num)}>Pos</TableHead>
-            <TableHead className="text-brand-grey">Team</TableHead>
+            <TableHead scope="col" className={cn('w-12 text-brand-grey', num)}>Pos</TableHead>
+            <TableHead scope="col" className="text-brand-grey">Team</TableHead>
             {cols.map((c) => (
-              <TableHead key={c.key} className={cn('text-brand-grey', num)}>
+              <TableHead scope="col" key={c.key} className={cn('text-brand-grey', num)}>
                 {c.label}
               </TableHead>
             ))}

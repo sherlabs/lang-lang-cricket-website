@@ -112,6 +112,8 @@ describe('dismissalText', () => {
     [ev('RUN_OUT', [['x', 'BATTING']]), 'run out'],
     [ev('HIT_WICKET', [['x', 'BATTING'], ['b', 'BOWLING']]), 'hit wicket b Bowler'],
     [ev('RETIRED_HURT', [['x', 'BATTING']]), 'retired hurt'],
+    [ev('RETIRED', [['x', 'BATTING']]), 'retired'],
+    [ev('RETIRED_OUT', [['x', 'BATTING']]), 'retired out'],
     [ev('OBSTRUCTING_FIELD', [['x', 'BATTING']]), 'obstructing field'],
   ])('%o → %s', (event, expected) => expect(dismissalText(event as never, 'OUT', name)).toBe(expected))
   it('not out / out without event', () => {

@@ -31,6 +31,12 @@ describe('groupSeasons', () => {
     expect(g.seasons.find((s) => s.competitionName === 'CCCA Senior Competition')?.isJunior).toBe(false)
     expect(g.seasons.find((s) => s.competitionName === 'CCCA Junior Competition')?.isJunior).toBe(true)
   })
+  it('a group mixing junior and senior comps is not junior; junior-only is', () => {
+    const mixed = groupSeasons(raw).find((g) => g.name === 'Summer 2025/26')!
+    expect(mixed.isJunior).toBe(false)
+    const juniorOnly = groupSeasons(raw).find((g) => g.name === 'Winter 2026')!
+    expect(juniorOnly.isJunior).toBe(true)
+  })
   it('group status is ACTIVE if any season active, else UPCOMING, else COMPLETED', () => {
     const g = groupSeasons([
       { ...raw[0], status: 'COMPLETED' },

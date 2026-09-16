@@ -43,12 +43,26 @@ describe('aggregatePlayers', () => {
     const bowler = s.find((p) => p.bowling.balls > 0)!
     expect(bowler.bowling.overs).toBe(ballsToOvers(bowler.bowling.balls))
     expect(bowler.bowling.economy).toBeCloseTo(bowler.bowling.runs / (bowler.bowling.balls / 6), 2)
-    expect(bowler.bowling.bestWickets).toBeGreaterThanOrEqual(0)
+    // Nadeera Fernando bowled 6-0-18-3 in the one-day fixture (from the raw JSON)
+    const nf = s.find((p) => p.name === 'Nadeera Fernando')!
+    expect(nf.bowling).toMatchObject({ balls: 36, overs: '6', runs: 18, wickets: 3, bestWickets: 3, bestRuns: 18, economy: 3, average: 6 })
   })
   it('ignores non-FINAL games and catches count', () => {
     expect(aggregatePlayers([{ ...sc, status: 'UPCOMING' }], LL_B)).toEqual([])
     const s = aggregatePlayers([sc], LL_B)
     expect(s.reduce((n, p) => n + p.catches, 0)).toBeGreaterThan(0)
+  })
+})
+
+describe('junior aggregation', () => {
+  it('uses First L. names and still attributes catches', () => {
+    const j = mapScorecard(twoDay.data as RawGameSummary, ORG, true)
+    const stats = aggregatePlayers([j], LL_B, true)
+    expect(stats.length).toBeGreaterThanOrEqual(11)
+    for (const p of stats) expect(p.name).toMatch(/^[^\s]+(?: [^\s]+)* [A-Z]\.$/)
+    const senior = aggregatePlayers([sc], LL_B)
+    expect(stats.reduce((n, p) => n + p.catches, 0)).toBe(senior.reduce((n, p) => n + p.catches, 0))
+    expect(stats.reduce((n, p) => n + p.catches, 0)).toBeGreaterThan(0)
   })
 })
 

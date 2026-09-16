@@ -100,8 +100,9 @@ will leave the homepage showing stale data even after its own page revalidates.
 The `/fixtures`, `/fixtures/[gameId]`, `/teams` and `/teams/[teamId]` pages
 read directly from the PlayHQ public API (`lib/playhq/`) rather than the
 database. Nothing is stored locally: every request is a `fetch` with Next.js
-data-cache revalidation, tagged `playhq`, and pages themselves revalidate
-every 15–30 minutes. Cache TTLs live in `lib/playhq/queries.ts` (`TTL`):
+data-cache revalidation, tagged `playhq`. The pages are dynamic routes (they
+read `searchParams`), so freshness is governed by the data-cache TTLs in
+`lib/playhq/queries.ts` (`TTL`):
 seasons and team lists 6 h, fixtures 30 min, ladders 1 h, in-progress
 scorecards 15 min, completed scorecards 7 days.
 
@@ -127,5 +128,8 @@ once to drop it from the database.
 - Deleting an admin upload (document, photo, sponsor logo) does not delete
   the underlying file from Vercel Blob — it just removes the database row.
 - No rate-limiting on the admin login form.
-- Player names on junior team pages are abbreviated to `First L.`; the
-  PlayHQ API only exposes players marked visible.
+- Player names on junior team pages and scorecards are abbreviated to
+  `First L.` (and a scorecard whose club team cannot be resolved is treated
+  as junior). The PlayHQ API returns every appearance, including coaches
+  and players not marked visible; the site only shows appearances with
+  `roleType === 'Player'` and `visible === true`.

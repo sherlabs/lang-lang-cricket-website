@@ -15,8 +15,8 @@ export async function getSeasonGroups(): Promise<SeasonGroup[]> {
 
 export async function resolveSeason(param: string | undefined) {
   const groups = await getSeasonGroups()
-  const wanted = param ? decodeURIComponent(param) : null
-  const season = (wanted && groups.find((g) => g.name === wanted)) || pickDefaultSeason(groups)
+  // searchParams are already decoded by Next; decoding again throws on a stray '%'.
+  const season = (param && groups.find((g) => g.name === param)) || pickDefaultSeason(groups)
   return { groups, season }
 }
 

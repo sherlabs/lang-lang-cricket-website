@@ -34,12 +34,12 @@ export function ScorecardInnings({ innings }: { innings: Innings }) {
           <caption className="sr-only">Batting — {innings.battingTeamName}</caption>
           <TableHeader>
             <TableRow className="border-brand-black/10 hover:bg-transparent">
-              <TableHead className={head}>Batting</TableHead>
-              <TableHead className={cn(head, num)}>R</TableHead>
-              <TableHead className={cn(head, num)}>B</TableHead>
-              <TableHead className={cn(head, num)}>4s</TableHead>
-              <TableHead className={cn(head, num)}>6s</TableHead>
-              <TableHead className={cn(head, num)}>SR</TableHead>
+              <TableHead scope="col" className={head}>Batting</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>R</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>B</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>4s</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>6s</TableHead>
+              <TableHead scope="col" className={cn(head, num)}>SR</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,12 +85,12 @@ export function ScorecardInnings({ innings }: { innings: Innings }) {
             <caption className="sr-only">Bowling — {innings.bowlingTeamName}</caption>
             <TableHeader>
               <TableRow className="border-brand-black/10 hover:bg-transparent">
-                <TableHead className={head}>Bowling</TableHead>
-                <TableHead className={cn(head, num)}>O</TableHead>
-                <TableHead className={cn(head, num)}>M</TableHead>
-                <TableHead className={cn(head, num)}>R</TableHead>
-                <TableHead className={cn(head, num)}>W</TableHead>
-                <TableHead className={cn(head, num)}>Econ</TableHead>
+                <TableHead scope="col" className={head}>Bowling</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>O</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>M</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>R</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>W</TableHead>
+                <TableHead scope="col" className={cn(head, num)}>Econ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
