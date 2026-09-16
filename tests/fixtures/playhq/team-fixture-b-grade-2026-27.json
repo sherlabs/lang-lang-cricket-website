@@ -1,0 +1,736 @@
+{
+    "data": [
+        {
+            "id": "ef31bcc7-e9b9-47b9-8d35-ad99858596b7",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/ef31bcc7",
+            "createdAt": "2026-09-10T21:55:41.000Z",
+            "updatedAt": "2026-09-15T09:23:30.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "135b2ba9-8f80-4bca-a74d-5171f13dc124",
+                "name": "Round 1",
+                "abbreviatedName": "R1",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-10-03",
+                "time": "12:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "da68eb24-1265-4e75-97d5-6b735ff58c7d",
+                    "name": "Pakenham B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "1c6aeb72-bf9c-4960-b594-ff4b0fafcabd",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/1c6aeb72",
+            "createdAt": "2026-09-10T21:55:41.000Z",
+            "updatedAt": "2026-09-15T09:23:51.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "a483ed6e-5f79-4507-b977-999332cca70d",
+                "name": "Round 2",
+                "abbreviatedName": "R2",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-10-10",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "5507d8b6-2111-43e0-97ec-1b8c5a1a8f99",
+                    "name": "Devon Meadows 2nd XI",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "37d5e2a5-32f7-492a-a2ee-c39c165d34ef",
+                "name": "Glover Recreation Reserve",
+                "surfaceName": "Glover Recrectaion Reserve",
+                "surfaceAbbreviation": "GlKQ5",
+                "surfaceId": "92bb6b08-f2ac-4f7e-8f44-0bd84740ab35",
+                "address": {
+                    "line1": "48 Browns Road",
+                    "postcode": "3977",
+                    "suburb": "DEAVON MEADOWS",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.1568993697234,
+                    "longitude": 145.302686691284
+                }
+            }
+        },
+        {
+            "id": "8f21c92b-0b0f-4c6e-8157-660e4495554e",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/8f21c92b",
+            "createdAt": "2026-09-10T21:55:41.000Z",
+            "updatedAt": "2026-09-12T08:53:24.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "fffde6b8-4b02-4e68-a1ae-e7ed67f2e4dc",
+                "name": "Round 3",
+                "abbreviatedName": "R3",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-10-17",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "52075d2a-5974-48b1-bab2-8ec24332bbe7",
+                    "name": "Carlisle Park B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "65a49aef-0cce-446c-9d1c-7476e5de6bb9",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/65a49aef",
+            "createdAt": "2026-09-10T21:55:41.000Z",
+            "updatedAt": "2026-09-14T11:03:54.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "bc5f3b31-700c-426e-ad09-006aa4f80867",
+                "name": "Round 4",
+                "abbreviatedName": "R4",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-10-31",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "14497f88-348b-41d0-9500-a4f108a3cbf0",
+                    "name": "Clyde Cougars B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "51f8a071-d335-4309-ae69-bab4c71a5972",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/51f8a071",
+            "createdAt": "2026-09-10T21:55:41.000Z",
+            "updatedAt": "2026-09-13T08:10:45.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "e3ac808d-20c5-482a-8062-ec244754c783",
+                "name": "Round 5",
+                "abbreviatedName": "R5",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-11-07",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "52075d2a-5974-48b1-bab2-8ec24332bbe7",
+                    "name": "Carlisle Park B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "e63e0a84-01fe-4dce-b17f-c534fe8ab0c0",
+                "name": "Carlisle Park Reserve",
+                "surfaceName": "Carlisle Park Reserve",
+                "surfaceAbbreviation": "CaSH5",
+                "surfaceId": "b8a7bde1-ccf1-42d3-b268-947fc79f02b2",
+                "address": {
+                    "line1": "Majestic Boulevard",
+                    "postcode": "3977",
+                    "suburb": "CRANBOURNE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.0865403162531,
+                    "longitude": 145.292354822158
+                }
+            }
+        },
+        {
+            "id": "fff8e069-2e48-478b-bf48-ebf83369491c",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/fff8e069",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:25:19.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "0527af82-3a36-4320-a2ae-e55d504255a3",
+                "name": "Round 6",
+                "abbreviatedName": "R6",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-11-21",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "5507d8b6-2111-43e0-97ec-1b8c5a1a8f99",
+                    "name": "Devon Meadows 2nd XI",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "37d5e2a5-32f7-492a-a2ee-c39c165d34ef",
+                "name": "Glover Recreation Reserve",
+                "surfaceName": "Glover Recrectaion Reserve",
+                "surfaceAbbreviation": "GlKQ5",
+                "surfaceId": "92bb6b08-f2ac-4f7e-8f44-0bd84740ab35",
+                "address": {
+                    "line1": "48 Browns Road",
+                    "postcode": "3977",
+                    "suburb": "DEAVON MEADOWS",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.1568993697234,
+                    "longitude": 145.302686691284
+                }
+            }
+        },
+        {
+            "id": "7c90475b-d356-4c6d-b24d-3c4fa96fa05e",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/7c90475b",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:25:57.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "58d3668f-6d3b-4c2b-9432-81d37dc3dd58",
+                "name": "Round 7",
+                "abbreviatedName": "R7",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-12-05",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "96d6a4b7-e456-4ca1-91cd-7fb0005342e8",
+                    "name": "Merinda Park B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "31c4391c-23d8-4d17-96b8-c5ffa639df84",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/31c4391c",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-13T08:15:28.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "50a35251-2916-4b2d-86bd-a1599c78dbf3",
+                "name": "Round 8",
+                "abbreviatedName": "R8",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-12-19",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "da68eb24-1265-4e75-97d5-6b735ff58c7d",
+                    "name": "Pakenham B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "ad71faaf-2f00-4543-86a3-30227c163ae9",
+                "name": "Toomuc Reserve",
+                "surfaceName": "Oval 1 (North)",
+                "surfaceAbbreviation": "OvAK9",
+                "surfaceId": "6ce5e7df-1e10-4239-9adf-d11b91d6054a",
+                "address": {
+                    "line1": "Princes Highway",
+                    "postcode": "3810",
+                    "suburb": "PAKENHAM",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.0667438418802,
+                    "longitude": 145.460400581359
+                }
+            }
+        },
+        {
+            "id": "4714bdb7-6d18-4a7c-a071-817b3c783213",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/4714bdb7",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-13T08:15:59.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "9f9ebe17-1158-4659-acb4-41734489ca3b",
+                "name": "Round 9",
+                "abbreviatedName": "R9",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-01-09",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                },
+                {
+                    "id": "96d6a4b7-e456-4ca1-91cd-7fb0005342e8",
+                    "name": "Merinda Park B Grade",
+                    "isHomeTeam": false
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "2e142064-5ba4-4a30-85d7-2baabf5fc95f",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/2e142064",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-13T08:17:45.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "919c0bdd-eb58-4cef-aa44-12dd3c244c01",
+                "name": "Round 10",
+                "abbreviatedName": "R10",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-01-16",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "52075d2a-5974-48b1-bab2-8ec24332bbe7",
+                    "name": "Carlisle Park B Grade",
+                    "isHomeTeam": false
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "816e68e8-11f6-454d-80f1-afa13cabad77",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/816e68e8",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:27:10.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "d98e39d7-4a7e-42cb-a863-95e388c10df1",
+                "name": "Round 11",
+                "abbreviatedName": "R11",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-01-23",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "da68eb24-1265-4e75-97d5-6b735ff58c7d",
+                    "name": "Pakenham B Grade",
+                    "isHomeTeam": true
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                }
+            ],
+            "venue": {
+                "id": "ad71faaf-2f00-4543-86a3-30227c163ae9",
+                "name": "Toomuc Reserve",
+                "surfaceName": "Oval 1 (North)",
+                "surfaceAbbreviation": "OvAK9",
+                "surfaceId": "6ce5e7df-1e10-4239-9adf-d11b91d6054a",
+                "address": {
+                    "line1": "Princes Highway",
+                    "postcode": "3810",
+                    "suburb": "PAKENHAM",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.0667438418802,
+                    "longitude": 145.460400581359
+                }
+            }
+        },
+        {
+            "id": "e9d72932-16bf-425a-a4bb-47afac17d2d1",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/e9d72932",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:27:53.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "cac38134-6161-4642-92a2-5dd0ae999d64",
+                "name": "Round 12",
+                "abbreviatedName": "R12",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-01-30",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "14497f88-348b-41d0-9500-a4f108a3cbf0",
+                    "name": "Clyde Cougars B Grade",
+                    "isHomeTeam": true
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                }
+            ],
+            "venue": {
+                "id": "cf5f7d73-725b-4316-8cc9-290ce0045284",
+                "name": "Clyde Recreation Reserve",
+                "surfaceName": "Clyde Recreaton Reserve - North West Oval",
+                "surfaceAbbreviation": "ClBC1",
+                "surfaceId": "f4302151-b670-49ff-a7c9-7ea6c8035e40",
+                "address": {
+                    "line1": "25 Vestfold Drive",
+                    "postcode": "3978",
+                    "suburb": "CLYDE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.121218035070996,
+                    "longitude": 145.33044096987243
+                }
+            }
+        },
+        {
+            "id": "575578ab-5b48-4e49-91ac-d6e7cf4e3ffe",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/575578ab",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:28:20.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "f9283c43-2d58-4c72-9d55-a87284b2f159",
+                "name": "Round 13",
+                "abbreviatedName": "R13",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-02-06",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "5507d8b6-2111-43e0-97ec-1b8c5a1a8f99",
+                    "name": "Devon Meadows 2nd XI",
+                    "isHomeTeam": true
+                },
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": false
+                }
+            ],
+            "venue": {
+                "id": "37d5e2a5-32f7-492a-a2ee-c39c165d34ef",
+                "name": "Glover Recreation Reserve",
+                "surfaceName": "Glover Recrectaion Reserve",
+                "surfaceAbbreviation": "GlKQ5",
+                "surfaceId": "92bb6b08-f2ac-4f7e-8f44-0bd84740ab35",
+                "address": {
+                    "line1": "48 Browns Road",
+                    "postcode": "3977",
+                    "suburb": "DEAVON MEADOWS",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.1568993697234,
+                    "longitude": 145.302686691284
+                }
+            }
+        },
+        {
+            "id": "ae7182cb-86c3-43d3-b73e-89f6adb2a1d3",
+            "status": "UPCOMING",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/game-centre/ae7182cb",
+            "createdAt": "2026-09-10T21:55:42.000Z",
+            "updatedAt": "2026-09-15T09:28:39.000Z",
+            "grade": {
+                "id": "979ec48c-7aa1-47e3-8ced-4660e21652bc",
+                "name": "4. Senior Men B Grade",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2026-27/4-senior-men-b-grade/979ec48c"
+            },
+            "round": {
+                "id": "e929f912-2f5e-4303-9614-97f0c2409415",
+                "name": "Round 14",
+                "abbreviatedName": "R14",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2027-02-20",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "9ad1241c-0f78-418e-b9f6-e0e74bff69a0",
+                    "name": "Lang Lang B Grade",
+                    "isHomeTeam": true
+                },
+                {
+                    "id": "14497f88-348b-41d0-9500-a4f108a3cbf0",
+                    "name": "Clyde Cougars B Grade",
+                    "isHomeTeam": false
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "hasMore": false,
+        "nextCursor": null
+    }
+}

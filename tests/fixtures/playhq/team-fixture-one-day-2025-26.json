@@ -1,0 +1,960 @@
+{
+    "data": [
+        {
+            "id": "4821fdce-7b1e-467d-bb61-2dddfe7db393",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/4821fdce",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-10-26T05:42:53.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "1a31ab4d-4235-488e-990e-8a8861409f86",
+                "name": "Round 1",
+                "abbreviatedName": "R1",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-10-25",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "08432d92-4049-42e2-8bc8-03714e5858d4",
+                    "name": "Clyde Cougars One Day Green",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 88,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 95,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "cf5f7d73-725b-4316-8cc9-290ce0045284",
+                "name": "Clyde Recreation Reserve",
+                "surfaceName": "Clyde Recreaton Reserve - North East Oval",
+                "surfaceAbbreviation": "CRR3",
+                "surfaceId": "2074ab96-67bd-442a-be3d-a399abc65de1",
+                "address": {
+                    "line1": "25 Vestfold Drive",
+                    "postcode": "3978",
+                    "suburb": "CLYDE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.121218035070996,
+                    "longitude": 145.33044096987243
+                }
+            }
+        },
+        {
+            "id": "4baf691c-9c37-4379-a850-030fd38719ac",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/4baf691c",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-11-01T03:50:43.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "37cfeba7-d89f-4f9c-b854-14db948132d7",
+                "name": "Round 2",
+                "abbreviatedName": "R2",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-11-01",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": false,
+                    "outcome": "LOST_BY_FORFEIT",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "85b27e2c-c73c-459b-8343-6db9c9602e8b",
+                    "name": "Merinda Park One-Day Competition",
+                    "isHomeTeam": true,
+                    "outcome": "WON_BY_FORFEIT",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "b1a555d5-e554-457e-b427-ad5fb27e68cb",
+                "name": "Cranbourne West Secondary College",
+                "surfaceName": "Cranbourne West Secondary College",
+                "surfaceAbbreviation": "CWS",
+                "surfaceId": "a760a7cc-ee14-453f-a86c-13cff6d53020",
+                "address": {
+                    "line1": "80 Strathlea Dr",
+                    "postcode": "3977",
+                    "suburb": "Cranbourne West",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.10665086891175,
+                    "longitude": 145.24719042857495
+                }
+            }
+        },
+        {
+            "id": "ddc6996c-0d7a-4824-ae49-76b830635c2e",
+            "status": "ABANDONED",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/ddc6996c",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-11-08T03:49:35.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "78cada91-22a2-4f9a-b010-7804fd53c4cf",
+                "name": "Round 3",
+                "abbreviatedName": "R3",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-11-08",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "aad903fb-9739-4a12-ae9d-e7b73bfcea0d",
+                    "name": "Carlisle Park One Day",
+                    "isHomeTeam": false,
+                    "outcome": "ABANDONED",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "ABANDONED",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "adcc962d-aeae-41f7-af2f-a83cbc8ebbad",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/adcc962d",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-11-15T06:35:38.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "c1a73d7c-0653-447f-a723-25a23573d9b9",
+                "name": "Round 4",
+                "abbreviatedName": "R4",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-11-15",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "7bebdb86-1014-4d7f-9ff6-ab68b4d929ca",
+                    "name": "Avengers Senior Men One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 333,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 59,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "73bc2d21-4fa2-427e-b595-decc39dd4a9a",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/73bc2d21",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-11-22T06:15:32.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "0c3e4c69-8645-405a-aace-b9086f283d73",
+                "name": "Round 5",
+                "abbreviatedName": "R5",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-11-22",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": false,
+                    "outcome": "LOST",
+                    "scoreTotal": 91,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "961a5839-7c71-4a16-a19c-ae5a647b6108",
+                    "name": "PUTCC 1 Day Competition",
+                    "isHomeTeam": true,
+                    "outcome": "WON",
+                    "scoreTotal": 93,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "9974a770-086b-48d4-8f60-963108a94e53",
+                "name": "Comely Banks Recreation Reserve",
+                "surfaceName": "Comely Banks Recreation Reserve - West",
+                "surfaceAbbreviation": "CBRR",
+                "surfaceId": "20fc691f-e2c7-4283-8fc3-b3828916516f",
+                "address": {
+                    "line1": "125 BRIDGE RD",
+                    "postcode": "3809",
+                    "suburb": "OFFICER",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.07188928760417,
+                    "longitude": 145.4173340535343
+                }
+            }
+        },
+        {
+            "id": "eb0f26f9-4c76-463b-88a3-7b41f66a1753",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/eb0f26f9",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-11-29T08:33:42.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "d4a3518f-5d2b-49f1-8eb5-e510b834d921",
+                "name": "Round 6",
+                "abbreviatedName": "R6",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-11-29",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4f4555d7-1717-44ab-8603-13208996796f",
+                    "name": "Upper Beaconsfield One Day",
+                    "isHomeTeam": true,
+                    "outcome": "WON",
+                    "scoreTotal": 139,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": false,
+                    "outcome": "LOST",
+                    "scoreTotal": 138,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "7cc50641-d3da-4025-998d-a10496ba10b7",
+                "name": "Heatherbrae Recreation Reserve",
+                "surfaceName": "Oval 2",
+                "surfaceAbbreviation": "OvTT8",
+                "surfaceId": "90f94c60-4bdf-49e5-8fa6-a19346810cf0",
+                "address": {
+                    "line1": "12 Bellerive Avenue",
+                    "postcode": "3809",
+                    "suburb": "OFFICER",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.0671492841762,
+                    "longitude": 145.422141551971
+                }
+            }
+        },
+        {
+            "id": "9c3dc85f-78a1-4d08-a144-b7f07fb3dcbe",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/9c3dc85f",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-12-06T06:27:36.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "490d8c72-6710-4498-ac98-588677351747",
+                "name": "Round 7",
+                "abbreviatedName": "R7",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-12-06",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 120,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "5e7c7966-2ded-42cd-83fe-7ec10ff6b61f",
+                    "name": "Emerald One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 121,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "537ba518-0a87-4d5c-928d-952477875c84",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/537ba518",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2025-12-13T09:43:15.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "0ae51522-68e0-437c-83e4-7956399d264f",
+                "name": "Round 8",
+                "abbreviatedName": "R8",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2025-12-13",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "WON_BY_FORFEIT",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "08432d92-4049-42e2-8bc8-03714e5858d4",
+                    "name": "Clyde Cougars One Day Green",
+                    "isHomeTeam": false,
+                    "outcome": "LOST_BY_FORFEIT",
+                    "scoreTotal": 0,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "b3e8f349-ba15-4d8c-8713-fac1d8f28898",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/b3e8f349",
+            "createdAt": "2025-10-10T10:37:31.000Z",
+            "updatedAt": "2026-01-31T07:12:12.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "baf86bc9-939e-412b-b9f1-64ece43d74ab",
+                "name": "Round 9",
+                "abbreviatedName": "R9",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-01-31",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "aad903fb-9739-4a12-ae9d-e7b73bfcea0d",
+                    "name": "Carlisle Park One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 155,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 94,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 1 (East)",
+                "surfaceAbbreviation": "LaME7",
+                "surfaceId": "b3cf2bbc-b6b3-45dc-928a-ea167defe569",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "5d37ecd3-78f7-4e35-9527-c257d4e6e8c3",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/5d37ecd3",
+            "createdAt": "2025-10-10T10:37:32.000Z",
+            "updatedAt": "2026-02-07T06:29:39.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "016c750b-64a5-4cc0-a825-2feaf69cb35f",
+                "name": "Round 10",
+                "abbreviatedName": "R10",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-02-07",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": false,
+                    "outcome": "LOST",
+                    "scoreTotal": 89,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "404aa815-40f3-491c-856b-1f6c344ce1da",
+                    "name": "Melbourne Sixers - 1 Day",
+                    "isHomeTeam": true,
+                    "outcome": "WON",
+                    "scoreTotal": 321,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "76a1e4d2-be18-440d-b3c1-e9a6a981e7a7",
+                "name": "Inez Hunter Recreation Reserve",
+                "surfaceName": "Inez Hunter Recreation Reserve - Oval #2 (West)",
+                "surfaceAbbreviation": "IHRR2",
+                "surfaceId": "38bddb52-57ee-4b9d-bbfd-5fa03f1d55a0",
+                "address": {
+                    "line1": "45 Heather Grove",
+                    "postcode": "3977",
+                    "suburb": "Cranbourne East",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.109117589855494,
+                    "longitude": 145.31905830025977
+                }
+            }
+        },
+        {
+            "id": "667eba20-a095-47ed-9c30-612aba553827",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/667eba20",
+            "createdAt": "2025-10-10T10:37:32.000Z",
+            "updatedAt": "2026-02-14T07:33:09.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "97c61c2a-897c-4f00-8ec6-70ce8922e30b",
+                "name": "Round 11",
+                "abbreviatedName": "R11",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-02-14",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "85b27e2c-c73c-459b-8343-6db9c9602e8b",
+                    "name": "Merinda Park One-Day Competition",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 236,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 110,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "7c026759-8dc4-44cd-9e66-c43bb02997de",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/7c026759",
+            "createdAt": "2025-10-10T10:37:32.000Z",
+            "updatedAt": "2026-02-21T22:47:39.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "945565c6-075a-4f0c-917b-2863bbb559c8",
+                "name": "Round 12",
+                "abbreviatedName": "R12",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-02-21",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "961a5839-7c71-4a16-a19c-ae5a647b6108",
+                    "name": "PUTCC 1 Day Competition",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 145,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 143,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "360bc8e2-8bbb-4f48-aed3-2404484377bc",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/360bc8e2",
+            "createdAt": "2025-10-10T10:37:32.000Z",
+            "updatedAt": "2026-02-28T07:17:48.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "e48f6b0e-4410-4cca-a157-dae0f7cc8aa3",
+                "name": "Round 13",
+                "abbreviatedName": "R13",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-02-28",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "7bebdb86-1014-4d7f-9ff6-ab68b4d929ca",
+                    "name": "Avengers Senior Men One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 198,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 175,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        },
+        {
+            "id": "93b5e08e-0335-4be4-a2c1-b63e1a112ec0",
+            "status": "FINAL",
+            "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/game-centre/93b5e08e",
+            "createdAt": "2025-10-10T10:37:32.000Z",
+            "updatedAt": "2026-03-07T23:00:14.000Z",
+            "grade": {
+                "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+                "name": "9. Senior Men 1 Day Comp",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/ccca-senior-competition-summer-2025-26/9-senior-men-1-day-comp/3a34ef95"
+            },
+            "round": {
+                "id": "1f17ffa8-3f9d-448e-a78f-eec596d1e310",
+                "name": "Round 14",
+                "abbreviatedName": "R14",
+                "isFinalRound": false
+            },
+            "pool": null,
+            "schedule": {
+                "date": "2026-03-07",
+                "time": "13:00:00",
+                "timezone": "Australia/Melbourne"
+            },
+            "competitors": [
+                {
+                    "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+                    "name": "Lang Lang One Day",
+                    "isHomeTeam": true,
+                    "outcome": "LOST",
+                    "scoreTotal": 109,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "4f4555d7-1717-44ab-8603-13208996796f",
+                    "name": "Upper Beaconsfield One Day",
+                    "isHomeTeam": false,
+                    "outcome": "WON",
+                    "scoreTotal": 167,
+                    "scoreSubTotal": [
+                        {
+                            "type": "",
+                            "value": 0
+                        }
+                    ]
+                }
+            ],
+            "venue": {
+                "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+                "name": "Lang Lang Community Recreation Reserve",
+                "surfaceName": "Lang Lang Recreational Reserve 2 (West)",
+                "surfaceAbbreviation": "LLRR2",
+                "surfaceId": "64352f31-507f-449d-a8b9-27740773a5a7",
+                "address": {
+                    "line1": "Cnr Caldermeade and Soldiers Road",
+                    "postcode": "3984",
+                    "suburb": "CALDERMEADE",
+                    "state": "VIC",
+                    "country": "Australia",
+                    "latitude": -38.238845,
+                    "longitude": 145.558739
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "hasMore": false,
+        "nextCursor": null
+    }
+}

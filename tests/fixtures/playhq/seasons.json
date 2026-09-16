@@ -1,0 +1,831 @@
+{
+    "data": [
+        {
+            "id": "9796adee-25dc-4d54-8108-25ba07489153",
+            "name": "Summer 2026/27",
+            "status": "UPCOMING",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "65beae9f-3c01-460b-8940-35ddc985c497",
+                "name": "CCCA Junior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "a8c2210f-8295-4985-b6e9-4db9507287a7",
+            "name": "Summer 2025/26",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "65beae9f-3c01-460b-8940-35ddc985c497",
+                "name": "CCCA Junior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "ca707aac-1f14-4210-a3df-4da6e1a52cfe",
+            "name": "Summer 2024/25",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "65beae9f-3c01-460b-8940-35ddc985c497",
+                "name": "CCCA Junior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "c8c27bd8-4eb9-4a97-b5c7-264b7efa5bf3",
+            "name": "Summer 2023/24",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "65beae9f-3c01-460b-8940-35ddc985c497",
+                "name": "CCCA Junior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "b6eb6172-dd2f-4d81-9368-6d6456e0c7eb",
+            "name": "Summer 2025/26",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "33f12b4d-6fe8-42a6-9da9-84fc250101e3",
+                "name": "CCCA Kookaburra Cup"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "98a7fbfe-6cd8-4159-a02e-874e6c76f815",
+            "name": "Summer 2024/25",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "33f12b4d-6fe8-42a6-9da9-84fc250101e3",
+                "name": "CCCA Kookaburra Cup"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "a09c3786-f51b-4827-9470-f11e867d4ae7",
+            "name": "Summer 2023/24",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "33f12b4d-6fe8-42a6-9da9-84fc250101e3",
+                "name": "CCCA Kookaburra Cup"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "e92eb6d6-4821-4b99-a0cb-98b95fe3aa1b",
+            "name": "Summer 2026/27",
+            "status": "UPCOMING",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "5e3bba01-7bb4-4494-b9ef-061d503032bd",
+                "name": "CCCA Senior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "04518c8e-79eb-4aeb-b126-3abc395c8902",
+            "name": "Summer 2025/26",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "5e3bba01-7bb4-4494-b9ef-061d503032bd",
+                "name": "CCCA Senior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "b610439d-49b5-4874-89b6-c60e5124566f",
+            "name": "Summer 2024/25",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "5e3bba01-7bb4-4494-b9ef-061d503032bd",
+                "name": "CCCA Senior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "46af0722-260f-4954-b1c3-410603dcfb4c",
+            "name": "Summer 2023/24",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "5e3bba01-7bb4-4494-b9ef-061d503032bd",
+                "name": "CCCA Senior Competition"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "70c378ab-457a-4463-a530-906d50664928",
+            "name": "Summer 2026/27",
+            "status": "UPCOMING",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "2865ea95-3a14-455a-8266-b097809cd0f6",
+                "name": "CCCA U15 All Star Girls"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "0738c395-99a9-45bc-ad65-70d449d6a8af",
+            "name": "Summer 2025/26",
+            "status": "COMPLETED",
+            "association": {
+                "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+                "name": "Casey Cardinia Cricket Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-cardinia-cricket-association/18570db1",
+                "logo": {
+                    "sizes": [
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_32,w_32/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 32,
+                                "height": 32
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_48,w_48/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 48,
+                                "height": 48
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_128,w_128/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 128,
+                                "height": 128
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_64,w_64/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 64,
+                                "height": 64
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_96,w_96/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 96,
+                                "height": 96
+                            }
+                        },
+                        {
+                            "url": "https://res.cloudinary.com/playhq/image/upload/h_256,w_256/v1/production/ca/18570db1-30ab-490f-bafa-793c4bd6eef2/1679887877760/logo.jpg?_a=BAMAMifg0",
+                            "dimensions": {
+                                "width": 256,
+                                "height": 256
+                            }
+                        }
+                    ]
+                }
+            },
+            "competition": {
+                "id": "2865ea95-3a14-455a-8266-b097809cd0f6",
+                "name": "CCCA U15 All Star Girls"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        },
+        {
+            "id": "ac36c326-7a83-49eb-822a-7593d2c7f32f",
+            "name": "Winter 2026",
+            "status": "COMPLETED",
+            "association": {
+                "id": "acefc097-abcc-4262-8eb3-317d3f82e79c",
+                "name": "Casey Stadium Association",
+                "url": "https://www.playhq.com/cricket-australia/org/casey-stadium-association/acefc097",
+                "logo": null
+            },
+            "competition": {
+                "id": "d7f1e459-76c6-494a-bb0e-1c6a1523a62f",
+                "name": "Junior Winter Cricket"
+            },
+            "createdAt": null,
+            "updatedAt": null
+        }
+    ],
+    "metadata": {
+        "hasMore": false,
+        "nextCursor": null
+    }
+}
