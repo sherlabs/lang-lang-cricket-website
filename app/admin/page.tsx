@@ -9,7 +9,7 @@ export default function AdminDashboard() {
         <Link href="/admin/gallery" className="underline">gallery</Link>,{' '}
         <Link href="/admin/sponsors" className="underline">sponsors</Link>,{' '}
         <Link href="/admin/contacts" className="underline">contacts</Link>, and{' '}
-        <Link href="/admin/fixtures" className="underline">fixtures</Link>.
+        <Link href="/admin/playhq" className="underline">PlayHQ data</Link>.
       </p>
     </main>
   )

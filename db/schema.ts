@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core'
 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
@@ -32,16 +32,5 @@ export const committeeContacts = pgTable('committee_contacts', {
   phone: text('phone').notNull().default(''),
   email: text('email').notNull().default(''),
   sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-export const fixtures = pgTable('fixtures', {
-  id: serial('id').primaryKey(),
-  team: text('team').notNull(),
-  opponent: text('opponent').notNull(),
-  venue: text('venue').notNull().default(''),
-  matchDate: timestamp('match_date').notNull(),
-  isResult: boolean('is_result').notNull().default(false),
-  resultSummary: text('result_summary').notNull().default(''),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

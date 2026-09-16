@@ -5,7 +5,7 @@ const links = [
   { href: '/admin/gallery', label: 'Gallery' },
   { href: '/admin/sponsors', label: 'Sponsors' },
   { href: '/admin/contacts', label: 'Contacts' },
-  { href: '/admin/fixtures', label: 'Fixtures' },
+  { href: '/admin/playhq', label: 'PlayHQ' },
 ]
 
 export function AdminNav() {

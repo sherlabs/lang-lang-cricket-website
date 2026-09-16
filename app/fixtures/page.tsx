@@ -1,11 +1,6 @@
-import { asc } from 'drizzle-orm'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CalendarDaysIcon, MapPinIcon, ExternalLinkIcon, TrophyIcon } from '@hugeicons/core-free-icons'
-import { db } from '@/db'
-import { fixtures } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
-
-export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Fixtures & Results | Lang Lang Cricket Club',
@@ -40,7 +35,9 @@ function ColumnHeading({ title, count }: { title: string; count: number }) {
 }
 
 export default async function FixturesPage() {
-  const rows = await db.select().from(fixtures).orderBy(asc(fixtures.matchDate))
+  // Placeholder until the PlayHQ-driven page lands (Task 9).
+  type Row = { id: number; team: string; opponent: string; venue: string; matchDate: Date; isResult: boolean; resultSummary: string }
+  const rows: Row[] = []
   const upcoming = rows.filter((f) => !f.isResult)
   const results = rows.filter((f) => f.isResult).reverse()
 
