@@ -57,3 +57,17 @@ export function dedupeGames(games: Game[]): Game[] {
   const seen = new Set<string>()
   return games.filter((g) => (seen.has(g.id) ? false : (seen.add(g.id), true)))
 }
+
+/** `YYYY-MM-DD` for today in Melbourne. */
+export function todayMelbourne(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Melbourne' }).format(now)
+}
+
+/**
+ * The next unfinished game on or after `today` (games without a date count
+ * as upcoming). PlayHQ sometimes leaves past games in a non-final status,
+ * so an unfinished game in the past is not "next".
+ */
+export function nextGame(games: Game[], today: string): Game | null {
+  return sortUpcoming(games.filter((g) => !isFinished(g) && (g.localDate ?? '9999-12-31') >= today))[0] ?? null
+}

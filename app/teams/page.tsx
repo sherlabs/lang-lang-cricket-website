@@ -5,7 +5,8 @@ import { ArrowRight01Icon, RankingIcon, CalendarDaysIcon } from '@hugeicons/core
 import { PageHeader } from '@/components/page-header'
 import { SeasonPicker } from '@/components/playhq/season-picker'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
-import { resolveSeason, getClubGames, getLadder, isFinished, mapLimit, resultSentence, sortResults, sortUpcoming } from '@/lib/playhq'
+import { resolveSeason, getClubGames, getLadder, isFinished, mapLimit, resultSentence, sortResults } from '@/lib/playhq'
+import { nextGame, todayMelbourne } from '@/lib/playhq/games'
 import type { ClubTeam, Game, Ladder } from '@/lib/playhq/types'
 import { formatLocalDate, seasonHref } from '@/lib/playhq/format'
 
@@ -33,9 +34,9 @@ function ladderLine(ladder: Ladder | null, teamId: string) {
   return parts.join(' · ')
 }
 
-function nextOrLast(team: ClubTeam, games: Game[]) {
+function nextOrLast(team: ClubTeam, games: Game[], today: string) {
   const mine = games.filter((g) => g.club.id === team.id)
-  const next = sortUpcoming(mine.filter((g) => !isFinished(g)))[0]
+  const next = nextGame(mine, today)
   if (next) {
     const when = next.localDate ? formatLocalDate(next.localDate, { weekday: true }).replace(/ \d{4}$/, '') : 'TBC'
     return { label: 'Next', text: `${when} v ${next.opponent.name} (${next.club.isHome ? 'H' : 'A'})` }
@@ -45,9 +46,11 @@ function nextOrLast(team: ClubTeam, games: Game[]) {
   return null
 }
 
-function TeamCard({ team, ladder, games }: { team: ClubTeam; ladder: Ladder | null; games: Game[] }) {
+type CardProps = { team: ClubTeam; ladder: Ladder | null; games: Game[]; today: string }
+
+function TeamCard({ team, ladder, games, today }: CardProps) {
   const standing = ladderLine(ladder, team.id)
-  const game = nextOrLast(team, games)
+  const game = nextOrLast(team, games, today)
   return (
     <li>
       <Link
@@ -73,7 +76,12 @@ function TeamCard({ team, ladder, games }: { team: ClubTeam; ladder: Ladder | nu
               </dd>
             </div>
           )}
-          {!standing && !game && <p>Season details coming soon.</p>}
+          {!standing && !game && (
+            <div>
+              <dt className="sr-only">Fixtures</dt>
+              <dd>No fixtures yet.</dd>
+            </div>
+          )}
         </dl>
         <span className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-brand-gold-deep">
           Ladder, results &amp; players
@@ -84,7 +92,7 @@ function TeamCard({ team, ladder, games }: { team: ClubTeam; ladder: Ladder | nu
   )
 }
 
-function Group({ title, teams, ladders, games }: { title: string; teams: ClubTeam[]; ladders: Map<string, Ladder | null>; games: Game[] }) {
+function Group({ title, teams, ladders, games, today }: { title: string; teams: ClubTeam[]; ladders: Map<string, Ladder | null>; games: Game[]; today: string }) {
   if (!teams.length) return null
   return (
     <div>
@@ -97,7 +105,7 @@ function Group({ title, teams, ladders, games }: { title: string; teams: ClubTea
       </div>
       <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((t) => (
-          <TeamCard key={t.id} team={t} ladder={t.gradeId ? (ladders.get(t.gradeId) ?? null) : null} games={games} />
+          <TeamCard key={t.id} team={t} ladder={t.gradeId ? (ladders.get(t.gradeId) ?? null) : null} games={games} today={today} />
         ))}
       </ul>
     </div>
@@ -118,6 +126,7 @@ export default async function TeamsPage({ searchParams }: Props) {
     const ladders = new Map(gradeIds.map((g, i) => [g, ladderList[i]]))
     const seniors = teams.filter((t) => !t.isJunior)
     const juniors = teams.filter((t) => t.isJunior)
+    const today = todayMelbourne()
 
     content = (
       <>
@@ -134,8 +143,8 @@ export default async function TeamsPage({ searchParams }: Props) {
               No Lang Lang sides have been entered for this season yet.
             </div>
           )}
-          <Group title="Senior sides" teams={seniors} ladders={ladders} games={games} />
-          <Group title="Junior sides" teams={juniors} ladders={ladders} games={games} />
+          <Group title="Senior sides" teams={seniors} ladders={ladders} games={games} today={today} />
+          <Group title="Junior sides" teams={juniors} ladders={ladders} games={games} today={today} />
         </section>
       </>
     )

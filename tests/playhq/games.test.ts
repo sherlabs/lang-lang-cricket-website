@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import bGrade from '../fixtures/playhq/team-fixture-b-grade-2025-26.json'
 import oneDay from '../fixtures/playhq/team-fixture-one-day-2025-26.json'
 import upcoming from '../fixtures/playhq/team-fixture-b-grade-2026-27.json'
-import { mapGame, resultSentence, isFinished, sortUpcoming, sortResults, dedupeGames } from '@/lib/playhq/games'
+import { mapGame, resultSentence, isFinished, sortUpcoming, sortResults, dedupeGames, nextGame, todayMelbourne } from '@/lib/playhq/games'
 import type { RawFixtureGame } from '@/lib/playhq/types'
 
 const B = '61e6c836-a80b-49f1-ae65-625bd0f55016'
@@ -69,4 +69,28 @@ describe('sorting & dedupe', () => {
     expect(sortResults(bGames)[0].roundName).toBe('Round 14')
   })
   it('dedupes by id', () => expect(dedupeGames([...bGames, ...bGames]).length).toBe(bGames.length))
+})
+
+describe('nextGame', () => {
+  it('skips a stale unfinished game in the past and picks the first one on/after today', () => {
+    // Round 4 (2025-10-25) left non-final by PlayHQ; Round 6 (later) is genuinely upcoming.
+    const dates = [...bGames].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    const stale = { ...dates[3], status: 'UPCOMING', club: { ...dates[3].club, outcome: null } }
+    const future = { ...dates[5], status: 'UPCOMING', club: { ...dates[5].club, outcome: null } }
+    const today = dates[4].localDate!
+    const games = bGames.map((g) => (g.id === stale.id ? stale : g.id === future.id ? future : g))
+    expect(nextGame(games, today)?.id).toBe(future.id)
+    // a game dated today still counts as next
+    const todayGame = { ...dates[4], status: 'UPCOMING', club: { ...dates[4].club, outcome: null } }
+    expect(nextGame(games.map((g) => (g.id === todayGame.id ? todayGame : g)), today)?.id).toBe(todayGame.id)
+  })
+  it('all finished → null; undated unfinished games count as upcoming', () => {
+    expect(nextGame(bGames, '2026-06-01')).toBeNull()
+    const tbc = { ...bGames[0], id: 'tbc', status: 'UPCOMING', localDate: null, sortKey: '9999-12-31T00:00:00' }
+    expect(nextGame([...bGames, tbc], '2026-06-01')?.id).toBe('tbc')
+  })
+  it('todayMelbourne is YYYY-MM-DD in Melbourne time', () => {
+    expect(todayMelbourne(new Date('2025-10-24T15:00:00Z'))).toBe('2025-10-25')   // 02:00 AEDT next day
+    expect(todayMelbourne(new Date('2025-10-24T12:00:00Z'))).toBe('2025-10-24')
+  })
 })
