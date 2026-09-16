@@ -21,7 +21,8 @@ export function SeasonPicker({ groups, current, basePath }: Props) {
       </label>
       <select
         id={id}
-        value={current}
+        key={current}
+        defaultValue={current}
         onChange={(e) => router.push(seasonHref(basePath, e.target.value, team))}
         className="min-h-11 rounded-md border border-brand-black/15 bg-white px-3 text-sm text-brand-black"
       >
