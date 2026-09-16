@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, CalendarDaysIcon, ExternalLinkIcon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
+import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
 import type { Scorecard } from '@/lib/playhq/types'
 import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
@@ -13,15 +14,35 @@ export const revalidate = 900
 
 type Props = { params: { gameId: string }; searchParams: { season?: string } }
 
-const isMissing = (e: unknown) => e instanceof PlayHQError && (e.status === 400 || e.status === 404)
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-async function load(gameId: string, seasonHint?: string): Promise<Scorecard | null> {
+type Loaded = { kind: 'ok'; sc: Scorecard } | { kind: 'missing' } | { kind: 'error' }
+
+/**
+ * 404 → missing. 400 → missing only for a malformed id (PlayHQ answers 400
+ * for non-UUIDs); a 400 on a real-looking id is treated as an outage.
+ */
+async function load(gameId: string, seasonHint?: string): Promise<Loaded> {
   try {
-    return await getGameSummaryAuto(gameId, seasonHint)
+    const sc = await getGameSummaryAuto(gameId, seasonHint)
+    return sc ? { kind: 'ok', sc } : { kind: 'missing' }
   } catch (e) {
-    if (isMissing(e)) return null
-    throw e
+    if (e instanceof PlayHQError && (e.status === 404 || (e.status === 400 && !UUID.test(gameId)))) return { kind: 'missing' }
+    console.error('[playhq] scorecard', gameId, e instanceof PlayHQError ? e.status : e instanceof Error ? e.message : e)
+    return { kind: 'error' }
   }
+}
+
+function BackToFixtures({ season }: { season: string | null }) {
+  return (
+    <Link
+      href={seasonHref('/fixtures', season)}
+      className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
+    >
+      <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
+      All fixtures &amp; results
+    </Link>
+  )
 }
 
 function sides(sc: Scorecard) {
@@ -62,16 +83,29 @@ function buildResult(sc: Scorecard): string | null {
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const sc = await load(params.gameId, searchParams.season).catch(() => null)
-  if (!sc) return { title: 'Scorecard | Lang Lang Cricket Club' }
-  const { club, opp } = sides(sc)
+  const loaded = await load(params.gameId, searchParams.season)
+  if (loaded.kind !== 'ok') return { title: 'Scorecard | Lang Lang Cricket Club' }
+  const { club, opp } = sides(loaded.sc)
   return { title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club` }
 }
 
 export default async function GamePage({ params, searchParams }: Props) {
   const { season: seasonHint } = searchParams
-  const sc = await load(params.gameId, seasonHint)
-  if (!sc) notFound()
+  const loaded = await load(params.gameId, seasonHint)
+  if (loaded.kind === 'missing') notFound()
+  if (loaded.kind === 'error') {
+    return (
+      <main>
+        <PageHeader eyebrow="Scorecard" title="Match scorecard">
+          <BackToFixtures season={seasonHint ?? null} />
+        </PageHeader>
+        <section className="container-site py-16">
+          <PlayHQUnavailable what="this scorecard" />
+        </section>
+      </main>
+    )
+  }
+  const sc = loaded.sc
 
   const { club, opp } = sides(sc)
   const result = buildResult(sc)
@@ -99,13 +133,7 @@ export default async function GamePage({ params, searchParams }: Props) {
         </div>
         {result && <p className="mt-6 max-w-2xl text-xl font-bold text-white">{result}</p>}
         {sc.toss && <p className="mt-2 text-sm text-white/75">{sc.toss}</p>}
-        <Link
-          href={seasonHref('/fixtures', seasonHint ?? null)}
-          className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
-          All fixtures &amp; results
-        </Link>
+        <BackToFixtures season={seasonHint ?? null} />
       </PageHeader>
 
       <section className="container-site py-16 lg:py-24">

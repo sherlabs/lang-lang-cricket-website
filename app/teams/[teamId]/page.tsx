@@ -8,6 +8,7 @@ import { SectionHeading } from '@/components/section-heading'
 import { GameCard } from '@/components/playhq/game-card'
 import { LadderTable } from '@/components/playhq/ladder-table'
 import { PlayerStatsTables } from '@/components/playhq/player-stats-tables'
+import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { seasonHref } from '@/lib/playhq/format'
 import { findClubTeam, getClubTeams, getTeamGames, getLadder, getTeamPlayerStats, isFinished, resultSentence, sortResults, sortUpcoming } from '@/lib/playhq'
 
@@ -33,38 +34,78 @@ function ColumnHeading({ title, count }: { title: string; count: number }) {
   )
 }
 
+function BackToTeams({ season }: { season: string | null }) {
+  return (
+    <Link
+      href={seasonHref('/teams', season)}
+      className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
+    >
+      <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
+      All teams
+    </Link>
+  )
+}
+
 function Note({ children }: { children: React.ReactNode }) {
   return <p className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">{children}</p>
 }
 
-export default async function TeamPage({ params, searchParams }: Props) {
-  const { season: seasonHint } = searchParams
-  const found = await findClubTeam(params.teamId, seasonHint)
-  if (!found) notFound()
-  const { team, season } = found
+type Loaded = Awaited<ReturnType<typeof loadTeam>>
 
+async function loadTeam(teamId: string, seasonHint: string | undefined) {
+  const found = await findClubTeam(teamId, seasonHint)
+  if (!found) return null
+  const { team, season } = found
   const teams = await getClubTeams(season)
   const ids = new Set(teams.map((t) => t.id))
   const games = await getTeamGames(team, ids)
   const [ladder, players] = await Promise.all([
     team.gradeId ? getLadder(team.gradeId, ids).catch(() => null) : Promise.resolve(null),
-    getTeamPlayerStats(team, games).catch(() => null),
+    getTeamPlayerStats(team, games).catch((err) => {
+      console.error('[playhq] team player stats', team.id, err instanceof Error ? err.message : err)
+      return null
+    }),
   ])
+  return { team, games, ladder, players }
+}
+
+export default async function TeamPage({ params, searchParams }: Props) {
+  // Read search params outside the try so Next's dynamic-rendering bail-out isn't swallowed.
+  const { season: seasonHint } = searchParams
+  let loaded: Loaded = null
+  let failed = false
+  try {
+    loaded = await loadTeam(params.teamId, seasonHint)
+  } catch (err) {
+    console.error('[playhq] team page', params.teamId, err instanceof Error ? err.message : err)
+    failed = true
+  }
+  if (failed) {
+    return (
+      <main>
+        <PageHeader eyebrow="Our teams" title="Team">
+          <BackToTeams season={seasonHint ?? null} />
+        </PageHeader>
+        <section className="container-site py-16">
+          <PlayHQUnavailable what="this team" />
+        </section>
+      </main>
+    )
+  }
+  if (!loaded) notFound()
+  const { team, games, ladder, players } = loaded
 
   const upcoming = sortUpcoming(games.filter((g) => !isFinished(g)))
   const results = sortResults(games.filter(isFinished))
   const showPlayers = players && players.gamesCounted > 0 && players.stats.length > 0
+  // Stats errored outright, or every completed game's scorecard failed to load (abandoned games have none).
+  const hasFinal = games.some((g) => g.status === 'FINAL')
+  const playersUnavailable = !showPlayers && hasFinal && (players === null || players.gamesCounted === 0)
 
   return (
     <main>
       <PageHeader eyebrow={`${team.seasonName} · ${team.gradeName ?? team.competitionName}`} title={team.name}>
-        <Link
-          href={seasonHref('/teams', team.seasonName)}
-          className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
-          All teams
-        </Link>
+        <BackToTeams season={team.seasonName} />
       </PageHeader>
 
       <section className="container-site py-16 lg:py-24">
@@ -117,6 +158,8 @@ export default async function TeamPage({ params, searchParams }: Props) {
         <div className="mt-8">
           {showPlayers ? (
             <PlayerStatsTables stats={players.stats} gamesCounted={players.gamesCounted} />
+          ) : playersUnavailable ? (
+            <PlayHQUnavailable what="player stats" />
           ) : (
             <Note>Player stats will appear after the first completed match.</Note>
           )}
