@@ -1,26 +1,21 @@
+import { Suspense } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { CalendarDaysIcon, MapPinIcon, ExternalLinkIcon, TrophyIcon } from '@hugeicons/core-free-icons'
+import { ExternalLinkIcon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
+import { SeasonPicker } from '@/components/playhq/season-picker'
+import { TeamFilter } from '@/components/playhq/team-filter'
+import { GameCard } from '@/components/playhq/game-card'
+import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
+import { resolveSeason, getClubGames, resultSentence, sortUpcoming, sortResults, isFinished } from '@/lib/playhq'
+import { PLAYHQ_CLUB_URL } from '@/lib/playhq/format'
+
+export const revalidate = 1800
 
 export const metadata = {
   title: 'Fixtures & Results | Lang Lang Cricket Club',
 }
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat('en-AU', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(d)
-}
-
-function dateParts(d: Date) {
-  return {
-    day: new Intl.DateTimeFormat('en-AU', { day: 'numeric' }).format(d),
-    month: new Intl.DateTimeFormat('en-AU', { month: 'short' }).format(d),
-  }
-}
+type Props = { searchParams: { season?: string; team?: string } }
 
 function ColumnHeading({ title, count }: { title: string; count: number }) {
   return (
@@ -34,22 +29,98 @@ function ColumnHeading({ title, count }: { title: string; count: number }) {
   )
 }
 
-export default async function FixturesPage() {
-  // Placeholder until the PlayHQ-driven page lands (Task 9).
-  type Row = { id: number; team: string; opponent: string; venue: string; matchDate: Date; isResult: boolean; resultSummary: string }
-  const rows: Row[] = []
-  const upcoming = rows.filter((f) => !f.isResult)
-  const results = rows.filter((f) => f.isResult).reverse()
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return <li className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">{children}</li>
+}
+
+function PlayHQLink({ children }: { children: React.ReactNode }) {
+  return (
+    <a
+      href={PLAYHQ_CLUB_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black"
+    >
+      {children}
+    </a>
+  )
+}
+
+export default async function FixturesPage({ searchParams }: Props) {
+  let content: React.ReactNode
+  try {
+    const { groups, season } = await resolveSeason(searchParams.season)
+    if (!season) throw new Error('no seasons')
+    const { teams, games } = await getClubGames(season)
+    const teamId = searchParams.team && teams.some((t) => t.id === searchParams.team) ? searchParams.team : null
+    const filtered = teamId ? games.filter((g) => g.club.id === teamId || g.opponent.id === teamId) : games
+    const upcoming = sortUpcoming(filtered.filter((g) => !isFinished(g)))
+    const results = sortResults(filtered.filter(isFinished))
+
+    content = (
+      <>
+        <section className="border-b border-brand-black/10 bg-brand-cream">
+          <div className="container-site flex flex-col gap-6 py-8 lg:flex-row lg:items-start lg:gap-12">
+            <Suspense fallback={<div className="min-h-11" aria-hidden />}>
+              <SeasonPicker groups={groups} current={season.name} basePath="/fixtures" />
+            </Suspense>
+            {teams.length > 0 && <TeamFilter teams={teams} current={teamId} season={season.name} basePath="/fixtures" />}
+          </div>
+        </section>
+
+        <section className="container-site grid gap-16 py-16 lg:grid-cols-2 lg:gap-12 lg:py-24">
+          <div>
+            <ColumnHeading title="Upcoming" count={upcoming.length} />
+            <ul className="mt-8 space-y-4">
+              {upcoming.map((g) => (
+                <li key={g.id}>
+                  <GameCard game={g} variant="upcoming" showTeam />
+                </li>
+              ))}
+              {upcoming.length === 0 && (
+                <EmptyState>
+                  No upcoming fixtures for this season yet. <PlayHQLink>Check PlayHQ for the latest draw.</PlayHQLink>
+                </EmptyState>
+              )}
+            </ul>
+          </div>
+
+          <div>
+            <ColumnHeading title="Results" count={results.length} />
+            <ul className="mt-8 space-y-4">
+              {results.map((g) => (
+                <li key={g.id}>
+                  <GameCard game={g} variant="result" resultText={resultSentence(g)} showTeam />
+                </li>
+              ))}
+              {results.length === 0 && (
+                <EmptyState>
+                  No results yet this season. <PlayHQLink>See past results and scorecards on PlayHQ.</PlayHQLink>
+                </EmptyState>
+              )}
+            </ul>
+          </div>
+        </section>
+      </>
+    )
+  } catch (err) {
+    console.error('[playhq] fixtures page', err)
+    content = (
+      <section className="container-site py-16">
+        <PlayHQUnavailable what="fixtures and results" />
+      </section>
+    )
+  }
 
   return (
     <main>
       <PageHeader
         eyebrow="Fixtures & results"
         title="This season's matches"
-        intro="Upcoming games and recent results for our junior and senior sides."
+        intro="Live draw and results for every Lang Lang side, straight from PlayHQ."
       >
         <a
-          href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
+          href={PLAYHQ_CLUB_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
@@ -59,112 +130,7 @@ export default async function FixturesPage() {
           <span className="sr-only">(opens in a new tab)</span>
         </a>
       </PageHeader>
-
-      <section className="container-site grid gap-16 py-16 lg:grid-cols-2 lg:gap-12 lg:py-24">
-        <div>
-          <ColumnHeading title="Upcoming" count={upcoming.length} />
-          <ul className="mt-8 space-y-4">
-            {upcoming.map((f) => {
-              const date = new Date(f.matchDate)
-              const { day, month } = dateParts(date)
-              return (
-                <li
-                  key={f.id}
-                  className="flex gap-5 rounded-2xl bg-white p-5 shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover hover:ring-brand-gold/40"
-                >
-                  <div
-                    aria-hidden
-                    className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-xl bg-brand-black text-brand-gold"
-                  >
-                    <span className="display text-2xl leading-none">{day}</span>
-                    <span className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em]">
-                      {month}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="eyebrow">{f.team}</p>
-                    <p className="mt-1 text-lg font-bold tracking-tight text-brand-black">
-                      vs {f.opponent}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-grey">
-                      <span className="inline-flex items-center gap-1.5">
-                        <HugeiconsIcon icon={CalendarDaysIcon} className="h-4 w-4 text-brand-gold-deep" aria-hidden />
-                        {formatDate(date)}
-                      </span>
-                      {f.venue && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4 text-brand-gold-deep" aria-hidden />
-                          {f.venue}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-            {upcoming.length === 0 && (
-              <li className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-                No fixtures entered yet.{' '}
-                <a
-                  href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black"
-                >
-                  Check PlayHQ for the latest draw.
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
-
-        <div>
-          <ColumnHeading title="Recent results" count={results.length} />
-          <ul className="mt-8 space-y-4">
-            {results.map((f) => (
-              <li
-                key={f.id}
-                className="rounded-2xl border-l-4 border-brand-gold bg-white p-5 shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="eyebrow">{f.team}</p>
-                    <p className="mt-1 text-lg font-bold tracking-tight text-brand-black">
-                      vs {f.opponent}
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold-pale text-brand-gold-deep"
-                  >
-                    <HugeiconsIcon icon={TrophyIcon} className="h-4 w-4" />
-                  </span>
-                </div>
-                {f.resultSummary && (
-                  <p className="mt-3 text-sm leading-relaxed text-brand-charcoal">{f.resultSummary}</p>
-                )}
-                <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-grey">
-                  <HugeiconsIcon icon={CalendarDaysIcon} className="h-3.5 w-3.5 text-brand-gold-deep" aria-hidden />
-                  {formatDate(new Date(f.matchDate))}
-                </p>
-              </li>
-            ))}
-            {results.length === 0 && (
-              <li className="rounded-2xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-                No results entered yet.{' '}
-                <a
-                  href="https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black"
-                >
-                  See past results and scorecards on PlayHQ.
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
-      </section>
+      {content}
     </main>
   )
 }
