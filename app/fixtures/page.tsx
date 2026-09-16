@@ -47,12 +47,14 @@ function PlayHQLink({ children }: { children: React.ReactNode }) {
 }
 
 export default async function FixturesPage({ searchParams }: Props) {
+  // Read search params outside the try so Next's dynamic-rendering bail-out isn't swallowed.
+  const { season: seasonParam, team: teamParam } = searchParams
   let content: React.ReactNode
   try {
-    const { groups, season } = await resolveSeason(searchParams.season)
+    const { groups, season } = await resolveSeason(seasonParam)
     if (!season) throw new Error('no seasons')
     const { teams, games } = await getClubGames(season)
-    const teamId = searchParams.team && teams.some((t) => t.id === searchParams.team) ? searchParams.team : null
+    const teamId = teamParam && teams.some((t) => t.id === teamParam) ? teamParam : null
     const filtered = teamId ? games.filter((g) => g.club.id === teamId || g.opponent.id === teamId) : games
     const upcoming = sortUpcoming(filtered.filter((g) => !isFinished(g)))
     const results = sortResults(filtered.filter(isFinished))

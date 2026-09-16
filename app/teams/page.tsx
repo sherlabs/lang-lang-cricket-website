@@ -105,9 +105,11 @@ function Group({ title, teams, ladders, games }: { title: string; teams: ClubTea
 }
 
 export default async function TeamsPage({ searchParams }: Props) {
+  // Read search params outside the try so Next's dynamic-rendering bail-out isn't swallowed.
+  const { season: seasonParam } = searchParams
   let content: React.ReactNode
   try {
-    const { groups, season } = await resolveSeason(searchParams.season)
+    const { groups, season } = await resolveSeason(seasonParam)
     if (!season) throw new Error('no seasons')
     const { teams, games } = await getClubGames(season)
     const ids = new Set(teams.map((t) => t.id))
