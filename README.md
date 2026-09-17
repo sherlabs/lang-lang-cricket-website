@@ -97,7 +97,8 @@ will leave the homepage showing stale data even after its own page revalidates.
 
 ## PlayHQ
 
-The `/fixtures`, `/fixtures/[gameId]`, `/teams` and `/teams/[teamId]` pages
+The `/fixtures` hub (next round, latest results, team grid; `?team=` for a
+single side's ladder, games and players) and `/fixtures/[gameId]` scorecards
 read directly from the PlayHQ public API (`lib/playhq/`) rather than the
 database. Nothing is stored locally: every request is a `fetch` with Next.js
 data-cache revalidation, tagged `playhq`. The pages are dynamic routes (they

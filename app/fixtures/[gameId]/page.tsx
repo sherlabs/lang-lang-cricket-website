@@ -33,14 +33,14 @@ async function load(gameId: string, seasonHint?: string): Promise<Loaded> {
   }
 }
 
-function BackToFixtures({ season }: { season: string | null }) {
+function BackToFixtures({ season, teamId }: { season: string | null; teamId?: string }) {
   return (
     <Link
-      href={seasonHref('/fixtures', season)}
+      href={seasonHref('/fixtures', season, teamId)}
       className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-gold hover:text-brand-gold"
     >
       <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
-      All fixtures &amp; results
+      {teamId ? 'Back to team' : 'All fixtures & results'}
     </Link>
   )
 }
@@ -133,7 +133,7 @@ export default async function GamePage({ params, searchParams }: Props) {
         </div>
         {result && <p className="mt-6 max-w-2xl text-xl font-bold text-white">{result}</p>}
         {sc.toss && <p className="mt-2 text-sm text-white/75">{sc.toss}</p>}
-        <BackToFixtures season={seasonHint ?? null} />
+        <BackToFixtures season={seasonHint ?? null} teamId={club.isClub ? club.id : undefined} />
       </PageHeader>
 
       <section className="container-site py-16 lg:py-24">

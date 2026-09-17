@@ -16,6 +16,6 @@ describe('format', () => {
   it('hrefs', () => {
     expect(seasonHref('/fixtures', 'Summer 2026/27')).toBe('/fixtures?season=Summer%202026%2F27')
     expect(seasonHref('/fixtures', 'Summer 2026/27', 'abc')).toBe('/fixtures?season=Summer%202026%2F27&team=abc')
-    expect(seasonHref('/teams', null)).toBe('/teams')
+    expect(seasonHref('/fixtures', null)).toBe('/fixtures')
   })
 })
