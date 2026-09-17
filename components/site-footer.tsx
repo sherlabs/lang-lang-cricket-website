@@ -6,9 +6,9 @@ import { FacebookIcon } from '@/components/icons'
 
 const links = [
   { href: '/history', label: 'History' },
-  { href: '/fixtures', label: 'Fixtures & Results' },
+  { href: '/fixtures', label: 'Fixtures' },
   { href: '/teams', label: 'Teams' },
-  { href: '/documents', label: 'Documents & Policies' },
+  { href: '/documents', label: 'Documents' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
   { href: '/contact', label: 'Contact' },

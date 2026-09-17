@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils'
 const links = [
   { href: '/', label: 'Home' },
   { href: '/history', label: 'History' },
-  { href: '/fixtures', label: 'Fixtures & Results' },
+  { href: '/fixtures', label: 'Fixtures' },
   { href: '/teams', label: 'Teams' },
-  { href: '/documents', label: 'Documents & Policies' },
+  { href: '/documents', label: 'Documents' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
   { href: '/contact', label: 'Contact' },
@@ -45,7 +45,7 @@ export function SiteNav() {
               priority
             />
           </span>
-          <span className="leading-none">
+          <span className="leading-none whitespace-nowrap">
             <span className="display block text-xl text-white transition group-hover:text-brand-gold">
               Lang Lang Cricket Club
             </span>
@@ -55,7 +55,7 @@ export function SiteNav() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
           {links.map((l) => {
             const active = isActive(l.href)
             return (
@@ -64,7 +64,7 @@ export function SiteNav() {
                 href={l.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative rounded-md px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white',
+                  'relative whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white xl:px-3',
                   // Gold underline marker on the current page.
                   'after:absolute after:inset-x-3 after:-bottom-[13px] after:h-0.5 after:rounded-full after:bg-brand-gold after:opacity-0 after:transition',
                   active && 'text-brand-gold after:opacity-100 hover:text-brand-gold'
@@ -76,7 +76,7 @@ export function SiteNav() {
           })}
           <a
             href="mailto:langlangcricketclub@gmail.com"
-            className="ml-2 inline-flex items-center gap-2 rounded-md bg-brand-gold px-3.5 py-2 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
+            className="ml-2 inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-brand-gold px-3.5 py-2 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
           >
             <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
             Get in touch
@@ -89,7 +89,7 @@ export function SiteNav() {
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md text-white transition hover:bg-white/10 md:hidden"
+          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md text-white transition hover:bg-white/10 lg:hidden"
         >
           {open ? (
             <HugeiconsIcon icon={Cancel01Icon} className="h-5 w-5" aria-hidden />
@@ -103,7 +103,7 @@ export function SiteNav() {
         <nav
           id="mobile-nav"
           aria-label="Mobile"
-          className="border-t border-white/10 bg-brand-ink px-5 pb-5 pt-2 animate-in fade-in-0 slide-in-from-top-2 md:hidden"
+          className="border-t border-white/10 bg-brand-ink px-5 pb-5 pt-2 animate-in fade-in-0 slide-in-from-top-2 lg:hidden"
         >
           <div className="flex flex-col">
             {links.map((l) => {
