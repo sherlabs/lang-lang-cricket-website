@@ -128,9 +128,12 @@ async function HubView({ season, teams, games }: { season: string; teams: ClubTe
   const results = sortResults(games.filter(isFinished))
   const ladders = await loadLadders(teams)
 
+  // A finished season has nothing coming up — skip the section instead of showing an empty one.
+  const showNextUp = nextUp.length > 0 || remaining.length > 0 || results.length === 0
+
   return (
     <div className="container-site space-y-14 py-12 lg:py-16">
-      <section aria-labelledby="next-up">
+      {showNextUp && <section aria-labelledby="next-up">
         <HubHeading id="next-up" title="Next up" count={nextUp.length} />
         <div className="mt-5">
           {nextUp.length ? (
@@ -146,7 +149,7 @@ async function HubView({ season, teams, games }: { season: string; teams: ClubTe
             </Disclosure>
           )}
         </div>
-      </section>
+      </section>}
 
       <section aria-labelledby="latest-results">
         <HubHeading id="latest-results" title="Latest results" count={latest.length} />
