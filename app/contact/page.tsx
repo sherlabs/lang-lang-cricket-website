@@ -16,9 +16,13 @@ export const metadata = {
 }
 
 const CLUB_EMAIL = 'langlangcricketclub@gmail.com'
+// Contacts stored with this role are shown in their own section rather than with the committee.
+const LEADERSHIP_ROLE = 'Senior Leadership Team'
 
 export default async function ContactPage() {
-  const contacts = await db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder))
+  const all = await db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder))
+  const contacts = all.filter((c) => c.role !== LEADERSHIP_ROLE)
+  const leadership = all.filter((c) => c.role === LEADERSHIP_ROLE)
 
   return (
     <main>
@@ -57,6 +61,17 @@ export default async function ContactPage() {
           intro="The volunteers who run the club. Our Child Safety Officer is your first point of contact for any safeguarding concern."
         />
         <CommitteeCards contacts={contacts} className="mt-12" />
+
+        {leadership.length > 0 && (
+          <div className="mt-20">
+            <SectionHeading
+              eyebrow="Senior leadership team"
+              title="Leading our senior program"
+              intro="The group responsible for selection, coaching and the direction of our senior sides."
+            />
+            <CommitteeCards contacts={leadership} className="mt-12" />
+          </div>
+        )}
 
         <div className="mt-8 flex items-start gap-3 rounded-2xl bg-brand-gold-pale p-5 text-sm text-brand-charcoal ring-1 ring-brand-gold/30">
           <HugeiconsIcon icon={ShieldCheckIcon} className="mt-0.5 h-5 w-5 shrink-0 text-brand-gold-deep" aria-hidden />

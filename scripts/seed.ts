@@ -37,7 +37,11 @@ async function main() {
     { role: 'President', name: 'Eddie Duiker', phone: '0423 465 992', email: 'langlangcricketclub@gmail.com', sortOrder: 0 },
     { role: 'Treasurer', name: 'Karen Duiker', phone: '0423 201 257', email: 'langlangcricketclub@gmail.com', sortOrder: 1 },
     { role: 'Secretary / Child Safety Officer & Junior Coordinator', name: 'Erin Jozwin', phone: '0421 991 436', email: 'langlangcricketclub@gmail.com', sortOrder: 2 },
-    { role: 'Head Club Coach', name: 'Damien Quinlan', phone: '0430 166 172', email: 'langlangcricketclub@gmail.com', sortOrder: 3 },
+    { role: 'Senior Leadership Team', name: 'Brad Savige', sortOrder: 10 },
+    { role: 'Senior Leadership Team', name: 'William Wykes', sortOrder: 11 },
+    { role: 'Senior Leadership Team', name: 'Russell Savige', sortOrder: 12 },
+    { role: 'Senior Leadership Team', name: 'Damien Quinlan', sortOrder: 13 },
+    { role: 'Senior Leadership Team', name: 'Nilesh Jayanandana', sortOrder: 14 },
   ])
 
   console.log('Seed complete.')

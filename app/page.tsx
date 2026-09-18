@@ -42,11 +42,13 @@ const highlights = [
 ]
 
 export default async function HomePage() {
-  const [sponsorRows, contacts, photos] = await Promise.all([
+  const [sponsorRows, allContacts, photos] = await Promise.all([
     db.select().from(sponsors),
     db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder)),
     db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
   ])
+  // The senior leadership team has its own section on the contact page; the home page shows the committee only.
+  const contacts = allContacts.filter((c) => c.role !== 'Senior Leadership Team')
 
   return (
     <main>
