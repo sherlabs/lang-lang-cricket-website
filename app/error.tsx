@@ -16,7 +16,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           <button
             type="button"
             onClick={() => reset()}
-            className="inline-flex min-h-11 items-center rounded-md bg-brand-black px-5 py-2 text-sm font-semibold text-brand-gold transition hover:bg-brand-charcoal"
+            className="inline-flex min-h-11 items-center rounded-md bg-brand-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-charcoal"
           >
             Try again
           </button>

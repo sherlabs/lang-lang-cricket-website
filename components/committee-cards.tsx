@@ -36,7 +36,7 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
         >
           <div
             aria-hidden
-            className="font-heading flex h-12 w-12 items-center justify-center rounded-full bg-brand-black text-base font-bold tracking-wide text-brand-gold ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
+            className="font-heading flex h-12 w-12 items-center justify-center rounded-full bg-brand-gold-pale text-base font-bold tracking-wide text-brand-gold-deep ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
           >
             {initials(c.name)}
           </div>

@@ -134,7 +134,7 @@ export default async function HomePage() {
               key={h.title}
               className="group rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale hover:ring-brand-gold/40"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-black text-brand-gold transition group-hover:bg-brand-gold group-hover:text-brand-black">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30 transition group-hover:bg-brand-gold group-hover:text-brand-black group-hover:ring-brand-gold">
                 <HugeiconsIcon icon={h.icon} className="h-5 w-5" aria-hidden />
               </span>
               <h3 className="mt-4 font-bold tracking-tight text-brand-black">{h.title}</h3>

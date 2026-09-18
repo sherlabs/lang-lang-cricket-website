@@ -91,7 +91,7 @@ export default async function DocumentsPage() {
           return (
             <section key={cat} id={slug(cat)} className="scroll-mt-28 grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-12">
               <div className="lg:sticky lg:top-28 lg:self-start">
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-black text-brand-gold">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30">
                   <HugeiconsIcon icon={Icon} className="h-5 w-5" aria-hidden />
                 </span>
                 <h2 className="display mt-4 text-3xl text-brand-black sm:text-4xl">{cat}</h2>
@@ -116,7 +116,7 @@ export default async function DocumentsPage() {
                       </span>
                       <span
                         aria-hidden
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-grey-light transition group-hover:bg-brand-black group-hover:text-brand-gold"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-grey-light transition group-hover:bg-white group-hover:text-brand-gold-deep"
                       >
                         <HugeiconsIcon icon={Download01Icon} className="h-4 w-4" />
                       </span>

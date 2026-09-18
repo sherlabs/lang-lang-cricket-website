@@ -20,7 +20,7 @@ export function TeamSwitcher({ teams, current, season }: Props) {
                 className={cn(
                   'inline-flex min-h-11 items-center rounded-full px-3 py-1.5 text-sm font-semibold transition',
                   active
-                    ? 'bg-brand-black text-brand-gold'
+                    ? 'bg-brand-black text-white'
                     : 'bg-white text-brand-charcoal ring-1 ring-brand-black/10 hover:ring-brand-gold/60'
                 )}
               >

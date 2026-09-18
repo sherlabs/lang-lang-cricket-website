@@ -20,7 +20,7 @@ export const TIER_STYLES: Record<
     grid: 'grid-cols-1 sm:grid-cols-2',
     logo: 'h-28 sm:h-36',
     card: 'p-10 rounded-3xl',
-    badge: 'bg-brand-black text-brand-gold',
+    badge: 'bg-brand-black text-white',
     blurb: 'Our principal partner.',
   },
   Gold: {
