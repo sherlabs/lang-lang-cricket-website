@@ -40,9 +40,8 @@ export default function HistoryPage() {
           <div className="mt-10 space-y-5 leading-relaxed text-brand-charcoal">
             <p>
               Much of the club&apos;s written record had faded or gone missing over the decades. In the
-              2022&ndash;23 season that changed: thanks to a generous donation from Josephine Giacco,
-              together with the work of the Club Committee, the club&apos;s history records were
-              restored and brought back into the clubrooms.
+              2022&ndash;23 season that changed: through the work of the Club Committee, the
+              club&apos;s history records were restored and brought back into the clubrooms.
             </p>
             <p>
               Those records now sit alongside a modern home ground in Caldermeade, developed with the
@@ -54,7 +53,7 @@ export default function HistoryPage() {
           <div className="mt-10 rounded-2xl bg-brand-gold-pale p-6 ring-1 ring-brand-gold/30">
             <p className="eyebrow">With thanks</p>
             <p className="display mt-2 text-2xl text-brand-black">
-              Josephine Giacco and the Club Committee
+              The Club Committee
             </p>
             <p className="mt-2 text-sm text-brand-charcoal">
               For restoring the club&apos;s history records in 2022&ndash;23.
