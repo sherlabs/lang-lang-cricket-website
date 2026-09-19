@@ -19,3 +19,8 @@ export async function login(_prevState: { error: string } | undefined, formData:
   })
   redirect('/admin')
 }
+
+export async function logout() {
+  cookies().set(COOKIE_NAME, '', { maxAge: 0, path: '/' })
+  redirect('/admin/login')
+}

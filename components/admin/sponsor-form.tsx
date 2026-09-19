@@ -3,21 +3,26 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createSponsor, updateSponsor, removeSponsor, type SponsorInput } from '@/app/admin/sponsors/actions'
+import { createSponsor, updateSponsor, type SponsorInput } from '@/app/admin/(shell)/sponsors/actions'
 import { TIERS } from '@/components/sponsor-logos'
 import { optimiseImage, uploadToBlob } from '@/lib/blob-client'
+import { Field, FileInput, Select, TextInput } from '@/components/admin/fields'
+import { Button } from '@/components/ui/button'
+import { useDialogClose } from '@/components/admin/action-form'
 
 type Props = { sponsor?: SponsorInput & { id: number } }
 
-/** Create form when no sponsor is passed; edit + delete controls for an existing one. */
+/** Create form when no sponsor is passed; edit form for an existing one (closes its dialog on save). */
 export function SponsorForm({ sponsor }: Props) {
   const router = useRouter()
+  const close = useDialogClose()
   const fileRef = useRef<HTMLInputElement>(null)
   const [tier, setTier] = useState(sponsor?.tier ?? 'Gold')
   const [name, setName] = useState(sponsor?.name ?? '')
   const [linkUrl, setLinkUrl] = useState(sponsor?.linkUrl ?? '')
   const [busy, setBusy] = useState(false)
-  const [status, setStatus] = useState<string | null>(null)
+  const [status, setStatus] = useState<{ tone: 'ok' | 'error' | 'busy'; text: string } | null>(null)
+  const p = sponsor ? `sponsor-${sponsor.id}` : 'sponsor-new'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -27,90 +32,80 @@ export function SponsorForm({ sponsor }: Props) {
       let logoUrl = sponsor?.logoUrl ?? ''
       const file = fileRef.current?.files?.[0]
       if (file) {
-        setStatus('Uploading logo…')
+        setStatus({ tone: 'busy', text: 'Uploading logo…' })
         const prepared = await optimiseImage(file, { maxEdge: 1200, keepAlpha: true, quality: 0.9 })
         logoUrl = await uploadToBlob(prepared, 'sponsors')
       }
       const data = { tier, name, linkUrl, logoUrl }
       if (sponsor) {
         await updateSponsor(sponsor.id, data)
-        setStatus('Saved.')
       } else {
         await createSponsor(data)
         setName('')
         setLinkUrl('')
-        setStatus('Added.')
+        setStatus({ tone: 'ok', text: 'Sponsor added.' })
       }
       if (fileRef.current) fileRef.current.value = ''
       router.refresh()
+      close?.()
     } catch (err) {
-      setStatus(`Failed: ${(err as Error).message}`)
+      setStatus({ tone: 'error', text: `Failed: ${(err as Error).message}` })
     } finally {
       setBusy(false)
     }
   }
 
-  async function onDelete() {
-    if (!sponsor) return
-    setBusy(true)
-    try {
-      await removeSponsor(sponsor.id)
-      router.refresh()
-    } catch (err) {
-      setStatus(`Failed: ${(err as Error).message}`)
-      setBusy(false)
-    }
-  }
-
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-2 text-sm">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {sponsor && (
-        <div className="flex h-24 items-center justify-center rounded bg-neutral-100 p-2">
+        <div className="flex h-28 items-center justify-center rounded-lg bg-white p-3 ring-1 ring-brand-black/10">
           {sponsor.logoUrl ? (
             <img src={sponsor.logoUrl} alt={`${sponsor.name} logo`} className="max-h-full max-w-full object-contain" />
           ) : (
-            <span className="text-xs text-neutral-500">No logo yet</span>
+            <span className="text-sm text-brand-grey">No logo yet</span>
           )}
         </div>
       )}
-      <div className="flex flex-wrap gap-2">
-        <select value={tier} onChange={(e) => setTier(e.target.value)} className="rounded border px-2 py-1" disabled={busy}>
-          {TIERS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-          required
-          className="min-w-0 flex-1 rounded border px-2 py-1"
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <Field label="Tier" htmlFor={`${p}-tier`}>
+          <Select id={`${p}-tier`} value={tier} onChange={(e) => setTier(e.target.value)} disabled={busy}>
+            {TIERS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Name" htmlFor={`${p}-name`}>
+          <TextInput id={`${p}-name`} value={name} onChange={(e) => setName(e.target.value)} required disabled={busy} />
+        </Field>
+      </div>
+      <Field label="Website" htmlFor={`${p}-link`} hint="Optional. The logo links here on the public site.">
+        <TextInput
+          id={`${p}-link`}
+          type="url"
+          value={linkUrl}
+          onChange={(e) => setLinkUrl(e.target.value)}
+          placeholder="https://"
           disabled={busy}
         />
-      </div>
-      <input
-        value={linkUrl}
-        onChange={(e) => setLinkUrl(e.target.value)}
-        placeholder="Website (optional)"
-        className="rounded border px-2 py-1"
-        disabled={busy}
-      />
-      <label className="flex flex-col gap-1 text-xs text-neutral-600">
-        {sponsor ? 'Replace logo' : 'Logo'}
-        <input ref={fileRef} type="file" accept="image/*" required={!sponsor} disabled={busy} />
-      </label>
-      <div className="flex items-center gap-3">
-        <button type="submit" disabled={busy} className="rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50">
-          {busy ? 'Working…' : sponsor ? 'Save' : 'Add sponsor'}
-        </button>
-        {sponsor && (
-          <button type="button" onClick={onDelete} disabled={busy} className="text-xs text-red-600 hover:underline">
-            Delete
-          </button>
+      </Field>
+      <Field
+        label={sponsor ? 'Replace logo' : 'Logo'}
+        htmlFor={`${p}-logo`}
+        hint={sponsor ? 'Leave empty to keep the current logo.' : 'PNG or SVG with a transparent background looks best. Resized in your browser before upload.'}
+      >
+        <FileInput id={`${p}-logo`} ref={fileRef} accept="image/*" required={!sponsor} disabled={busy} />
+      </Field>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="submit" size="xl" variant="brand" disabled={busy}>
+          {busy ? 'Working…' : sponsor ? 'Save changes' : 'Add sponsor'}
+        </Button>
+        {status && (
+          <p role="status" className={status.tone === 'error' ? 'text-sm text-red-700' : 'text-sm text-brand-grey'}>
+            {status.text}
+          </p>
         )}
-        {status && <span className="text-xs text-neutral-600">{status}</span>}
       </div>
     </form>
   )

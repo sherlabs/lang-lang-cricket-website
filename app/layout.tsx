@@ -3,6 +3,7 @@ import { Inter, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteChrome } from "@/components/site-chrome";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,9 +44,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${barlowCondensed.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
-        <SiteNav />
+        <SiteChrome>
+          <SiteNav />
+        </SiteChrome>
         <div className="flex-1">{children}</div>
-        <SiteFooter />
+        <SiteChrome>
+          <SiteFooter />
+        </SiteChrome>
       </body>
     </html>
   );
