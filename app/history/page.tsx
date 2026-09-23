@@ -2,8 +2,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
+import { buttonVariants } from '@/components/ui/button'
 import { listPublishedStories } from '@/lib/stories-queries'
 
 export const dynamic = 'force-dynamic'
@@ -70,28 +71,34 @@ export default async function HistoryPage() {
             </p>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-dashed border-brand-black/20 p-6 transition hover:border-brand-gold">
-            <p className="font-semibold text-brand-black">Got old photos, scorebooks or stories?</p>
-            <p className="mt-1 text-sm text-brand-grey">
-              We are always keen to add to the archive. Share your story below, or get in touch with the
-              committee directly.
+        </div>
+      </section>
+
+      <section className="container-site pb-16 lg:pb-20">
+        <div className="relative overflow-hidden rounded-3xl bg-brand-black px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-gold/20 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-full bg-brand-gold/10 blur-3xl"
+          />
+          <div className="relative mx-auto max-w-xl">
+            <p className="eyebrow text-brand-gold">Got old photos, scorebooks or stories?</p>
+            <p className="display mt-3 text-3xl sm:text-4xl">Write your story</p>
+            <p className="mt-4 text-base leading-relaxed text-white/75">
+              Every era of the club deserves its chapter. Whatever you remember, however you want to
+              tell it — write it up and share it with the club.
             </p>
-            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-              <Link
-                href="/history/submit"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
-              >
-                Share your story
-                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
-              >
-                Contact the club
-                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
+            <Link
+              href="/history/submit"
+              className={buttonVariants({ variant: 'gold', size: 'xl', className: 'mt-8 gap-2' })}
+            >
+              <HugeiconsIcon icon={PencilEdit01Icon} className="h-4 w-4" aria-hidden />
+              Write your story
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+            </Link>
           </div>
         </div>
       </section>
