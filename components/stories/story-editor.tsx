@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
+import Placeholder from '@tiptap/extension-placeholder'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   BoldIcon,
@@ -15,7 +16,6 @@ import {
 } from '@hugeicons/core-free-icons'
 import { STORY_EXTENSIONS } from '@/lib/stories-extensions'
 import { optimiseImage } from '@/lib/blob-client'
-import { cn } from '@/lib/utils'
 
 const EMPTY_DOC: JSONContent = { type: 'doc', content: [{ type: 'paragraph' }] }
 
@@ -28,18 +28,25 @@ type Props = {
 }
 
 export function StoryEditor({ name, initialContent, uploadImage }: Props) {
-  const hiddenRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkValue, setLinkValue] = useState('')
   const [uploading, setUploading] = useState(false)
+  // Controlled state, not a ref mutation: a ref written to from Tiptap's
+  // onUpdate can end up pointing at a hidden input that's no longer the one
+  // React keeps mounted (e.g. after a dev-mode double-render), silently
+  // submitting the empty default doc. State re-renders the real DOM node.
+  const [contentJson, setContentJson] = useState(() => JSON.stringify(initialContent ?? EMPTY_DOC))
 
   const editor = useEditor({
-    extensions: STORY_EXTENSIONS,
+    extensions: [
+      ...STORY_EXTENSIONS,
+      Placeholder.configure({ placeholder: 'Tell your story…' }),
+    ],
     content: initialContent ?? EMPTY_DOC,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      if (hiddenRef.current) hiddenRef.current.value = JSON.stringify(editor.getJSON())
+      setContentJson(JSON.stringify(editor.getJSON()))
     },
   })
 
@@ -51,7 +58,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         const prepared = await optimiseImage(file, { maxEdge: 1600 })
         const url = await uploadImage(prepared)
         editor.chain().focus().setImage({ src: url }).run()
-        if (hiddenRef.current) hiddenRef.current.value = JSON.stringify(editor.getJSON())
+        setContentJson(JSON.stringify(editor.getJSON()))
       } finally {
         setUploading(false)
       }
@@ -61,18 +68,12 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
 
   if (!editor) return null
 
-  const toolbarBtn = (active: boolean) =>
-    cn(
-      'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm text-brand-charcoal transition hover:bg-brand-stone',
-      active && 'bg-brand-gold-pale text-brand-gold-deep'
-    )
-
   return (
-    <div className="rounded-lg border border-brand-black/15 bg-white">
-      <div className="flex flex-wrap items-center gap-1 border-b border-brand-black/10 p-2">
+    <div>
+      <div className="story-toolbar sticky top-16 z-10 -mx-1 bg-white/95 px-1 backdrop-blur sm:top-0">
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('heading', { level: 2 }))}
+          aria-pressed={editor.isActive('heading', { level: 2 })}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           aria-label="Heading"
         >
@@ -80,7 +81,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </button>
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('bold'))}
+          aria-pressed={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
           aria-label="Bold"
         >
@@ -88,7 +89,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </button>
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('italic'))}
+          aria-pressed={editor.isActive('italic')}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           aria-label="Italic"
         >
@@ -96,7 +97,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </button>
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('bulletList'))}
+          aria-pressed={editor.isActive('bulletList')}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           aria-label="Bulleted list"
         >
@@ -104,7 +105,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </button>
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('blockquote'))}
+          aria-pressed={editor.isActive('blockquote')}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           aria-label="Quote"
         >
@@ -112,7 +113,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </button>
         <button
           type="button"
-          className={toolbarBtn(editor.isActive('link'))}
+          aria-pressed={editor.isActive('link')}
           onClick={() => {
             setLinkValue((editor.getAttributes('link').href as string) ?? '')
             setLinkOpen((v) => !v)
@@ -121,13 +122,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         >
           <HugeiconsIcon icon={Link01Icon} className="h-4 w-4" aria-hidden />
         </button>
-        <button
-          type="button"
-          className={toolbarBtn(false)}
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          aria-label="Insert image"
-        >
+        <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} aria-label="Insert image">
           <HugeiconsIcon icon={Image01Icon} className="h-4 w-4" aria-hidden />
         </button>
         <input
@@ -145,7 +140,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
       </div>
 
       {linkOpen && (
-        <div className="flex items-center gap-2 border-b border-brand-black/10 p-2">
+        <div className="flex items-center gap-2 border-b border-brand-black/10 py-2">
           <input
             type="url"
             value={linkValue}
@@ -162,7 +157,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
               } else {
                 editor.chain().focus().unsetLink().run()
               }
-              if (hiddenRef.current) hiddenRef.current.value = JSON.stringify(editor.getJSON())
+              setContentJson(JSON.stringify(editor.getJSON()))
               setLinkOpen(false)
             }}
           >
@@ -171,8 +166,8 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         </div>
       )}
 
-      <EditorContent editor={editor} className="story-content min-h-64 px-4 py-3" />
-      <input ref={hiddenRef} type="hidden" name={name} defaultValue={JSON.stringify(initialContent ?? EMPTY_DOC)} />
+      <EditorContent editor={editor} className="story-content pt-6" />
+      <input type="hidden" name={name} value={contentJson} readOnly />
     </div>
   )
 }

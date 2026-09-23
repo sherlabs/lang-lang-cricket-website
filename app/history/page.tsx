@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { unstable_noStore as noStore } from 'next/cache'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
@@ -12,6 +13,7 @@ export const metadata = {
 }
 
 export default async function HistoryPage() {
+  noStore()
   const stories = await listPublishedStories()
 
   return (

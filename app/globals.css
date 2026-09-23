@@ -111,35 +111,63 @@
   .container-site {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
-  /* Shared styling for both the live Tiptap editor and rendered story HTML. */
+  /* Minimal editorial reading/writing surface (Vercel blog-starter style) —
+     shared by the live Tiptap editor and rendered story HTML on the public
+     detail page. Neutral sans-serif copy, generous measure, no boxed chrome. */
   .story-content {
-    @apply text-brand-charcoal;
+    @apply text-[17px] leading-[1.75] text-brand-charcoal;
   }
   .story-content h2 {
-    @apply font-heading mb-3 mt-6 text-2xl font-bold text-brand-black first:mt-0;
+    @apply mb-4 mt-10 text-2xl font-semibold tracking-tight text-brand-black first:mt-0;
   }
   .story-content h3 {
-    @apply font-heading mb-2 mt-5 text-xl font-bold text-brand-black;
+    @apply mb-3 mt-8 text-xl font-semibold tracking-tight text-brand-black;
   }
   .story-content p {
-    @apply mb-4 leading-relaxed;
+    @apply mb-6;
+  }
+  .story-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none float-left h-0 text-brand-grey-light;
   }
   .story-content ul {
-    @apply mb-4 list-disc pl-6;
+    @apply mb-6 list-disc pl-6;
   }
   .story-content ol {
-    @apply mb-4 list-decimal pl-6;
+    @apply mb-6 list-decimal pl-6;
+  }
+  .story-content li {
+    @apply mb-2;
   }
   .story-content blockquote {
-    @apply my-4 border-l-4 border-brand-gold pl-4 italic text-brand-grey;
+    @apply my-8 border-l-2 border-brand-black/15 pl-6 text-brand-grey;
   }
   .story-content img {
-    @apply my-4 w-full rounded-xl;
+    @apply -mx-5 my-8 w-[calc(100%+2.5rem)] rounded-none sm:mx-0 sm:w-full sm:rounded-xl;
   }
   .story-content a {
-    @apply text-brand-gold-deep underline underline-offset-2;
+    @apply text-brand-black underline underline-offset-2 hover:text-brand-grey;
+  }
+  .story-content .ProseMirror {
+    @apply min-h-[50vh];
   }
   .story-content .ProseMirror:focus {
     @apply outline-none;
+  }
+
+  /* Editorial toolbar: quiet icon row, no card/border box around the writing surface. */
+  .story-toolbar {
+    @apply flex flex-wrap items-center gap-1 border-b border-brand-black/10 pb-3;
+  }
+  .story-toolbar button {
+    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-brand-grey transition hover:bg-brand-stone hover:text-brand-black;
+  }
+  .story-toolbar button[aria-pressed="true"] {
+    @apply bg-brand-stone text-brand-black;
+  }
+
+  /* Headline input on the write/submit forms — looks like a title, not a form field. */
+  .story-title-input {
+    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-2 text-3xl font-bold tracking-tight text-brand-black placeholder:text-brand-black/20 focus:border-brand-black/20 focus:outline-none focus:ring-0 sm:text-4xl;
   }
 }
