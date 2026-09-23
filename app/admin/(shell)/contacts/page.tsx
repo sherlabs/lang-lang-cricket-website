@@ -35,7 +35,8 @@ export default async function ContactsAdminPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-5 sm:pl-6">Role</TableHead>
+                <TableHead className="pl-5 sm:pl-6" />
+                <TableHead>Role</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
@@ -47,6 +48,16 @@ export default async function ContactsAdminPage() {
               {contacts.map((c) => (
                 <TableRow key={c.id} className="border-brand-black/5">
                   <TableCell className="pl-5 sm:pl-6">
+                    {c.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-stone text-xs font-semibold text-brand-grey-light">
+                        —
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {c.role === LEADERSHIP_ROLE ? <Badge>{c.role}</Badge> : <span className="text-brand-grey">{c.role}</span>}
                   </TableCell>
                   <TableCell className="font-medium text-brand-black">{c.name}</TableCell>

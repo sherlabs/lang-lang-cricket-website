@@ -21,6 +21,7 @@ export async function createContact(formData: FormData) {
     name: String(formData.get('name')),
     phone: String(formData.get('phone')),
     email: String(formData.get('email')),
+    photoUrl: String(formData.get('photoUrl') ?? ''),
     sortOrder: Number(formData.get('sortOrder')),
   } as never)
 }
@@ -32,6 +33,7 @@ export async function editContact(formData: FormData) {
     name: String(formData.get('name')),
     phone: String(formData.get('phone')),
     email: String(formData.get('email')),
+    photoUrl: String(formData.get('photoUrl') ?? ''),
     sortOrder: Number(formData.get('sortOrder')),
   } as never)
 }

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { COOKIE_NAME, verifySessionCookie } from '@/lib/auth'
 
-const ALLOWED_PREFIXES = ['gallery/', 'sponsors/', 'documents/', 'stories/']
+const ALLOWED_PREFIXES = ['gallery/', 'sponsors/', 'documents/', 'stories/', 'contacts/']
 
 // Issues short-lived client upload tokens so admin pages can send files straight
 // to Vercel Blob from the browser (server actions cap request bodies at ~4.5MB).

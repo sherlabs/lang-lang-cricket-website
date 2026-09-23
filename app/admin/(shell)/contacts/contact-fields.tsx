@@ -1,8 +1,9 @@
 import { Field, TextInput } from '@/components/admin/fields'
+import { PhotoUploadField } from '@/components/admin/photo-upload-field'
 
 export const LEADERSHIP_ROLE = 'Senior Leadership Team'
 
-type Contact = { id: number; role: string; name: string; phone: string; email: string; sortOrder: number }
+type Contact = { id: number; role: string; name: string; phone: string; email: string; photoUrl: string; sortOrder: number }
 
 /** Shared between the add card and the edit dialog; field names match the server actions. */
 export function ContactFields({ contact, roles }: { contact?: Contact; roles: string[] }) {
@@ -11,6 +12,9 @@ export function ContactFields({ contact, roles }: { contact?: Contact; roles: st
   return (
     <>
       {contact && <input type="hidden" name="id" value={contact.id} />}
+      <Field label="Photo" htmlFor={`${p}-photo`}>
+        <PhotoUploadField name="photoUrl" initialUrl={contact?.photoUrl} />
+      </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Role"

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, CallIcon } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
@@ -8,6 +9,7 @@ export type Contact = {
   name: string
   phone: string
   email: string
+  photoUrl?: string
 }
 
 function initials(name: string) {
@@ -34,12 +36,20 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
           key={c.id}
           className="group flex flex-col rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5 transition hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-brand-gold/40"
         >
-          <div
-            aria-hidden
-            className="font-heading flex h-12 w-12 items-center justify-center rounded-full bg-brand-gold-pale text-base font-bold tracking-wide text-brand-gold-deep ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
-          >
-            {initials(c.name)}
-          </div>
+          {c.photoUrl ? (
+            <img
+              src={c.photoUrl}
+              alt=""
+              className="h-12 w-12 rounded-full object-cover ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
+            />
+          ) : (
+            <div
+              aria-hidden
+              className="font-heading flex h-12 w-12 items-center justify-center rounded-full bg-brand-gold-pale text-base font-bold tracking-wide text-brand-gold-deep ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
+            >
+              {initials(c.name)}
+            </div>
+          )}
           <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-gold-deep">
             {c.role}
           </p>
