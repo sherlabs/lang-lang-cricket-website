@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core'
 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
@@ -34,3 +34,22 @@ export const committeeContacts = pgTable('committee_contacts', {
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+export const stories = pgTable('stories', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  excerpt: text('excerpt').notNull().default(''),
+  contentJson: jsonb('content_json').notNull(),
+  contentHtml: text('content_html').notNull(),
+  coverImageUrl: text('cover_image_url').notNull().default(''),
+  authorName: text('author_name').notNull(),
+  authorEmail: text('author_email').notNull().default(''),
+  submittedByAdmin: boolean('submitted_by_admin').notNull().default(false),
+  status: text('status').notNull().default('pending'), // 'pending' | 'published' | 'rejected'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  publishedAt: timestamp('published_at'),
+  reviewedAt: timestamp('reviewed_at'),
+})
+
+export type Story = typeof stories.$inferSelect
