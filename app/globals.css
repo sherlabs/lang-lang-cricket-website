@@ -111,4 +111,35 @@
   .container-site {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
+  /* Shared styling for both the live Tiptap editor and rendered story HTML. */
+  .story-content {
+    @apply text-brand-charcoal;
+  }
+  .story-content h2 {
+    @apply font-heading mb-3 mt-6 text-2xl font-bold text-brand-black first:mt-0;
+  }
+  .story-content h3 {
+    @apply font-heading mb-2 mt-5 text-xl font-bold text-brand-black;
+  }
+  .story-content p {
+    @apply mb-4 leading-relaxed;
+  }
+  .story-content ul {
+    @apply mb-4 list-disc pl-6;
+  }
+  .story-content ol {
+    @apply mb-4 list-decimal pl-6;
+  }
+  .story-content blockquote {
+    @apply my-4 border-l-4 border-brand-gold pl-4 italic text-brand-grey;
+  }
+  .story-content img {
+    @apply my-4 w-full rounded-xl;
+  }
+  .story-content a {
+    @apply text-brand-gold-deep underline underline-offset-2;
+  }
+  .story-content .ProseMirror:focus {
+    @apply outline-none;
+  }
 }
