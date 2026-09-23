@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,22 @@ export function ImageCropperDialog({ file, aspect = 1, onCancel, onCropped }: Pr
   const [croppedArea, setCroppedArea] = useState<Area | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const objectUrl = file ? URL.createObjectURL(file) : null
+  // Created once per file, not on every render — react-easy-crop treats a
+  // changed `image` string as a brand-new image to (re)fetch, so recreating
+  // this on every crop/zoom-driven re-render caused a runaway request loop.
+  const objectUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [objectUrl])
+
+  useEffect(() => {
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedArea(null)
+  }, [file])
 
   const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
     setCroppedArea(areaPixels)
@@ -55,7 +70,6 @@ export function ImageCropperDialog({ file, aspect = 1, onCancel, onCropped }: Pr
       onCropped(cropped)
     } finally {
       setBusy(false)
-      URL.revokeObjectURL(objectUrl)
     }
   }
 
