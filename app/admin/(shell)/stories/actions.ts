@@ -9,6 +9,7 @@ import { stories, type Story } from '@/db/schema'
 import { makeUniqueSlug } from '@/lib/slugify'
 import { renderStoryHtml, htmlToExcerpt } from '@/lib/stories-content'
 import { isBlobUrl } from '@/lib/blob-url'
+import { generateStoryToken } from '@/lib/story-tokens'
 import { COOKIE_NAME, verifySessionCookie } from '@/lib/auth'
 
 async function requireAdmin() {
@@ -68,6 +69,8 @@ export async function createStory(formData: FormData) {
     submittedByAdmin: true,
     status: 'published',
     publishedAt: new Date(),
+    editToken: generateStoryToken(),
+    viewToken: generateStoryToken(),
   })
 
   revalidatePath('/admin/stories')

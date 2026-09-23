@@ -13,3 +13,15 @@ export async function getPublishedStoryBySlug(slug: string): Promise<Story | nul
     .where(and(eq(stories.slug, slug), eq(stories.status, 'published')))
   return (rows[0] as Story | undefined) ?? null
 }
+
+/** Edit access via secret link — works regardless of status (pending, published, or rejected). */
+export async function getStoryByEditToken(editToken: string): Promise<Story | null> {
+  const rows = await db.select().from(stories).where(eq(stories.editToken, editToken))
+  return (rows[0] as Story | undefined) ?? null
+}
+
+/** Read-only preview access via secret link — works regardless of status. */
+export async function getStoryByViewToken(viewToken: string): Promise<Story | null> {
+  const rows = await db.select().from(stories).where(eq(stories.viewToken, viewToken))
+  return (rows[0] as Story | undefined) ?? null
+}

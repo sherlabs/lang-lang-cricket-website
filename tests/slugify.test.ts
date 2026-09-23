@@ -27,4 +27,9 @@ describe('makeUniqueSlug', () => {
     const slug = await makeUniqueSlug('Submit', async () => false)
     expect(slug).toBe('submit-2')
   })
+
+  it('treats "drafts" as reserved so it never collides with /history/drafts', async () => {
+    const slug = await makeUniqueSlug('Drafts', async () => false)
+    expect(slug).toBe('drafts-2')
+  })
 })

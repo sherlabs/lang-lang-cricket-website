@@ -12,7 +12,7 @@ export function slugify(input: string): string {
 // "taken" so makeUniqueSlug appends -2 the same way it does for a real
 // collision, otherwise the story would be unreachable (the static route
 // always wins the match).
-const RESERVED_SLUGS = new Set(['submit'])
+const RESERVED_SLUGS = new Set(['submit', 'drafts'])
 
 /** Appends -2, -3, ... to the base slug until `isTaken` reports one that's free. */
 export async function makeUniqueSlug(

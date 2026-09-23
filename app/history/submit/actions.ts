@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { eq } from 'drizzle-orm'
 import type { JSONContent } from '@tiptap/core'
 import { db } from '@/db'
@@ -9,6 +10,7 @@ import { stories } from '@/db/schema'
 import { makeUniqueSlug } from '@/lib/slugify'
 import { renderStoryHtml, htmlToExcerpt } from '@/lib/stories-content'
 import { isBlobUrl } from '@/lib/blob-url'
+import { generateStoryToken, DRAFT_COOKIE } from '@/lib/story-tokens'
 
 async function slugIsTaken(slug: string): Promise<boolean> {
   const rows = await db.select({ id: stories.id }).from(stories).where(eq(stories.slug, slug))
@@ -40,6 +42,8 @@ export async function submitStory(formData: FormData): Promise<{ error: string }
   const slug = await makeUniqueSlug(title, slugIsTaken)
   const coverImageUrl = String(formData.get('coverImageUrl') ?? '')
   const safeCoverImageUrl = coverImageUrl && isBlobUrl(coverImageUrl) ? coverImageUrl : ''
+  const editToken = generateStoryToken()
+  const viewToken = generateStoryToken()
 
   await db.insert(stories).values({
     slug,
@@ -52,9 +56,20 @@ export async function submitStory(formData: FormData): Promise<{ error: string }
     authorEmail: String(formData.get('authorEmail') ?? '').trim(),
     submittedByAdmin: false,
     status: 'pending',
+    editToken,
+    viewToken,
   })
 
   revalidatePath('/admin/stories')
+
+  // Not put in the URL: query params linger in browser history and can leak
+  // via the Referer header to any outbound link on the confirmation page.
+  // A cookie keeps it off the URL and lets the submitter come back later.
+  cookies().set(DRAFT_COOKIE, JSON.stringify({ title, editToken, viewToken }), {
+    maxAge: 60 * 60 * 24 * 180,
+    path: '/',
+    sameSite: 'lax',
+  })
 
   redirect('/history/submit?submitted=1')
 }

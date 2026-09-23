@@ -47,6 +47,13 @@ export const stories = pgTable('stories', {
   authorEmail: text('author_email').notNull().default(''),
   submittedByAdmin: boolean('submitted_by_admin').notNull().default(false),
   status: text('status').notNull().default('pending'), // 'pending' | 'published' | 'rejected'
+  // Unguessable secrets shared only with the submitter — not shown anywhere
+  // public. editToken grants edit access regardless of status; viewToken
+  // grants read-only access regardless of status (for previewing before
+  // approval). Neither is a substitute for real auth — anyone with the link
+  // has full access to what it grants, forever.
+  editToken: text('edit_token').notNull().unique(),
+  viewToken: text('view_token').notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
   reviewedAt: timestamp('reviewed_at'),
