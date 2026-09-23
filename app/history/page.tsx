@@ -3,12 +3,17 @@ import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
+import { listPublishedStories } from '@/lib/stories-queries'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'History | Lang Lang Cricket Club',
 }
 
-export default function HistoryPage() {
+export default async function HistoryPage() {
+  const stories = await listPublishedStories()
+
   return (
     <main>
       <PageHeader
@@ -63,19 +68,63 @@ export default function HistoryPage() {
           <div className="mt-6 rounded-2xl border border-dashed border-brand-black/20 p-6 transition hover:border-brand-gold">
             <p className="font-semibold text-brand-black">Got old photos, scorebooks or stories?</p>
             <p className="mt-1 text-sm text-brand-grey">
-              We are always keen to add to the archive. Get in touch with the committee and help fill in
-              the gaps.
+              We are always keen to add to the archive. Share your story below, or get in touch with the
+              committee directly.
             </p>
-            <Link
-              href="/contact"
-              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
-            >
-              Contact the club
-              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              <Link
+                href="/history/submit"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
+              >
+                Share your story
+                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
+              >
+                Contact the club
+                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
+
+      {stories.length > 0 && (
+        <section className="container-site py-16 lg:py-20">
+          <div className="mb-8 flex items-center gap-3">
+            <span className="display text-2xl text-brand-black">Stories</span>
+            <span className="h-px flex-1 bg-brand-black/10" aria-hidden />
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {stories.map((story) => (
+              <Link
+                key={story.id}
+                href={`/history/${story.slug}`}
+                className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover"
+              >
+                {story.coverImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={story.coverImageUrl}
+                    alt=""
+                    className="aspect-video w-full object-cover transition group-hover:scale-[1.02]"
+                  />
+                )}
+                <div className="flex flex-1 flex-col gap-2 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold-deep">
+                    {story.publishedAt?.toLocaleDateString()}
+                  </p>
+                  <h3 className="font-heading text-lg font-bold text-brand-black">{story.title}</h3>
+                  <p className="line-clamp-3 text-sm text-brand-grey">{story.excerpt}</p>
+                  <p className="mt-auto text-xs text-brand-grey-light">By {story.authorName}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   )
 }
