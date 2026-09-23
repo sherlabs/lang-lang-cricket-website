@@ -5,13 +5,12 @@ const eqCalls: Array<[unknown, unknown]> = []
 
 vi.mock('drizzle-orm', async () => {
   const actual = await vi.importActual<typeof import('drizzle-orm')>('drizzle-orm')
-  const eqImpl = (col: unknown, val: unknown) => {
-    eqCalls.push([col, val])
-    return actual.eq(col as never, val)
-  }
   return {
     ...actual,
-    eq: vi.fn(eqImpl),
+    eq: vi.fn((col: unknown, val: unknown) => {
+      eqCalls.push([col, val])
+      return actual.eq(col, val)
+    }),
   }
 })
 
@@ -20,7 +19,7 @@ describe('lib/crud makeCrudActions', () => {
     const rows: Array<{ id: number; name: string }> = []
     let nextId = 1
     const fakeDb = {
-      select: () => ({ from: (): Array<{ id: number; name: string }> => rows }),
+      select: () => ({ from: () => rows }),
       insert: () => ({
         values: (v: { name: string }) => {
           rows.push({ id: nextId++, name: v.name })
@@ -52,8 +51,7 @@ describe('lib/crud makeCrudActions', () => {
     expect(await actions.list()).toEqual([{ id: 1, name: 'Alpha' }])
 
     await actions.update(1, { name: 'Beta' })
-    const list = (await actions.list()) as Array<{ id: number; name: string }>
-    expect(list[0].name).toBe('Beta')
+    expect((await actions.list())[0].name).toBe('Beta')
 
     await actions.remove(1)
     expect(await actions.list()).toEqual([])
