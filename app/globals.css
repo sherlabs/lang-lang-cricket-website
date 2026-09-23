@@ -126,6 +126,13 @@
   .story-content p {
     @apply mb-6;
   }
+  /* A blank line while composing (Enter with nothing typed) shouldn't inherit
+     full paragraph spacing — otherwise a few blank lines create a large void
+     and the floating "+" (which correctly tracks the cursor) looks disconnected
+     from the text above it. */
+  .story-content .ProseMirror p:has(> br.ProseMirror-trailingBreak) {
+    @apply mb-2;
+  }
   .story-content p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     @apply pointer-events-none float-left h-0 text-brand-grey-light;
