@@ -42,11 +42,23 @@ export async function optimiseImage(
   }
 }
 
-/** Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL. */
-export async function uploadToBlob(file: File, prefix: 'gallery' | 'sponsors' | 'documents'): Promise<string> {
+/** Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL. Requires the admin session (routes through /api/admin/upload). */
+export async function uploadToBlob(
+  file: File,
+  prefix: 'gallery' | 'sponsors' | 'documents' | 'stories'
+): Promise<string> {
   const blob = await upload(`${prefix}/${file.name}`, file, {
     access: 'public',
     handleUploadUrl: '/api/admin/upload',
+  })
+  return blob.url
+}
+
+/** Upload a story image with no admin session required (public submission form). */
+export async function uploadPublicStoryImage(file: File): Promise<string> {
+  const blob = await upload(`stories/pending/${file.name}`, file, {
+    access: 'public',
+    handleUploadUrl: '/api/stories/upload',
   })
   return blob.url
 }
