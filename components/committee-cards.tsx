@@ -34,28 +34,30 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
       {contacts.map((c) => (
         <article
           key={c.id}
-          className="group flex flex-col rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5 transition hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-brand-gold/40"
+          className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5 transition hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-brand-gold/40"
         >
-          {c.photoUrl ? (
-            <img
-              src={c.photoUrl}
-              alt=""
-              className="h-12 w-12 rounded-full object-cover ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="font-heading flex h-12 w-12 items-center justify-center rounded-full bg-brand-gold-pale text-base font-bold tracking-wide text-brand-gold-deep ring-4 ring-brand-gold/20 transition group-hover:ring-brand-gold/40"
-            >
-              {initials(c.name)}
+          <div className="relative aspect-square w-full overflow-hidden bg-brand-gold-pale">
+            {c.photoUrl ? (
+              <img
+                src={c.photoUrl}
+                alt=""
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="font-heading flex h-full w-full items-center justify-center text-5xl font-bold tracking-wide text-brand-gold-deep/70"
+              >
+                {initials(c.name)}
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-black/85 via-brand-black/20 to-transparent p-4 pt-10">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold">{c.role}</p>
+              <h3 className="mt-0.5 text-lg font-bold leading-tight tracking-tight text-white">{c.name}</h3>
             </div>
-          )}
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-gold-deep">
-            {c.role}
-          </p>
-          <h3 className="mt-1 text-lg font-bold tracking-tight text-brand-black">{c.name}</h3>
+          </div>
           {(c.phone || c.email) && (
-            <ul className="mt-4 space-y-1 text-sm text-brand-grey">
+            <ul className="space-y-1 p-5 text-sm text-brand-grey">
               {c.phone && (
                 <li>
                   <a
