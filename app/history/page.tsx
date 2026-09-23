@@ -13,6 +13,9 @@ export const metadata = {
 }
 
 export default async function HistoryPage() {
+  // force-dynamic alone doesn't stop the Neon driver's fetch from being cached by
+  // Next's fetch-cache layer — noStore() is required so a rejected/unpublished
+  // story's status is never served stale here.
   noStore()
   const stories = await listPublishedStories()
 

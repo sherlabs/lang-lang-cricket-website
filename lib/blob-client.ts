@@ -2,11 +2,9 @@
 
 import { upload } from '@vercel/blob/client'
 
-const BLOB_HOST = '.blob.vercel-storage.com'
-
-export function isBlobUrl(url: string) {
-  return url.includes(BLOB_HOST)
-}
+// Re-exported from a directive-free module so server code (server actions)
+// can also import isBlobUrl without pulling in this 'use client' module.
+export { isBlobUrl } from './blob-url'
 
 /**
  * Downscale an image in the browser so uploads stay small. Photos become JPEG;

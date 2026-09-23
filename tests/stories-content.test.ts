@@ -21,6 +21,48 @@ describe('renderStoryHtml', () => {
     expect(html).toContain('<strong>win</strong>')
     expect(html).toContain('src="https://example.com/photo.jpg"')
   })
+
+  it('strips unexpected attributes injected on a link mark', () => {
+    const html = renderStoryHtml({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'click',
+              marks: [{ type: 'link', attrs: { href: 'https://example.com', class: 'fixed inset-0 z-50', target: '_blank', rel: 'evil' } }],
+            },
+          ],
+        },
+      ],
+    })
+    expect(html).toContain('href="https://example.com"')
+    expect(html).not.toContain('class=')
+    expect(html).not.toContain('target=')
+    expect(html).not.toContain('rel=')
+  })
+
+  it('strips a disallowed href protocol on a link mark', () => {
+    const html = renderStoryHtml({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'click',
+              marks: [{ type: 'link', attrs: { href: 'javascript:alert(1)' } }],
+            },
+          ],
+        },
+      ],
+    })
+    expect(html).toContain('href=""')
+    expect(html).not.toContain('javascript:')
+  })
 })
 
 describe('htmlToExcerpt', () => {

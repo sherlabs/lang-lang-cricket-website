@@ -54,6 +54,14 @@ export default async function StoriesAdminPage() {
                     </ActionForm>
                   </div>
                 </div>
+                {s.coverImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.coverImageUrl}
+                    alt=""
+                    className="mt-3 w-full max-w-xs rounded-lg"
+                  />
+                )}
                 {/* eslint-disable-next-line react/no-danger -- content only ever comes from this app's own Tiptap editor, see lib/stories-content.ts */}
                 <div
                   className="story-content mt-3 max-h-48 overflow-y-auto rounded-lg bg-brand-stone/60 p-3 text-sm"

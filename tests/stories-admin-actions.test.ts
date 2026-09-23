@@ -7,6 +7,17 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
 
+vi.mock('next/headers', () => ({
+  cookies: () => ({
+    get: (name: string) => (name === 'llcc_admin_session' ? { value: 'valid-token' } : undefined),
+  }),
+}))
+
+vi.mock('@/lib/auth', () => ({
+  COOKIE_NAME: 'llcc_admin_session',
+  verifySessionCookie: async () => true,
+}))
+
 vi.mock('@/db', () => ({
   db: {
     select: () => ({ from: () => ({ where: () => Promise.resolve([]) }) }),
@@ -43,6 +54,8 @@ const SAMPLE_DOC = JSON.stringify({
   content: [{ type: 'paragraph', content: [{ type: 'text', text: 'A short story about round six.' }] }],
 })
 
+const EMPTY_DOC = JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] })
+
 describe('createStory', () => {
   it('publishes immediately with a generated slug and derived excerpt', async () => {
     const { createStory } = await import('@/app/admin/(shell)/stories/actions')
@@ -64,6 +77,14 @@ describe('createStory', () => {
     await expect(createStory(formData({ title: '', contentJson: SAMPLE_DOC }))).rejects.toThrow(
       'Title is required.'
     )
+  })
+
+  it('rejects an empty-doc submission without inserting anything', async () => {
+    const { createStory } = await import('@/app/admin/(shell)/stories/actions')
+    await expect(
+      createStory(formData({ title: 'Empty Story', contentJson: EMPTY_DOC }))
+    ).rejects.toThrow('Story body cannot be empty.')
+    expect(inserted).toBeNull()
   })
 })
 

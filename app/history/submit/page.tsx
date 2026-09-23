@@ -33,16 +33,12 @@ function SubmitStoryForm() {
     setBusy(true)
     setError(null)
     formData.set('coverImageUrl', coverUrl)
-    try {
-      await submitStory(formData)
-    } catch (err) {
-      // next/navigation's redirect() throws on success too — only treat a
-      // real Error (our own validation) as a failure to show.
-      if (err instanceof Error && !('digest' in err)) {
-        setError(err.message)
-        setBusy(false)
-      }
+    const result = await submitStory(formData)
+    if (result?.error) {
+      setError(result.error)
+      setBusy(false)
     }
+    // no result / redirect: Next's redirect() already navigated away, nothing to do here
   }
 
   if (submitted) {

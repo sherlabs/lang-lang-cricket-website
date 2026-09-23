@@ -8,12 +8,18 @@ import { getPublishedStoryBySlug } from '@/lib/stories-queries'
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
+  // force-dynamic alone doesn't stop the Neon driver's fetch from being cached by
+  // Next's fetch-cache layer — noStore() is required so a rejected/unpublished
+  // story's status is never served stale here.
   noStore()
   const story = await getPublishedStoryBySlug(params.slug)
   return { title: story ? `${story.title} | Lang Lang Cricket Club` : 'Story not found' }
 }
 
 export default async function StoryDetailPage({ params }: { params: { slug: string } }) {
+  // force-dynamic alone doesn't stop the Neon driver's fetch from being cached by
+  // Next's fetch-cache layer — noStore() is required so a rejected/unpublished
+  // story's status is never served stale here.
   noStore()
   const story = await getPublishedStoryBySlug(params.slug)
   if (!story) notFound()

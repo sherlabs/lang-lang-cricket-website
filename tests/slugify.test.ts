@@ -22,4 +22,9 @@ describe('makeUniqueSlug', () => {
     const slug = await makeUniqueSlug('Grand Final Recap', async (s) => taken.has(s))
     expect(slug).toBe('grand-final-recap-3')
   })
+
+  it('treats "submit" as reserved so it never collides with /history/submit', async () => {
+    const slug = await makeUniqueSlug('Submit', async () => false)
+    expect(slug).toBe('submit-2')
+  })
 })

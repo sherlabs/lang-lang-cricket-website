@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 let inserted: Record<string, unknown> | null = null
 
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}))
+
 vi.mock('@/db', () => ({
   db: {
     select: () => ({ from: () => ({ where: () => Promise.resolve([]) }) }),
@@ -48,17 +52,15 @@ describe('submitStory', () => {
 
   it('rejects submissions missing required fields without inserting anything', async () => {
     const { submitStory } = await import('@/app/history/submit/actions')
-    await expect(
-      submitStory(formData({ authorName: '', title: '', contentJson: SAMPLE_DOC }))
-    ).rejects.toThrow('Name, title and story body are required.')
+    const result = await submitStory(formData({ authorName: '', title: '', contentJson: SAMPLE_DOC }))
+    expect(result).toEqual({ error: 'Name, title and story body are required.' })
     expect(inserted).toBeNull()
   })
 
   it('rejects a body with no real text without inserting anything', async () => {
     const { submitStory } = await import('@/app/history/submit/actions')
-    await expect(
-      submitStory(formData({ authorName: 'Pat Smith', title: 'Empty Story', contentJson: EMPTY_DOC }))
-    ).rejects.toThrow('Story body cannot be empty.')
+    const result = await submitStory(formData({ authorName: 'Pat Smith', title: 'Empty Story', contentJson: EMPTY_DOC }))
+    expect(result).toEqual({ error: 'Story body cannot be empty.' })
     expect(inserted).toBeNull()
   })
 
