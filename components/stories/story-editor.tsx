@@ -12,7 +12,10 @@ import {
   TextIcon,
   ListViewIcon,
   QuoteUpIcon,
-  PlusSignIcon,
+  Add01Icon,
+  Cancel01Icon,
+  Image01Icon,
+  SolidLine01Icon,
 } from '@hugeicons/core-free-icons'
 import { STORY_EXTENSIONS } from '@/lib/stories-extensions'
 import { optimiseImage } from '@/lib/blob-client'
@@ -32,6 +35,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkValue, setLinkValue] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false)
   // Controlled state, not a ref mutation: a ref written to from Tiptap's
   // onUpdate can end up pointing at a hidden input that's no longer the one
   // React keeps mounted (e.g. after a dev-mode double-render), silently
@@ -175,16 +179,59 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         )}
       </BubbleMenu>
 
-      {/* "+" in the left margin of an empty line, as on Medium. FloatingMenu
-          only shows itself when the caret sits in an empty text block. */}
+      {/* "+" in the left margin of an empty line, as on Medium/Ghost. FloatingMenu
+          only shows itself when the caret sits in an empty text block. The
+          popper is anchored left-start, so its own box stays one button wide
+          and the expanded row overflows rightward (absolute) — otherwise tippy
+          would re-anchor and shove the "+" leftward when the row appears. */}
       <FloatingMenu
         editor={editor}
         className="story-floating-menu"
-        tippyOptions={{ duration: 100, placement: 'left-start' }}
+        tippyOptions={{ duration: 100, placement: 'left-start', onHide: () => setPlusMenuOpen(false) }}
       >
-        <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} aria-label="Insert image">
-          <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4" aria-hidden />
+        <button
+          type="button"
+          className="group"
+          aria-expanded={plusMenuOpen}
+          aria-label={plusMenuOpen ? 'Close menu' : 'Insert block'}
+          onClick={() => {
+            setPlusMenuOpen((open) => !open)
+            if (plusMenuOpen) editor.chain().focus().run()
+          }}
+        >
+          <HugeiconsIcon
+            icon={plusMenuOpen ? Cancel01Icon : Add01Icon}
+            className="h-4 w-4 transition-transform duration-200 group-aria-expanded:rotate-90"
+            aria-hidden
+          />
+          <span className="story-tooltip">{plusMenuOpen ? 'Close menu' : 'Insert block'}</span>
         </button>
+        <div className="story-plus-row" data-open={plusMenuOpen} aria-hidden={!plusMenuOpen}>
+          <button
+            type="button"
+            className="group"
+            disabled={uploading}
+            tabIndex={plusMenuOpen ? 0 : -1}
+            onClick={() => fileRef.current?.click()}
+            aria-label="Insert image"
+          >
+            <HugeiconsIcon icon={Image01Icon} className="h-4 w-4" aria-hidden />
+            <span className="story-tooltip">Image</span>
+          </button>
+          <button
+            type="button"
+            className="group"
+            tabIndex={plusMenuOpen ? 0 : -1}
+            onClick={() => {
+              editor.chain().focus().setHorizontalRule().run()
+              setPlusMenuOpen(false)
+            }}
+            aria-label="Insert divider"
+          >
+            <HugeiconsIcon icon={SolidLine01Icon} className="h-4 w-4" aria-hidden />
+            <span className="story-tooltip">Divider</span>
+          </button>
+        </div>
       </FloatingMenu>
 
       <input
@@ -199,7 +246,7 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
         }}
       />
 
-      <EditorContent editor={editor} className="story-content pt-2" />
+      <EditorContent editor={editor} className="story-content pt-2" data-plus-open={plusMenuOpen} />
       {uploading && <p className="text-xs text-brand-grey">Uploading image…</p>}
       <input type="hidden" name={name} value={contentJson} readOnly />
     </div>

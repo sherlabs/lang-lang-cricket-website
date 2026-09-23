@@ -135,7 +135,12 @@
   }
   .story-content p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
-    @apply pointer-events-none float-left h-0 text-brand-grey-light;
+    @apply pointer-events-none float-left h-0 text-brand-grey-light transition-opacity;
+  }
+  /* The expanded insert row overlays the empty first line, so the placeholder
+     steps aside while it's open. */
+  .story-content[data-plus-open="true"] p.is-editor-empty:first-child::before {
+    @apply opacity-0;
   }
   .story-content ul {
     @apply mb-6 list-disc pl-6;
@@ -154,6 +159,9 @@
   }
   .story-content a {
     @apply text-brand-black underline underline-offset-2 hover:text-brand-grey;
+  }
+  .story-content hr {
+    @apply mx-auto my-10 w-16 border-0 border-t-2 border-brand-black/15;
   }
   .story-content .ProseMirror {
     @apply min-h-[50vh];
@@ -180,12 +188,39 @@
   .story-bubble-menu-input {
     @apply h-8 w-64 bg-transparent px-2 text-sm text-white placeholder:text-white/40 focus:outline-none;
   }
+  .story-floating-menu {
+    @apply relative;
+  }
   .story-floating-menu button {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-black/30 bg-white text-brand-grey transition hover:border-brand-black hover:text-brand-black disabled:opacity-40;
+    @apply relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-black/30 bg-white text-brand-grey transition hover:border-brand-black hover:text-brand-black disabled:opacity-40;
+  }
+  .story-floating-menu button[aria-expanded="true"] {
+    @apply border-brand-black text-brand-black;
+  }
+  /* Ghost-style insert row: overflows to the right of the "+" over the empty
+     line. Always mounted so the reveal can transition; hidden state is
+     `invisible` so the buttons also leave the tab order. */
+  .story-plus-row {
+    @apply invisible absolute left-full top-0 ml-2 flex -translate-x-1 items-center gap-2 opacity-0 transition-[opacity,transform,visibility] duration-200;
+  }
+  .story-plus-row[data-open="true"] {
+    @apply visible translate-x-0 opacity-100;
+  }
+  .story-plus-row button {
+    @apply border-brand-gold text-brand-gold-deep hover:border-brand-gold-dark hover:bg-brand-gold-pale hover:text-brand-black;
+  }
+  .story-tooltip {
+    @apply pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-black px-2 py-1 text-xs font-medium leading-none text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100;
   }
 
   /* Headline input on the write/submit forms — looks like a title, not a form field. */
   .story-title-input {
-    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-2 text-3xl font-bold tracking-tight text-brand-black placeholder:text-brand-black/20 focus:border-brand-black/20 focus:outline-none focus:ring-0 sm:text-4xl;
+    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-2 font-serif text-3xl font-bold leading-tight tracking-tight text-brand-black placeholder:text-brand-black/20 focus:border-brand-black/20 focus:outline-none focus:ring-0 sm:text-4xl;
+  }
+
+  /* Byline fields under the title: borderless inputs that sit on a hairline,
+     so they read as part of the article header rather than a form. */
+  .story-byline-input {
+    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-1 text-brand-black placeholder:text-brand-grey-light focus:border-brand-gold focus:outline-none focus:ring-0;
   }
 }
