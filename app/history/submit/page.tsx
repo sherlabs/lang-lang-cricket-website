@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { submitStory } from './actions'
 import { StoryEditor } from '@/components/stories/story-editor'
 import { uploadPublicStoryImage, optimiseImage } from '@/lib/blob-client'
@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/page-header'
 import { Field, TextInput, FileInput } from '@/components/admin/fields'
 import { Button } from '@/components/ui/button'
 
-export default function SubmitStoryPage() {
+function SubmitStoryForm() {
   const params = useSearchParams()
   const submitted = params.get('submitted') === '1'
   const [coverUrl, setCoverUrl] = useState('')
@@ -95,5 +95,13 @@ export default function SubmitStoryPage() {
         </form>
       </section>
     </main>
+  )
+}
+
+export default function SubmitStoryPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubmitStoryForm />
+    </Suspense>
   )
 }
