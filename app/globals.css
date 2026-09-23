@@ -155,15 +155,26 @@
     @apply outline-none;
   }
 
-  /* Editorial toolbar: quiet icon row, no card/border box around the writing surface. */
-  .story-toolbar {
-    @apply flex flex-wrap items-center gap-1 border-b border-brand-black/10 pb-3;
+  /* Medium-style editor chrome. The tippy poppers mount inside the editor
+     wrapper, so typography is reset explicitly rather than inherited from
+     .story-content. */
+  .story-bubble-menu {
+    @apply flex items-center gap-0.5 rounded-lg bg-brand-black p-1 text-sm leading-none text-white shadow-lg shadow-black/25;
   }
-  .story-toolbar button {
-    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-brand-grey transition hover:bg-brand-stone hover:text-brand-black;
+  .story-bubble-menu button {
+    @apply inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-white/85 transition hover:bg-white/10 hover:text-white;
   }
-  .story-toolbar button[aria-pressed="true"] {
-    @apply bg-brand-stone text-brand-black;
+  .story-bubble-menu button[aria-pressed="true"] {
+    @apply bg-white/20 text-white;
+  }
+  .story-bubble-menu-divider {
+    @apply mx-1 h-5 w-px bg-white/20;
+  }
+  .story-bubble-menu-input {
+    @apply h-8 w-64 bg-transparent px-2 text-sm text-white placeholder:text-white/40 focus:outline-none;
+  }
+  .story-floating-menu button {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-black/30 bg-white text-brand-grey transition hover:border-brand-black hover:text-brand-black disabled:opacity-40;
   }
 
   /* Headline input on the write/submit forms — looks like a title, not a form field. */

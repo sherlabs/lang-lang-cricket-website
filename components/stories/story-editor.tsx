@@ -1,18 +1,18 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   BoldIcon,
   ItalicIcon,
-  Image01Icon,
   Link01Icon,
-  Heading02Icon,
+  TextIcon,
   ListViewIcon,
   QuoteUpIcon,
+  PlusSignIcon,
 } from '@hugeicons/core-free-icons'
 import { STORY_EXTENSIONS } from '@/lib/stories-extensions'
 import { optimiseImage } from '@/lib/blob-client'
@@ -66,107 +66,141 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
     [editor, uploadImage]
   )
 
+  const applyLink = () => {
+    if (!editor) return
+    if (linkValue) {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: linkValue }).run()
+    } else {
+      editor.chain().focus().unsetLink().run()
+    }
+    setContentJson(JSON.stringify(editor.getJSON()))
+    setLinkOpen(false)
+  }
+
   if (!editor) return null
 
   return (
     <div>
-      <div className="story-toolbar sticky top-16 z-10 -mx-1 bg-white/95 px-1 backdrop-blur sm:top-0">
-        <button
-          type="button"
-          aria-pressed={editor.isActive('heading', { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          aria-label="Heading"
-        >
-          <HugeiconsIcon icon={Heading02Icon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-pressed={editor.isActive('bold')}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          aria-label="Bold"
-        >
-          <HugeiconsIcon icon={BoldIcon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-pressed={editor.isActive('italic')}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          aria-label="Italic"
-        >
-          <HugeiconsIcon icon={ItalicIcon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-pressed={editor.isActive('bulletList')}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          aria-label="Bulleted list"
-        >
-          <HugeiconsIcon icon={ListViewIcon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-pressed={editor.isActive('blockquote')}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          aria-label="Quote"
-        >
-          <HugeiconsIcon icon={QuoteUpIcon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-pressed={editor.isActive('link')}
-          onClick={() => {
-            setLinkValue((editor.getAttributes('link').href as string) ?? '')
-            setLinkOpen((v) => !v)
-          }}
-          aria-label="Link"
-        >
-          <HugeiconsIcon icon={Link01Icon} className="h-4 w-4" aria-hidden />
-        </button>
-        <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} aria-label="Insert image">
-          <HugeiconsIcon icon={Image01Icon} className="h-4 w-4" aria-hidden />
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) insertImage(file)
-            e.target.value = ''
-          }}
-        />
-        {uploading && <span className="text-xs text-brand-grey">Uploading…</span>}
-      </div>
-
-      {linkOpen && (
-        <div className="flex items-center gap-2 border-b border-brand-black/10 py-2">
+      {/* Medium-style selection toolbar: only exists while text is selected. The
+          tippy popper mounts inside the surrounding <form>, so Enter in the URL
+          field must be intercepted or it submits the whole story. */}
+      <BubbleMenu
+        editor={editor}
+        className="story-bubble-menu"
+        tippyOptions={{ duration: 100, onHide: () => setLinkOpen(false) }}
+      >
+        {linkOpen ? (
           <input
             type="url"
+            autoFocus
             value={linkValue}
             onChange={(e) => setLinkValue(e.target.value)}
-            placeholder="https://…"
-            className="h-9 flex-1 rounded-md border border-brand-black/15 px-2 text-sm"
-          />
-          <button
-            type="button"
-            className="h-9 shrink-0 rounded-md bg-brand-black px-3 text-xs font-semibold text-white"
-            onClick={() => {
-              if (linkValue) {
-                editor.chain().focus().extendMarkRange('link').setLink({ href: linkValue }).run()
-              } else {
-                editor.chain().focus().unsetLink().run()
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                applyLink()
+              } else if (e.key === 'Escape') {
+                e.preventDefault()
+                setLinkOpen(false)
+                editor.chain().focus().run()
               }
-              setContentJson(JSON.stringify(editor.getJSON()))
-              setLinkOpen(false)
             }}
-          >
-            Apply
-          </button>
-        </div>
-      )}
+            placeholder="Paste or type a link…"
+            aria-label="Link URL"
+            className="story-bubble-menu-input"
+          />
+        ) : (
+          <>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('bold')}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              aria-label="Bold"
+            >
+              <HugeiconsIcon icon={BoldIcon} className="h-4 w-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('italic')}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              aria-label="Italic"
+            >
+              <HugeiconsIcon icon={ItalicIcon} className="h-4 w-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('link')}
+              onClick={() => {
+                setLinkValue((editor.getAttributes('link').href as string) ?? '')
+                setLinkOpen(true)
+              }}
+              aria-label="Link"
+            >
+              <HugeiconsIcon icon={Link01Icon} className="h-4 w-4" aria-hidden />
+            </button>
+            <span className="story-bubble-menu-divider" aria-hidden />
+            <button
+              type="button"
+              aria-pressed={editor.isActive('heading', { level: 2 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              aria-label="Large heading"
+            >
+              <HugeiconsIcon icon={TextIcon} className="h-5 w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('heading', { level: 3 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              aria-label="Small heading"
+            >
+              <HugeiconsIcon icon={TextIcon} className="h-3.5 w-3.5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('blockquote')}
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              aria-label="Quote"
+            >
+              <HugeiconsIcon icon={QuoteUpIcon} className="h-4 w-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-pressed={editor.isActive('bulletList')}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              aria-label="Bulleted list"
+            >
+              <HugeiconsIcon icon={ListViewIcon} className="h-4 w-4" aria-hidden />
+            </button>
+          </>
+        )}
+      </BubbleMenu>
 
-      <EditorContent editor={editor} className="story-content pt-6" />
+      {/* "+" in the left margin of an empty line, as on Medium. FloatingMenu
+          only shows itself when the caret sits in an empty text block. */}
+      <FloatingMenu
+        editor={editor}
+        className="story-floating-menu"
+        tippyOptions={{ duration: 100, placement: 'left-start' }}
+      >
+        <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} aria-label="Insert image">
+          <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4" aria-hidden />
+        </button>
+      </FloatingMenu>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) insertImage(file)
+          e.target.value = ''
+        }}
+      />
+
+      <EditorContent editor={editor} className="story-content pt-2" />
+      {uploading && <p className="text-xs text-brand-grey">Uploading image…</p>}
       <input type="hidden" name={name} value={contentJson} readOnly />
     </div>
   )
