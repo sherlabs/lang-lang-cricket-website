@@ -61,3 +61,48 @@ export const stories = pgTable('stories', {
 })
 
 export type Story = typeof stories.$inferSelect
+
+export const events = pgTable('events', {
+  id: serial('id').primaryKey(),
+  type: text('type').notNull(), // 'one_time' | 'recurring'
+  title: text('title').notNull(),
+  description: text('description').notNull().default(''),
+  location: text('location').notNull().default(''),
+  coverImageUrl: text('cover_image_url').notNull().default(''),
+  paymentLinkLabel: text('payment_link_label').notNull().default(''),
+  paymentLinkUrl: text('payment_link_url').notNull().default(''),
+  eventTime: text('event_time').notNull().default(''), // "HH:mm", both types
+  // one_time only:
+  eventDate: timestamp('event_date'), // UTC midnight of the day — see Task 4
+  // recurring only:
+  dayOfWeek: integer('day_of_week'), // 0 (Sun) - 6 (Sat)
+  startDate: timestamp('start_date'), // UTC midnight
+  endDate: timestamp('end_date'), // UTC midnight
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Event = typeof events.$inferSelect
+
+export const eventRsvps = pgTable('event_rsvps', {
+  id: serial('id').primaryKey(),
+  eventId: integer('event_id').notNull(),
+  occurrenceDate: timestamp('occurrence_date').notNull(), // full timestamp, time merged in — see Task 2
+  name: text('name').notNull(),
+  email: text('email').notNull().default(''),
+  note: text('note').notNull().default(''),
+  editToken: text('edit_token').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type EventRsvp = typeof eventRsvps.$inferSelect
+
+export const eventPhotos = pgTable('event_photos', {
+  id: serial('id').primaryKey(),
+  eventId: integer('event_id').notNull(),
+  url: text('url').notNull(),
+  caption: text('caption').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type EventPhoto = typeof eventPhotos.$inferSelect
