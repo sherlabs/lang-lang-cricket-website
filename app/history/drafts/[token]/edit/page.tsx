@@ -6,6 +6,10 @@ import { DraftEditForm } from './draft-edit-form'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  title: 'Edit your story | Lang Lang Cricket Club',
+}
+
 export default async function DraftEditPage({ params }: { params: { token: string } }) {
   noStore()
   const story = await getStoryByEditToken(params.token)

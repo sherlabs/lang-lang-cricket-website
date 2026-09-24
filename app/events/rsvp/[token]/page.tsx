@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
+import type { Metadata } from 'next'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, Clock01Icon, Location01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
@@ -15,7 +16,10 @@ import { RsvpEditForm } from './rsvp-edit-form'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = { title: 'Your RSVP | Lang Lang Cricket Club' }
+export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+  const rsvp = await getRsvpByToken(params.token)
+  return { title: rsvp ? `Manage your RSVP | Lang Lang Cricket Club` : 'RSVP not found | Lang Lang Cricket Club' }
+}
 
 /**
  * The session this RSVP is for. `event` is null when the admin has since deleted the event —

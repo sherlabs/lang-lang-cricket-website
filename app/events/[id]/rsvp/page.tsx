@@ -28,7 +28,7 @@ async function loadEvent(id: string): Promise<Event | null> {
 
 export async function generateMetadata({ params }: Props) {
   const event = await loadEvent(params.id)
-  return { title: event ? `RSVP: ${event.title} | Lang Lang Cricket Club` : 'RSVP | Lang Lang Cricket Club' }
+  return { title: event ? `RSVP: ${event.title} | Lang Lang Cricket Club` : 'Event not found | Lang Lang Cricket Club' }
 }
 
 /** The session being RSVP'd to — stays put beside the form so the date is never out of sight. */

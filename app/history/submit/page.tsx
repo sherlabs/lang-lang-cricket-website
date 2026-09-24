@@ -1,5 +1,9 @@
 'use client'
 
+export const metadata = {
+  title: 'Share your story | Lang Lang Cricket Club',
+}
+
 import { useSearchParams } from 'next/navigation'
 import { useState, Suspense } from 'react'
 import { submitStory } from './actions'

@@ -1,8 +1,14 @@
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
+import type { Metadata } from 'next'
 import { getStoryByViewToken } from '@/lib/stories-queries'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+  const story = await getStoryByViewToken(params.token)
+  return { title: story ? `${story.title} | Lang Lang Cricket Club` : 'Story not found | Lang Lang Cricket Club' }
+}
 
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Pending review',

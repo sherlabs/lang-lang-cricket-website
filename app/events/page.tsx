@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Events | Lang Lang Cricket Club',
+  description: 'Upcoming club events, training, and how to RSVP.',
 }
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
