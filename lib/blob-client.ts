@@ -40,14 +40,17 @@ export async function optimiseImage(
   }
 }
 
-/** Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL. Requires the admin session (routes through /api/admin/upload). */
-export async function uploadToBlob(
-  file: File,
-  prefix: 'gallery' | 'sponsors' | 'documents' | 'stories' | 'contacts' | 'events'
-): Promise<string> {
+export type UploadPrefix = 'gallery' | 'sponsors' | 'documents' | 'stories' | 'contacts' | 'events'
+
+/**
+ * Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL.
+ * Requires the admin session (routes through /api/admin/upload). `onProgress` receives 0–100.
+ */
+export async function uploadToBlob(file: File, prefix: UploadPrefix, onProgress?: (percentage: number) => void): Promise<string> {
   const blob = await upload(`${prefix}/${file.name}`, file, {
     access: 'public',
     handleUploadUrl: '/api/admin/upload',
+    onUploadProgress: onProgress ? (e) => onProgress(e.percentage) : undefined,
   })
   return blob.url
 }
