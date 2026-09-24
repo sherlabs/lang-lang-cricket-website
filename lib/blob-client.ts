@@ -60,3 +60,12 @@ export async function uploadPublicStoryImage(file: File): Promise<string> {
   })
   return blob.url
 }
+
+/** Upload a publicly submitted event recap photo with no admin session required (see app/events/[id]/actions.ts's submitEventPhoto). */
+export async function uploadPublicEventPhoto(file: File): Promise<string> {
+  const blob = await upload(`events/pending/${file.name}`, file, {
+    access: 'public',
+    handleUploadUrl: '/api/events/upload',
+  })
+  return blob.url
+}
