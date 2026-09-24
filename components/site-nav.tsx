@@ -12,6 +12,7 @@ const links = [
   { href: '/', label: 'Home' },
   { href: '/history', label: 'History' },
   { href: '/fixtures', label: 'Fixtures' },
+  { href: '/events', label: 'Events' },
   { href: '/documents', label: 'Documents' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
