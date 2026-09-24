@@ -11,7 +11,9 @@ import {
 } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
+import { DateTile } from '@/components/events/date-tile'
 import { getEventPhotosPublic, listPastOneTimeEvents, listUpcomingItems } from '@/lib/events-queries'
+import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
 
@@ -22,47 +24,6 @@ export const metadata = {
 }
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-// Event dates are UTC-midnight calendar dates with the local time-of-day merged in
-// as UTC hours (see lib/event-occurrences.ts), so every formatter here must read
-// them in UTC or a non-UTC server would shift the displayed day.
-function parts(d: Date, opts: Intl.DateTimeFormatOptions) {
-  const list = new Intl.DateTimeFormat('en-AU', { ...opts, timeZone: 'UTC' }).formatToParts(d)
-  return (t: Intl.DateTimeFormatPartTypes) => list.find((p) => p.type === t)?.value ?? ''
-}
-
-/** `Saturday 25 October` — assembled from parts so ICU comma differences can't leak in. */
-function formatLongDate(d: Date, withYear = false): string {
-  const get = parts(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  const core = `${get('weekday')} ${get('day')} ${get('month')}`
-  return withYear ? `${core} ${get('year')}` : core
-}
-
-function dateTile(d: Date): { day: string; month: string } {
-  const get = parts(d, { day: 'numeric', month: 'short' })
-  return { day: get('day'), month: get('month') }
-}
-
-/** Calendar-leaf date block used on every card so the eye can scan dates down a grid. */
-function DateTile({ date, size = 'md' }: { date: Date; size?: 'md' | 'sm' }) {
-  const { day, month } = dateTile(date)
-  const md = size === 'md'
-  return (
-    <div
-      aria-hidden
-      className={
-        md
-          ? 'flex w-16 shrink-0 flex-col items-center justify-center rounded-xl bg-brand-gold-pale py-2.5 ring-1 ring-brand-gold/30'
-          : 'flex w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-brand-stone py-1.5 ring-1 ring-brand-black/5'
-      }
-    >
-      <span className={md ? 'display text-3xl text-brand-black' : 'display text-xl text-brand-black'}>{day}</span>
-      <span className={md ? 'mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold-deep' : 'mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-grey'}>
-        {month}
-      </span>
-    </div>
-  )
-}
 
 function SectionRule({ title, count }: { title: string; count?: number }) {
   return (

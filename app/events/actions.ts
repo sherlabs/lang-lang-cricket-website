@@ -7,8 +7,7 @@ import { db } from '@/db'
 import { events, eventRsvps, type Event } from '@/db/schema'
 import { getOccurrences, getOneTimeEventDateTime } from '@/lib/event-occurrences'
 import { generateStoryToken } from '@/lib/story-tokens'
-
-export const RSVP_COOKIE = 'llcc_event_rsvp'
+import { RSVP_COOKIE } from '@/lib/rsvp-cookie'
 
 /** Confirms `occurrenceDate` is a real occurrence of `event` — the only server-side check standing between a crafted request and an RSVP for a date that was never actually offered. */
 function isValidOccurrence(event: Event, occurrenceDate: Date): boolean {
