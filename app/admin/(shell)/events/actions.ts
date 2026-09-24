@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { events, type Event } from '@/db/schema'
+import { events, eventRsvps, type Event } from '@/db/schema'
 import { isBlobUrl } from '@/lib/blob-url'
 import { COOKIE_NAME, verifySessionCookie } from '@/lib/auth'
 
@@ -73,9 +73,18 @@ function buildValues(input: EventInput) {
   return { ...base, eventDate: null, dayOfWeek: input.dayOfWeek, startDate, endDate }
 }
 
-export async function listEvents(): Promise<Event[]> {
+export type EventWithRsvpCount = Event & { rsvpCount: number }
+
+export async function listEvents(): Promise<EventWithRsvpCount[]> {
   await requireAdmin()
-  return db.select().from(events).orderBy(events.createdAt) as unknown as Promise<Event[]>
+  const [eventRows, counts] = await Promise.all([
+    db.select().from(events).orderBy(events.createdAt) as unknown as Promise<Event[]>,
+    db.select({ eventId: eventRsvps.eventId, count: sql<number>`count(*)` }).from(eventRsvps).groupBy(eventRsvps.eventId) as unknown as Promise<
+      { eventId: number; count: number }[]
+    >,
+  ])
+  const countByEventId = new Map(counts.map((c) => [c.eventId, Number(c.count)]))
+  return eventRows.map((e) => ({ ...e, rsvpCount: countByEventId.get(e.id) ?? 0 }))
 }
 
 export async function getAdminEventById(id: number): Promise<Event | null> {

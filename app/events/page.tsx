@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
 import { DateTile } from '@/components/events/date-tile'
 import { getEventPhotosPublic, listPastOneTimeEvents, listUpcomingItems } from '@/lib/events-queries'
-import { formatLongDate } from '@/lib/events-format'
+import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
 
@@ -23,8 +23,6 @@ export const metadata = {
   title: 'Events | Lang Lang Cricket Club',
   description: 'Upcoming club events, training, and how to RSVP.',
 }
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function SectionRule({ title, count }: { title: string; count?: number }) {
   return (

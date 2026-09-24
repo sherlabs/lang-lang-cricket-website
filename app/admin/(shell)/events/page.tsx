@@ -2,18 +2,13 @@ import Link from 'next/link'
 import { listEvents, deleteEvent } from './actions'
 import { EventForm } from './event-form'
 import { formatLocalTime } from '@/lib/playhq/format'
+import { DAYS, formatUtcDate } from '@/lib/events-format'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { AdminCard, Badge, EmptyState } from '@/components/admin/admin-card'
 import { ConfirmDelete, EditDialog } from '@/components/admin/row-actions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export const dynamic = 'force-dynamic'
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-function formatUtcDate(d: Date): string {
-  return d.toLocaleDateString(undefined, { timeZone: 'UTC' })
-}
 
 function summarise(e: Awaited<ReturnType<typeof listEvents>>[number]): string {
   const time = e.eventTime ? formatLocalTime(e.eventTime.length === 5 ? `${e.eventTime}:00` : e.eventTime) : null
@@ -46,6 +41,7 @@ export default async function EventsAdminPage() {
                 <TableHead className="pl-5 sm:pl-6">Title</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>When</TableHead>
+                <TableHead>RSVPs</TableHead>
                 <TableHead className="pr-5 text-right sm:pr-6">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -59,6 +55,7 @@ export default async function EventsAdminPage() {
                   </TableCell>
                   <TableCell>{e.type === 'recurring' ? <Badge>Recurring</Badge> : <span className="text-brand-grey">One-time</span>}</TableCell>
                   <TableCell className="text-brand-grey">{summarise(e)}</TableCell>
+                  <TableCell className="text-brand-grey">{e.rsvpCount}</TableCell>
                   <TableCell className="pr-5 text-right sm:pr-6">
                     <div className="inline-flex items-center gap-1">
                       <EditDialog title="Edit event">

@@ -18,3 +18,15 @@ export function dateTileParts(d: Date): { day: string; month: string } {
   const get = parts(d, { day: 'numeric', month: 'short' })
   return { day: get('day'), month: get('month') }
 }
+
+/**
+ * `25/10/2026`-style short date, for admin tables. Explicit 'en-AU' locale
+ * (not `undefined`) so the display matches the public site regardless of
+ * the server's ambient locale.
+ */
+export function formatUtcDate(d: Date): string {
+  return d.toLocaleDateString('en-AU', { timeZone: 'UTC' })
+}
+
+/** Weekday names, indexed 0 (Sunday) - 6 (Saturday) to match `dayOfWeek`. */
+export const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']

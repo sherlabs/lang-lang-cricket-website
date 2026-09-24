@@ -1,12 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { eventRsvps } from '@/db/schema'
 
 let inserted: Record<string, unknown> | null = null
+let eventRows: unknown[] = []
+let rsvpCounts: { eventId: number; count: number }[] = []
 
 vi.mock('next/headers', () => ({ cookies: () => ({ get: () => ({ value: 'token' }) }) }))
 vi.mock('@/lib/auth', () => ({ COOKIE_NAME: 'llcc_admin_session', verifySessionCookie: async () => true }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/db', () => ({
   db: {
+    select: () => ({
+      from: (table: unknown) =>
+        table === eventRsvps
+          ? { groupBy: () => Promise.resolve(rsvpCounts) }
+          : { orderBy: () => Promise.resolve(eventRows) },
+    }),
     insert: () => ({
       values: (v: Record<string, unknown>) => {
         inserted = v
@@ -18,6 +27,8 @@ vi.mock('@/db', () => ({
 
 beforeEach(() => {
   inserted = null
+  eventRows = []
+  rsvpCounts = []
 })
 
 const ONE_TIME_INPUT = {
@@ -86,5 +97,21 @@ describe('createEvent', () => {
     const { createEvent } = await import('@/app/admin/(shell)/events/actions')
     await expect(createEvent({ ...RECURRING_INPUT, endDateStr: '' })).rejects.toThrow('Start and end dates are required.')
     expect(inserted).toBeNull()
+  })
+})
+
+describe('listEvents', () => {
+  it('attaches an aggregated rsvpCount per event, defaulting to 0 when none', async () => {
+    eventRows = [
+      { id: 1, title: 'Presentation Night' },
+      { id: 2, title: 'Thursday Training' },
+    ]
+    rsvpCounts = [{ eventId: 1, count: 3 }]
+    const { listEvents } = await import('@/app/admin/(shell)/events/actions')
+    const result = await listEvents()
+    expect(result).toEqual([
+      { id: 1, title: 'Presentation Night', rsvpCount: 3 },
+      { id: 2, title: 'Thursday Training', rsvpCount: 0 },
+    ])
   })
 })

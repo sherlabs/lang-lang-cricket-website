@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { events, eventRsvps, type Event } from '@/db/schema'
-import { getOccurrences, getOneTimeEventDateTime } from '@/lib/event-occurrences'
+import { getOccurrences, getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
 import { generateStoryToken } from '@/lib/story-tokens'
 import { RSVP_COOKIE } from '@/lib/rsvp-cookie'
 
@@ -38,6 +38,12 @@ export async function submitRsvp(formData: FormData): Promise<{ error: string } 
 
   const occurrenceDate = new Date(occurrenceDateStr)
   if (Number.isNaN(occurrenceDate.getTime()) || !isValidOccurrence(event, occurrenceDate)) {
+    return { error: 'That date is not available for this event.' }
+  }
+  // Reject an already-past occurrence of an otherwise-valid series. The public page only
+  // offers future dates, but the server must enforce it too. Same generic message as the
+  // validity check above — no oracle telling an attacker *why* a date was rejected.
+  if (occurrenceDate < nowAsEventClock()) {
     return { error: 'That date is not available for this event.' }
   }
 

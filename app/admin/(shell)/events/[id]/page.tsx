@@ -3,7 +3,8 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { getAdminEventById } from '../actions'
 import { listRsvpsForEvent, deleteRsvp } from '../rsvp-actions'
 import { listEventPhotos, removeEventPhoto } from '../photo-actions'
-import { getOneTimeEventDateTime } from '@/lib/event-occurrences'
+import { getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
+import { formatUtcDate } from '@/lib/events-format'
 import { RecapUploader } from './recap-uploader'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { AdminCard, EmptyState } from '@/components/admin/admin-card'
@@ -11,14 +12,6 @@ import { ConfirmDelete } from '@/components/admin/row-actions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export const dynamic = 'force-dynamic'
-
-// `occurrenceDate` is a full timestamp with the event's local time-of-day merged
-// into UTC fields (see Task 2 / db/schema.ts) — the same convention `eventDate`
-// uses. Format it with an explicit UTC timezone so the server's ambient timezone
-// can't shift the displayed calendar day, matching the pattern in ../page.tsx.
-function formatUtcDate(d: Date): string {
-  return d.toLocaleDateString(undefined, { timeZone: 'UTC' })
-}
 
 export default async function EventDetailPage({ params }: { params: { id: string } }) {
   noStore()
@@ -29,7 +22,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const [rsvps, photos] = await Promise.all([listRsvpsForEvent(id), listEventPhotos(id)])
 
   const isPastOneTime =
-    event.type === 'one_time' && !!event.eventDate && getOneTimeEventDateTime({ eventDate: event.eventDate, eventTime: event.eventTime }) < new Date()
+    event.type === 'one_time' && !!event.eventDate && getOneTimeEventDateTime({ eventDate: event.eventDate, eventTime: event.eventTime }) < nowAsEventClock()
 
   return (
     <main>

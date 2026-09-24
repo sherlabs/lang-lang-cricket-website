@@ -7,9 +7,8 @@ import { optimiseImage, uploadToBlob } from '@/lib/blob-client'
 import { Field, TextInput, TextArea, Select, FileInput } from '@/components/admin/fields'
 import { Button } from '@/components/ui/button'
 import { useDialogClose } from '@/components/admin/action-form'
+import { DAYS } from '@/lib/events-format'
 import type { Event } from '@/db/schema'
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function toDateStr(d: Date | null): string {
   if (!d) return ''
