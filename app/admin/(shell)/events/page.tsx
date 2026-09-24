@@ -57,7 +57,8 @@ export default async function EventsAdminPage() {
                   <TableCell className="text-brand-grey">{summarise(e)}</TableCell>
                   <TableCell className="text-brand-grey">{e.rsvpCount}</TableCell>
                   <TableCell className="pr-5 text-right sm:pr-6">
-                    <div className="inline-flex items-center gap-1">
+                    <div className="inline-flex items-center gap-2">
+                      {e.pendingPhotoCount > 0 && <Badge>{`${e.pendingPhotoCount} pending photo${e.pendingPhotoCount === 1 ? '' : 's'}`}</Badge>}
                       <EditDialog title="Edit event">
                         <EventForm event={e} />
                       </EditDialog>

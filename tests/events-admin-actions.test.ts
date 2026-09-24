@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { eventRsvps } from '@/db/schema'
+import { eventRsvps, eventPhotos } from '@/db/schema'
 
 let inserted: Record<string, unknown> | null = null
 let eventRows: unknown[] = []
 let rsvpCounts: { eventId: number; count: number }[] = []
+let pendingPhotoCounts: { eventId: number; count: number }[] = []
 
 vi.mock('next/headers', () => ({ cookies: () => ({ get: () => ({ value: 'token' }) }) }))
 vi.mock('@/lib/auth', () => ({ COOKIE_NAME: 'llcc_admin_session', verifySessionCookie: async () => true }))
@@ -11,10 +12,11 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/db', () => ({
   db: {
     select: () => ({
-      from: (table: unknown) =>
-        table === eventRsvps
-          ? { groupBy: () => Promise.resolve(rsvpCounts) }
-          : { orderBy: () => Promise.resolve(eventRows) },
+      from: (table: unknown) => {
+        if (table === eventRsvps) return { groupBy: () => Promise.resolve(rsvpCounts) }
+        if (table === eventPhotos) return { where: () => ({ groupBy: () => Promise.resolve(pendingPhotoCounts) }) }
+        return { orderBy: () => Promise.resolve(eventRows) }
+      },
     }),
     insert: () => ({
       values: (v: Record<string, unknown>) => {
@@ -29,6 +31,7 @@ beforeEach(() => {
   inserted = null
   eventRows = []
   rsvpCounts = []
+  pendingPhotoCounts = []
 })
 
 const ONE_TIME_INPUT = {
@@ -101,17 +104,18 @@ describe('createEvent', () => {
 })
 
 describe('listEvents', () => {
-  it('attaches an aggregated rsvpCount per event, defaulting to 0 when none', async () => {
+  it('attaches an aggregated rsvpCount and pendingPhotoCount per event, defaulting to 0 when none', async () => {
     eventRows = [
       { id: 1, title: 'Presentation Night' },
       { id: 2, title: 'Thursday Training' },
     ]
     rsvpCounts = [{ eventId: 1, count: 3 }]
+    pendingPhotoCounts = [{ eventId: 2, count: 2 }]
     const { listEvents } = await import('@/app/admin/(shell)/events/actions')
     const result = await listEvents()
     expect(result).toEqual([
-      { id: 1, title: 'Presentation Night', rsvpCount: 3 },
-      { id: 2, title: 'Thursday Training', rsvpCount: 0 },
+      { id: 1, title: 'Presentation Night', rsvpCount: 3, pendingPhotoCount: 0 },
+      { id: 2, title: 'Thursday Training', rsvpCount: 0, pendingPhotoCount: 2 },
     ])
   })
 })

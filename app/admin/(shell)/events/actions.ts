@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { events, eventRsvps, type Event } from '@/db/schema'
+import { events, eventRsvps, eventPhotos, type Event } from '@/db/schema'
 import { isBlobUrl } from '@/lib/blob-url'
 import { COOKIE_NAME, verifySessionCookie } from '@/lib/auth'
 
@@ -73,18 +73,28 @@ function buildValues(input: EventInput) {
   return { ...base, eventDate: null, dayOfWeek: input.dayOfWeek, startDate, endDate }
 }
 
-export type EventWithRsvpCount = Event & { rsvpCount: number }
+export type EventWithRsvpCount = Event & { rsvpCount: number; pendingPhotoCount: number }
 
 export async function listEvents(): Promise<EventWithRsvpCount[]> {
   await requireAdmin()
-  const [eventRows, counts] = await Promise.all([
+  const [eventRows, rsvpCounts, pendingPhotoCounts] = await Promise.all([
     db.select().from(events).orderBy(events.createdAt) as unknown as Promise<Event[]>,
     db.select({ eventId: eventRsvps.eventId, count: sql<number>`count(*)` }).from(eventRsvps).groupBy(eventRsvps.eventId) as unknown as Promise<
       { eventId: number; count: number }[]
     >,
+    db
+      .select({ eventId: eventPhotos.eventId, count: sql<number>`count(*)` })
+      .from(eventPhotos)
+      .where(eq(eventPhotos.status, 'pending'))
+      .groupBy(eventPhotos.eventId) as unknown as Promise<{ eventId: number; count: number }[]>,
   ])
-  const countByEventId = new Map(counts.map((c) => [c.eventId, Number(c.count)]))
-  return eventRows.map((e) => ({ ...e, rsvpCount: countByEventId.get(e.id) ?? 0 }))
+  const rsvpCountByEventId = new Map(rsvpCounts.map((c) => [c.eventId, Number(c.count)]))
+  const pendingPhotoCountByEventId = new Map(pendingPhotoCounts.map((c) => [c.eventId, Number(c.count)]))
+  return eventRows.map((e) => ({
+    ...e,
+    rsvpCount: rsvpCountByEventId.get(e.id) ?? 0,
+    pendingPhotoCount: pendingPhotoCountByEventId.get(e.id) ?? 0,
+  }))
 }
 
 export async function getAdminEventById(id: number): Promise<Event | null> {
