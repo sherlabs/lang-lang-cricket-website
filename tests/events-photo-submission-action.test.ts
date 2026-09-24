@@ -31,6 +31,10 @@ vi.mock('@/db', () => ({
 beforeEach(() => {
   inserted = null
   fixedNow = new Date('2026-06-01T12:00:00.000Z')
+  // Matches the 'x.public.blob.vercel-storage.com' host used by fixture URLs
+  // throughout this suite, so isOwnBlobUrl treats them as this project's own
+  // store.
+  process.env.BLOB_READ_WRITE_TOKEN = 'vercel_blob_rw_x_secret'
 })
 
 function formData(fields: Record<string, string>): FormData {
@@ -107,5 +111,46 @@ describe('submitEventPhoto', () => {
     const result = await submitEventPhoto(formData({ eventId: '1', url: 'https://x.public.blob.vercel-storage.com/gallery/some-photo.jpg' }))
     expect(result).toEqual({ error: 'A photo is required.' })
     expect(inserted).toBeNull()
+  })
+
+  it('rejects a URL with the right events/pending/ path but a foreign store hostname', async () => {
+    eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
+    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const result = await submitEventPhoto(
+      formData({ eventId: '1', url: 'https://attacker-store.public.blob.vercel-storage.com/events/pending/a.jpg' })
+    )
+    expect(result).toEqual({ error: 'A photo is required.' })
+    expect(inserted).toBeNull()
+  })
+
+  it('rejects a non-numeric eventId without crashing', async () => {
+    eventRow = null
+    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const result = await submitEventPhoto(formData({ eventId: 'not-a-number', url: 'https://x.public.blob.vercel-storage.com/events/pending/a.jpg' }))
+    expect(result).toEqual({ error: 'Event not found.' })
+    expect(inserted).toBeNull()
+  })
+
+  it('accepts a mixed-case store id in BLOB_READ_WRITE_TOKEN by lowercasing before comparing to the hostname', async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = 'vercel_blob_rw_AbC123_secret'
+    eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
+    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const result = await submitEventPhoto(
+      formData({ eventId: '1', url: 'https://abc123.public.blob.vercel-storage.com/events/pending/a.jpg' })
+    )
+    expect(result).toBeUndefined()
+    expect(inserted).not.toBeNull()
+  })
+
+  it('truncates an overly long caption and submitterName instead of erroring', async () => {
+    eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
+    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const longText = 'x'.repeat(500)
+    const result = await submitEventPhoto(
+      formData({ eventId: '1', url: 'https://x.public.blob.vercel-storage.com/events/pending/a.jpg', caption: longText, submitterName: longText })
+    )
+    expect(result).toBeUndefined()
+    expect((inserted!.caption as string).length).toBe(200)
+    expect((inserted!.submitterName as string).length).toBe(200)
   })
 })

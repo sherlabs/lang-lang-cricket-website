@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { events, eventPhotos, type Event } from '@/db/schema'
 import { getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
-import { isBlobUrl } from '@/lib/blob-url'
+import { isOwnBlobUrl } from '@/lib/blob-url'
 
 /**
  * Public, no-login submission of a recap photo for a past one-time event
@@ -23,8 +23,10 @@ import { isBlobUrl } from '@/lib/blob-url'
 export async function submitEventPhoto(formData: FormData): Promise<{ error: string } | void> {
   const eventId = Number(formData.get('eventId'))
   const url = String(formData.get('url') ?? '').trim()
-  const submitterName = String(formData.get('submitterName') ?? '').trim()
-  const caption = String(formData.get('caption') ?? '').trim()
+  const submitterName = String(formData.get('submitterName') ?? '').trim().slice(0, MAX_TEXT_LENGTH)
+  const caption = String(formData.get('caption') ?? '').trim().slice(0, MAX_TEXT_LENGTH)
+
+  if (!Number.isInteger(eventId) || eventId <= 0) return { error: 'Event not found.' }
 
   const rows = await db.select().from(events).where(eq(events.id, eventId))
   const event = (rows[0] as Event | undefined) ?? null
@@ -38,17 +40,26 @@ export async function submitEventPhoto(formData: FormData): Promise<{ error: str
 
   if (!event) return { error: 'Event not found.' }
   if (!isPastOneTime) return { error: 'Photos can only be submitted for a past event.' }
-  // Not just "is this any Blob URL" — it must be one this action's own public
-  // upload route (/api/events/upload) actually minted, under events/pending/.
-  // Otherwise a crafted submission could point at an unrelated blob (another
-  // event's approved recap photo, a sponsor logo, ...) and get it deleted
-  // later via rejectEventPhoto's del() call — a cross-entity deletion vector.
-  if (!url || !isBlobUrl(url) || !isPendingEventBlobPath(url)) return { error: 'A photo is required.' }
+  // Not just "is this any Blob URL" — it must be one THIS project's own
+  // Blob store minted (isOwnBlobUrl, not just the generic *.blob.vercel-
+  // storage.com suffix — otherwise anyone with their own free Vercel Blob
+  // store could submit a URL from it and later swap the file underneath an
+  // already-approved photo), and specifically under events/pending/, the
+  // path this action's own public upload route (/api/events/upload) writes
+  // to. Otherwise a crafted submission could point at an unrelated blob
+  // (another event's approved recap photo, a sponsor logo, ...) and get it
+  // deleted later via rejectEventPhoto's del() call — a cross-entity
+  // deletion vector.
+  if (!url || !isOwnBlobUrl(url) || !isPendingEventBlobPath(url)) return { error: 'A photo is required.' }
 
   await db.insert(eventPhotos).values({ eventId, url, caption, submitterName, status: 'pending' })
 
   revalidatePath('/admin/events')
 }
+
+// Unauthenticated public action — cap free-text fields so no one can stuff
+// megabytes of text into a caption/name via a raw form post.
+const MAX_TEXT_LENGTH = 200
 
 function isPendingEventBlobPath(url: string): boolean {
   try {
