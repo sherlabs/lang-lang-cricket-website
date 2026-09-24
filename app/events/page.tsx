@@ -12,6 +12,7 @@ import {
 import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
 import { DateTile } from '@/components/events/date-tile'
+import { EventPlaceholderArt } from '@/components/events/event-placeholder-art'
 import { getEventPhotosPublic, listPastOneTimeEvents, listUpcomingItems } from '@/lib/events-queries'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
@@ -45,21 +46,23 @@ function UpcomingCard({ event, occurrenceDate }: { event: Event; occurrenceDate:
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5 transition hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-brand-gold/40">
-      {event.coverImageUrl && (
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-brand-stone">
+      <Link href={`/events/${event.id}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-brand-black" aria-label={`${event.title} details`}>
+        {event.coverImageUrl ? (
           <img
             src={event.coverImageUrl}
             alt=""
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
-          {event.type === 'recurring' && event.dayOfWeek != null && (
-            <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-brand-black/85 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold-light backdrop-blur">
-              <HugeiconsIcon icon={RepeatIcon} className="h-3 w-3" aria-hidden />
-              Every {DAYS[event.dayOfWeek]}
-            </span>
-          )}
-        </div>
-      )}
+        ) : (
+          <EventPlaceholderArt seed={event.id} className="transition duration-300 group-hover:scale-105" />
+        )}
+        {event.type === 'recurring' && event.dayOfWeek != null && (
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-brand-black/85 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold-light backdrop-blur">
+            <HugeiconsIcon icon={RepeatIcon} className="h-3 w-3" aria-hidden />
+            Every {DAYS[event.dayOfWeek]}
+          </span>
+        )}
+      </Link>
 
       <div className="flex flex-1 flex-col p-5">
         <div className="flex-1">
@@ -70,14 +73,10 @@ function UpcomingCard({ event, occurrenceDate }: { event: Event; occurrenceDate:
                 {formatLongDate(occurrenceDate)}
               </p>
               <h3 className="font-heading mt-1 text-xl font-bold leading-tight tracking-tight text-brand-black">
-                {event.title}
+                <Link href={`/events/${event.id}`} className="underline-offset-4 hover:underline">
+                  {event.title}
+                </Link>
               </h3>
-              {!event.coverImageUrl && event.type === 'recurring' && event.dayOfWeek != null && (
-                <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-stone px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-grey">
-                  <HugeiconsIcon icon={RepeatIcon} className="h-3 w-3" aria-hidden />
-                  Every {DAYS[event.dayOfWeek]}
-                </span>
-              )}
             </div>
           </div>
 
@@ -128,31 +127,47 @@ function UpcomingCard({ event, occurrenceDate }: { event: Event; occurrenceDate:
   )
 }
 
+/** The list shows a taste; the detail page (/events/[id]) shows every approved photo. */
+const PAST_PREVIEW_PHOTOS = 8
+
 function PastCard({ event, photos }: { event: Event; photos: { url: string }[] }) {
   if (!event.eventDate) return null
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5 transition hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-brand-gold/40">
       <div className="flex items-center gap-4 p-5">
         <DateTile date={event.eventDate} size="sm" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-grey-light">
             {formatLongDate(event.eventDate, true)}
           </p>
           <h3 className="font-heading mt-0.5 text-lg font-bold leading-tight tracking-tight text-brand-black">
-            {event.title}
+            {/* Stretched link: the whole card is the target, but the heading stays the accessible name. */}
+            <Link href={`/events/${event.id}`} className="after:absolute after:inset-0 after:content-['']">
+              {event.title}
+            </Link>
           </h3>
         </div>
+        <HugeiconsIcon
+          icon={ArrowRight01Icon}
+          className="h-5 w-5 shrink-0 text-brand-grey-light transition group-hover:translate-x-0.5 group-hover:text-brand-gold-deep"
+          aria-hidden
+        />
       </div>
       {photos.length > 0 && (
         <ul className="grid grid-cols-3 gap-1 px-5 pb-5 sm:grid-cols-4">
-          {photos.map((photo, i) => (
-            <li key={`${photo.url}-${i}`} className="overflow-hidden rounded-lg bg-brand-stone">
+          {photos.slice(0, PAST_PREVIEW_PHOTOS).map((photo, i) => (
+            <li key={`${photo.url}-${i}`} className="relative overflow-hidden rounded-lg bg-brand-stone">
               <img
                 src={photo.url}
                 alt={`${event.title} photo ${i + 1}`}
                 loading="lazy"
                 className="aspect-square h-full w-full object-cover"
               />
+              {i === PAST_PREVIEW_PHOTOS - 1 && photos.length > PAST_PREVIEW_PHOTOS && (
+                <span className="absolute inset-0 flex items-center justify-center bg-brand-black/60 text-sm font-semibold text-white">
+                  +{photos.length - PAST_PREVIEW_PHOTOS}
+                </span>
+              )}
             </li>
           ))}
         </ul>

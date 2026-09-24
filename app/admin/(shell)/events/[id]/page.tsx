@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getAdminEventById } from '../actions'
 import { listRsvpsForEvent, deleteRsvp } from '../rsvp-actions'
-import { listEventPhotos, removeEventPhoto } from '../photo-actions'
+import { listEventPhotos, listPendingEventPhotos, removeEventPhoto } from '../photo-actions'
+import { PendingPhotoCard } from './pending-photos'
 import { getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
 import { formatUtcDate } from '@/lib/events-format'
 import { RecapUploader } from './recap-uploader'
@@ -19,7 +20,9 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const event = await getAdminEventById(id)
   if (!event) notFound()
 
-  const [rsvps, photos] = await Promise.all([listRsvpsForEvent(id), listEventPhotos(id)])
+  const [rsvps, allPhotos, pending] = await Promise.all([listRsvpsForEvent(id), listEventPhotos(id), listPendingEventPhotos(id)])
+  // listEventPhotos returns every row; pending submissions get their own queue below.
+  const photos = allPhotos.filter((p) => p.status === 'approved')
 
   const isPastOneTime =
     event.type === 'one_time' && !!event.eventDate && getOneTimeEventDateTime({ eventDate: event.eventDate, eventTime: event.eventTime }) < nowAsEventClock()
@@ -58,6 +61,27 @@ export default async function EventDetailPage({ params }: { params: { id: string
           </Table>
         )}
       </AdminCard>
+
+      {/* Shown whenever a queue could exist (past one-time) or does exist (e.g. the event's date was later edited). */}
+      {(isPastOneTime || pending.length > 0) && (
+        <AdminCard
+          title="Pending photos"
+          description="Submitted by the public from the event page. Approve to publish, reject to delete."
+          aside={<span className="text-sm text-brand-grey">{pending.length} waiting</span>}
+          flush={pending.length === 0}
+          className="mb-8"
+        >
+          {pending.length === 0 ? (
+            <EmptyState>No photos waiting for review.</EmptyState>
+          ) : (
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {pending.map((p) => (
+                <PendingPhotoCard key={p.id} photo={p} />
+              ))}
+            </ul>
+          )}
+        </AdminCard>
+      )}
 
       {isPastOneTime && (
         <AdminCard title="Recap photos" className="mb-8">
