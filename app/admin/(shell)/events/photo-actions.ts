@@ -66,12 +66,22 @@ export async function approveEventPhoto(id: number) {
   revalidate()
 }
 
-/** Rejects (deletes) a pending public submission, including its underlying Blob file so storage doesn't fill with orphans. */
+/**
+ * Rejects (deletes) a pending public submission, including its underlying
+ * Blob file so storage doesn't fill with orphans — UNLESS another
+ * `eventPhotos` row (e.g. an already-approved photo) still references the
+ * same URL. That can happen because an approved photo's URL stays a valid,
+ * fetchable Blob URL under events/pending/ forever, so anyone can copy it
+ * and resubmit it via submitEventPhoto; rejecting that duplicate must not
+ * delete the file out from under the still-approved original.
+ */
 export async function rejectEventPhoto(id: number) {
   await requireAdmin()
   const [row] = await db.select().from(eventPhotos).where(eq(eventPhotos.id, id))
   if (!row) return
+  const sameUrlRows = await db.select().from(eventPhotos).where(eq(eventPhotos.url, row.url))
+  const stillReferencedElsewhere = sameUrlRows.some((r) => r.id !== id)
   await db.delete(eventPhotos).where(eq(eventPhotos.id, id))
-  if (isBlobUrl(row.url)) await del(row.url).catch(() => {})
+  if (isBlobUrl(row.url) && !stillReferencedElsewhere) await del(row.url).catch(() => {})
   revalidate()
 }

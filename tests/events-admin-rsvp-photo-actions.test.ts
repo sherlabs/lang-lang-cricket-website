@@ -35,6 +35,7 @@ vi.mock('@/db', async () => {
     [schema.eventPhotos.eventId, 'eventId'],
     [schema.eventPhotos.status, 'status'],
     [schema.eventPhotos.id, 'id'],
+    [schema.eventPhotos.url, 'url'],
   ])
   function matches(row: Record<string, unknown>, cond: unknown): boolean {
     const c = cond as { __op: string; column?: unknown; value?: unknown; conditions?: unknown[] }
@@ -144,6 +145,21 @@ describe('rejectEventPhoto', () => {
     const { rejectEventPhoto } = await import('@/app/admin/(shell)/events/photo-actions')
     await rejectEventPhoto(999)
     expect(deletedId).toBeNull()
+    expect(delUrl).toBeNull()
+  })
+
+  it('deletes only the row, not the Blob file, when another row (e.g. an approved photo) still references the same URL', async () => {
+    // Simulates a resubmitted duplicate: an approved photo's URL stays a
+    // valid, fetchable Blob URL, so someone can copy it and resubmit it via
+    // submitEventPhoto. Rejecting the resulting duplicate pending row must
+    // not delete the file out from under the still-approved original.
+    selectRows = [
+      { id: 3, eventId: 7, url: 'https://x.public.blob.vercel-storage.com/pending.jpg', status: 'pending' },
+      { id: 4, eventId: 7, url: 'https://x.public.blob.vercel-storage.com/pending.jpg', status: 'approved' },
+    ]
+    const { rejectEventPhoto } = await import('@/app/admin/(shell)/events/photo-actions')
+    await rejectEventPhoto(3)
+    expect(deletedId).toBe(1)
     expect(delUrl).toBeNull()
   })
 })
