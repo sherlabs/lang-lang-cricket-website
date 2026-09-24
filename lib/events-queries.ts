@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { events, type Event } from '@/db/schema'
+import { events, eventPhotos, type Event } from '@/db/schema'
 import { getOccurrences, getOneTimeEventDateTime } from './event-occurrences'
 
 export type UpcomingItem = { event: Event; occurrenceDate: Date }
@@ -41,4 +41,13 @@ export async function listPastOneTimeEvents(): Promise<Event[]> {
 export async function getEventById(id: number): Promise<Event | null> {
   const rows = await db.select().from(events).where(eq(events.id, id))
   return (rows[0] as Event | undefined) ?? null
+}
+
+/** Recap photos for a past event, in admin sort order. Public: these are already-published photos of a public event. */
+export async function getEventPhotosPublic(eventId: number): Promise<{ url: string }[]> {
+  return db
+    .select({ url: eventPhotos.url })
+    .from(eventPhotos)
+    .where(eq(eventPhotos.eventId, eventId))
+    .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.id))
 }
