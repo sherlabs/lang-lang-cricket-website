@@ -36,7 +36,12 @@ export async function cancelRsvpByToken(token: string): Promise<{ error: string 
   if (!rsvp) return { error: 'This RSVP link is no longer valid.' }
 
   await db.delete(eventRsvps).where(eq(eventRsvps.editToken, token))
-  // No revalidatePath here: the admin events pages are already force-dynamic, and revalidating
-  // from a server action re-renders the current route (this RSVP's page) into the action response —
-  // with the row gone that render hits notFound(), which would replace the "cancelled" card with a 404.
+  // No revalidatePath here. Any revalidate call inside a server action re-renders the CURRENTLY
+  // MOUNTED route (this RSVP page), not just the literal path argument — with the row gone that
+  // render hits notFound(), which would replace the "cancelled" card with a 404 before it can paint.
+  // Dropping the call is safe: fresh reads on the admin pages come from the Neon client's
+  // `cache: 'no-store'` config (db/index.ts) plus unstable_noStore() on those pages, not from
+  // force-dynamic alone. And '/admin/events' — the literal path this call targeted — doesn't even
+  // render RSVP-derived data; RSVP counts live on the separate '/admin/events/[id]' detail page,
+  // a different path this call never reached anyway.
 }
