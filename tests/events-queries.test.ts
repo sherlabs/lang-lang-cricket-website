@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 let eventRows: unknown[] = []
+let photoRows: unknown[] = []
 let fixedNow: Date | null = null
 
 vi.mock('@/lib/event-occurrences', async (importOriginal) => {
@@ -11,20 +12,69 @@ vi.mock('@/lib/event-occurrences', async (importOriginal) => {
   }
 })
 
-vi.mock('@/db', () => ({
-  db: {
-    select: () => ({
-      from: () =>
-        Object.assign(Promise.resolve(eventRows), {
-          where: () => Promise.resolve(eventRows),
-          orderBy: () => Promise.resolve(eventRows),
-        }),
-    }),
-  },
-}))
+// eq/and are replaced with plain tagged objects (instead of real SQL builders)
+// so the `@/db` mock below can actually evaluate a `.where(...)` condition
+// against the fixture rows, rather than ignoring it — needed to genuinely
+// test that getEventPhotosPublic's status filter excludes pending photos.
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>()
+  return {
+    ...actual,
+    eq: (column: unknown, value: unknown) => ({ __op: 'eq' as const, column, value }),
+    and: (...conditions: unknown[]) => ({ __op: 'and' as const, conditions }),
+  }
+})
+
+// `from(table)` branches on the real `eventPhotos`/`events` table objects
+// (imported normally, not mocked) so this one mock can serve both queries
+// with their own fixture rows, and `where(...)` actually filters using the
+// tagged eq/and objects above.
+vi.mock('@/db', async () => {
+  const schema = await import('@/db/schema')
+  const rowsFor = (table: unknown) => (table === schema.eventPhotos ? photoRows : eventRows)
+  // Maps a real Drizzle column object to the camelCase key used on fixture rows.
+  const columnKey = new Map<unknown, string>([
+    [schema.eventPhotos.eventId, 'eventId'],
+    [schema.eventPhotos.status, 'status'],
+    [schema.eventPhotos.url, 'url'],
+    [schema.events.type, 'type'],
+  ])
+  function matches(row: Record<string, unknown>, cond: unknown): boolean {
+    const c = cond as { __op: string; column?: unknown; value?: unknown; conditions?: unknown[] }
+    if (c.__op === 'and') return (c.conditions ?? []).every((sub) => matches(row, sub))
+    if (c.__op === 'eq') return row[columnKey.get(c.column) ?? ''] === c.value
+    return true
+  }
+  function project(rows: Record<string, unknown>[], projection?: Record<string, unknown>) {
+    if (!projection) return rows
+    return rows.map((r) => Object.fromEntries(Object.keys(projection).map((outKey) => [outKey, r[columnKey.get(projection[outKey]) ?? outKey]])))
+  }
+  return {
+    db: {
+      select: (projection?: Record<string, unknown>) => ({
+        from: (table: unknown) => {
+          // Filtering happens on the raw (unprojected) rows so `where`
+          // conditions can reference columns the projection later drops.
+          const rows = rowsFor(table) as Record<string, unknown>[]
+          const finalize = (rs: Record<string, unknown>[]) => project(rs, projection)
+          return Object.assign(Promise.resolve(finalize(rows)), {
+            where: (cond: unknown) => {
+              const filtered = rows.filter((r) => matches(r, cond))
+              return Object.assign(Promise.resolve(finalize(filtered)), {
+                orderBy: () => Promise.resolve(finalize(filtered)),
+              })
+            },
+            orderBy: () => Promise.resolve(finalize(rows)),
+          })
+        },
+      }),
+    },
+  }
+})
 
 beforeEach(() => {
   fixedNow = null
+  photoRows = []
 })
 
 describe('listUpcomingItems', () => {
@@ -48,7 +98,7 @@ describe('listUpcomingItems', () => {
     expect(await listUpcomingItems()).toEqual([])
   })
 
-  it('expands an active recurring event into multiple upcoming items', async () => {
+  it('includes only the single next occurrence of an active recurring event, even though many more exist in the window', async () => {
     const start = new Date(Date.now() - 24 * 60 * 60 * 1000) // started yesterday
     const end = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // ends in 90 days
     eventRows = [
@@ -56,8 +106,8 @@ describe('listUpcomingItems', () => {
     ]
     const { listUpcomingItems } = await import('@/lib/events-queries')
     const items = await listUpcomingItems()
-    expect(items.length).toBeGreaterThan(1)
-    expect(items.every((i) => i.event.id === 3)).toBe(true)
+    expect(items).toHaveLength(1)
+    expect(items[0].event.id).toBe(3)
   })
 
   describe('wall-clock "now" boundary (Melbourne time, not UTC)', () => {
@@ -144,5 +194,17 @@ describe('listUpcomingItems', () => {
       expect(items).toHaveLength(1)
       expect(items[0].event.id).toBe(21)
     })
+  })
+})
+
+describe('getEventPhotosPublic', () => {
+  it('returns only approved photos, excluding pending submissions', async () => {
+    photoRows = [
+      { id: 1, eventId: 5, url: 'https://x.public.blob.vercel-storage.com/approved.jpg', status: 'approved', sortOrder: 0 },
+      { id: 2, eventId: 5, url: 'https://x.public.blob.vercel-storage.com/pending.jpg', status: 'pending', sortOrder: 1 },
+    ]
+    const { getEventPhotosPublic } = await import('@/lib/events-queries')
+    const photos = await getEventPhotosPublic(5)
+    expect(photos).toEqual([{ url: 'https://x.public.blob.vercel-storage.com/approved.jpg' }])
   })
 })

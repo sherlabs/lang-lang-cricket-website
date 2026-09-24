@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { events, eventPhotos, type Event } from '@/db/schema'
 import { getOccurrences, getOneTimeEventDateTime, nowAsEventClock } from './event-occurrences'
@@ -23,7 +23,10 @@ export async function listUpcomingItems(): Promise<UpcomingItem[]> {
         { dayOfWeek: event.dayOfWeek, eventTime: event.eventTime, startDate: event.startDate, endDate: event.endDate },
         { from: now, to: new Date(now.getTime() + UPCOMING_WEEKS_AHEAD * 7 * 24 * 60 * 60 * 1000) }
       ).filter((occurrenceDate) => occurrenceDate >= now)
-      for (const occurrenceDate of occurrences) items.push({ event, occurrenceDate })
+      // Only the single next occurrence is shown in "Upcoming" — a weekly
+      // series would otherwise produce a card per week within the window.
+      const next = occurrences[0]
+      if (next) items.push({ event, occurrenceDate: next })
     }
   }
 
@@ -43,11 +46,15 @@ export async function getEventById(id: number): Promise<Event | null> {
   return (rows[0] as Event | undefined) ?? null
 }
 
-/** Recap photos for a past event, in admin sort order. Public: these are already-published photos of a public event. */
+/**
+ * Recap photos for a past event, in admin sort order. Public: only ever
+ * returns approved photos — a publicly submitted photo that hasn't been
+ * approved by an admin must never appear here.
+ */
 export async function getEventPhotosPublic(eventId: number): Promise<{ url: string }[]> {
   return db
     .select({ url: eventPhotos.url })
     .from(eventPhotos)
-    .where(eq(eventPhotos.eventId, eventId))
+    .where(and(eq(eventPhotos.eventId, eventId), eq(eventPhotos.status, 'approved')))
     .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.id))
 }

@@ -102,6 +102,14 @@ export const eventPhotos = pgTable('event_photos', {
   url: text('url').notNull(),
   caption: text('caption').notNull().default(''),
   sortOrder: integer('sort_order').notNull().default(0),
+  // 'approved' | 'pending'. Admin-added photos (addEventPhotos) default to
+  // 'approved' and are immediately public. Publicly submitted photos
+  // (submitEventPhoto) go in as 'pending' and only become public once an
+  // admin calls approveEventPhoto.
+  status: text('status').notNull().default('approved'),
+  // Who submitted the photo, for admin context only — public, optional,
+  // no auth behind it (matches this feature's "no heavy auth" stance).
+  submitterName: text('submitter_name').notNull().default(''),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
