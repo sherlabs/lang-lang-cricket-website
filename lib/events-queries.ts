@@ -8,7 +8,7 @@ export type UpcomingItem = { event: Event; occurrenceDate: Date }
 const UPCOMING_WEEKS_AHEAD = 6
 
 export async function listUpcomingItems(): Promise<UpcomingItem[]> {
-  const all = (await db.select().from(events).orderBy(events.id)) as Event[]
+  const all = (await db.select().from(events)) as Event[]
   const now = new Date()
   const items: UpcomingItem[] = []
 

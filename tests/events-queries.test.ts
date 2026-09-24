@@ -4,7 +4,13 @@ let eventRows: unknown[] = []
 
 vi.mock('@/db', () => ({
   db: {
-    select: () => ({ from: () => ({ where: () => Promise.resolve(eventRows), orderBy: () => Promise.resolve(eventRows) }) }),
+    select: () => ({
+      from: () =>
+        Object.assign(Promise.resolve(eventRows), {
+          where: () => Promise.resolve(eventRows),
+          orderBy: () => Promise.resolve(eventRows),
+        }),
+    }),
   },
 }))
 
