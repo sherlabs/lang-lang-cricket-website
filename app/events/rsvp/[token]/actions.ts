@@ -36,5 +36,7 @@ export async function cancelRsvpByToken(token: string): Promise<{ error: string 
   if (!rsvp) return { error: 'This RSVP link is no longer valid.' }
 
   await db.delete(eventRsvps).where(eq(eventRsvps.editToken, token))
-  revalidatePath('/admin/events')
+  // No revalidatePath here: the admin events pages are already force-dynamic, and revalidating
+  // from a server action re-renders the current route (this RSVP's page) into the action response —
+  // with the row gone that render hits notFound(), which would replace the "cancelled" card with a 404.
 }
