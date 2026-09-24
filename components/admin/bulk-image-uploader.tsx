@@ -259,7 +259,8 @@ export function BulkImageUploader({ prefix, maxEdge = 1600, concurrency = 3, onU
         <Button type="button" size="xl" variant="brand" disabled={running || (queued === 0 && !needsSave)} onClick={() => void run()}>
           {buttonLabel}
         </Button>
-        {items.length > 0 && !running && (
+        {/* Hidden while anything is `uploaded` but unsaved: clearing then would abandon live Blob files. */}
+        {items.length > 0 && !running && !needsSave && (
           <Button type="button" size="xl" variant="outline" onClick={() => setItems([])}>
             Clear
           </Button>
