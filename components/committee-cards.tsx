@@ -51,7 +51,7 @@ export function CommitteeCards({ contacts, className }: { contacts: Contact[]; c
                 {initials(c.name)}
               </div>
             )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-black from-40% via-brand-black/80 to-transparent p-4 pt-14">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-black/95 via-brand-black/55 via-55% to-transparent p-4 pt-12">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold-light">{c.role}</p>
               <h3 className="mt-0.5 text-lg font-bold leading-tight tracking-tight text-white">{c.name}</h3>
             </div>
