@@ -11,14 +11,18 @@ export const dynamic = 'force-dynamic'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+function formatUtcDate(d: Date): string {
+  return d.toLocaleDateString(undefined, { timeZone: 'UTC' })
+}
+
 function summarise(e: Awaited<ReturnType<typeof listEvents>>[number]): string {
   const time = e.eventTime ? formatLocalTime(e.eventTime.length === 5 ? `${e.eventTime}:00` : e.eventTime) : null
   if (e.type === 'one_time') {
-    const date = e.eventDate ? e.eventDate.toLocaleDateString() : '—'
+    const date = e.eventDate ? formatUtcDate(e.eventDate) : '—'
     return time ? `${date} · ${time}` : date
   }
   const day = e.dayOfWeek != null ? DAYS[e.dayOfWeek] : '—'
-  const end = e.endDate ? e.endDate.toLocaleDateString() : '—'
+  const end = e.endDate ? formatUtcDate(e.endDate) : '—'
   return time ? `Every ${day} · ${time} · until ${end}` : `Every ${day} · until ${end}`
 }
 
