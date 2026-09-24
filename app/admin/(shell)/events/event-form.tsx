@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createEvent, updateEvent, type EventInput } from './actions'
 import { optimiseImage, uploadToBlob } from '@/lib/blob-client'
-import { Field, TextInput, TextArea, Select, FileInput } from '@/components/admin/fields'
+import { Field, TextInput, TextArea, FileInput } from '@/components/admin/fields'
+import { Select } from '@/components/admin/select'
+import { DatePicker } from '@/components/admin/date-picker'
+import { TimePicker } from '@/components/admin/time-picker'
 import { Button } from '@/components/ui/button'
 import { useDialogClose } from '@/components/admin/action-form'
 import { DAYS } from '@/lib/events-format'
@@ -15,12 +18,21 @@ function toDateStr(d: Date | null): string {
   return d.toISOString().slice(0, 10)
 }
 
+type EventType = 'one_time' | 'recurring'
+
+const TYPE_OPTIONS = [
+  { value: 'one_time', label: 'One-time event' },
+  { value: 'recurring', label: 'Recurring event' },
+] as const satisfies readonly { value: EventType; label: string }[]
+
+const DAY_OPTIONS = DAYS.map((d, i) => ({ value: i, label: d }))
+
 type Props = { event?: Event }
 
 export function EventForm({ event }: Props) {
   const router = useRouter()
   const close = useDialogClose()
-  const [type, setType] = useState<'one_time' | 'recurring'>((event?.type as 'one_time' | 'recurring') ?? 'one_time')
+  const [type, setType] = useState<EventType>((event?.type as EventType) ?? 'one_time')
   const [title, setTitle] = useState(event?.title ?? '')
   const [description, setDescription] = useState(event?.description ?? '')
   const [location, setLocation] = useState(event?.location ?? '')
@@ -80,10 +92,7 @@ export function EventForm({ event }: Props) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <Field label="Type" htmlFor={`${p}-type`}>
-        <Select id={`${p}-type`} value={type} onChange={(e) => setType(e.target.value as 'one_time' | 'recurring')} disabled={busy}>
-          <option value="one_time">One-time event</option>
-          <option value="recurring">Recurring event</option>
-        </Select>
+        <Select id={`${p}-type`} value={type} onChange={setType} options={TYPE_OPTIONS} disabled={busy} />
       </Field>
       <Field label="Title" htmlFor={`${p}-title`}>
         <TextInput id={`${p}-title`} value={title} onChange={(e) => setTitle(e.target.value)} required disabled={busy} />
@@ -98,31 +107,25 @@ export function EventForm({ event }: Props) {
       {type === 'one_time' ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Date" htmlFor={`${p}-date`}>
-            <TextInput id={`${p}-date`} type="date" value={eventDateStr} onChange={(e) => setEventDateStr(e.target.value)} required disabled={busy} />
+            <DatePicker id={`${p}-date`} value={eventDateStr} onChange={setEventDateStr} required disabled={busy} />
           </Field>
           <Field label="Time" htmlFor={`${p}-time`} hint="Optional.">
-            <TextInput id={`${p}-time`} type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} disabled={busy} />
+            <TimePicker id={`${p}-time`} value={eventTime} onChange={setEventTime} disabled={busy} />
           </Field>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Day of the week" htmlFor={`${p}-day`}>
-            <Select id={`${p}-day`} value={dayOfWeek} onChange={(e) => setDayOfWeek(Number(e.target.value))} disabled={busy}>
-              {DAYS.map((d, i) => (
-                <option key={d} value={i}>
-                  {d}
-                </option>
-              ))}
-            </Select>
+            <Select id={`${p}-day`} value={dayOfWeek} onChange={setDayOfWeek} options={DAY_OPTIONS} disabled={busy} />
           </Field>
           <Field label="Time" htmlFor={`${p}-time`} hint="Optional.">
-            <TextInput id={`${p}-time`} type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} disabled={busy} />
+            <TimePicker id={`${p}-time`} value={eventTime} onChange={setEventTime} disabled={busy} />
           </Field>
           <Field label="Start date" htmlFor={`${p}-start`}>
-            <TextInput id={`${p}-start`} type="date" value={startDateStr} onChange={(e) => setStartDateStr(e.target.value)} required disabled={busy} />
+            <DatePicker id={`${p}-start`} value={startDateStr} onChange={setStartDateStr} required disabled={busy} />
           </Field>
           <Field label="End date" htmlFor={`${p}-end`}>
-            <TextInput id={`${p}-end`} type="date" value={endDateStr} onChange={(e) => setEndDateStr(e.target.value)} required disabled={busy} />
+            <DatePicker id={`${p}-end`} value={endDateStr} onChange={setEndDateStr} required disabled={busy} />
           </Field>
         </div>
       )}
