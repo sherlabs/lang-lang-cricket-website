@@ -29,6 +29,10 @@ export async function submitEventPhoto(formData: FormData): Promise<{ error: str
   const rows = await db.select().from(events).where(eq(events.id, eventId))
   const event = (rows[0] as Event | undefined) ?? null
 
+  // Known limitation: this schema has no end-time/duration, so an event that
+  // started but hasn't "ended" (e.g. started 10 minutes ago) is already
+  // treated as "past" and eligible for submissions here, same as the
+  // pre-existing listPastOneTimeEvents semantics this mirrors.
   const isPastOneTime =
     !!event && event.type === 'one_time' && !!event.eventDate && getOneTimeEventDateTime({ eventDate: event.eventDate, eventTime: event.eventTime }) < nowAsEventClock()
 
