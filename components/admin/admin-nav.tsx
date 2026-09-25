@@ -14,6 +14,7 @@ const links = [
   { href: '/admin/gallery', label: 'Gallery' },
   { href: '/admin/stories', label: 'Stories' },
   { href: '/admin/events', label: 'Events' },
+  { href: '/admin/announcements', label: 'Announcements' },
   { href: '/admin/sponsors', label: 'Sponsors' },
   { href: '/admin/contacts', label: 'Contacts' },
   { href: '/admin/playhq', label: 'PlayHQ' },
