@@ -114,3 +114,14 @@ export const eventPhotos = pgTable('event_photos', {
 })
 
 export type EventPhoto = typeof eventPhotos.$inferSelect
+
+export const announcements = pgTable('announcements', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''), // plain text or simple text with line breaks — NOT a rich editor like stories, keep this simple
+  published: boolean('published').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type Announcement = typeof announcements.$inferSelect
