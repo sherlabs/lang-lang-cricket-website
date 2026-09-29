@@ -14,12 +14,16 @@ const links = [
   { href: '/contact', label: 'Contact' },
 ]
 
+// One column template shared by the main grid and the bottom bar so the credit,
+// copyright and supporters line sit on the same vertical edges as the columns above.
+const columns = 'lg:grid-cols-[1.5fr_1fr_1fr]'
+
 export function SiteFooter() {
   return (
     <footer className="mt-24 bg-brand-black text-white">
       <div className="h-1 w-full bg-gradient-to-r from-brand-gold-dark via-brand-gold to-brand-gold-light" />
-      <div className="container-site grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10">
-        <div>
+      <div className={`container-site grid gap-10 py-14 sm:grid-cols-2 sm:gap-x-8 lg:gap-x-10 lg:py-16 ${columns}`}>
+        <div className="sm:col-span-2 lg:col-span-1">
           <Link href="/" className="group inline-flex items-center gap-3 rounded-md">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white p-1 ring-1 ring-white/20 transition group-hover:ring-brand-gold">
               <Image
@@ -46,13 +50,14 @@ export function SiteFooter() {
         </div>
 
         <nav aria-label="Footer">
-          <p className="display mb-5 text-lg text-brand-gold">Explore</p>
-          <ul className="space-y-1 text-sm">
+          <p className="display mb-4 text-lg text-brand-gold">Explore</p>
+          {/* Two columns read top-to-bottom (grid-flow-col) so the order matches the nav. */}
+          <ul className="grid grid-flow-col grid-cols-2 grid-rows-4 gap-x-6 text-sm">
             {links.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="inline-flex min-h-9 items-center text-white/80 transition hover:text-brand-gold"
+                  className="inline-flex min-h-9 items-center rounded-sm text-white/80 transition hover:text-brand-gold"
                 >
                   {l.label}
                 </Link>
@@ -62,49 +67,61 @@ export function SiteFooter() {
         </nav>
 
         <div>
-          <p className="display mb-5 text-lg text-brand-gold">Find us</p>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-2.5 text-white/80">
-              <HugeiconsIcon icon={MapPinIcon} className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
+          <p className="display mb-4 text-lg text-brand-gold">Find us</p>
+          <ul className="space-y-1 text-sm">
+            <li className="flex min-h-9 items-center gap-2.5 text-white/80">
+              <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
               Caldermeade, Victoria, Australia
             </li>
             <li>
               <a
                 href="mailto:langlangcricketclub@gmail.com"
-                className="flex items-start gap-2.5 text-white/80 transition hover:text-brand-gold"
+                className="flex min-h-9 items-center gap-2.5 rounded-sm text-white/80 transition hover:text-brand-gold"
               >
-                <HugeiconsIcon icon={Mail01Icon} className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
-                <span className="break-all">langlangcricketclub@gmail.com</span>
+                <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
+                <span className="break-words">langlangcricketclub@gmail.com</span>
               </a>
             </li>
-            <li className="flex items-start gap-2.5 text-white/80">
-              <FacebookIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
+            <li className="flex min-h-9 items-center gap-2.5 text-white/80">
+              <FacebookIcon className="h-4 w-4 shrink-0 text-brand-gold" />
               Find us on Facebook for club news
             </li>
           </ul>
         </div>
       </div>
+
       <div className="border-t border-white/10">
-        <div className="container-site flex flex-col gap-2 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`container-site flex flex-col gap-5 py-6 text-xs leading-relaxed text-white/60 lg:grid lg:items-end lg:gap-x-10 ${columns}`}
+        >
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-white/80 transition hover:text-white"
+            className="group inline-flex w-fit flex-col rounded-sm"
           >
-            Built with
-            <span aria-label="love" role="img" className="text-rose-500 transition group-hover:scale-110">
-              ♥
+            <span className="whitespace-nowrap text-sm text-white/80 transition group-hover:text-white">
+              Built with{' '}
+              <span aria-label="love" role="img" className="inline-block text-rose-500 transition group-hover:scale-110">
+                ♥
+              </span>{' '}
+              by{' '}
+              <span className="font-semibold text-white underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
+                sherlabs.com
+              </span>
             </span>
-            by
-            <span className="font-semibold text-white underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
-              sherlabs.com
+            <span className="mt-0.5 text-white/60 transition group-hover:text-white/80">
+              Websites for clubs &amp; local businesses
             </span>
-            <span className="text-white/50">· Websites for clubs &amp; local businesses</span>
           </a>
-          <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
-          <p>Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
+
+          <div className="lg:col-span-2 lg:text-right">
+            <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
+            <p className="text-balance">
+              Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
