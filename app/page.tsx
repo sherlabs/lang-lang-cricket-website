@@ -10,14 +10,19 @@ import {
   Mail01Icon,
 } from '@hugeicons/core-free-icons'
 import { asc } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 import { db } from '@/db'
 import { sponsors, committeeContacts, galleryPhotos } from '@/db/schema'
 import { SectionHeading } from '@/components/section-heading'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SponsorStrip } from '@/components/sponsor-logos'
 import { SponsorCarousel, selectCarouselSponsors } from '@/components/sponsor-carousel'
+import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
+import { getLatestAnnouncement } from '@/lib/announcements-queries'
+import { ANNOUNCEMENT_DISMISS_COOKIE, excerpt, shouldShowBanner } from '@/lib/announcements-format'
 
+// Reads the announcement-dismissed cookie, so this page is per-request anyway.
 export const dynamic = 'force-dynamic'
 
 const highlights = [
@@ -44,18 +49,31 @@ const highlights = [
 ]
 
 export default async function HomePage() {
-  const [sponsorRows, allContacts, photos, carouselTiers] = await Promise.all([
+  const [sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement] = await Promise.all([
     db.select().from(sponsors),
     db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder)),
     db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
     getSponsorCarouselTiers(),
+    getLatestAnnouncement(),
   ])
   // Leadership and junior coaches have their own sections on /people; the home page shows the committee only.
   const contacts = allContacts.filter((c) => c.section === 'committee')
   const carouselSponsors = selectCarouselSponsors(sponsorRows, carouselTiers)
+  // Decided server-side so a dismissed banner never flashes before hiding.
+  const dismissedId = cookies().get(ANNOUNCEMENT_DISMISS_COOKIE)?.value
+  const showBanner = latestAnnouncement !== null && shouldShowBanner(latestAnnouncement.id, dismissedId)
 
   return (
     <main>
+      {/* Latest announcement (dismissable, per announcement) */}
+      {showBanner && latestAnnouncement && (
+        <AnnouncementBanner
+          id={latestAnnouncement.id}
+          title={latestAnnouncement.title}
+          excerpt={excerpt(latestAnnouncement.body)}
+        />
+      )}
+
       {/* Hero */}
       <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px] lg:min-h-[700px]">
         <Image

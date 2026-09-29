@@ -14,7 +14,7 @@ export default async function AnnouncementsAdminPage() {
       <AdminPageHeader
         eyebrow="Announcements"
         title="Club announcements"
-        intro="The latest published announcement shows as a banner on the homepage. All published announcements list on the Announcements page."
+        intro="The latest published announcement shows as a banner at the top of the homepage — visitors can dismiss it, and it stays hidden for them until a newer one is published. All published announcements list on the Announcements page."
       />
 
       <AdminCard title="Add an announcement" className="mb-8">

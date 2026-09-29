@@ -4,20 +4,21 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 
-// Column 1 mirrors the main nav, column 2 the Clubhouse group + Contact.
+// Column 1 mirrors the main nav + Contact, column 2 the Clubhouse group — five links each.
 const linkColumns = [
   [
     { href: '/fixtures', label: 'Fixtures' },
     { href: '/events', label: 'Events' },
     { href: '/players', label: 'Players' },
     { href: '/history', label: 'History' },
+    { href: '/contact', label: 'Contact' },
   ],
   [
     { href: '/people', label: 'Our People' },
+    { href: '/announcements', label: 'Announcements' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/sponsors', label: 'Sponsors' },
     { href: '/documents', label: 'Documents' },
-    { href: '/contact', label: 'Contact' },
   ],
 ]
 

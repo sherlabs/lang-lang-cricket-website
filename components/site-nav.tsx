@@ -20,6 +20,7 @@ const primaryLinks = [
 // and under a small heading in the mobile menu.
 const clubLinks = [
   { href: '/people', label: 'Our People' },
+  { href: '/announcements', label: 'Announcements' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
   { href: '/documents', label: 'Documents' },
