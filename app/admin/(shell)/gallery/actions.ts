@@ -5,6 +5,7 @@ import { del } from '@vercel/blob'
 import { asc, eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { galleryPhotos } from '@/db/schema'
+import { requireAdmin } from '@/lib/require-admin'
 
 function revalidate() {
   revalidatePath('/gallery')
@@ -13,11 +14,13 @@ function revalidate() {
 }
 
 export async function listGalleryPhotos() {
+  await requireAdmin()
   return db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder))
 }
 
 /** Register already-uploaded blob URLs. New photos go to the front so they show on the homepage. */
 export async function addGalleryPhotos(urls: string[], caption = '') {
+  await requireAdmin()
   const clean = urls.filter((u) => typeof u === 'string' && u.includes('.blob.vercel-storage.com'))
   if (clean.length === 0) return
   await db.update(galleryPhotos).set({ sortOrder: sql`${galleryPhotos.sortOrder} + ${clean.length}` })
@@ -26,6 +29,7 @@ export async function addGalleryPhotos(urls: string[], caption = '') {
 }
 
 export async function editGalleryPhoto(formData: FormData) {
+  await requireAdmin()
   const id = Number(formData.get('id'))
   await db
     .update(galleryPhotos)
@@ -38,6 +42,7 @@ export async function editGalleryPhoto(formData: FormData) {
 }
 
 export async function removeGalleryPhoto(id: number) {
+  await requireAdmin()
   const [row] = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id))
   if (!row) return
   await db.delete(galleryPhotos).where(eq(galleryPhotos.id, id))
