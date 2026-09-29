@@ -5,15 +5,20 @@ import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 
 // Column 1 mirrors the main nav, column 2 the Clubhouse group + Contact.
-const links = [
-  { href: '/fixtures', label: 'Fixtures' },
-  { href: '/events', label: 'Events' },
-  { href: '/players', label: 'Players' },
-  { href: '/history', label: 'History' },
-  { href: '/gallery', label: 'Gallery' },
-  { href: '/sponsors', label: 'Sponsors' },
-  { href: '/documents', label: 'Documents' },
-  { href: '/contact', label: 'Contact' },
+const linkColumns = [
+  [
+    { href: '/fixtures', label: 'Fixtures' },
+    { href: '/events', label: 'Events' },
+    { href: '/players', label: 'Players' },
+    { href: '/history', label: 'History' },
+  ],
+  [
+    { href: '/people', label: 'Our People' },
+    { href: '/gallery', label: 'Gallery' },
+    { href: '/sponsors', label: 'Sponsors' },
+    { href: '/documents', label: 'Documents' },
+    { href: '/contact', label: 'Contact' },
+  ],
 ]
 
 // Desktop column template for the main footer grid.
@@ -52,19 +57,23 @@ export function SiteFooter() {
 
         <nav aria-label="Footer">
           <p className="display mb-4 text-lg text-brand-gold">Explore</p>
-          {/* Two columns read top-to-bottom (grid-flow-col) so the order matches the nav. */}
-          <ul className="grid grid-flow-col grid-cols-2 grid-rows-4 gap-x-6 text-sm">
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="inline-flex min-h-9 items-center rounded-sm text-white/80 transition hover:text-brand-gold"
-                >
-                  {l.label}
-                </Link>
-              </li>
+          {/* Two lists side by side, each reading top-to-bottom in nav order. */}
+          <div className="grid grid-cols-2 gap-x-6 text-sm">
+            {linkColumns.map((column, i) => (
+              <ul key={i}>
+                {column.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="inline-flex min-h-9 items-center rounded-sm text-white/80 transition hover:text-brand-gold"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             ))}
-          </ul>
+          </div>
         </nav>
 
         <div>

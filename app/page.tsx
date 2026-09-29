@@ -50,8 +50,8 @@ export default async function HomePage() {
     db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
     getSponsorCarouselTiers(),
   ])
-  // The senior leadership team has its own section on the contact page; the home page shows the committee only.
-  const contacts = allContacts.filter((c) => c.role !== 'Senior Leadership Team')
+  // Leadership and junior coaches have their own sections on /people; the home page shows the committee only.
+  const contacts = allContacts.filter((c) => c.section === 'committee')
   const carouselSponsors = selectCarouselSponsors(sponsorRows, carouselTiers)
 
   return (
