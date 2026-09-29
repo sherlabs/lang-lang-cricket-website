@@ -89,35 +89,42 @@ export function SiteFooter() {
         </div>
       </div>
 
+      {/* Bottom bar: everything left-aligned at the same size, one divider, club line first and the
+          build credit last. The credit is subordinate — only "sherlabs.com" carries emphasis (colour, not size). */}
       <div className="border-t border-white/10">
-        <div className="container-site py-5 text-xs leading-relaxed text-white/60">
-          <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-            <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
-            <p className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
-          </div>
+        <div className="container-site flex flex-col py-6 text-xs leading-relaxed text-white/60">
+          <p className="flex min-h-9 flex-col justify-center gap-y-1 lg:flex-row lg:items-center lg:justify-start lg:gap-x-3">
+            <span className="whitespace-nowrap">
+              &copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.
+            </span>
+            <span aria-hidden className="hidden text-white/30 lg:inline">
+              ·
+            </span>
+            <span className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</span>
+          </p>
 
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group mt-4 flex min-h-9 flex-col justify-center gap-0.5 rounded-sm border-t border-white/5 pt-4 transition hover:text-white/80 lg:flex-row lg:items-center lg:justify-between lg:gap-10"
+            className="group mt-2 flex min-h-9 flex-col justify-center gap-y-1 self-start rounded-sm sm:flex-row sm:items-center sm:justify-start sm:gap-x-3 lg:mt-0"
           >
-            <span className="whitespace-nowrap text-white/80">
+            <span className="whitespace-nowrap">
               Built with{' '}
               <span aria-label="love" role="img" className="inline-block text-rose-500 transition group-hover:scale-110">
                 ♥
               </span>{' '}
               by{' '}
-              <span className="font-semibold text-white underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
+              <span className="font-medium text-white/90 underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
                 sherlabs.com
               </span>
             </span>
-            <span>
-              Websites for clubs &amp; local businesses{' '}
-              <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">
-                →
-              </span>
+            <span aria-hidden className="hidden text-white/30 sm:inline">
+              ·
+            </span>
+            <span className="text-white/50 transition group-hover:text-white/70">
+              Websites for clubs &amp; local businesses
             </span>
           </a>
         </div>
