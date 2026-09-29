@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
+// runPlayerSync is POSTed to this route, so it runs under this segment's limit, not the cron route's.
+export const maxDuration = 300
 
 type Status = 'all' | 'active' | 'past' | 'hidden'
 type Props = { searchParams: { status?: string | string[]; q?: string | string[] } }
