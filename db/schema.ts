@@ -25,6 +25,15 @@ export const sponsors = pgTable('sponsors', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+// Generic key/value store for small admin-editable site options
+// (e.g. which sponsor tiers scroll on the home page). Readers validate
+// `value` themselves and fall back to a default on anything unexpected.
+export const siteSettings = pgTable('site_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 export const committeeContacts = pgTable('committee_contacts', {
   id: serial('id').primaryKey(),
   role: text('role').notNull(),

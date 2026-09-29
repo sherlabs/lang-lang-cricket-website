@@ -78,6 +78,20 @@ export function groupByTier(rows: Sponsor[]) {
   )
 }
 
+/**
+ * A business can sponsor at more than one tier; keep its first occurrence
+ * (highest tier, given tier-ordered input) so its logo appears once.
+ */
+export function dedupeByHighestTier(rows: Sponsor[]) {
+  const seen = new Set<string>()
+  return rows.filter((s) => {
+    const key = s.name.trim().toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: string }) {
   const style = TIER_STYLES[tier] ?? TIER_STYLES.Bronze
   const img = <SponsorMark sponsor={sponsor} className={style.logo} />
@@ -108,16 +122,7 @@ export function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: string 
 
 /** Compact, single-row logo strip used on the home page. */
 export function SponsorStrip({ sponsors, className }: { sponsors: Sponsor[]; className?: string }) {
-  // A business can sponsor at more than one tier; show its logo once, at its highest tier.
-  const seen = new Set<string>()
-  const ordered = groupByTier(sponsors)
-    .flatMap((g) => g.items)
-    .filter((s) => {
-      const key = s.name.trim().toLowerCase()
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
+  const ordered = dedupeByHighestTier(groupByTier(sponsors).flatMap((g) => g.items))
   return (
     <div className={cn('flex flex-wrap items-center justify-center gap-x-10 gap-y-6', className)}>
       {ordered.map((s) => {

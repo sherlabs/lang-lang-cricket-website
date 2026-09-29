@@ -111,6 +111,48 @@
   .container-site {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
+
+  /* Home page sponsor marquee: two copies of the logo row slide left by half
+     the track width, so the loop is seamless. Edge fades come from a mask so
+     the band's background shows through. Hover/focus pauses it; reduced
+     motion turns it into a plain wrapped row with the duplicate hidden. */
+  .sponsor-marquee {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  }
+  .sponsor-marquee-track {
+    animation: sponsor-marquee var(--marquee-duration, 40s) linear infinite;
+  }
+  .sponsor-marquee:hover .sponsor-marquee-track,
+  .sponsor-marquee:focus-within .sponsor-marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes sponsor-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sponsor-marquee {
+      -webkit-mask-image: none;
+      mask-image: none;
+      @apply mx-auto max-w-6xl px-5 sm:px-8;
+    }
+    /* Doubled selector so this outranks the `w-max` utility on the track. */
+    .sponsor-marquee .sponsor-marquee-track {
+      animation: none;
+      width: 100%;
+    }
+    .sponsor-marquee-track > ul {
+      @apply w-full flex-wrap justify-center gap-y-5;
+    }
+    .sponsor-marquee-dup {
+      display: none;
+    }
+  }
   /* Minimal editorial reading/writing surface (Vercel blog-starter style) —
      shared by the live Tiptap editor and rendered story HTML on the public
      detail page. Neutral sans-serif copy, generous measure, no boxed chrome. */

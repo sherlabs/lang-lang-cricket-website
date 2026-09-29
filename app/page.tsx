@@ -15,6 +15,8 @@ import { sponsors, committeeContacts, galleryPhotos } from '@/db/schema'
 import { SectionHeading } from '@/components/section-heading'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SponsorStrip } from '@/components/sponsor-logos'
+import { SponsorCarousel, selectCarouselSponsors } from '@/components/sponsor-carousel'
+import { getSponsorCarouselTiers } from '@/lib/site-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,13 +44,15 @@ const highlights = [
 ]
 
 export default async function HomePage() {
-  const [sponsorRows, allContacts, photos] = await Promise.all([
+  const [sponsorRows, allContacts, photos, carouselTiers] = await Promise.all([
     db.select().from(sponsors),
     db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder)),
     db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
+    getSponsorCarouselTiers(),
   ])
   // The senior leadership team has its own section on the contact page; the home page shows the committee only.
   const contacts = allContacts.filter((c) => c.role !== 'Senior Leadership Team')
+  const carouselSponsors = selectCarouselSponsors(sponsorRows, carouselTiers)
 
   return (
     <main>
@@ -97,6 +101,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Sponsor logo carousel (tiers chosen in admin) */}
+      <SponsorCarousel sponsors={carouselSponsors} />
 
       {/* About */}
       <section className="container-site grid gap-12 py-20 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-20 lg:py-28">
