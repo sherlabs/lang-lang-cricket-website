@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, timestamp, integer, jsonb, boolean, unique } from 'drizzle-orm/pg-core'
 
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
@@ -125,3 +125,80 @@ export const announcements = pgTable('announcements', {
 })
 
 export type Announcement = typeof announcements.$inferSelect
+
+export const players = pgTable('players', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  photoUrl: text('photo_url').notNull().default(''),
+  bio: text('bio').notNull().default(''), // plain text; paragraphs split on blank lines
+  source: text('source').notNull(), // 'playhq' | 'manual'
+  manualYears: text('manual_years').notNull().default(''), // manual players only, e.g. "1978–1992"
+  activeOverride: text('active_override'), // null (auto) | 'active' | 'past'
+  isActiveDerived: boolean('is_active_derived').notNull().default(false), // written by sync only
+  hidden: boolean('hidden').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+export type Player = typeof players.$inferSelect
+
+// PlayHQ has no stable player id — a name key (`first|last` lower-cased) maps
+// appearances to a player. Merging players moves aliases, so merges survive syncs.
+export const playerAliases = pgTable('player_aliases', {
+  nameKey: text('name_key').primaryKey(),
+  playerId: integer('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+})
+
+export const playerHonours = pgTable('player_honours', {
+  id: serial('id').primaryKey(),
+  playerId: integer('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  years: text('years').notNull(),
+  title: text('title').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+})
+export type PlayerHonour = typeof playerHonours.$inferSelect
+
+// One row per player × PlayHQ team (a team belongs to one season). Raw counts only;
+// averages are derived at read time. Fully rewritten by every sync.
+export const playerSeasons = pgTable(
+  'player_seasons',
+  {
+    id: serial('id').primaryKey(),
+    playerId: integer('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+    seasonName: text('season_name').notNull(),
+    seasonOrder: integer('season_order').notNull(), // 0 = newest senior season group
+    teamId: text('team_id').notNull(),
+    teamName: text('team_name').notNull(),
+    gradeName: text('grade_name'),
+    games: integer('games').notNull().default(0),
+    batInnings: integer('bat_innings').notNull().default(0),
+    batNotOuts: integer('bat_not_outs').notNull().default(0),
+    batRuns: integer('bat_runs').notNull().default(0),
+    batHighScore: integer('bat_high_score').notNull().default(0),
+    batHighScoreNotOut: boolean('bat_high_score_not_out').notNull().default(false),
+    batBalls: integer('bat_balls').notNull().default(0),
+    batFours: integer('bat_fours').notNull().default(0),
+    batSixes: integer('bat_sixes').notNull().default(0),
+    bowlBalls: integer('bowl_balls').notNull().default(0),
+    bowlMaidens: integer('bowl_maidens').notNull().default(0),
+    bowlRuns: integer('bowl_runs').notNull().default(0),
+    bowlWickets: integer('bowl_wickets').notNull().default(0),
+    bowlBestWickets: integer('bowl_best_wickets').notNull().default(0),
+    bowlBestRuns: integer('bowl_best_runs').notNull().default(0),
+    catches: integer('catches').notNull().default(0),
+  },
+  (t) => [unique('player_seasons_player_team').on(t.playerId, t.teamId)]
+)
+export type PlayerSeason = typeof playerSeasons.$inferSelect
+
+export const playerSyncRuns = pgTable('player_sync_runs', {
+  id: serial('id').primaryKey(),
+  startedAt: timestamp('started_at').defaultNow().notNull(),
+  finishedAt: timestamp('finished_at'),
+  status: text('status').notNull(), // 'running' | 'ok' | 'error'
+  playersCreated: integer('players_created').notNull().default(0),
+  seasonRows: integer('season_rows').notNull().default(0),
+  error: text('error'),
+})
+export type PlayerSyncRun = typeof playerSyncRuns.$inferSelect
