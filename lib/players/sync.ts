@@ -35,8 +35,15 @@ export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
     const clubIds = new Set(teams.map((t) => t.id))
     for (const team of teams.filter((t) => !t.isJunior)) {
       const finals = (await getTeamGames(team, clubIds)).filter((g) => g.status === 'FINAL')
-      const cards = await mapLimit(finals, 5, (g) => getGameSummary(g.id, false, 'FINAL'))
-      const stats = aggregatePlayers(cards, team.id, false)
+      // One broken scorecard shouldn't block every future sync: skip it (logged) and
+      // let the next run retry. Season/team/fixture failures above still abort.
+      const cards = await mapLimit(finals, 5, (g) =>
+        getGameSummary(g.id, false, 'FINAL').catch((err) => {
+          console.error('[players] skipping game summary', g.id, err instanceof Error ? err.message : err)
+          return null
+        })
+      )
+      const stats = aggregatePlayers(cards.filter((c): c is NonNullable<typeof c> => c !== null), team.id, false)
       if (stats.length) out.push({ seasonName: group.name, seasonOrder: order, teamId: team.id, teamName: team.name, gradeName: team.gradeName, stats })
     }
   }
