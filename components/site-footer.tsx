@@ -14,8 +14,7 @@ const links = [
   { href: '/contact', label: 'Contact' },
 ]
 
-// One column template shared by the main grid and the bottom bar so the credit,
-// copyright and supporters line sit on the same vertical edges as the columns above.
+// Desktop column template for the main footer grid.
 const columns = 'lg:grid-cols-[1.5fr_1fr_1fr]'
 
 export function SiteFooter() {
@@ -91,17 +90,22 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div
-          className={`container-site flex flex-col gap-5 py-6 text-xs leading-relaxed text-white/60 lg:grid lg:items-end lg:gap-x-10 ${columns}`}
-        >
+        <div className="container-site flex flex-col gap-1 py-5 text-xs leading-relaxed text-white/60 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+          <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
+          <p className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10 bg-black/40">
+        <div className="container-site flex justify-center py-4">
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group inline-flex w-fit flex-col rounded-sm"
+            className="group flex min-h-9 flex-col items-center justify-center rounded-sm text-center text-sm text-white/80 transition hover:text-white sm:flex-row sm:gap-2"
           >
-            <span className="whitespace-nowrap text-sm text-white/80 transition group-hover:text-white">
+            <span className="whitespace-nowrap">
               Built with{' '}
               <span aria-label="love" role="img" className="inline-block text-rose-500 transition group-hover:scale-110">
                 ♥
@@ -111,17 +115,13 @@ export function SiteFooter() {
                 sherlabs.com
               </span>
             </span>
-            <span className="mt-0.5 text-white/60 transition group-hover:text-white/80">
+            <span aria-hidden className="hidden text-white/30 sm:inline">
+              ·
+            </span>
+            <span className="text-xs text-white/60 transition group-hover:text-white/80 sm:text-sm">
               Websites for clubs &amp; local businesses
             </span>
           </a>
-
-          <div className="lg:col-span-2 lg:text-right">
-            <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
-            <p className="text-balance">
-              Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.
-            </p>
-          </div>
         </div>
       </div>
     </footer>
