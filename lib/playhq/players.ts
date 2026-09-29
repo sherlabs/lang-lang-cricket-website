@@ -1,5 +1,5 @@
 import type { PlayerSeasonStats, Scorecard } from './types'
-import { displayName } from './names'
+import { displayName, titleCase } from './names'
 import { isInningsPlayed } from './scorecard'
 
 export function oversToBalls(overs: number): number {
@@ -13,9 +13,25 @@ export function ballsToOvers(balls: number): string {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-function emptyStats(key: string, name: string): PlayerSeasonStats {
+export function battingAverages(b: { runs: number; innings: number; notOuts: number; balls: number }) {
+  const outs = b.innings - b.notOuts
   return {
-    key, name, games: 0,
+    average: outs > 0 ? round2(b.runs / outs) : null,
+    strikeRate: b.balls > 0 ? round2((b.runs / b.balls) * 100) : null,
+  }
+}
+
+export function bowlingAverages(b: { balls: number; runs: number; wickets: number }) {
+  return {
+    overs: ballsToOvers(b.balls),
+    average: b.wickets > 0 ? round2(b.runs / b.wickets) : null,
+    economy: b.balls > 0 ? round2(b.runs / (b.balls / 6)) : null,
+  }
+}
+
+function emptyStats(key: string, p: { firstName: string; lastName: string }, isJunior: boolean): PlayerSeasonStats {
+  return {
+    key, name: displayName(p, isJunior), firstName: titleCase(p.firstName ?? ''), lastName: titleCase(p.lastName ?? ''), games: 0,
     batting: { innings: 0, notOuts: 0, runs: 0, highScore: 0, highScoreNotOut: false, balls: 0, fours: 0, sixes: 0, average: null, strikeRate: null },
     bowling: { balls: 0, overs: '0', maidens: 0, runs: 0, wickets: 0, bestWickets: 0, bestRuns: 0, average: null, economy: null },
     catches: 0,
@@ -31,9 +47,9 @@ export function aggregatePlayers(scorecards: Scorecard[], teamId: string, isJuni
     const byName = new Map<string, PlayerSeasonStats>()
     for (const [id, p] of Object.entries(sc.players)) {
       if (p.teamId !== teamId) continue
-      const key = `${p.firstName}|${p.lastName}`.toLowerCase()
+      const key = `${(p.firstName ?? '').trim()}|${(p.lastName ?? '').trim()}`.toLowerCase()
       let e = acc.get(key)
-      if (!e) { e = emptyStats(key, displayName(p, isJunior)); acc.set(key, e) }
+      if (!e) { e = emptyStats(key, p, isJunior); acc.set(key, e) }
       if (!byAppearance.has(id)) { e.games++ }
       byAppearance.set(id, e); byName.set(e.name, e)
     }
@@ -67,12 +83,8 @@ export function aggregatePlayers(scorecards: Scorecard[], teamId: string, isJuni
     }
   }
   const out = [...acc.values()].map((e) => {
-    const outs = e.batting.innings - e.batting.notOuts
-    e.batting.average = outs > 0 ? round2(e.batting.runs / outs) : null
-    e.batting.strikeRate = e.batting.balls > 0 ? round2((e.batting.runs / e.batting.balls) * 100) : null
-    e.bowling.overs = ballsToOvers(e.bowling.balls)
-    e.bowling.average = e.bowling.wickets > 0 ? round2(e.bowling.runs / e.bowling.wickets) : null
-    e.bowling.economy = e.bowling.balls > 0 ? round2(e.bowling.runs / (e.bowling.balls / 6)) : null
+    Object.assign(e.batting, battingAverages(e.batting))
+    Object.assign(e.bowling, bowlingAverages(e.bowling))
     return e
   })
   return out.sort((a, b) => b.batting.runs - a.batting.runs || b.bowling.wickets - a.bowling.wickets || a.name.localeCompare(b.name))

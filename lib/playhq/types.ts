@@ -58,7 +58,7 @@ export type Scorecard = {
   players: Record<string, { firstName: string; lastName: string; teamId: string }>   // appearanceId → player; visible Players only (no coaches)
 }
 export type PlayerSeasonStats = {
-  key: string; name: string; games: number
+  key: string; name: string; firstName: string; lastName: string; games: number
   batting: { innings: number; notOuts: number; runs: number; highScore: number; highScoreNotOut: boolean; balls: number; fours: number; sixes: number; average: number | null; strikeRate: number | null }
   bowling: { balls: number; overs: string; maidens: number; runs: number; wickets: number; bestWickets: number; bestRuns: number; average: number | null; economy: number | null }
   catches: number

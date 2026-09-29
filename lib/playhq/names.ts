@@ -1,4 +1,4 @@
-function titleCase(s: string) {
+export function titleCase(s: string): string {
   return s.trim().toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase())
 }
 

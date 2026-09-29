@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
 import { mapScorecard } from '@/lib/playhq/scorecard'
-import { aggregatePlayers, oversToBalls, ballsToOvers } from '@/lib/playhq/players'
+import { aggregatePlayers, oversToBalls, ballsToOvers, battingAverages, bowlingAverages } from '@/lib/playhq/players'
 import type { RawGameSummary } from '@/lib/playhq/types'
 
 const ORG = '484ced51-403a-466c-9a94-bd95eedf7319'
@@ -87,5 +87,27 @@ describe('placeholder innings', () => {
     }
     const notOutZero = stats.filter((p) => p.batting.innings === 1 && p.batting.notOuts === 1 && p.batting.balls === 0)
     expect(notOutZero).toEqual([])
+  })
+})
+
+describe('aggregatePlayers names', () => {
+  it('exposes title-cased first and last name', () => {
+    const stats = aggregatePlayers([sc], LL_B)
+    for (const p of stats) {
+      expect(p.firstName.length).toBeGreaterThan(0)
+      expect(`${p.firstName}|${p.lastName}`.toLowerCase()).toBe(p.key)
+      expect(p.name).toBe(`${p.firstName} ${p.lastName}`.trim())
+    }
+  })
+})
+
+describe('shared averages', () => {
+  it('batting', () => {
+    expect(battingAverages({ runs: 100, innings: 5, notOuts: 1, balls: 200 })).toEqual({ average: 25, strikeRate: 50 })
+    expect(battingAverages({ runs: 10, innings: 1, notOuts: 1, balls: 0 })).toEqual({ average: null, strikeRate: null })
+  })
+  it('bowling', () => {
+    expect(bowlingAverages({ balls: 81, runs: 27, wickets: 3 })).toEqual({ overs: '13.3', average: 9, economy: 2 })
+    expect(bowlingAverages({ balls: 0, runs: 0, wickets: 0 })).toEqual({ overs: '0', average: null, economy: null })
   })
 })
