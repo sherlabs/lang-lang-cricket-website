@@ -5,15 +5,21 @@ import { useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UserIcon, Camera01Icon } from '@hugeicons/core-free-icons'
 import { ImageCropperDialog } from '@/components/admin/image-cropper-dialog'
-import { optimiseImage, uploadToBlob } from '@/lib/blob-client'
+import { optimiseImage, uploadToBlob, type UploadPrefix } from '@/lib/blob-client'
 
 type Props = {
   name: string
   initialUrl?: string
+  /** Id for the pick button, so a surrounding Field label points at it. */
+  id?: string
+  /** Blob folder the photo is uploaded to. */
+  prefix?: UploadPrefix
+  /** Longest edge (px) the cropped photo is resized to before upload. */
+  maxEdge?: number
 }
 
 /** Circular photo picker: pick a file, crop it to a square, upload, store the URL in a hidden field. */
-export function PhotoUploadField({ name, initialUrl = '' }: Props) {
+export function PhotoUploadField({ name, initialUrl = '', id, prefix = 'contacts', maxEdge = 480 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [photoUrl, setPhotoUrl] = useState(initialUrl)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
@@ -29,8 +35,8 @@ export function PhotoUploadField({ name, initialUrl = '' }: Props) {
     setPendingFile(null)
     setBusy(true)
     try {
-      const prepared = await optimiseImage(cropped, { maxEdge: 480 })
-      setPhotoUrl(await uploadToBlob(prepared, 'contacts'))
+      const prepared = await optimiseImage(cropped, { maxEdge })
+      setPhotoUrl(await uploadToBlob(prepared, prefix))
     } finally {
       setBusy(false)
     }
@@ -43,6 +49,7 @@ export function PhotoUploadField({ name, initialUrl = '' }: Props) {
       </span>
       <div className="flex flex-col gap-1.5">
         <button
+          id={id}
           type="button"
           disabled={busy}
           onClick={() => fileRef.current?.click()}

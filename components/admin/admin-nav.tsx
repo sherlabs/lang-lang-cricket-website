@@ -13,6 +13,7 @@ const links = [
   { href: '/admin/documents', label: 'Documents' },
   { href: '/admin/gallery', label: 'Gallery' },
   { href: '/admin/stories', label: 'Stories' },
+  { href: '/admin/players', label: 'Players' },
   { href: '/admin/events', label: 'Events' },
   { href: '/admin/announcements', label: 'Announcements' },
   { href: '/admin/sponsors', label: 'Sponsors' },
