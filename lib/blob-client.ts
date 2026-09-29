@@ -40,7 +40,7 @@ export async function optimiseImage(
   }
 }
 
-export type UploadPrefix = 'gallery' | 'sponsors' | 'documents' | 'stories' | 'contacts' | 'events'
+export type UploadPrefix = 'gallery' | 'sponsors' | 'documents' | 'stories' | 'contacts' | 'events' | 'players'
 
 /**
  * Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL.
