@@ -1,5 +1,5 @@
 import { revalidatePath } from 'next/cache'
-import { desc, eq, inArray } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { playerAliases, playerSeasons, playerSyncRuns, players, type PlayerSyncRun } from '@/db/schema'
 import { getClubTeams, getGameSummary, getSeasonGroups, getTeamGames } from '@/lib/playhq/queries'
@@ -81,7 +81,8 @@ export async function syncPlayers(now = new Date()): Promise<SyncResult> {
     await db.batch([
       db.delete(playerSeasons),
       ...chunk(rows, 500).map((part) => db.insert(playerSeasons).values(part)),
-      db.update(players).set({ isActiveDerived: false }).where(eq(players.source, 'playhq')),
+      // All players, not just source=playhq: a PlayHQ identity merged into a manual player carries seasons too.
+      db.update(players).set({ isActiveDerived: false }).where(sql`true`),
       ...(activeIds.length ? [db.update(players).set({ isActiveDerived: true }).where(inArray(players.id, activeIds))] : []),
     ] as never)
 

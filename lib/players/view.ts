@@ -13,7 +13,7 @@ export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(
 export type SeasonLite = Pick<PlayerSeason, 'seasonName' | 'seasonOrder' | 'teamName'>
 
 export function yearsLabel(p: Pick<Player, 'source' | 'manualYears'>, seasons: SeasonLite[]) {
-  if (p.source === 'manual' || seasons.length === 0) return p.manualYears
+  if (seasons.length === 0) return p.manualYears
   const sorted = [...seasons].sort((a, b) => b.seasonOrder - a.seasonOrder) // oldest first
   const first = seasonYears(sorted[0].seasonName), last = seasonYears(sorted[sorted.length - 1].seasonName)
   return first === last ? first : `${first} – ${last}`
