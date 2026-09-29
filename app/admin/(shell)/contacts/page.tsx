@@ -1,36 +1,38 @@
 import { listContacts, createContact, removeContact, editContact } from './actions'
-import { ContactFields, LEADERSHIP_ROLE } from './contact-fields'
+import { ContactFields } from './contact-fields'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
-import { AdminCard, Badge, EmptyState } from '@/components/admin/admin-card'
+import { AdminCard, EmptyState } from '@/components/admin/admin-card'
 import { ActionForm, SubmitButton } from '@/components/admin/action-form'
 import { ConfirmDelete, EditDialog } from '@/components/admin/row-actions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { groupPeople } from '@/lib/people'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ContactsAdminPage() {
-  const contacts = (await listContacts()).sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
-  const roles = contacts.map((c) => c.role)
+  const contacts = await listContacts()
+  const groups = groupPeople(contacts)
+  const roles = Array.from(new Set(contacts.map((c) => c.role)))
   return (
     <main>
       <AdminPageHeader
         eyebrow="Contacts"
-        title="Committee contacts"
-        intro="People listed on the Contact page. Roles are free text; one special role puts someone in the leadership section."
+        title="Our People"
+        intro="Committee members, the senior leadership team and junior coaches. Everyone appears on the Our People page; committee and leadership also appear on the Contact page."
       />
 
-      <AdminCard title="Add a contact" className="mb-8">
-        <ActionForm action={createContact} resetOnSuccess successText="Contact added.">
+      <AdminCard title="Add a person" className="mb-8">
+        <ActionForm action={createContact} resetOnSuccess successText="Person added.">
           <ContactFields roles={roles} />
           <div>
-            <SubmitButton>Add contact</SubmitButton>
+            <SubmitButton>Add person</SubmitButton>
           </div>
         </ActionForm>
       </AdminCard>
 
-      <AdminCard title="All contacts" aside={<span className="text-sm text-brand-grey">{contacts.length} total</span>} flush>
+      <AdminCard title="All people" aside={<span className="text-sm text-brand-grey">{contacts.length} total</span>} flush>
         {contacts.length === 0 ? (
-          <EmptyState>No contacts yet — add one above.</EmptyState>
+          <EmptyState>No people yet — add one above.</EmptyState>
         ) : (
           <Table>
             <TableHeader>
@@ -45,44 +47,61 @@ export default async function ContactsAdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contacts.map((c) => (
-                <TableRow key={c.id} className="border-brand-black/5">
-                  <TableCell className="pl-5 sm:pl-6">
-                    {c.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-stone text-xs font-semibold text-brand-grey-light">
-                        —
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {c.role === LEADERSHIP_ROLE ? <Badge>{c.role}</Badge> : <span className="text-brand-grey">{c.role}</span>}
-                  </TableCell>
-                  <TableCell className="font-medium text-brand-black">{c.name}</TableCell>
-                  <TableCell className="text-brand-grey">{c.phone || '—'}</TableCell>
-                  <TableCell className="text-brand-grey">{c.email || '—'}</TableCell>
-                  <TableCell className="text-right tabular-nums text-brand-grey">{c.sortOrder}</TableCell>
-                  <TableCell className="pr-5 text-right sm:pr-6">
-                    <div className="inline-flex items-center gap-1">
-                      <EditDialog title="Edit contact">
-                        <ActionForm action={editContact}>
-                          <ContactFields contact={c} roles={roles} />
-                          <div>
-                            <SubmitButton>Save changes</SubmitButton>
-                          </div>
-                        </ActionForm>
-                      </EditDialog>
-                      <ConfirmDelete name={c.name} action={removeContact.bind(null, c.id)} />
-                    </div>
-                  </TableCell>
-                </TableRow>
+              {groups.map((g) => (
+                <GroupRows key={g.key} label={g.label} count={g.people.length}>
+                  {g.people.map((c) => (
+                    <TableRow key={c.id} className="border-brand-black/5">
+                      <TableCell className="pl-5 sm:pl-6">
+                        {c.photoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-stone text-xs font-semibold text-brand-grey-light">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-brand-grey">{c.role}</TableCell>
+                      <TableCell className="font-medium text-brand-black">{c.name}</TableCell>
+                      <TableCell className="text-brand-grey">{c.phone || '—'}</TableCell>
+                      <TableCell className="text-brand-grey">{c.email || '—'}</TableCell>
+                      <TableCell className="text-right tabular-nums text-brand-grey">{c.sortOrder}</TableCell>
+                      <TableCell className="pr-5 text-right sm:pr-6">
+                        <div className="inline-flex items-center gap-1">
+                          <EditDialog title="Edit person">
+                            <ActionForm action={editContact}>
+                              <ContactFields contact={c} roles={roles} />
+                              <div>
+                                <SubmitButton>Save changes</SubmitButton>
+                              </div>
+                            </ActionForm>
+                          </EditDialog>
+                          <ConfirmDelete name={c.name} action={removeContact.bind(null, c.id)} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </GroupRows>
               ))}
             </TableBody>
           </Table>
         )}
       </AdminCard>
     </main>
+  )
+}
+
+/** A sub-heading row followed by that group's people. */
+function GroupRows({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
+  return (
+    <>
+      <TableRow className="border-brand-black/5 bg-brand-stone/60 hover:bg-brand-stone/60">
+        <TableCell colSpan={7} className="pl-5 py-2.5 sm:pl-6">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-black">{label}</span>
+          <span className="ml-2 text-xs tabular-nums text-brand-grey-light">{count}</span>
+        </TableCell>
+      </TableRow>
+      {children}
+    </>
   )
 }

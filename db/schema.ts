@@ -32,6 +32,8 @@ export const committeeContacts = pgTable('committee_contacts', {
   phone: text('phone').notNull().default(''),
   email: text('email').notNull().default(''),
   photoUrl: text('photo_url').notNull().default(''),
+  // 'committee' | 'leadership' | 'coach' — which group the person is listed under; see lib/people.ts
+  section: text('section').notNull().default('committee'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

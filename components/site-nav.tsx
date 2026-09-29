@@ -19,6 +19,7 @@ const primaryLinks = [
 // Around the clubrooms: grouped under a "Clubhouse" disclosure on desktop
 // and under a small heading in the mobile menu.
 const clubLinks = [
+  { href: '/people', label: 'Our People' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsors', label: 'Sponsors' },
   { href: '/documents', label: 'Documents' },

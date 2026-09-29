@@ -16,13 +16,12 @@ export const metadata = {
 }
 
 const CLUB_EMAIL = 'langlangcricketclub@gmail.com'
-// Contacts stored with this role are shown in their own section rather than with the committee.
-const LEADERSHIP_ROLE = 'Senior Leadership Team'
 
 export default async function ContactPage() {
+  // Junior coaches are listed on /people only; the contact page keeps the committee and leadership.
   const all = await db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder))
-  const contacts = all.filter((c) => c.role !== LEADERSHIP_ROLE)
-  const leadership = all.filter((c) => c.role === LEADERSHIP_ROLE)
+  const contacts = all.filter((c) => c.section === 'committee')
+  const leadership = all.filter((c) => c.section === 'leadership')
 
   return (
     <main>
@@ -60,6 +59,13 @@ export default async function ContactPage() {
           title="Meet the committee"
           intro="The volunteers who run the club. Our Child Safety Officer is your first point of contact for any safeguarding concern."
         />
+        <p className="mt-4 text-sm text-brand-grey">
+          Looking for our junior coaches? Everyone involved in running the club is listed on the{' '}
+          <Link href="/people" className="font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep">
+            Our People
+          </Link>{' '}
+          page.
+        </p>
         <CommitteeCards contacts={contacts} className="mt-12" />
 
         {leadership.length > 0 && (
