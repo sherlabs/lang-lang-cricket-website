@@ -86,8 +86,6 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="container-site flex flex-col gap-2 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
-          <p>Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
@@ -96,7 +94,7 @@ export function SiteFooter() {
             className="group inline-flex items-center gap-1.5 text-sm text-white/80 transition hover:text-white"
           >
             Built with
-            <span aria-label="love" role="img" className="text-brand-gold transition group-hover:scale-110">
+            <span aria-label="love" role="img" className="text-rose-500 transition group-hover:scale-110">
               ♥
             </span>
             by
@@ -104,6 +102,8 @@ export function SiteFooter() {
               sherlabs.com
             </span>
           </a>
+          <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
+          <p>Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
         </div>
       </div>
     </footer>
