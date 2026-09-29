@@ -54,6 +54,25 @@ export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
 
 const chunk = <T,>(xs: T[], n: number) => Array.from({ length: Math.ceil(xs.length / n) }, (_, i) => xs.slice(i * n, i * n + n))
 
+/**
+ * Step 2 inserts players and their aliases as separate statements. If a run died between
+ * them, the PlayHQ player has no alias and the next run would create a `-2` duplicate.
+ * Re-derive the alias from the stored name (sync stores title-cased raw names, so
+ * lower-casing yields the original key) before planning.
+ */
+async function healOrphanPlayers() {
+  const [all, aliases] = await Promise.all([
+    db.select({ id: players.id, firstName: players.firstName, lastName: players.lastName }).from(players).where(eq(players.source, 'playhq')),
+    db.select({ playerId: playerAliases.playerId }).from(playerAliases),
+  ])
+  const aliased = new Set(aliases.map((a) => a.playerId))
+  const orphans = all.filter((p) => !aliased.has(p.id))
+  if (!orphans.length) return
+  await db.insert(playerAliases)
+    .values(orphans.map((p) => ({ nameKey: `${p.firstName.trim()}|${p.lastName.trim()}`.toLowerCase(), playerId: p.id })))
+    .onConflictDoNothing()
+}
+
 export async function syncPlayers(now = new Date()): Promise<SyncResult> {
   if (isLocked((await latestSyncRun()) ?? undefined, now)) return { status: 'locked', playersCreated: 0, seasonRows: 0 }
   const [run] = await db.insert(playerSyncRuns).values({ status: 'running', startedAt: now }).returning({ id: playerSyncRuns.id })
@@ -61,11 +80,13 @@ export async function syncPlayers(now = new Date()): Promise<SyncResult> {
   try {
     // 1. Collect everything first — a PlayHQ failure aborts before any player write.
     const aggregates = await collectSeniorAggregates()
+    await healOrphanPlayers()
     const aliasRows = await db.select().from(playerAliases)
     const slugRows = await db.select({ slug: players.slug }).from(players)
     const plan = buildSyncPlan(aggregates, new Map(aliasRows.map((a) => [a.nameKey, a.playerId])), new Set(slugRows.map((s) => s.slug)))
 
-    // 2. New players + aliases (safe to keep if a later step fails: next run resolves them by alias).
+    // 2. New players + aliases (safe to keep if a later step fails: next run resolves them by alias,
+    //    or healOrphanPlayers re-links them if the alias insert itself failed).
     const idByKey = new Map<string, number>()
     for (const part of chunk(plan.newPlayers, 200)) {
       const inserted = await db.insert(players)
