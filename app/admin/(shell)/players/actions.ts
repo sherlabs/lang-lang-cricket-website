@@ -178,9 +178,10 @@ export async function deleteManualPlayerAndReturn(id: number): Promise<void> {
 /** Folds `sourceId` into `targetId`: seasons, aliases and honours move; the source player is deleted. */
 export async function mergePlayers(sourceId: number, targetId: number): Promise<void> {
   await requireAdmin()
-  if (sourceId === targetId) throw new Error('Pick a different player to merge into.')
   const sId = toId(sourceId)
   const tId = toId(targetId)
+  // Compare after coercion: ('5', 5) would otherwise fold a player into itself and delete it.
+  if (sId === tId) throw new Error('Pick a different player to merge into.')
   const [source, target] = await Promise.all([getRow(sId), getRow(tId)])
   if (!source || !target) throw new Error('Player not found.')
   const [sourceSeasons, targetSeasons] = await Promise.all([seasonsOf(sId), seasonsOf(tId)])
