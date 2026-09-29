@@ -96,14 +96,14 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-white/10 bg-black/40">
-        <div className="container-site flex justify-center py-4">
+      <div className="border-t border-white/5">
+        <div className="container-site flex py-4">
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group flex min-h-9 flex-col items-center justify-center rounded-sm text-center text-sm text-white/80 transition hover:text-white sm:flex-row sm:gap-2"
+            className="group flex min-h-9 flex-col justify-center rounded-sm text-sm text-white/80 transition hover:text-white sm:flex-row sm:items-center sm:gap-2"
           >
             <span className="whitespace-nowrap">
               Built with{' '}
@@ -118,7 +118,7 @@ export function SiteFooter() {
             <span aria-hidden className="hidden text-white/30 sm:inline">
               ·
             </span>
-            <span className="text-xs text-white/60 transition group-hover:text-white/80 sm:text-sm">
+            <span className="text-xs text-white/60 transition group-hover:text-white/80">
               Websites for clubs &amp; local businesses
             </span>
           </a>
