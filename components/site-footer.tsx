@@ -91,7 +91,7 @@ export function SiteFooter() {
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group inline-flex items-center gap-1.5 text-sm text-white/80 transition hover:text-white"
+            className="group inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-white/80 transition hover:text-white"
           >
             Built with
             <span aria-label="love" role="img" className="text-rose-500 transition group-hover:scale-110">
@@ -101,6 +101,7 @@ export function SiteFooter() {
             <span className="font-semibold text-white underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
               sherlabs.com
             </span>
+            <span className="text-white/50">· Websites for clubs &amp; local businesses</span>
           </a>
           <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
           <p>Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
