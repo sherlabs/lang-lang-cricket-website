@@ -88,17 +88,22 @@ export function SiteFooter() {
         <div className="container-site flex flex-col gap-2 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
           <p>Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
-          <p>
-            Built by{' '}
-            <a
-              href="https://www.sherlabs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/80 underline decoration-white/30 underline-offset-2 transition hover:text-brand-gold hover:decoration-brand-gold"
-            >
-              Sherlabs
-            </a>
-          </p>
+          {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
+          <a
+            href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
+            target="_blank"
+            rel="noopener"
+            className="group inline-flex items-center gap-1.5 text-sm text-white/80 transition hover:text-white"
+          >
+            Built with
+            <span aria-label="love" role="img" className="text-brand-gold transition group-hover:scale-110">
+              ♥
+            </span>
+            by
+            <span className="font-semibold text-white underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
+              sherlabs.com
+            </span>
+          </a>
         </div>
       </div>
     </footer>
