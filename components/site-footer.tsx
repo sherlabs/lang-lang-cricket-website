@@ -90,22 +90,20 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container-site flex flex-col gap-1 py-5 text-xs leading-relaxed text-white/60 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-          <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
-          <p className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
-        </div>
-      </div>
+        <div className="container-site py-5 text-xs leading-relaxed text-white/60">
+          <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+            <p>&copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.</p>
+            <p className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</p>
+          </div>
 
-      <div className="border-t border-white/5">
-        <div className="container-site flex py-4">
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
             href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
             target="_blank"
             rel="noopener"
-            className="group flex min-h-9 flex-col justify-center rounded-sm text-sm text-white/80 transition hover:text-white sm:flex-row sm:items-center sm:gap-2"
+            className="group mt-4 flex min-h-9 flex-col justify-center gap-0.5 rounded-sm border-t border-white/5 pt-4 transition hover:text-white/80 lg:flex-row lg:items-center lg:justify-between lg:gap-10"
           >
-            <span className="whitespace-nowrap">
+            <span className="whitespace-nowrap text-white/80">
               Built with{' '}
               <span aria-label="love" role="img" className="inline-block text-rose-500 transition group-hover:scale-110">
                 ♥
@@ -115,11 +113,11 @@ export function SiteFooter() {
                 sherlabs.com
               </span>
             </span>
-            <span aria-hidden className="hidden text-white/30 sm:inline">
-              ·
-            </span>
-            <span className="text-xs text-white/60 transition group-hover:text-white/80">
-              Websites for clubs &amp; local businesses
+            <span>
+              Websites for clubs &amp; local businesses{' '}
+              <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">
+                →
+              </span>
             </span>
           </a>
         </div>
