@@ -41,7 +41,7 @@ export default async function PlayerAdminPage({ params }: { params: { id: string
             <span className="text-sm text-brand-grey">Hidden from the website</span>
           ) : (
             <a
-              href={`/history/players/${player.slug}`}
+              href={`/players/${player.slug}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-gold-deep hover:underline"

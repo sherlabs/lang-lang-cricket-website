@@ -6,7 +6,7 @@ import { initials } from '@/lib/players/view'
 export function PlayerCardTile({ card }: { card: PlayerCard }) {
   return (
     <Link
-      href={`/history/players/${card.slug}`}
+      href={`/players/${card.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5 transition hover:shadow-card-hover"
     >
       <div className="aspect-square w-full overflow-hidden bg-brand-stone">

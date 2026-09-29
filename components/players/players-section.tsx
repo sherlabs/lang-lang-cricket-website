@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { PlayerCard } from '@/lib/players/view'
 import { PlayerCardTile } from './player-card'
 
@@ -12,29 +11,20 @@ function Grid({ cards }: { cards: PlayerCard[] }) {
   )
 }
 
-/** Active + Past player grids. `pastLimit` caps the past grid and links to the full list. */
-export function PlayersSection({ active, past, pastLimit }: { active: PlayerCard[]; past: PlayerCard[]; pastLimit?: number }) {
-  const shownPast = pastLimit ? past.slice(0, pastLimit) : past
+/** Active + Past player grids; a grid is omitted when it has no cards. */
+export function PlayersSection({ active, past }: { active: PlayerCard[]; past: PlayerCard[] }) {
   return (
     <div className="space-y-12">
       {active.length > 0 && (
         <div>
-          <h3 className="eyebrow mb-4">Active players</h3>
+          <h2 className="eyebrow mb-4">Active players · {active.length}</h2>
           <Grid cards={active} />
         </div>
       )}
       {past.length > 0 && (
         <div id="past" className="scroll-mt-28">
-          <h3 className="eyebrow mb-4">Past players</h3>
-          <Grid cards={shownPast} />
-          {shownPast.length < past.length && (
-            <Link
-              href="/history/players#past"
-              className="mt-6 inline-block text-sm font-semibold text-brand-gold-deep hover:underline"
-            >
-              See all {past.length} past players →
-            </Link>
-          )}
+          <h2 className="eyebrow mb-4">Past players · {past.length}</h2>
+          <Grid cards={past} />
         </div>
       )}
     </div>

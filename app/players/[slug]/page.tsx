@@ -58,7 +58,7 @@ export default async function PlayerPage({ params }: Props) {
             )}
           </div>
           <div className="min-w-0">
-            <Link href="/history/players" className="text-sm text-white/60 hover:text-white">
+            <Link href="/players" className="text-sm text-white/60 hover:text-white">
               ← All players
             </Link>
             <p className="eyebrow mt-4 text-brand-gold">{profile.active ? 'Active player' : 'Past player'}</p>

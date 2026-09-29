@@ -21,8 +21,8 @@ export async function latestSyncRun(): Promise<PlayerSyncRun | null> {
 
 export function revalidatePlayerPages() {
   revalidatePath('/history')
-  revalidatePath('/history/players')
-  revalidatePath('/history/players/[slug]', 'page')
+  revalidatePath('/players')
+  revalidatePath('/players/[slug]', 'page')
   revalidatePath('/admin/players')
 }
 

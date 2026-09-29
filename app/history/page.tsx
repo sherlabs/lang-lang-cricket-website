@@ -5,9 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
-import { PlayersSection } from '@/components/players/players-section'
 import { listPublishedStories } from '@/lib/stories-queries'
-import { listPlayersForHistory } from '@/lib/players/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +18,7 @@ export default async function HistoryPage() {
   // Next's fetch-cache layer — noStore() is required so a rejected/unpublished
   // story's status is never served stale here.
   noStore()
-  const [stories, playerLists] = await Promise.all([listPublishedStories(), listPlayersForHistory()])
+  const stories = await listPublishedStories()
 
   return (
     <main>
@@ -140,18 +138,6 @@ export default async function HistoryPage() {
         </section>
       )}
 
-      {(playerLists.active.length > 0 || playerLists.past.length > 0) && (
-        <section className="container-site pb-16 lg:pb-24">
-          <div className="mb-8 flex items-center gap-3">
-            <span className="display text-2xl text-brand-black">Players</span>
-            <span className="h-px flex-1 bg-brand-black/10" aria-hidden />
-            <Link href="/history/players" className="text-sm font-semibold text-brand-gold-deep hover:underline">
-              All players
-            </Link>
-          </div>
-          <PlayersSection active={playerLists.active} past={playerLists.past} pastLimit={12} />
-        </section>
-      )}
     </main>
   )
 }

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 const primaryLinks = [
   { href: '/fixtures', label: 'Fixtures' },
   { href: '/events', label: 'Events' },
+  { href: '/players', label: 'Players' },
   { href: '/history', label: 'History' },
 ]
 

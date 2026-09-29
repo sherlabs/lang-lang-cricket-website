@@ -32,8 +32,4 @@ describe('makeUniqueSlug', () => {
     const slug = await makeUniqueSlug('Drafts', async () => false)
     expect(slug).toBe('drafts-2')
   })
-
-  it('never returns "players" (static /history/players route)', async () => {
-    expect(await makeUniqueSlug('Players', async () => false)).toBe('players-2')
-  })
 })

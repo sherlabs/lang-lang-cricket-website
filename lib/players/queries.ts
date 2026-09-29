@@ -4,7 +4,7 @@ import { playerHonours, playerSeasons, players, type Player, type PlayerHonour, 
 import type { SeasonCounts } from './season-math'
 import { careerTotals, isActive, playerName, splitPlayers, toCard, yearsLabel, type SeasonLite } from './view'
 
-export async function listPlayersForHistory() {
+export async function listPublicPlayers() {
   const [all, seasons] = await Promise.all([
     db.select().from(players).where(eq(players.hidden, false)),
     db.select({ playerId: playerSeasons.playerId, seasonName: playerSeasons.seasonName, seasonOrder: playerSeasons.seasonOrder, teamName: playerSeasons.teamName }).from(playerSeasons),
