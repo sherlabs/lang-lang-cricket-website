@@ -6,6 +6,7 @@ import { asc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { sponsors } from '@/db/schema'
 import { TIERS } from '@/components/sponsor-logos'
+import { requireAdmin } from '@/lib/require-admin'
 
 export type SponsorInput = { tier: string; name: string; linkUrl: string; logoUrl: string }
 
@@ -30,10 +31,12 @@ function isBlob(url: string) {
 }
 
 export async function listSponsors() {
+  await requireAdmin()
   return db.select().from(sponsors).orderBy(asc(sponsors.id))
 }
 
 export async function createSponsor(input: SponsorInput) {
+  await requireAdmin()
   const data = clean(input)
   if (!data.name) throw new Error('Name is required')
   await db.insert(sponsors).values(data)
@@ -41,6 +44,7 @@ export async function createSponsor(input: SponsorInput) {
 }
 
 export async function updateSponsor(id: number, input: SponsorInput) {
+  await requireAdmin()
   const data = clean(input)
   if (!data.name) throw new Error('Name is required')
   const [prev] = await db.select().from(sponsors).where(eq(sponsors.id, id))
@@ -53,6 +57,7 @@ export async function updateSponsor(id: number, input: SponsorInput) {
 }
 
 export async function removeSponsor(id: number) {
+  await requireAdmin()
   const [row] = await db.select().from(sponsors).where(eq(sponsors.id, id))
   if (!row) return
   await db.delete(sponsors).where(eq(sponsors.id, id))

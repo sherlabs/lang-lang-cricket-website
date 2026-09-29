@@ -31,3 +31,14 @@ describe('gallery admin actions require a session', () => {
     await expect(a.removeGalleryPhoto(1)).rejects.toThrow('Unauthorized')
   })
 })
+
+describe('sponsors admin actions require a session', () => {
+  it('rejects every action', async () => {
+    const a = await import('@/app/admin/(shell)/sponsors/actions')
+    const input = { tier: 'Gold', name: 'X', linkUrl: '', logoUrl: '' }
+    await expect(a.listSponsors()).rejects.toThrow('Unauthorized')
+    await expect(a.createSponsor(input)).rejects.toThrow('Unauthorized')
+    await expect(a.updateSponsor(1, input)).rejects.toThrow('Unauthorized')
+    await expect(a.removeSponsor(1)).rejects.toThrow('Unauthorized')
+  })
+})
