@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 type Status = 'all' | 'active' | 'past' | 'hidden'
-type Props = { searchParams: { status?: string; q?: string } }
+type Props = { searchParams: { status?: string | string[]; q?: string | string[] } }
 
 const TABS: { value: Status; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -40,8 +40,9 @@ const statusLabel = (p: AdminPlayerRow) => (p.hidden ? 'Hidden' : p.active ? 'Ac
 
 export default async function PlayersAdminPage({ searchParams }: Props) {
   noStore()
-  const status: Status = TABS.some((t) => t.value === searchParams.status) ? (searchParams.status as Status) : 'all'
-  const q = (searchParams.q ?? '').trim()
+  const rawStatus = typeof searchParams.status === 'string' ? searchParams.status : ''
+  const status: Status = TABS.find((t) => t.value === rawStatus)?.value ?? 'all'
+  const q = typeof searchParams.q === 'string' ? searchParams.q.trim() : ''
   const [all, run] = await Promise.all([listPlayersAdmin(), getSyncStatus()])
 
   const needle = q.toLowerCase()
