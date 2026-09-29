@@ -6,7 +6,7 @@ const num = 'tabular-nums text-right'
 const head = 'text-brand-grey'
 const fmt = (v: number | null, dp = 2) => (v == null ? '–' : v.toFixed(dp))
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+export function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5">
       <h3 className="display border-b border-brand-black/10 px-5 py-4 text-2xl text-brand-black">{title}</h3>
