@@ -1,8 +1,8 @@
 import { revalidatePath } from 'next/cache'
-import { desc, eq, inArray, sql } from 'drizzle-orm'
+import { count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { playerAliases, playerSeasons, playerSyncRuns, players, type PlayerSyncRun } from '@/db/schema'
-import { getClubTeams, getGameSummary, getSeasonGroups, getTeamGames } from '@/lib/playhq/queries'
+import { getClubTeams, getGameSummary, getSeasonGroups, getTeamGames, isJuniorGrade } from '@/lib/playhq/queries'
 import { mapLimit } from '@/lib/playhq/client'
 import { aggregatePlayers } from '@/lib/playhq/players'
 import { buildSyncPlan, type TeamAggregate } from './plan'
@@ -33,7 +33,9 @@ export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
   for (const [order, group] of groups.entries()) {
     const teams = await getClubTeams(group)
     const clubIds = new Set(teams.map((t) => t.id))
-    for (const team of teams.filter((t) => !t.isJunior)) {
+    // Season-level flag OR grade-name heuristic, same as getGameSummaryAuto: a U-age grade
+    // inside a senior-classified season must never put junior names into players tables.
+    for (const team of teams.filter((t) => !t.isJunior && !isJuniorGrade(t.gradeName ?? ''))) {
       const finals = (await getTeamGames(team, clubIds)).filter((g) => g.status === 'FINAL')
       // One broken scorecard shouldn't block every future sync: skip it (logged) and
       // let the next run retry. Season/team/fixture failures above still abort.
@@ -73,6 +75,11 @@ export async function syncPlayers(now = new Date()): Promise<SyncResult> {
       for (const p of part) idByKey.set(p.nameKey, bySlug.get(p.slug)!)
       await db.insert(playerAliases).values(part.map((p) => ({ nameKey: p.nameKey, playerId: idByKey.get(p.nameKey)! })))
     }
+
+    // Every scorecard fetch failing is swallowed per game, which would yield zero rows and wipe
+    // all seasons below. Refuse instead: history never legitimately shrinks to nothing.
+    const existing = Number((await db.select({ n: count() }).from(playerSeasons))[0]?.n ?? 0)
+    if (plan.seasonRows.length === 0 && existing > 0) throw new Error('PlayHQ returned no player data; refusing to wipe seasons')
 
     const rows = plan.seasonRows.map(({ playerId, newNameKey, ...rest }) => ({ ...rest, playerId: playerId ?? idByKey.get(newNameKey!)! }))
     const activeIds = [...plan.activePlayerIds, ...plan.activeNewNameKeys.map((k) => idByKey.get(k)!)]

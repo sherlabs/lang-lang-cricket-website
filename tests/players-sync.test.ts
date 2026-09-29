@@ -6,7 +6,7 @@ let latestRun: unknown[] = []
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/playhq/queries', () => ({
   getSeasonGroups: vi.fn(async () => { throw new Error('PlayHQ 503') }),
-  getClubTeams: vi.fn(), getTeamGames: vi.fn(), getGameSummary: vi.fn(),
+  getClubTeams: vi.fn(), getTeamGames: vi.fn(), getGameSummary: vi.fn(), isJuniorGrade: vi.fn(() => false),
 }))
 vi.mock('@/db', () => {
   const chain = (label: string) => {
