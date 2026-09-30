@@ -42,6 +42,7 @@ const ONE_TIME_INPUT = {
   coverImageUrl: '',
   paymentLinkLabel: '',
   paymentLinkUrl: '',
+  mealOptionsText: '',
   eventTime: '19:00',
   eventDateStr: '2026-11-15',
   dayOfWeek: null,
@@ -57,6 +58,7 @@ const RECURRING_INPUT = {
   coverImageUrl: '',
   paymentLinkLabel: '',
   paymentLinkUrl: '',
+  mealOptionsText: '',
   eventTime: '18:00',
   eventDateStr: '',
   dayOfWeek: 4,
@@ -82,6 +84,24 @@ describe('createEvent', () => {
     expect(inserted!.eventDate).toBeNull()
     expect((inserted!.startDate as Date).toISOString()).toBe('2026-10-01T00:00:00.000Z')
     expect((inserted!.endDate as Date).toISOString()).toBe('2027-03-31T00:00:00.000Z')
+  })
+
+  it('normalises dinner options (trim, drop blanks, dedupe) and stores an empty list when none', async () => {
+    const { createEvent } = await import('@/app/admin/(shell)/events/actions')
+    await createEvent({ ...ONE_TIME_INPUT, mealOptionsText: ' Beef \n\nChicken\nbeef\nVeggie ' })
+    expect(inserted!.mealOptions).toEqual(['Beef', 'Chicken', 'Veggie'])
+    await createEvent(ONE_TIME_INPUT)
+    expect(inserted!.mealOptions).toEqual([])
+  })
+
+  it('accepts an empty or http(s) payment link and rejects anything else', async () => {
+    const { createEvent } = await import('@/app/admin/(shell)/events/actions')
+    await createEvent({ ...ONE_TIME_INPUT, paymentLinkUrl: ' https://square.link/u/abc ' })
+    expect(inserted!.paymentLinkUrl).toBe('https://square.link/u/abc')
+    inserted = null
+    await expect(createEvent({ ...ONE_TIME_INPUT, paymentLinkUrl: 'javascript:alert(1)' })).rejects.toThrow('Payment link must be a full http(s) URL.')
+    await expect(createEvent({ ...ONE_TIME_INPUT, paymentLinkUrl: 'square.link/u/abc' })).rejects.toThrow('Payment link must be a full http(s) URL.')
+    expect(inserted).toBeNull()
   })
 
   it('rejects a missing title', async () => {

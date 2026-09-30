@@ -6,6 +6,7 @@ import { eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { events, eventRsvps, eventPhotos, type Event } from '@/db/schema'
 import { isBlobUrl } from '@/lib/blob-url'
+import { isValidPaymentUrl, normaliseMealOptions } from '@/lib/events-meal'
 import { COOKIE_NAME, verifySessionCookie } from '@/lib/auth'
 
 async function requireAdmin() {
@@ -23,6 +24,8 @@ export type EventInput = {
   coverImageUrl: string
   paymentLinkLabel: string
   paymentLinkUrl: string
+  /** Dinner options, one per line (blank = no dinner step). Normalised server-side. */
+  mealOptionsText: string
   eventTime: string
   eventDateStr: string
   dayOfWeek: number | null
@@ -49,6 +52,9 @@ function buildValues(input: EventInput) {
 
   const coverImageUrl = input.coverImageUrl && isBlobUrl(input.coverImageUrl) ? input.coverImageUrl : ''
 
+  const paymentLinkUrl = input.paymentLinkUrl.trim()
+  if (!isValidPaymentUrl(paymentLinkUrl)) throw new Error('Payment link must be a full http(s) URL.')
+
   const base = {
     type: input.type,
     title,
@@ -56,7 +62,8 @@ function buildValues(input: EventInput) {
     location: input.location.trim(),
     coverImageUrl,
     paymentLinkLabel: input.paymentLinkLabel.trim(),
-    paymentLinkUrl: input.paymentLinkUrl.trim(),
+    paymentLinkUrl,
+    mealOptions: normaliseMealOptions(input.mealOptionsText ?? ''),
     eventTime: input.eventTime.trim(),
   }
 

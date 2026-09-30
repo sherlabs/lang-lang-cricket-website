@@ -11,6 +11,8 @@ import { getEventById } from '@/lib/events-queries'
 import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event, EventRsvp } from '@/db/schema'
+import { eventMealOptions } from '@/lib/events-meal'
+import { isRsvpResponse } from '@/lib/rsvp-response'
 import { getRsvpByToken } from './actions'
 import { RsvpEditForm } from './rsvp-edit-form'
 
@@ -100,7 +102,7 @@ export default async function RsvpEditPage({ params }: { params: { token: string
       <PageHeader
         eyebrow="Your RSVP"
         title="Manage your RSVP"
-        intro="Plans changed? Update your details below, or let us know you can't make it any more. Changes save straight away."
+        intro="Plans changed? Switch your answer, update your details, or take yourself off the list. Changes save straight away."
       />
 
       <section className="bg-brand-stone/60">
@@ -112,6 +114,9 @@ export default async function RsvpEditPage({ params }: { params: { token: string
               initialName={rsvp.name}
               initialEmail={rsvp.email}
               initialNote={rsvp.note}
+              initialResponse={isRsvpResponse(rsvp.response) ? rsvp.response : 'yes'}
+              initialMeal={rsvp.meal ?? ''}
+              mealOptions={event ? eventMealOptions(event) : []}
               eventTitle={event?.title ?? null}
               occurrenceLabel={formatLongDate(rsvp.occurrenceDate)}
             />

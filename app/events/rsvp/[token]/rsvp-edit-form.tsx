@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { ChoiceGroup } from '@/components/events/choice-group'
+import type { RsvpResponse } from '@/lib/rsvp-response'
 import { cancelRsvpByToken, updateRsvpByToken } from './actions'
 
 type Props = {
@@ -12,6 +14,11 @@ type Props = {
   initialName: string
   initialEmail: string
   initialNote: string
+  initialResponse: RsvpResponse
+  /** Stored dinner choice ('' = no dinner). */
+  initialMeal: string
+  /** The event's current dinner options; [] when none or the event is gone. */
+  mealOptions: string[]
   /** Null when the event has since been deleted — the cancelled copy then leans on the date alone. */
   eventTitle: string | null
   /** Already-formatted (UTC-anchored, server-side) date label for the confirmation copy. */
@@ -32,7 +39,21 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   )
 }
 
-export function RsvpEditForm({ token, initialName, initialEmail, initialNote, eventTitle, occurrenceLabel }: Props) {
+export function RsvpEditForm({
+  token,
+  initialName,
+  initialEmail,
+  initialNote,
+  initialResponse,
+  initialMeal,
+  mealOptions,
+  eventTitle,
+  occurrenceLabel,
+}: Props) {
+  const [response, setResponse] = useState<RsvpResponse>(initialResponse)
+  const [dinner, setDinner] = useState<'yes' | 'no' | ''>(mealOptions.length ? (initialMeal ? 'yes' : 'no') : '')
+  const [meal, setMeal] = useState(initialMeal)
+  const hasDinner = response === 'yes' && mealOptions.length > 0
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -102,6 +123,16 @@ export function RsvpEditForm({ token, initialName, initialEmail, initialNote, ev
         <p className="mt-1.5 text-sm text-brand-grey">We only use these to plan numbers — nothing is published.</p>
 
         <div className="mt-6 flex flex-col gap-5">
+          <ChoiceGroup
+            legend="Are you coming?"
+            name="response"
+            options={[
+              { value: 'yes', label: 'Yes, I\u2019m going' },
+              { value: 'no', label: 'Can\u2019t make it' },
+            ]}
+            value={response}
+            onChange={(v) => setResponse(v as RsvpResponse)}
+          />
           <Field label="Name">
             <input
               type="text"
@@ -123,6 +154,30 @@ export function RsvpEditForm({ token, initialName, initialEmail, initialNote, ev
               className={inputClass}
             />
           </Field>
+          {hasDinner && (
+            <>
+              <ChoiceGroup
+                legend="Do you want dinner?"
+                name="dinner"
+                options={[
+                  { value: 'yes', label: 'Yes' },
+                  { value: 'no', label: 'No' },
+                ]}
+                value={dinner}
+                onChange={(v) => setDinner(v as 'yes' | 'no')}
+              />
+              {dinner === 'yes' && (
+                <ChoiceGroup
+                  legend="What type of dinner?"
+                  name="meal"
+                  options={mealOptions.map((o) => ({ value: o, label: o }))}
+                  value={meal}
+                  onChange={setMeal}
+                  columns={3}
+                />
+              )}
+            </>
+          )}
           <Field label="Anything we should know?" hint="(optional)">
             <textarea
               name="note"

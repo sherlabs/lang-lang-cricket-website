@@ -1,7 +1,9 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, gte, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { events, eventPhotos, type Event } from '@/db/schema'
+import { events, eventPhotos, eventRsvps, type Event, type EventRsvp } from '@/db/schema'
 import { getOccurrences, getOneTimeEventDateTime, nowAsEventClock } from './event-occurrences'
+import { rsvpKey, type RsvpMemory } from './rsvp-cookie'
+import { isRsvpResponse, type RsvpResponse, type RsvpTally } from './rsvp-response'
 
 export type UpcomingItem = { event: Event; occurrenceDate: Date }
 
@@ -57,4 +59,67 @@ export async function getEventPhotosPublic(eventId: number): Promise<{ url: stri
     .from(eventPhotos)
     .where(and(eq(eventPhotos.eventId, eventId), eq(eventPhotos.status, 'approved')))
     .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.id))
+}
+
+/** Public tally for one occurrence — counts only, never names/emails/notes. */
+export async function getRsvpTally(eventId: number, occurrenceDate: Date): Promise<RsvpTally> {
+  const rows = (await db
+    .select({ response: eventRsvps.response, count: sql<number>`count(*)` })
+    .from(eventRsvps)
+    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.occurrenceDate, occurrenceDate)))
+    .groupBy(eventRsvps.response)) as { response: string; count: number }[]
+  const tally: RsvpTally = { yes: 0, no: 0 }
+  for (const row of rows) {
+    if (isRsvpResponse(row.response)) tally[row.response] += Number(row.count)
+  }
+  return tally
+}
+
+/**
+ * "Going" counts for every future occurrence in one grouped query, keyed by
+ * `rsvpKey(eventId, occurrenceDate)` — for the small pill on the upcoming cards.
+ */
+export async function listGoingCounts(): Promise<Map<string, number>> {
+  const rows = (await db
+    .select({ eventId: eventRsvps.eventId, occurrenceDate: eventRsvps.occurrenceDate, count: sql<number>`count(*)` })
+    .from(eventRsvps)
+    .where(and(eq(eventRsvps.response, 'yes'), gte(eventRsvps.occurrenceDate, nowAsEventClock())))
+    .groupBy(eventRsvps.eventId, eventRsvps.occurrenceDate)) as { eventId: number; occurrenceDate: Date; count: number }[]
+  return new Map(rows.map((r) => [rsvpKey(r.eventId, r.occurrenceDate), Number(r.count)]))
+}
+
+export async function getRsvpByToken(token: string): Promise<EventRsvp | null> {
+  if (!token) return null
+  const rows = await db.select().from(eventRsvps).where(eq(eventRsvps.editToken, token))
+  return (rows[0] as EventRsvp | undefined) ?? null
+}
+
+/** What this device already answered for an occurrence — server-side only; the token never reaches the client. */
+export type DeviceRsvp = {
+  token: string
+  response: RsvpResponse
+  name: string
+  email: string
+  meal: string
+  note: string
+}
+
+/**
+ * Looks up the RSVP the device cookie remembers for `eventId` + `occurrenceDate`.
+ * Null when the cookie has nothing for it, or the row is gone (admin deleted it) or
+ * belongs to another event — either way the device is treated as "not responded".
+ */
+export async function getDeviceRsvp(memory: RsvpMemory, eventId: number, occurrenceDate: Date): Promise<DeviceRsvp | null> {
+  const token = memory.rsvps[rsvpKey(eventId, occurrenceDate)]
+  if (!token) return null
+  const row = await getRsvpByToken(token)
+  if (!row || row.eventId !== eventId) return null
+  return {
+    token,
+    response: isRsvpResponse(row.response) ? row.response : 'yes',
+    name: row.name,
+    email: row.email,
+    meal: row.meal ?? '',
+    note: row.note,
+  }
 }

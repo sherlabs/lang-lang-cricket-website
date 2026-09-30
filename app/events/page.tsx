@@ -13,7 +13,8 @@ import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
 import { DateTile } from '@/components/events/date-tile'
 import { EventPlaceholderArt } from '@/components/events/event-placeholder-art'
-import { getEventPhotosPublic, listPastOneTimeEvents, listUpcomingItems } from '@/lib/events-queries'
+import { getEventPhotosPublic, listGoingCounts, listPastOneTimeEvents, listUpcomingItems } from '@/lib/events-queries'
+import { rsvpKey } from '@/lib/rsvp-cookie'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
@@ -39,7 +40,7 @@ function SectionRule({ title, count }: { title: string; count?: number }) {
   )
 }
 
-function UpcomingCard({ event, occurrenceDate }: { event: Event; occurrenceDate: Date }) {
+function UpcomingCard({ event, occurrenceDate, going }: { event: Event; occurrenceDate: Date; going: number }) {
   const time = formatLocalTime(event.eventTime)
   const hasPayment = Boolean(event.paymentLinkLabel && event.paymentLinkUrl)
   const rsvpHref = `/events/${event.id}/rsvp?date=${encodeURIComponent(occurrenceDate.toISOString())}`
@@ -69,8 +70,13 @@ function UpcomingCard({ event, occurrenceDate }: { event: Event; occurrenceDate:
           <div className="flex items-start gap-4">
             <DateTile date={occurrenceDate} />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold-deep">
-                {formatLongDate(occurrenceDate)}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wide text-brand-gold-deep">
+                <span>{formatLongDate(occurrenceDate)}</span>
+                {going > 0 && (
+                  <span className="rounded-full bg-brand-gold-pale px-2 py-0.5 text-[11px] normal-case tracking-normal text-brand-gold-deep ring-1 ring-brand-gold/30">
+                    {going} going
+                  </span>
+                )}
               </p>
               <h3 className="font-heading mt-1 text-xl font-bold leading-tight tracking-tight text-brand-black">
                 <Link href={`/events/${event.id}`} className="underline-offset-4 hover:underline">
@@ -181,7 +187,7 @@ export default async function EventsPage() {
   // Next's fetch-cache layer — noStore() is required so a freshly created or
   // deleted event is never served stale here.
   noStore()
-  const [upcoming, past] = await Promise.all([listUpcomingItems(), listPastOneTimeEvents()])
+  const [upcoming, past, going] = await Promise.all([listUpcomingItems(), listPastOneTimeEvents(), listGoingCounts()])
   const pastWithPhotos = await Promise.all(
     past.map(async (event) => ({ event, photos: await getEventPhotosPublic(event.id) }))
   )
@@ -203,7 +209,12 @@ export default async function EventsPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map(({ event, occurrenceDate }) => (
-              <UpcomingCard key={`${event.id}-${occurrenceDate.toISOString()}`} event={event} occurrenceDate={occurrenceDate} />
+              <UpcomingCard
+                key={`${event.id}-${occurrenceDate.toISOString()}`}
+                event={event}
+                occurrenceDate={occurrenceDate}
+                going={going.get(rsvpKey(event.id, occurrenceDate)) ?? 0}
+              />
             ))}
           </div>
         )}

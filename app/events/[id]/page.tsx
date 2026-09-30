@@ -3,30 +3,29 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  Calendar03Icon,
-  Clock01Icon,
-  ExternalLinkIcon,
-  Location01Icon,
-  RepeatIcon,
-} from '@hugeicons/core-free-icons'
+import { cookies } from 'next/headers'
+import { ArrowLeft01Icon, Calendar03Icon, Clock01Icon, Location01Icon, RepeatIcon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { DateTile } from '@/components/events/date-tile'
 import { EventPlaceholderArt } from '@/components/events/event-placeholder-art'
-import { buttonVariants } from '@/components/ui/button'
-import { getEventById, getEventPhotosPublic, listUpcomingItems } from '@/lib/events-queries'
+import { getDeviceRsvp, getEventById, getEventPhotosPublic, getRsvpTally, listUpcomingItems } from '@/lib/events-queries'
 import { getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
+import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
+import { isRsvpResponse } from '@/lib/rsvp-response'
 import type { Event } from '@/db/schema'
 import { baseOpenGraph, truncateDescription } from '@/lib/site-metadata'
 import { PhotoSubmitForm } from './photo-submit-form'
+import { RsvpPanel } from './rsvp-panel'
 
 export const dynamic = 'force-dynamic'
 
-type Props = { params: { id: string } }
+type Props = { params: { id: string }; searchParams?: { [key: string]: string | string[] | undefined } }
+
+function first(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v
+}
 
 async function loadEvent(id: string): Promise<Event | null> {
   const numericId = Number(id)
@@ -69,7 +68,7 @@ function isPastOneTime(event: Event): event is Event & { eventDate: Date } {
   )
 }
 
-export default async function EventDetailPage({ params }: Props) {
+export default async function EventDetailPage({ params, searchParams }: Props) {
   // See app/events/page.tsx — noStore() keeps the Neon fetch out of Next's fetch cache.
   noStore()
   const event = await loadEvent(params.id)
@@ -81,8 +80,17 @@ export default async function EventDetailPage({ params }: Props) {
   const upcoming = past ? null : (await listUpcomingItems()).find((item) => item.event.id === event.id) ?? null
   const photos = past ? await getEventPhotosPublic(event.id) : []
 
+  // The occurrence the poll is about: the next one, or the (past) date itself for a closed poll.
+  const pollDate = past ? getOneTimeEventDateTime({ eventDate: event.eventDate, eventTime: event.eventTime }) : upcoming?.occurrenceDate ?? null
+  const memory = parseRsvpCookie(cookies().get(RSVP_COOKIE)?.value)
+  const [tally, mine] = pollDate
+    ? await Promise.all([getRsvpTally(event.id, pollDate), past ? null : getDeviceRsvp(memory, event.id, pollDate)])
+    : [null, null]
+  const confirmedResponse = first(searchParams?.rsvp)
+  // Only shown when this device really has an RSVP — a typed-in `?rsvp=yes` is not a confirmation.
+  const confirmation = mine && isRsvpResponse(confirmedResponse) ? { response: confirmedResponse, pay: first(searchParams?.pay) === '1' } : null
+
   const time = formatLocalTime(event.eventTime)
-  const hasPayment = Boolean(event.paymentLinkLabel && event.paymentLinkUrl)
   const isRecurring = event.type === 'recurring' && event.dayOfWeek != null
   const headlineDate = past ? event.eventDate : upcoming?.occurrenceDate ?? null
 
@@ -157,29 +165,17 @@ export default async function EventDetailPage({ params }: Props) {
                   </ul>
                 )}
 
-                {(upcoming || hasPayment) && (
-                  <div className="mt-5 flex flex-wrap gap-2 border-t border-brand-black/5 pt-5">
-                    {upcoming && (
-                      <Link
-                        href={`/events/${event.id}/rsvp?date=${encodeURIComponent(upcoming.occurrenceDate.toISOString())}`}
-                        className={buttonVariants({ variant: 'brand', size: 'xl', className: 'flex-1 gap-2' })}
-                      >
-                        RSVP
-                        <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-                      </Link>
-                    )}
-                    {hasPayment && (
-                      <a
-                        href={event.paymentLinkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={buttonVariants({ variant: 'gold', size: 'xl', className: 'flex-1 gap-2' })}
-                      >
-                        {event.paymentLinkLabel}
-                        <HugeiconsIcon icon={ExternalLinkIcon} className="h-4 w-4" aria-hidden />
-                      </a>
-                    )}
-                  </div>
+                {pollDate && tally && (
+                  <RsvpPanel
+                    eventId={event.id}
+                    occurrenceDate={pollDate}
+                    tally={tally}
+                    mine={mine?.response ?? null}
+                    closed={past}
+                    confirmation={confirmation}
+                    paymentUrl={event.paymentLinkUrl}
+                    paymentLabel={event.paymentLinkLabel}
+                  />
                 )}
               </div>
             </aside>

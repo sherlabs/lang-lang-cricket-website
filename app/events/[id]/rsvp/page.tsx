@@ -2,14 +2,17 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
+import { cookies } from 'next/headers'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, Clock01Icon, Location01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { DateTile } from '@/components/events/date-tile'
 import { buttonVariants } from '@/components/ui/button'
-import { getEventById } from '@/lib/events-queries'
+import { getDeviceRsvp, getEventById, listUpcomingItems } from '@/lib/events-queries'
+import { eventMealOptions } from '@/lib/events-meal'
 import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
+import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
 import type { Event } from '@/db/schema'
 import { baseOpenGraph } from '@/lib/site-metadata'
 import { RsvpForm } from './rsvp-form'
@@ -32,7 +35,7 @@ export async function generateMetadata({ params }: Props) {
   if (!event) return { title: 'Event not found | Lang Lang Cricket Club' }
   return {
     title: `RSVP: ${event.title} | Lang Lang Cricket Club`,
-    description: `Let Lang Lang Cricket Club know you're coming to ${event.title}.`,
+    description: `Let Lang Lang Cricket Club know whether you're coming to ${event.title}.`,
     openGraph: event.coverImageUrl
       ? { ...baseOpenGraph, images: [{ url: event.coverImageUrl, alt: event.title }] }
       : baseOpenGraph,
@@ -81,26 +84,26 @@ function OccurrenceCard({ event, occurrenceDate }: { event: Event; occurrenceDat
         )}
 
         <Link
-          href="/events"
+          href={`/events/${event.id}`}
           className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-black underline-offset-4 hover:underline"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
-          {event.type === 'recurring' ? 'Pick a different date' : 'Back to all events'}
+          Back to the event
         </Link>
       </div>
     </aside>
   )
 }
 
-/** Reached without a usable `?date=` — the link was hand-typed or truncated, so send them back to choose a session. */
-function MissingDate({ event }: { event: Event }) {
+/** No upcoming date to RSVP for (the series has ended, or the one-time date has passed). */
+function NoDate({ event }: { event: Event }) {
   return (
     <div className="mx-auto max-w-xl rounded-2xl bg-white p-8 text-center shadow-card ring-1 ring-brand-black/5">
-      <p className="eyebrow">Pick a date first</p>
-      <h2 className="font-heading mt-3 text-2xl font-bold tracking-tight text-brand-black">Which session are you coming to?</h2>
+      <p className="eyebrow">RSVPs closed</p>
+      <h2 className="font-heading mt-3 text-2xl font-bold tracking-tight text-brand-black">There&apos;s no upcoming date for this event</h2>
       <p className="mt-3 text-sm leading-relaxed text-brand-grey">
-        This link doesn&apos;t say which date you&apos;re RSVPing for. Head back to the events page and choose the{' '}
-        <span className="font-semibold text-brand-black">{event.title}</span> session you&apos;re coming to.
+        <span className="font-semibold text-brand-black">{event.title}</span> has no sessions open for RSVP right now. Check the
+        events page for what&apos;s coming up.
       </p>
       <Link href="/events" className={buttonVariants({ variant: 'brand', size: 'xl', className: 'mt-6 gap-2' })}>
         <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" aria-hidden />
@@ -117,34 +120,55 @@ export default async function RsvpPage({ params, searchParams }: Props) {
   if (!event) notFound()
 
   const rawDate = searchParams.date
-  const dateParam = Array.isArray(rawDate) ? rawDate[0] : rawDate
-  // Passed through untouched as the hidden field so submitRsvp validates exactly what was linked to.
-  const occurrenceIso = dateParam?.trim() ?? ''
-  const occurrenceDate = occurrenceIso ? new Date(occurrenceIso) : null
-  const validDate = occurrenceDate && !Number.isNaN(occurrenceDate.getTime()) ? occurrenceDate : null
+  const dateParam = (Array.isArray(rawDate) ? rawDate[0] : rawDate)?.trim() ?? ''
+  const parsed = dateParam ? new Date(dateParam) : null
+  // A usable `?date=` wins; otherwise fall back to the next occurrence so a bare
+  // /events/[id]/rsvp link still works. submitRsvp validates whichever we picked.
+  let occurrenceDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
+  if (!occurrenceDate) {
+    occurrenceDate = (await listUpcomingItems()).find((item) => item.event.id === event.id)?.occurrenceDate ?? null
+  }
+
+  const rawResponse = searchParams.response
+  const mode = (Array.isArray(rawResponse) ? rawResponse[0] : rawResponse) === 'no' ? 'no' : 'yes'
+
+  const memory = parseRsvpCookie(cookies().get(RSVP_COOKIE)?.value)
+  const mine = occurrenceDate ? await getDeviceRsvp(memory, event.id, occurrenceDate) : null
 
   return (
     <main>
       <PageHeader
         eyebrow="RSVP"
         title={event.title}
-        intro="Let us know you're coming so we can plan the numbers. It only takes a moment, and you'll get a link to change or cancel later."
+        intro={
+          mode === 'no'
+            ? "Sorry you can't make it — let us know so we can plan the numbers."
+            : 'Let us know you’re coming so we can plan the numbers. It only takes a moment.'
+        }
       />
 
       <section className="bg-brand-stone/60">
         <div className="container-site py-12 lg:py-16">
-          {validDate ? (
+          {occurrenceDate ? (
             <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
-              <OccurrenceCard event={event} occurrenceDate={validDate} />
+              <OccurrenceCard event={event} occurrenceDate={occurrenceDate} />
               <RsvpForm
                 eventId={event.id}
-                eventTitle={event.title}
-                occurrenceIso={occurrenceIso}
-                occurrenceLabel={formatLongDate(validDate)}
+                occurrenceIso={occurrenceDate.toISOString()}
+                mode={mode}
+                mealOptions={eventMealOptions(event)}
+                paymentUrl={event.paymentLinkUrl}
+                existing={mine !== null}
+                initial={{
+                  name: mine?.name ?? memory.name,
+                  email: mine?.email ?? memory.email,
+                  meal: mine?.meal ?? '',
+                  note: mine?.note ?? '',
+                }}
               />
             </div>
           ) : (
-            <MissingDate event={event} />
+            <NoDate event={event} />
           )}
         </div>
       </section>

@@ -81,7 +81,9 @@ export const events = pgTable('events', {
   location: text('location').notNull().default(''),
   coverImageUrl: text('cover_image_url').notNull().default(''),
   paymentLinkLabel: text('payment_link_label').notNull().default(''),
-  paymentLinkUrl: text('payment_link_url').notNull().default(''),
+  paymentLinkUrl: text('payment_link_url').notNull().default(''), // http(s) only — validated in admin actions
+  // Dinner choices offered on the RSVP form (e.g. ["Beef", "Chicken", "Veg"]). Empty = no meal step.
+  mealOptions: jsonb('meal_options').$type<string[]>().notNull().default([]),
   eventTime: text('event_time').notNull().default(''), // "HH:mm", both types
   // one_time only:
   eventDate: timestamp('event_date'), // UTC midnight of the day — see Task 4
@@ -101,6 +103,11 @@ export const eventRsvps = pgTable('event_rsvps', {
   name: text('name').notNull(),
   email: text('email').notNull().default(''),
   note: text('note').notNull().default(''),
+  // 'yes' | 'no' — the poll answer. Rows from before the poll existed are all 'yes'
+  // (that was the only thing an RSVP could mean). See lib/rsvp-response.ts.
+  response: text('response').notNull().default('yes'),
+  // One of the event's mealOptions at the time of the RSVP; '' when the event has none or response is 'no'.
+  meal: text('meal').notNull().default(''),
   editToken: text('edit_token').notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

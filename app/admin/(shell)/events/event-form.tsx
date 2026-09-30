@@ -39,6 +39,7 @@ export function EventForm({ event }: Props) {
   const [coverImageUrl, setCoverImageUrl] = useState(event?.coverImageUrl ?? '')
   const [paymentLinkLabel, setPaymentLinkLabel] = useState(event?.paymentLinkLabel ?? '')
   const [paymentLinkUrl, setPaymentLinkUrl] = useState(event?.paymentLinkUrl ?? '')
+  const [mealOptionsText, setMealOptionsText] = useState((Array.isArray(event?.mealOptions) ? event!.mealOptions : []).join('\n'))
   const [eventTime, setEventTime] = useState(event?.eventTime ?? '')
   const [eventDateStr, setEventDateStr] = useState(toDateStr(event?.eventDate ?? null))
   const [dayOfWeek, setDayOfWeek] = useState<number>(event?.dayOfWeek ?? 4)
@@ -66,6 +67,7 @@ export function EventForm({ event }: Props) {
       coverImageUrl,
       paymentLinkLabel,
       paymentLinkUrl,
+      mealOptionsText,
       eventTime,
       eventDateStr,
       dayOfWeek: type === 'recurring' ? dayOfWeek : null,
@@ -134,10 +136,24 @@ export function EventForm({ event }: Props) {
         <Field label="Payment link label" htmlFor={`${p}-pay-label`} hint='Optional, e.g. "Pay for food".'>
           <TextInput id={`${p}-pay-label`} value={paymentLinkLabel} onChange={(e) => setPaymentLinkLabel(e.target.value)} disabled={busy} />
         </Field>
-        <Field label="Payment link URL" htmlFor={`${p}-pay-url`} hint="Optional.">
+        <Field label="Payment link URL" htmlFor={`${p}-pay-url`} hint="Optional. Full https:// link — also used by the RSVP form's “Pay for dinner” button.">
           <TextInput id={`${p}-pay-url`} type="url" value={paymentLinkUrl} onChange={(e) => setPaymentLinkUrl(e.target.value)} disabled={busy} />
         </Field>
       </div>
+
+      <Field
+        label="Dinner options"
+        htmlFor={`${p}-meals`}
+        hint="Optional. One per line, e.g. Beef / Chicken / Veggie. When set, the RSVP form asks whether they want dinner and which type."
+      >
+        <TextArea
+          id={`${p}-meals`}
+          value={mealOptionsText}
+          onChange={(e) => setMealOptionsText(e.target.value)}
+          placeholder={'Beef\nChicken\nVeggie'}
+          disabled={busy}
+        />
+      </Field>
 
       <Field label="Cover image" htmlFor={`${p}-cover`} hint="Optional.">
         <FileInput id={`${p}-cover`} accept="image/*" onChange={onCoverChange} disabled={busy} />
