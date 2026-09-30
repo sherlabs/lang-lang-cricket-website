@@ -86,7 +86,7 @@ export async function listEvents(): Promise<EventWithRsvpCount[]> {
   await requireAdmin()
   const [eventRows, rsvpCounts, pendingPhotoCounts] = await Promise.all([
     db.select().from(events).orderBy(events.createdAt) as unknown as Promise<Event[]>,
-    db.select({ eventId: eventRsvps.eventId, count: sql<number>`count(*)` }).from(eventRsvps).groupBy(eventRsvps.eventId) as unknown as Promise<
+    db.select({ eventId: eventRsvps.eventId, count: sql<number>`count(*) filter (where ${eventRsvps.response} = 'yes')` }).from(eventRsvps).groupBy(eventRsvps.eventId) as unknown as Promise<
       { eventId: number; count: number }[]
     >,
     db

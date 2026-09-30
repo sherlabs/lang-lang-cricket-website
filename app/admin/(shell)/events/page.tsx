@@ -41,7 +41,7 @@ export default async function EventsAdminPage() {
                 <TableHead className="pl-5 sm:pl-6">Title</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>When</TableHead>
-                <TableHead>RSVPs</TableHead>
+                <TableHead>Going</TableHead>
                 <TableHead className="pr-5 text-right sm:pr-6">Actions</TableHead>
               </TableRow>
             </TableHeader>
