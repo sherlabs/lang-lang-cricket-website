@@ -1,10 +1,12 @@
+import { JsonLd } from '@/components/json-ld'
+import { storyJsonLd } from '@/lib/structured-data'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { getPublishedStoryBySlug } from '@/lib/stories-queries'
-import { baseOpenGraph, truncateDescription } from '@/lib/site-metadata'
+import { baseOpenGraph, truncateDescription, canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +18,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const story = await getPublishedStoryBySlug(params.slug)
   if (!story) return { title: 'Story not found' }
   return {
+    alternates: canonicalFor(`/history/${story.slug}`),
     title: `${story.title} | Lang Lang Cricket Club`,
     description: truncateDescription(story.excerpt) || `A story from the history of Lang Lang Cricket Club, shared by ${story.authorName}.`,
     openGraph: {
@@ -37,6 +40,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
 
   return (
     <main className="py-12 lg:py-16">
+      <JsonLd data={storyJsonLd(story)} />
       <article className="container-site max-w-2xl">
         <Link
           href="/history"

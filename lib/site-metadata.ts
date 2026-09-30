@@ -37,3 +37,14 @@ export function truncateDescription(text: string, max = 155): string {
   );
   return `${head}…`;
 }
+
+/** `alternates` block with a canonical path (resolved against metadataBase). Query strings are never part of it. */
+export function canonicalFor(path: string): { canonical: string } {
+  return { canonical: path }
+}
+
+/** Resolve a site-relative path or absolute URL to an absolute URL on the canonical domain. */
+export function absoluteUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  return `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`
+}

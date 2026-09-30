@@ -2,10 +2,12 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { PageHeader } from '@/components/page-header'
 import { PlayersDirectory } from '@/components/players/players-directory'
 import { listPublicPlayers } from '@/lib/players/queries'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/players'),
   title: 'Players | Lang Lang Cricket Club',
   description:
     'Current and past players of Lang Lang Cricket Club in Caldermeade, Victoria, with career stats and club honours.',

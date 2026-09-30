@@ -1,9 +1,11 @@
+import { JsonLd } from '@/components/json-ld'
+import { playerJsonLd } from '@/lib/structured-data'
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getPlayerProfile } from '@/lib/players/queries'
-import { baseOpenGraph } from '@/lib/site-metadata'
+import { baseOpenGraph, canonicalFor } from "@/lib/site-metadata"
 import { battingView, bowlingView, initials } from '@/lib/players/view'
 import { PlayerSeasonTables } from '@/components/players/player-season-tables'
 
@@ -19,6 +21,7 @@ export async function generateMetadata({ params }: Props) {
     .filter(Boolean)
     .join(' — ')
   return {
+    alternates: canonicalFor(`/players/${profile.player.slug}`),
     title: `${profile.name} | Lang Lang Cricket Club`,
     description: `${summary}. Career stats and club honours at Lang Lang Cricket Club.`,
     // Share previews show the player's own photo when the club has added one.
@@ -54,6 +57,7 @@ export default async function PlayerPage({ params }: Props) {
 
   return (
     <main>
+      <JsonLd data={playerJsonLd({ slug: player.slug, name: profile.name, photoUrl: player.photoUrl })} />
       <section className="relative overflow-hidden bg-brand-black text-white">
         <div
           aria-hidden

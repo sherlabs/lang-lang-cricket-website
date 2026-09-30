@@ -2,7 +2,7 @@ import { asc, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { galleryPhotos } from "@/db/schema";
 import { PageHeader } from "@/components/page-header";
-import { baseOpenGraph } from "@/lib/site-metadata";
+import { baseOpenGraph, canonicalFor } from "@/lib/site-metadata";
 import { GalleryGrid } from "@/components/gallery-grid";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,7 @@ export async function generateMetadata() {
     .orderBy(desc(galleryPhotos.createdAt))
     .limit(1);
   return {
+    alternates: canonicalFor("/gallery"),
     title: "Gallery | Lang Lang Cricket Club",
     description:
       "Photos from match days, presentations and club life at Lang Lang Cricket Club in Caldermeade, Victoria.",

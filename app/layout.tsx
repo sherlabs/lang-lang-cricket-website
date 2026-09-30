@@ -40,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-AU">
       <body
         className={`${inter.variable} ${barlowCondensed.variable} flex min-h-screen flex-col font-sans antialiased`}
       >

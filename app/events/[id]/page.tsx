@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/json-ld'
+import { eventJsonLd } from '@/lib/structured-data'
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -15,7 +17,7 @@ import { formatLocalTime } from '@/lib/playhq/format'
 import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
 import type { Event } from '@/db/schema'
-import { baseOpenGraph, truncateDescription } from '@/lib/site-metadata'
+import { baseOpenGraph, truncateDescription, canonicalFor } from "@/lib/site-metadata"
 import { PhotoSubmitForm } from './photo-submit-form'
 import { RsvpPanel } from './rsvp-panel'
 
@@ -51,6 +53,7 @@ function eventDescription(event: Event): string {
 export async function generateMetadata({ params }: Props) {
   const event = await loadEvent(params.id)
   return {
+    alternates: canonicalFor(`/events/${params.id}`),
     title: event ? `${event.title} | Lang Lang Cricket Club` : 'Event not found | Lang Lang Cricket Club',
     description: event ? eventDescription(event) : undefined,
     openGraph: event?.coverImageUrl
@@ -96,6 +99,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
   return (
     <main>
+      <JsonLd data={eventJsonLd(event, pollDate)} />
       <PageHeader
         eyebrow={past ? 'Past event' : isRecurring ? 'Every ' + DAYS[event.dayOfWeek!] : 'Event'}
         title={event.title}

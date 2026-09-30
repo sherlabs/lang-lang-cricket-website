@@ -8,7 +8,7 @@ import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
 import type { Scorecard } from '@/lib/playhq/types'
-import { truncateDescription } from '@/lib/site-metadata'
+import { truncateDescription, canonicalFor } from "@/lib/site-metadata"
 import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 900
@@ -94,6 +94,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     ? `${result}${sc.gradeName ? ` (${sc.gradeName})` : ''}.`
     : `Scorecard: ${club.name} v ${opp.name}${date ? `, ${date}` : ''}.`
   return {
+    alternates: canonicalFor(`/fixtures/${params.gameId}`),
     title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club`,
     description: truncateDescription(description),
   }

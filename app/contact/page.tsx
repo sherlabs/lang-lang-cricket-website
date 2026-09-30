@@ -8,10 +8,12 @@ import { committeeContacts } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SectionHeading } from '@/components/section-heading'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/contact'),
   title: 'Contact | Lang Lang Cricket Club',
   description:
     'Get in touch with Lang Lang Cricket Club in Caldermeade, Victoria, for playing, sponsorship and general enquiries.',

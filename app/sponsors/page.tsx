@@ -5,10 +5,12 @@ import { sponsors } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
 import { SponsorCard, TIER_STYLES, groupByTier } from '@/components/sponsor-logos'
 import { cn } from '@/lib/utils'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/sponsors'),
   title: 'Sponsors | Lang Lang Cricket Club',
   description:
     'The local businesses and supporters who back Lang Lang Cricket Club in Caldermeade, Victoria.',

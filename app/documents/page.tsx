@@ -12,10 +12,12 @@ import {
 import { db } from '@/db'
 import { documents } from '@/db/schema'
 import { PageHeader } from '@/components/page-header'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/documents'),
   title: 'Documents & Policies | Lang Lang Cricket Club',
   description:
     'Codes of conduct, child safety, game day information and policies for members and families of Lang Lang Cricket Club.',

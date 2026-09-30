@@ -6,10 +6,12 @@ import { groupPeople, type Section } from '@/lib/people'
 import { PageHeader } from '@/components/page-header'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SectionHeading } from '@/components/section-heading'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/people'),
   title: 'Our People | Lang Lang Cricket Club',
   description:
     'Meet the coaches, committee and volunteers who keep Lang Lang Cricket Club in Caldermeade, Victoria running.',

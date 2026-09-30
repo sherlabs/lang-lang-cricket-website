@@ -1,3 +1,6 @@
+import { JsonLd } from '@/components/json-ld'
+import { organizationJsonLd } from '@/lib/structured-data'
+import { canonicalFor } from '@/lib/site-metadata'
 import Image from 'next/image'
 import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -21,6 +24,8 @@ import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
 import { getLatestAnnouncement } from '@/lib/announcements-queries'
 import { ANNOUNCEMENT_DISMISS_COOKIE, excerpt, shouldShowBanner } from '@/lib/announcements-format'
+
+export const metadata = { alternates: canonicalFor('/') }
 
 // Reads the announcement-dismissed cookie, so this page is per-request anyway.
 export const dynamic = 'force-dynamic'
@@ -65,6 +70,7 @@ export default async function HomePage() {
 
   return (
     <main>
+      <JsonLd data={organizationJsonLd()} />
       {/* Latest announcement (dismissable, per announcement) */}
       {showBanner && latestAnnouncement && (
         <AnnouncementBanner

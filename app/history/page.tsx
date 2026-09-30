@@ -6,10 +6,12 @@ import { ArrowRight01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
 import { listPublishedStories } from '@/lib/stories-queries'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/history'),
   title: 'History | Lang Lang Cricket Club',
   description:
     'Stories, memories and milestones from the long history of Lang Lang Cricket Club in Caldermeade, Victoria.',

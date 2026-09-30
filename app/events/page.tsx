@@ -18,10 +18,12 @@ import { rsvpKey } from '@/lib/rsvp-cookie'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/events'),
   title: 'Events | Lang Lang Cricket Club',
   description: 'Upcoming club events, training, and how to RSVP.',
 }

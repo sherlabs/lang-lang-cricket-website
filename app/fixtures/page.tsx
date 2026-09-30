@@ -15,10 +15,12 @@ import { todayMelbourne } from '@/lib/playhq/games'
 import { groupByDate, latestResultsWindow, nextRoundWindow } from '@/lib/playhq/rounds'
 import type { ClubTeam, Game, Ladder, SeasonGroup } from '@/lib/playhq/types'
 import { formatLocalDate, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const revalidate = 1800
 
 export const metadata = {
+  alternates: canonicalFor('/fixtures'),
   title: 'Fixtures, Results & Teams | Lang Lang Cricket Club',
   description:
     'Fixtures, results and teams for Lang Lang Cricket Club in Caldermeade, Victoria, across every grade and season.',

@@ -2,10 +2,12 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { PageHeader } from '@/components/page-header'
 import { listPublishedAnnouncements } from '@/lib/announcements-queries'
 import { bodyParagraphs, formatAnnouncementDate } from '@/lib/announcements-format'
+import { canonicalFor } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
+  alternates: canonicalFor('/announcements'),
   title: 'Announcements | Lang Lang Cricket Club',
   description:
     'Latest news and notices from Lang Lang Cricket Club in Caldermeade, Victoria.',
