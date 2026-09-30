@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getPlayerProfile } from '@/lib/players/queries'
+import { baseOpenGraph } from '@/lib/site-metadata'
 import { battingView, bowlingView, initials } from '@/lib/players/view'
 import { PlayerSeasonTables } from '@/components/players/player-season-tables'
 
@@ -13,7 +14,18 @@ type Props = { params: { slug: string } }
 export async function generateMetadata({ params }: Props) {
   noStore()
   const profile = await getPlayerProfile(params.slug)
-  return { title: profile ? `${profile.name} | Lang Lang Cricket Club` : 'Player | Lang Lang Cricket Club' }
+  if (!profile) return { title: 'Player | Lang Lang Cricket Club' }
+  const summary = [profile.active ? 'Active player' : 'Past player', profile.yearsLabel, profile.grades.join(' · ')]
+    .filter(Boolean)
+    .join(' — ')
+  return {
+    title: `${profile.name} | Lang Lang Cricket Club`,
+    description: `${summary}. Career stats and club honours at Lang Lang Cricket Club.`,
+    // Share previews show the player's own photo when the club has added one.
+    openGraph: profile.player.photoUrl
+      ? { ...baseOpenGraph, images: [{ url: profile.player.photoUrl, alt: profile.name }] }
+      : baseOpenGraph,
+  }
 }
 
 export default async function PlayerPage({ params }: Props) {

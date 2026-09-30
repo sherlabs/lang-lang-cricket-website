@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteChrome } from "@/components/site-chrome";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL, baseOpenGraph } from "@/lib/site-metadata";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,18 +20,17 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lang-lang-cricket-website.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Lang Lang Cricket Club",
+    default: SITE_NAME,
     template: "%s",
   },
   description:
     "Lang Lang Cricket Club — junior and senior cricket in Caldermeade, Victoria. A welcoming community club for beginners through to experienced players.",
-  openGraph: {
-    title: "Lang Lang Cricket Club",
-    description: "Junior and senior cricket in Caldermeade, Victoria.",
-    images: ["/assets/branding/hero.jpg"],
-    type: "website",
+  openGraph: baseOpenGraph,
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE.url],
   },
 };
 
