@@ -1,15 +1,15 @@
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
-export const SITE_URL = 'https://langlangcricketclub.com'
-export const SITE_NAME = 'Lang Lang Cricket Club'
+export const SITE_URL = "https://langlangcricketclub.com";
+export const SITE_NAME = "Lang Lang Cricket Club";
 
 // 1200×630, ~125KB: the size link previews expect (WhatsApp drops images over ~300KB).
 export const DEFAULT_OG_IMAGE = {
-  url: '/og-image.jpg',
+  url: "/og-image.jpg",
   width: 1200,
   height: 630,
-  alt: 'Lang Lang Cricket Club clubrooms and oval at Caldermeade',
-}
+  alt: "Lang Lang Cricket Club clubrooms and oval at Caldermeade",
+};
 
 /**
  * Open Graph block shared by every page. No og:title/description here on purpose:
@@ -18,9 +18,22 @@ export const DEFAULT_OG_IMAGE = {
  * crawlers fall back to the page's own <title> and meta description.
  * A page that sets its own `openGraph` replaces this object, so spread it in.
  */
-export const baseOpenGraph: NonNullable<Metadata['openGraph']> = {
-  type: 'website',
+export const baseOpenGraph: NonNullable<Metadata["openGraph"]> = {
+  type: "website",
   siteName: SITE_NAME,
-  locale: 'en_AU',
+  locale: "en_AU",
   images: [DEFAULT_OG_IMAGE],
+};
+
+/** Collapse whitespace and trim to `max` chars on a word boundary, adding an ellipsis when cut. */
+export function truncateDescription(text: string, max = 155): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  const head = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(
+    /[\s,;:.!?-]+$/,
+    "",
+  );
+  return `${head}…`;
 }

@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Players | Lang Lang Cricket Club',
+  description:
+    'Current and past players of Lang Lang Cricket Club in Caldermeade, Victoria, with career stats and club honours.',
 }
 
 export default async function PlayersPage() {

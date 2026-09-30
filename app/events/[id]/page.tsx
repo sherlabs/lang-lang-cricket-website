@@ -21,6 +21,7 @@ import { getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrence
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
+import { baseOpenGraph, truncateDescription } from '@/lib/site-metadata'
 import { PhotoSubmitForm } from './photo-submit-form'
 
 export const dynamic = 'force-dynamic'
@@ -33,11 +34,29 @@ async function loadEvent(id: string): Promise<Event | null> {
   return getEventById(numericId)
 }
 
+/** When/where summary first, then the admin-written blurb, trimmed for link previews. */
+function eventDescription(event: Event): string {
+  const when =
+    event.type === 'recurring' && event.dayOfWeek != null
+      ? `Every ${DAYS[event.dayOfWeek]}`
+      : event.eventDate
+        ? formatLongDate(event.eventDate, true)
+        : ''
+  const time = formatLocalTime(event.eventTime)
+  const parts = [[when, time].filter(Boolean).join(' · '), event.location && `at ${event.location}`].filter(Boolean)
+  const where = parts.join(' ')
+  const summary = where ? `${where}.` : ''
+  return truncateDescription([summary, event.description].filter(Boolean).join(' ') || 'A Lang Lang Cricket Club event.')
+}
+
 export async function generateMetadata({ params }: Props) {
   const event = await loadEvent(params.id)
   return {
     title: event ? `${event.title} | Lang Lang Cricket Club` : 'Event not found | Lang Lang Cricket Club',
-    description: event?.description || undefined,
+    description: event ? eventDescription(event) : undefined,
+    openGraph: event?.coverImageUrl
+      ? { ...baseOpenGraph, images: [{ url: event.coverImageUrl, alt: event.title }] }
+      : baseOpenGraph,
   }
 }
 

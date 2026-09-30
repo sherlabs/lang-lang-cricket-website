@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Edit your story | Lang Lang Cricket Club',
+  robots: { index: false, follow: false },
 }
 
 export default async function DraftEditPage({ params }: { params: { token: string } }) {

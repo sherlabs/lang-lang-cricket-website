@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { getPublishedStoryBySlug } from '@/lib/stories-queries'
+import { baseOpenGraph, truncateDescription } from '@/lib/site-metadata'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // story's status is never served stale here.
   noStore()
   const story = await getPublishedStoryBySlug(params.slug)
-  return { title: story ? `${story.title} | Lang Lang Cricket Club` : 'Story not found' }
+  if (!story) return { title: 'Story not found' }
+  return {
+    title: `${story.title} | Lang Lang Cricket Club`,
+    description: truncateDescription(story.excerpt) || `A story from the history of Lang Lang Cricket Club, shared by ${story.authorName}.`,
+    openGraph: {
+      ...baseOpenGraph,
+      type: 'article',
+      images: story.coverImageUrl ? [{ url: story.coverImageUrl, alt: story.title }] : baseOpenGraph.images,
+      ...(story.publishedAt ? { publishedTime: story.publishedAt.toISOString() } : {}),
+    },
+  }
 }
 
 export default async function StoryDetailPage({ params }: { params: { slug: string } }) {

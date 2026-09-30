@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Contact | Lang Lang Cricket Club',
+  description:
+    'Get in touch with Lang Lang Cricket Club in Caldermeade, Victoria, for playing, sponsorship and general enquiries.',
 }
 
 const CLUB_EMAIL = 'langlangcricketclub@gmail.com'

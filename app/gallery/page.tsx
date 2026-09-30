@@ -1,17 +1,42 @@
-import { asc } from 'drizzle-orm'
-import { db } from '@/db'
-import { galleryPhotos } from '@/db/schema'
-import { PageHeader } from '@/components/page-header'
-import { GalleryGrid } from '@/components/gallery-grid'
+import { asc, desc } from "drizzle-orm";
+import { db } from "@/db";
+import { galleryPhotos } from "@/db/schema";
+import { PageHeader } from "@/components/page-header";
+import { baseOpenGraph } from "@/lib/site-metadata";
+import { GalleryGrid } from "@/components/gallery-grid";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: 'Gallery | Lang Lang Cricket Club',
+export async function generateMetadata() {
+  // Newest upload as the share image, so a shared link shows something current.
+  const [latest] = await db
+    .select()
+    .from(galleryPhotos)
+    .orderBy(desc(galleryPhotos.createdAt))
+    .limit(1);
+  return {
+    title: "Gallery | Lang Lang Cricket Club",
+    description:
+      "Photos from match days, presentations and club life at Lang Lang Cricket Club in Caldermeade, Victoria.",
+    openGraph: latest
+      ? {
+          ...baseOpenGraph,
+          images: [
+            {
+              url: latest.url,
+              alt: latest.caption || "Lang Lang Cricket Club gallery photo",
+            },
+          ],
+        }
+      : baseOpenGraph,
+  };
 }
 
 export default async function GalleryPage() {
-  const photos = await db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder))
+  const photos = await db
+    .select()
+    .from(galleryPhotos)
+    .orderBy(asc(galleryPhotos.sortOrder));
   return (
     <main>
       <PageHeader
@@ -27,8 +52,14 @@ export default async function GalleryPage() {
           </span>
           <span className="h-px flex-1 bg-brand-black/10" aria-hidden />
         </div>
-        <GalleryGrid photos={photos.map((p) => ({ id: p.id, url: p.url, caption: p.caption }))} />
+        <GalleryGrid
+          photos={photos.map((p) => ({
+            id: p.id,
+            url: p.url,
+            caption: p.caption,
+          }))}
+        />
       </section>
     </main>
-  )
+  );
 }

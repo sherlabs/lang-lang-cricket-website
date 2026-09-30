@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Announcements | Lang Lang Cricket Club',
+  description:
+    'Latest news and notices from Lang Lang Cricket Club in Caldermeade, Victoria.',
 }
 
 export default async function AnnouncementsPage() {

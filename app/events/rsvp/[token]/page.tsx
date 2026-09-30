@@ -18,7 +18,10 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
   const rsvp = await getRsvpByToken(params.token)
-  return { title: rsvp ? `Manage your RSVP | Lang Lang Cricket Club` : 'RSVP not found | Lang Lang Cricket Club' }
+  return {
+    title: rsvp ? `Manage your RSVP | Lang Lang Cricket Club` : 'RSVP not found | Lang Lang Cricket Club',
+    robots: { index: false, follow: false },
+  }
 }
 
 /**

@@ -17,6 +17,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Documents & Policies | Lang Lang Cricket Club',
+  description:
+    'Codes of conduct, child safety, game day information and policies for members and families of Lang Lang Cricket Club.',
 }
 
 const CATEGORY_ORDER = ['Codes of Conduct', 'Policies', 'Child Safety', 'Game Day', 'CCCA Directory']

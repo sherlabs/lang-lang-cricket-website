@@ -11,6 +11,7 @@ import { getEventById } from '@/lib/events-queries'
 import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
+import { baseOpenGraph } from '@/lib/site-metadata'
 import { RsvpForm } from './rsvp-form'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,14 @@ async function loadEvent(id: string): Promise<Event | null> {
 
 export async function generateMetadata({ params }: Props) {
   const event = await loadEvent(params.id)
-  return { title: event ? `RSVP: ${event.title} | Lang Lang Cricket Club` : 'Event not found | Lang Lang Cricket Club' }
+  if (!event) return { title: 'Event not found | Lang Lang Cricket Club' }
+  return {
+    title: `RSVP: ${event.title} | Lang Lang Cricket Club`,
+    description: `Let Lang Lang Cricket Club know you're coming to ${event.title}.`,
+    openGraph: event.coverImageUrl
+      ? { ...baseOpenGraph, images: [{ url: event.coverImageUrl, alt: event.title }] }
+      : baseOpenGraph,
+  }
 }
 
 /** The session being RSVP'd to — stays put beside the form so the date is never out of sight. */

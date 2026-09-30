@@ -10,6 +10,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Sponsors | Lang Lang Cricket Club',
+  description:
+    'The local businesses and supporters who back Lang Lang Cricket Club in Caldermeade, Victoria.',
 }
 
 export default async function SponsorsPage() {

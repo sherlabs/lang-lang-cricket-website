@@ -20,6 +20,8 @@ export const revalidate = 1800
 
 export const metadata = {
   title: 'Fixtures, Results & Teams | Lang Lang Cricket Club',
+  description:
+    'Fixtures, results and teams for Lang Lang Cricket Club in Caldermeade, Victoria, across every grade and season.',
 }
 
 type Props = { searchParams: { season?: string; team?: string } }

@@ -5,9 +5,9 @@ import { getStoryByViewToken } from '@/lib/stories-queries'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
-  const story = await getStoryByViewToken(params.token)
-  return { title: story ? `${story.title} | Lang Lang Cricket Club` : 'Story not found | Lang Lang Cricket Club' }
+export async function generateMetadata(): Promise<Metadata> {
+  // Token URL: keep out of search and don't leak the draft's title into previews.
+  return { title: 'Your story | Lang Lang Cricket Club', robots: { index: false, follow: false } }
 }
 
 const STATUS_LABEL: Record<string, string> = {

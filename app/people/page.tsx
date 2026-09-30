@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Our People | Lang Lang Cricket Club',
+  description:
+    'Meet the coaches, committee and volunteers who keep Lang Lang Cricket Club in Caldermeade, Victoria running.',
 }
 
 const SECTION_COPY: Record<Section, { title: string; intro: string }> = {

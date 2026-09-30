@@ -8,6 +8,7 @@ import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
 import type { Scorecard } from '@/lib/playhq/types'
+import { truncateDescription } from '@/lib/site-metadata'
 import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 900
@@ -86,7 +87,16 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const loaded = await load(params.gameId, searchParams.season)
   if (loaded.kind !== 'ok') return { title: 'Scorecard | Lang Lang Cricket Club' }
   const { club, opp } = sides(loaded.sc)
-  return { title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club` }
+  const { sc } = loaded
+  const date = sc.startsAt ? formatIsoMelbourne(sc.startsAt) : null
+  const result = buildResult(sc)
+  const description = result
+    ? `${result}${sc.gradeName ? ` (${sc.gradeName})` : ''}.`
+    : `Scorecard: ${club.name} v ${opp.name}${date ? `, ${date}` : ''}.`
+  return {
+    title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club`,
+    description: truncateDescription(description),
+  }
 }
 
 export default async function GamePage({ params, searchParams }: Props) {
