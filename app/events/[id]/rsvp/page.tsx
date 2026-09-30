@@ -14,7 +14,7 @@ import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
 import type { Event } from '@/db/schema'
-import { baseOpenGraph, canonicalFor } from "@/lib/site-metadata"
+import { baseOpenGraph } from "@/lib/site-metadata"
 import { RsvpForm } from './rsvp-form'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +34,6 @@ export async function generateMetadata({ params }: Props) {
   const event = await loadEvent(params.id)
   if (!event) return { title: 'Event not found | Lang Lang Cricket Club', robots: { index: false, follow: true } }
   return {
-    alternates: canonicalFor(`/events/${params.id}/rsvp`),
     robots: { index: false, follow: true },
     title: `RSVP: ${event.title} | Lang Lang Cricket Club`,
     description: `Let Lang Lang Cricket Club know whether you're coming to ${event.title}.`,
