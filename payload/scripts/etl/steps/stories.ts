@@ -4,7 +4,7 @@ import { ETL_CONTEXT, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
 import type { EtlStep } from './types'
 
-type Row = {
+export type LegacyStoryRow = {
   id: number
   slug: string
   title: string
@@ -23,12 +23,12 @@ type Row = {
   reviewed_at: Date | null
 }
 
-const STATUSES = new Set(['pending', 'published', 'rejected'])
+export const STORY_STATUSES = new Set(['pending', 'published', 'rejected'])
 
 const iso = (d: Date | null) => (d instanceof Date ? d.toISOString() : null)
 
 /** Legacy HTML of a row: `content_html`, falling back to rendering `content_json` through the Tiptap schema. */
-function legacyHtml(r: Row): string {
+export function legacyHtml(r: Pick<LegacyStoryRow, 'content_html' | 'content_json'>): string {
   if (typeof r.content_html === 'string' && r.content_html.trim()) return r.content_html
   try {
     const json = typeof r.content_json === 'string' ? JSON.parse(r.content_json) : r.content_json
@@ -57,11 +57,11 @@ export const storiesStep: EtlStep = {
   async run(ctx) {
     const { payload, source, report, dryRun, update } = ctx
     const counts = report.counts('stories')
-    const rows = await source.rows<Row>('stories')
+    const rows = await source.rows<LegacyStoryRow>('stories')
     counts.read = rows.length
     for (const r of rows) {
       const where = { step: 'stories', table: 'stories', id: r.id }
-      if (!STATUSES.has(r.status)) {
+      if (!STORY_STATUSES.has(r.status)) {
         report.add({ ...where, field: 'status', kind: 'skipped', detail: `unknown status "${r.status}"` })
         counts.skipped++
         continue

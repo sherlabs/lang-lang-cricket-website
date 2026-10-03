@@ -511,3 +511,60 @@ describe('access: players (WP5)', () => {
     expect(foreign.status).toBe(403)
   })
 })
+
+/**
+ * WP6 final pass over EVERY collection and global in the config: anonymous REST can never
+ * write anything, and reads only what is public. The slug list is pinned, so a new collection
+ * fails here until its access is decided and added.
+ */
+describe('access: every collection and global (WP6)', () => {
+  let payload: Payload
+  let before: Record<string, number>
+
+  const PUBLIC_READ = new Set(['media', 'documents', 'gallery-photos', 'sponsors', 'people', 'announcements', 'events', 'event-photos', 'stories', 'players', 'player-seasons'])
+  const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs'])
+  const INTERNAL = /^payload-/
+
+  beforeAll(async () => {
+    payload = await getTestPayload()
+    before = {}
+    for (const c of payload.config.collections) before[c.slug] = (await payload.count({ collection: c.slug as 'media', overrideAccess: true })).totalDocs
+  })
+
+  afterAll(async () => {
+    await destroyTestPayload(payload)
+  })
+
+  it('the collection list is the one this file classifies', () => {
+    const slugs = payload.config.collections.map((c) => c.slug).filter((s) => !INTERNAL.test(s)).sort()
+    expect(slugs).toEqual([...PUBLIC_READ, ...PRIVATE_READ].sort())
+    expect(payload.config.globals.map((g) => g.slug).sort()).toEqual(['club', 'site-settings'])
+  })
+
+  it('anonymous REST cannot create, update or delete in any collection (bulk or by id)', async () => {
+    const denied = [401, 403]
+    for (const { slug } of payload.config.collections) {
+      if (slug === 'payload-migrations') continue // no REST routes are served for it
+      const statuses = {
+        create: (await rest('POST', `/${slug}`, { body: {} })).status,
+        updateById: (await rest('PATCH', `/${slug}/1`, { body: {} })).status,
+        bulkUpdate: (await rest('PATCH', `/${slug}?where[id][exists]=true`, { body: {} })).status,
+        deleteById: (await rest('DELETE', `/${slug}/1`)).status,
+        bulkDelete: (await rest('DELETE', `/${slug}?where[id][exists]=true`)).status,
+      }
+      for (const [op, status] of Object.entries(statuses)) expect({ slug, op, ok: denied.includes(status) || (status === 404 && op.endsWith('ById')) }).toEqual({ slug, op, ok: true })
+    }
+    for (const { slug } of payload.config.collections) {
+      expect({ slug, n: (await payload.count({ collection: slug as 'media', overrideAccess: true })).totalDocs }).toEqual({ slug, n: before[slug] })
+    }
+  })
+
+  it('anonymous REST cannot update either global', async () => {
+    for (const g of ['club', 'site-settings']) expect((await rest('POST', `/globals/${g}`, { body: {} })).status).toBe(403)
+  })
+
+  it('anonymous REST reads only the public collections', async () => {
+    for (const slug of PRIVATE_READ) expect({ slug, status: (await rest('GET', `/${slug}`)).status }).toEqual({ slug, status: 403 })
+    for (const slug of PUBLIC_READ) expect({ slug, status: (await rest('GET', `/${slug}?limit=1`)).status }).toEqual({ slug, status: 200 })
+  })
+})

@@ -23,9 +23,11 @@ export const playerSource: FieldHook = keepStored('manual')
 /**
  * `beforeDelete`, before the cascade: PlayHQ players come back on the next sync (their alias
  * re-creates them), so only manually added players can be deleted. Merge removes PlayHQ
- * identities through its own transaction instead.
+ * identities through its own transaction instead. Skipped under `context.etl` (reconcile).
  */
 export const refusePlayhqDelete: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  // The ETL's `--reconcile-deletes` removes target rows that no longer exist in legacy (§12.3).
+  if (req.context?.etl) return
   const player = await req.payload.findByID({ collection: 'players', id, depth: 0, overrideAccess: true, req, select: { source: true } })
   if (player?.source === 'playhq') {
     // 403 like Payload's `Forbidden`, with a message the admin can show.

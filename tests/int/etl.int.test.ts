@@ -1,0 +1,291 @@
+/**
+ * etl.int (spec §15, §12): the whole legacy ETL against the deterministic fixture, loaded into
+ * schema `legacy_fixture` of the test database. Run twice to prove idempotency (0 writes, every
+ * payload table byte-identical); orphans skipped; the 3-way media branch; ids + `setval` from
+ * `GREATEST(MAX(id), last_value)`; a partially failed `player-seasons` insert resumed; the
+ * timestamp post-pass; a field-for-field round trip of the preserved fields; verify (passing,
+ * and failing on a tampered row); `--update --reconcile-deletes`; a dry run writes nothing.
+ *
+ * The storage plugin is enabled with the fake token (`@vercel/blob` mocked), so `/assets/`
+ * uploads never touch disk or the network. The ETL itself runs as locally: no token, store id
+ * `fakestore` (the fixture's Blob host).
+ */
+import { createHash } from 'node:crypto'
+import path from 'node:path'
+import type { Payload } from 'payload'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { destroyTestPayload, getTestPayload, resetGlobal } from './helpers'
+
+const blob = vi.hoisted(() => {
+  process.env.PAYLOAD_BLOB_FAKE = '1'
+  // allowIDOnCreate and documents' allowRestrictedFileTypes are read at config time.
+  process.env.PAYLOAD_ETL = 'true'
+  const { createRequire } = process.getBuiltinModule('node:module') as typeof import('node:module')
+  const fromPlugin = createRequire(createRequire(import.meta.url).resolve('@payloadcms/storage-vercel-blob'))
+  const put = vi.fn(async (pathname: string) => ({ url: `https://fakestore.public.blob.vercel-storage.com/${pathname}`, pathname }))
+  const del = vi.fn(async (url: string | string[]) => void url)
+  const head = vi.fn(async (url: string) => ({ url, size: 1234, contentType: 'image/jpeg' }))
+  const pluginBlobPath = fromPlugin.resolve('@vercel/blob').replace(/index\.cjs$/, 'index.js')
+  return { put, del, head, pluginBlobPath }
+})
+
+vi.mock(blob.pluginBlobPath, async (importOriginal) => ({ ...(await importOriginal<Record<string, unknown>>()), put: blob.put, del: blob.del, head: blob.head }))
+vi.mock('@vercel/blob', async (importOriginal) => ({ ...(await importOriginal<Record<string, unknown>>()), put: blob.put, del: blob.del, head: blob.head }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
+
+type Source = import('@/payload/scripts/etl/source').LegacySource
+type Ctx = import('@/payload/scripts/etl/media').EtlContext
+
+const SCHEMA = 'legacy_fixture'
+const COLLECTIONS = [
+  'player-sync-runs', 'player-seasons', 'player-aliases', 'players', 'stories', 'event-photos', 'event-rsvps', 'events',
+  'announcements', 'people', 'sponsors', 'gallery-photos', 'documents', 'media',
+] as const
+
+let payload: Payload
+let source: Source
+const fetchSpy = vi.fn()
+
+async function sqlRows<T = Record<string, unknown>>(query: string): Promise<T[]> {
+  const { sql } = await import('@payloadcms/db-postgres/drizzle')
+  return ((await payload.db.drizzle.execute(sql.raw(query))) as { rows: T[] }).rows
+}
+
+async function wipeTarget() {
+  for (const c of COLLECTIONS) await sqlRows(`DELETE FROM "payload"."${c.replace(/-/g, '_')}"`)
+  await resetGlobal(payload, 'club')
+  await resetGlobal(payload, 'site-settings')
+}
+
+async function context(overrides: Partial<Ctx> = {}): Promise<Ctx> {
+  const { EtlReport } = await import('@/payload/scripts/etl/report')
+  return {
+    payload,
+    source,
+    report: new EtlReport(Boolean(overrides.dryRun)),
+    dryRun: false,
+    update: false,
+    storeId: 'fakestore',
+    token: undefined,
+    publicDir: path.resolve('public'),
+    ...overrides,
+  }
+}
+
+async function runEtl(overrides: Partial<Ctx> = {}, only?: string[]) {
+  const { ETL_STEPS } = await import('@/payload/scripts/etl/steps')
+  const ctx = await context(overrides)
+  for (const step of ETL_STEPS) if (!only || only.includes(step.name)) await step.run(ctx)
+  return ctx
+}
+
+async function verify(only?: string[]) {
+  const { verifyCutover } = await import('@/payload/scripts/etl/verify')
+  return verifyCutover({ payload, source, storeId: 'fakestore', publicDir: path.resolve('public'), only })
+}
+
+/** Every payload content table: row count + hash of all rows (all columns) in id order. */
+async function snapshot(): Promise<Record<string, string>> {
+  const tables = await sqlRows<{ t: string }>(
+    `SELECT table_name AS t FROM information_schema.tables WHERE table_schema = 'payload' AND table_type = 'BASE TABLE'
+       AND table_name NOT LIKE 'payload\\_%' AND table_name NOT LIKE 'users%' ORDER BY 1`,
+  )
+  const out: Record<string, string> = {}
+  for (const { t } of tables) {
+    const rows = await sqlRows(`SELECT * FROM "payload"."${t}" ORDER BY 1`)
+    out[t] = `${rows.length}:${createHash('sha256').update(JSON.stringify(rows)).digest('hex')}`
+  }
+  const seqs = await sqlRows(`SELECT sequencename, last_value FROM pg_sequences WHERE schemaname = 'payload' ORDER BY 1`)
+  out.__sequences = createHash('sha256').update(JSON.stringify(seqs)).digest('hex')
+  return out
+}
+
+const legacy = <T = Record<string, unknown>>(table: string, orderBy = 'id') => source.rows<T & Record<string, unknown>>(table, orderBy)
+const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null)
+
+beforeAll(async () => {
+  payload = await getTestPayload()
+  const { seedLegacyFixture } = await import('@/payload/scripts/fixtures/legacy-fixture')
+  await seedLegacyFixture(process.env.DATABASE_URI!, SCHEMA)
+  const { openLegacySource } = await import('@/payload/scripts/etl/source')
+  source = await openLegacySource({ url: process.env.DATABASE_URI!, schema: SCHEMA })
+  await wipeTarget()
+  vi.stubGlobal('fetch', fetchSpy)
+})
+
+afterAll(async () => {
+  vi.unstubAllGlobals()
+  await source?.close()
+  await destroyTestPayload(payload)
+  delete process.env.PAYLOAD_BLOB_FAKE
+  delete process.env.PAYLOAD_ETL
+})
+
+describe('legacy ETL (fixture)', () => {
+  let first: Ctx
+  let afterFirst: Record<string, string>
+
+  it('the source is read-only', async () => {
+    await expect(source.query(`INSERT INTO "${SCHEMA}"."announcements" (title) VALUES ('x')`)).rejects.toThrow(/read-only/)
+  })
+
+  it('a dry run plans every row and writes nothing', async () => {
+    const before = await snapshot()
+    const ctx = await runEtl({ dryRun: true })
+    expect(ctx.report.counts('stories').planned).toBe(5)
+    expect(await snapshot()).toEqual(before)
+    expect(blob.put).not.toHaveBeenCalled()
+  })
+
+  it('first run: imports every table, skips and reports orphans, takes all three media branches', async () => {
+    first = await runEtl()
+    const c = (s: string) => first.report.counts(s)
+    expect(c('documents').created).toBe(6)
+    expect(c('event-rsvps')).toMatchObject({ created: 6, skipped: 1 })
+    expect(c('event-photos')).toMatchObject({ created: 4, skipped: 2 })
+    expect(c('stories').created).toBe(5)
+    expect(c('players').created).toBe(6)
+    expect(c('player-seasons').created).toBe(6)
+    const kinds = first.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)
+    expect(kinds).toContain('orphan-skipped event_rsvps#9')
+    expect(kinds).toContain('orphan-skipped event_photos#8')
+    expect(kinds).toContain('story-image-dropped stories#1')
+    // 3-way branch: own-store registered (no bytes), /assets/ uploaded, empty → null.
+    expect(first.report.media.register).toBeGreaterThan(0)
+    expect(first.report.media['upload-local-asset']).toBeGreaterThan(0)
+    expect(first.report.media.empty).toBeGreaterThan(0)
+    expect(first.report.media['fallback-local']).toBeGreaterThan(0)
+    expect(fetchSpy).not.toHaveBeenCalled()
+    afterFirst = await snapshot()
+  })
+
+  it('verify passes, including the per-row URL check for every registered row', async () => {
+    const result = await verify()
+    const failures = result.checks.flatMap((c) => c.failures)
+    expect(failures).toEqual([])
+    expect(result.ok).toBe(true)
+    const urls = result.checks.find((c) => c.name.startsWith('registered rows'))!
+    expect(urls.checked).toBeGreaterThanOrEqual(15)
+  })
+
+  it('field-for-field round trip of the preserved fields', async () => {
+    for (const r of await legacy('stories')) {
+      const d = (await payload.findByID({ collection: 'stories', id: r.id as number, depth: 0, overrideAccess: true })) as unknown as Record<string, unknown>
+      expect({
+        slug: d.slug, editToken: d.editToken, viewToken: d.viewToken, submittedByAdmin: d.submittedByAdmin,
+        publishedAt: iso(d.publishedAt), reviewedAt: iso(d.reviewedAt), excerpt: d.excerpt, createdAt: iso(d.createdAt),
+      }).toEqual({
+        slug: r.slug, editToken: r.edit_token, viewToken: r.view_token, submittedByAdmin: r.submitted_by_admin,
+        publishedAt: iso(r.published_at), reviewedAt: iso(r.reviewed_at), excerpt: r.excerpt, createdAt: iso(r.created_at),
+      })
+    }
+    const { fullName } = await import('@/payload/hooks/displayName')
+    for (const r of await legacy('players')) {
+      const d = await payload.findByID({ collection: 'players', id: r.id as number, depth: 0, joins: false, overrideAccess: true })
+      expect({ slug: d.slug, source: d.source, displayName: d.displayName, createdAt: iso(d.createdAt) }).toEqual({
+        slug: r.slug, source: r.source, displayName: fullName(r.first_name, r.last_name), createdAt: iso(r.created_at),
+      })
+    }
+    for (const r of await legacy('gallery_photos')) {
+      const d = await payload.findByID({ collection: 'gallery-photos', id: r.id as number, depth: 0, overrideAccess: true })
+      expect({ sortOrder: d.sortOrder, createdAt: iso(d.createdAt) }).toEqual({ sortOrder: r.sort_order, createdAt: iso(r.created_at) })
+    }
+    for (const r of await legacy('event_rsvps')) {
+      const found = await payload.find({ collection: 'event-rsvps', where: { id: { equals: r.id } }, depth: 0, overrideAccess: true })
+      if (r.id === 9) {
+        expect(found.docs).toEqual([]) // the orphan
+        continue
+      }
+      expect({ token: found.docs[0].editToken, occurrence: iso(found.docs[0].occurrenceDate) }).toEqual({ token: r.edit_token, occurrence: iso(r.occurrence_date) })
+    }
+    // Timestamp post-pass: announcements keep both legacy timestamps.
+    for (const r of await legacy('announcements')) {
+      const d = await payload.findByID({ collection: 'announcements', id: r.id as number, depth: 0, overrideAccess: true })
+      expect([iso(d.createdAt), iso(d.updatedAt)]).toEqual([iso(r.created_at), iso(r.updated_at)])
+    }
+  })
+
+  it('sequences continue from GREATEST(MAX(id), legacy last_value) + 1', async () => {
+    const { ID_PRESERVING, nextSequenceValue } = await import('@/payload/scripts/etl/sequences')
+    for (const { collection, legacyTable } of ID_PRESERVING) {
+      const last = await source.sequenceLastValue(legacyTable)
+      const [{ max }] = await sqlRows<{ max: number | null }>(`SELECT MAX(id) AS max FROM "payload"."${collection.replace(/-/g, '_')}"`)
+      expect({ collection, next: await nextSequenceValue(payload, collection) }).toEqual({ collection, next: Math.max(Number(max ?? 0), last) + 1 })
+    }
+    // The fixture's sequences run 10 past the max id, so a new row skips the deleted legacy ids.
+    const created = await payload.create({ collection: 'announcements', data: { title: 'new', body: '', published: false }, overrideAccess: true, context: { disableRevalidate: true } })
+    const legacyMax = Math.max(...(await legacy('announcements')).map((r) => r.id as number))
+    expect(created.id).toBe(legacyMax + 11)
+    await payload.delete({ collection: 'announcements', id: created.id, overrideAccess: true, context: { disableRevalidate: true } })
+    await sqlRows(`SELECT setval(pg_get_serial_sequence('"payload"."announcements"', 'id'), ${legacyMax + 11}, false)`)
+  })
+
+  it('second run writes 0 rows and leaves every table identical', async () => {
+    blob.put.mockClear()
+    const second = await runEtl()
+    expect(second.report.writes()).toBe(0)
+    expect(blob.put).not.toHaveBeenCalled()
+    expect(await snapshot()).toEqual(afterFirst)
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it('a partially failed player-seasons insert resumes cleanly (no row-count shortcut)', async () => {
+    const ids = (await legacy('player_seasons')).map((r) => r.id as number)
+    await sqlRows(`DELETE FROM "payload"."player_seasons" WHERE id IN (${ids.slice(0, 2).join(',')})`)
+    const ctx = await runEtl({}, ['player-seasons'])
+    expect(ctx.report.counts('player-seasons')).toMatchObject({ created: 2, skipped: ids.length - 2 })
+    expect((await sqlRows(`SELECT id FROM "payload"."player_seasons" ORDER BY id`)).map((r) => Number(r.id))).toEqual(ids)
+  })
+
+  it('verify fails on a tampered preserved field and on a missing row', async () => {
+    const [story] = await legacy('stories')
+    await sqlRows(`UPDATE "payload"."stories" SET slug = 'tampered' WHERE id = ${story.id}`)
+    const [rsvp] = await legacy('event_rsvps')
+    const saved = await sqlRows(`SELECT * FROM "payload"."event_rsvps" WHERE id = ${rsvp.id}`)
+    await sqlRows(`DELETE FROM "payload"."event_rsvps" WHERE id = ${rsvp.id}`)
+    const result = await verify(['stories', 'event-rsvps'])
+    expect(result.ok).toBe(false)
+    const failures = result.checks.flatMap((c) => c.failures).join('\n')
+    expect(failures).toContain(`stories#${story.id}.slug`)
+    expect(failures).toContain(`event-rsvps: missing legacy ids ${rsvp.id}`)
+    // Restore: --update rewrites the story, a normal run re-creates the RSVP.
+    await runEtl({ update: true }, ['stories'])
+    await runEtl({}, ['event-rsvps'])
+    expect(saved).toHaveLength(1)
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it('--update --reconcile-deletes deletes stale legacy-range rows and keeps Payload-native ones', async () => {
+    const { reconcileDeletes } = await import('@/payload/scripts/etl/reconcile')
+    const ann = await legacy('announcements')
+    const legacyIds = new Set(ann.map((r) => r.id as number))
+    const legacyMax = Math.max(...legacyIds, await source.sequenceLastValue('announcements'))
+    const staleId = [...Array(legacyMax).keys()].map((i) => i + 1).find((i) => !legacyIds.has(i))!
+    const stamp = new Date().toISOString()
+    await sqlRows(`INSERT INTO "payload"."announcements" (id, title, body, published, created_at, updated_at) VALUES (${staleId}, 'stale', '', false, '${stamp}', '${stamp}')`)
+    const native = await payload.create({ collection: 'announcements', data: { title: 'native', body: '', published: false }, overrideAccess: true, context: { disableRevalidate: true } })
+    expect(native.id).toBeGreaterThan(legacyMax)
+
+    const ctx = await context({ update: true })
+    await reconcileDeletes(ctx, ['announcements'])
+    expect(ctx.report.counts('reconcile:announcements').deleted).toBe(1)
+    expect(ctx.report.items.map((i) => i.kind)).toEqual(['native-rows', 'reconcile-deleted'])
+    const left = (await sqlRows<{ id: number }>(`SELECT id FROM "payload"."announcements" ORDER BY id`)).map((r) => Number(r.id))
+    expect(left).toEqual([...legacyIds, native.id].sort((a, b) => a - b))
+
+    // A PlayHQ player that vanished from legacy is reconciled too (the delete guard yields to context.etl).
+    const [player] = await legacy('players')
+    const playerStale = Math.max(...(await legacy('players')).map((r) => r.id as number)) + 1
+    await payload.create({
+      collection: 'players',
+      data: { id: playerStale, slug: 'gone', firstName: 'Gone', lastName: 'Player', displayName: 'Gone Player', source: 'playhq', honours: [] } as never,
+      overrideAccess: true,
+      context: { etl: true, disableRevalidate: true },
+    })
+    const ctx2 = await context({ update: true })
+    await reconcileDeletes(ctx2, ['players'])
+    expect(ctx2.report.counts('reconcile:players').deleted).toBe(1)
+    expect(await payload.count({ collection: 'players', where: { id: { equals: player.id } }, overrideAccess: true })).toEqual({ totalDocs: 1 })
+    await payload.delete({ collection: 'announcements', id: native.id, overrideAccess: true, context: { disableRevalidate: true } })
+  })
+})

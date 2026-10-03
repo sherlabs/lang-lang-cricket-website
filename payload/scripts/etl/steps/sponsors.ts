@@ -5,6 +5,17 @@ import type { EtlStep } from './types'
 
 type Row = { id: number; tier: string; name: string; logo_url: string; link_url: string; created_at: Date }
 
+/** Rank of each legacy id within its (coerced) tier, in id order: the legacy display order. */
+export function sponsorRanks(rows: readonly { id: number; tier: string }[]): Map<number, number> {
+  const rank = new Map<number, number>()
+  const seen: Record<string, number> = {}
+  for (const r of [...rows].sort((a, b) => a.id - b.id)) {
+    const tier = (TIER_ORDER as readonly string[]).includes(r.tier) ? r.tier : DEFAULT_TIER
+    rank.set(r.id, (seen[tier] = (seen[tier] ?? -1) + 1))
+  }
+  return rank
+}
+
 /**
  * Step 5: `sponsors` (id kept). `logo` becomes a media relation. `sortOrder` is the rank of
  * the legacy id within its tier — today's effective (insertion) order.
@@ -16,12 +27,7 @@ export const sponsorsStep: EtlStep = {
     const counts = report.counts('sponsors')
     const rows = await source.rows<Row>('sponsors')
     counts.read = rows.length
-    const rank = new Map<number, number>()
-    const seen: Record<string, number> = {}
-    for (const r of rows) {
-      const tier = (TIER_ORDER as readonly string[]).includes(r.tier) ? r.tier : DEFAULT_TIER
-      rank.set(r.id, (seen[tier] = (seen[tier] ?? -1) + 1))
-    }
+    const rank = sponsorRanks(rows)
     for (const r of rows) {
       let tier = r.tier
       if (!(TIER_ORDER as readonly string[]).includes(tier)) {

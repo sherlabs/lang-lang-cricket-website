@@ -22,6 +22,10 @@
     "seed:admin": "payload run payload/scripts/seed-admin.ts --",
     "seed:club": "payload run payload/scripts/seed-club.ts --",
     "etl": "PAYLOAD_ETL=true payload run payload/scripts/etl-legacy.ts --",
+    "verify:cutover": "payload run payload/scripts/verify-cutover.ts --",
+    "seed:demo": "payload run payload/scripts/seed-demo.ts --",
+    "export:since": "payload run payload/scripts/export-since.ts --",
+    "reset:payload-schema": "payload run payload/scripts/reset-payload-schema.ts --",
     "fixture:legacy": "tsx --env-file=.env.local payload/scripts/fixtures/legacy-fixture.ts"
   },
   "dependencies": {
@@ -43,7 +47,6 @@
     "@vercel/blob": "^2.8.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.45.2",
     "graphql": "^16.8.1",
     "jsdom": "^25",
     "next": "16.3.8",

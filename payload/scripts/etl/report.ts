@@ -15,7 +15,7 @@ export type ReportItem = {
   detail?: string
 }
 
-export type StepCounts = { read: number; created: number; updated: number; skipped: number; planned: number }
+export type StepCounts = { read: number; created: number; updated: number; deleted: number; skipped: number; planned: number }
 
 export class EtlReport {
   readonly startedAt = new Date().toISOString()
@@ -26,12 +26,25 @@ export class EtlReport {
   constructor(readonly dryRun: boolean) {}
 
   counts(step: string): StepCounts {
-    return (this.steps[step] ??= { read: 0, created: 0, updated: 0, skipped: 0, planned: 0 })
+    return (this.steps[step] ??= { read: 0, created: 0, updated: 0, deleted: 0, skipped: 0, planned: 0 })
   }
 
   add(item: ReportItem): void {
     this.items.push(item)
   }
+
+  /**
+   * Rows written across every step (created + updated + deleted, plus upload docs created by
+   * the media branch): 0 on an idempotent re-run.
+   */
+  writes(): number {
+    const rows = Object.values(this.steps).reduce((n, c) => n + c.created + c.updated + c.deleted, 0)
+    const files = ['register', 'upload-local-asset', 'fallback-local', 'fallback-reupload'].reduce((n, k) => n + (this.media[k] ?? 0), 0)
+    return rows + files
+  }
+
+  /** Verify outcome, written into the JSON report. */
+  verify: unknown = null
 
   mediaAction(kind: string): void {
     this.media[kind] = (this.media[kind] ?? 0) + 1
@@ -41,7 +54,7 @@ export class EtlReport {
     const lines = [`ETL ${this.dryRun ? 'DRY RUN' : 'run'} — started ${this.startedAt}`]
     for (const [step, c] of Object.entries(this.steps)) {
       lines.push(
-        `  ${step.padEnd(16)} read ${c.read}  created ${c.created}  updated ${c.updated}  skipped ${c.skipped}${this.dryRun ? `  planned ${c.planned}` : ''}`,
+        `  ${step.padEnd(16)} read ${c.read}  created ${c.created}  updated ${c.updated}  skipped ${c.skipped}${c.deleted ? `  deleted ${c.deleted}` : ''}${this.dryRun ? `  planned ${c.planned}` : ''}`,
       )
     }
     if (Object.keys(this.media).length) {
@@ -60,7 +73,7 @@ export class EtlReport {
     await mkdir(path.dirname(path.resolve(file)), { recursive: true })
     await writeFile(
       file,
-      JSON.stringify({ startedAt: this.startedAt, dryRun: this.dryRun, steps: this.steps, media: this.media, items: this.items }, null, 2),
+      JSON.stringify({ startedAt: this.startedAt, dryRun: this.dryRun, writes: this.writes(), steps: this.steps, media: this.media, items: this.items, verify: this.verify }, null, 2),
     )
   }
 }

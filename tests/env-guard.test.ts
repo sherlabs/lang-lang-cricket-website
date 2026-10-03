@@ -33,7 +33,7 @@ describe('assertSafeEnv', () => {
     expect(() => assertSafeEnv({ VERCEL: '1', DATABASE_URI: REMOTE, BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_a_b' })).not.toThrow()
   })
 
-  it('checks a named variable (transitional db/ uses LEGACY_DATABASE_URL)', () => {
+  it('checks a named variable (the ETL source uses LEGACY_DATABASE_URL)', () => {
     expect(() => assertSafeEnv({ LEGACY_DATABASE_URL: REMOTE }, 'LEGACY_DATABASE_URL')).toThrow(/LEGACY_DATABASE_URL/)
   })
 })

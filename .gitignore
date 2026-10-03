@@ -50,3 +50,6 @@ logos/
 /documents/
 /gallery-photos/
 /event-photos/
+
+# ETL / verify / export reports
+/tmp/

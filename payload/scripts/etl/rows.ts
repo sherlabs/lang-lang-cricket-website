@@ -2,9 +2,12 @@
  * Shared row-writing helpers for the ETL steps (spec §12.2, §12.3): id-preserving creates,
  * skip-or-update idempotency, the timestamp post-pass and sequence bumps.
  */
-import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { CollectionSlug, Payload } from 'payload'
 import { ETL_CONTEXT, type EtlContext } from './media'
+import { restoreTimestamps } from './timestamps'
+
+export { bumpSequence } from './sequences'
+export { restoreTimestamps, tableOf } from './timestamps'
 
 export async function existingById(payload: Payload, collection: CollectionSlug, id: number) {
   const { docs } = await payload.find({
@@ -16,37 +19,6 @@ export async function existingById(payload: Payload, collection: CollectionSlug,
     pagination: false,
   })
   return (docs[0] as unknown as Record<string, unknown> | undefined) ?? null
-}
-
-/** Payload SQL table name for a collection slug (`gallery-photos` → `gallery_photos`). */
-export const tableOf = (collection: string) => collection.replace(/-/g, '_')
-
-/**
- * Timestamp post-pass for one row (spec §12.2 step 16): the Local API stamps "now", but the
- * sitemap, "latest announcement" and the gallery OG image depend on the original values.
- */
-export async function restoreTimestamps(payload: Payload, collection: string, id: number, createdAt: unknown, updatedAt?: unknown) {
-  const created = createdAt instanceof Date ? createdAt : null
-  if (!created) return
-  const updated = updatedAt instanceof Date ? updatedAt : created
-  await payload.db.drizzle.execute(
-    sql`UPDATE ${sql.identifier('payload')}.${sql.identifier(tableOf(collection))}
-        SET created_at = ${created.toISOString()}, updated_at = ${updated.toISOString()}
-        WHERE id = ${id}`,
-  )
-}
-
-/**
- * Sequence bump (spec §12.2 step 17): next id = GREATEST(MAX(id), legacy last_value) + 1, so a
- * new Payload row never reuses the id of a deleted legacy row a cookie may still hold.
- */
-export async function bumpSequence(payload: Payload, collection: string, legacyLastValue: number) {
-  const t = `"payload"."${tableOf(collection)}"`
-  await payload.db.drizzle.execute(
-    sql.raw(
-      `SELECT setval(pg_get_serial_sequence('${t}', 'id'), GREATEST(COALESCE((SELECT MAX(id) FROM ${t}), 0), ${Math.trunc(legacyLastValue)}) + 1, false)`,
-    ),
-  )
 }
 
 /**

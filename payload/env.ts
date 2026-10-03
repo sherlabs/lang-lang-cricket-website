@@ -1,7 +1,7 @@
 /**
  * Environment guards shared by payload.config.ts (so every entry point — next
  * dev/start/build, the payload CLI, scripts, tests — is covered) and by the
- * transitional legacy `db/index.ts`. Spec §1 / D4.
+ * ETL's legacy source (`LEGACY_DATABASE_URL`). Spec §1 / D4.
  *
  * Deliberately keyed on `process.env.VERCEL`, not NODE_ENV: a local `next start`
  * runs with NODE_ENV=production and must still be guarded.
