@@ -1,10 +1,9 @@
-// No 'use client' directive here on purpose: this needs to be importable
-// from server code (server actions) as well as client code. `lib/blob-client.ts`
-// has 'use client' at the top, so importing anything from it into a server
-// module turns it into a client reference and throws at runtime — this
-// module exists so `isBlobUrl` can be shared safely on both sides.
+// No 'use client' directive and no server imports on purpose: this module is pure, so it can be
+// imported from server actions AND re-exported by the 'use client' `lib/blob-client.ts`.
+// Callers resolve the store id themselves (server side: `blobStoreId(blobToken())`).
 const BLOB_HOST = '.blob.vercel-storage.com'
 
+/** Any Vercel Blob URL (stories still use this until WP4 moves them to `isOwnBlobUrl`). */
 export function isBlobUrl(url: string) {
   try {
     return new URL(url).hostname.endsWith(BLOB_HOST)
@@ -14,34 +13,54 @@ export function isBlobUrl(url: string) {
 }
 
 /**
- * Stricter than `isBlobUrl`: also verifies the URL's host is THIS project's
- * own Blob store, not just any store matching the generic
- * `.blob.vercel-storage.com` suffix. `isBlobUrl` alone is fine for
- * admin-uploaded URLs (trusted admin session), but for an unauthenticated
- * public submission path it isn't enough — anyone can spin up their own free
- * Vercel Blob store, submit a URL from it (which also matches the generic
- * suffix), get it approved as an innocuous image, then swap the file at that
- * same URL afterward since they control that store.
- *
- * The store id is derived from `BLOB_READ_WRITE_TOKEN`, which has the shape
- * `vercel_blob_rw_<storeId>_<secret>`; the store's public hostname is
- * `<storeId>.public.blob.vercel-storage.com`.
+ * The store id inside a Blob token (`vercel_blob_rw_<storeId>_<secret>`), lower-cased:
+ * `URL#hostname` is always lower-case, while the token's store id segment is mixed-case.
  */
-export function isOwnBlobUrl(url: string): boolean {
-  const storeId = ownBlobStoreId()
-  if (!storeId) return false
+export function blobStoreId(token: string | undefined | null): string | null {
+  return token?.match(/^vercel_blob_rw_([a-zA-Z0-9]+)_/)?.[1]?.toLowerCase() ?? null
+}
+
+/** Basenames our own uploads produce (`lib/blob-client.ts` slugs them before `upload()`). */
+const SAFE_BASENAME = /^[A-Za-z0-9._-]+$/
+
+/**
+ * Hardened check for a URL submitted by an anonymous visitor (spec §6). True only when it is:
+ * - `https:` on exactly `<storeId>.public.blob.vercel-storage.com` — THIS project's store, not
+ *   just any store (anyone can create a free Blob store, submit a URL from it, get it approved,
+ *   then swap the file underneath);
+ * - without query or hash, without `..` or encoded separators;
+ * - directly under `prefix/` (e.g. `events/pending/`), the folder the public upload route
+ *   writes to — so a crafted submission cannot point at another entity's blob (which a later
+ *   reject would delete);
+ * - a basename of `[A-Za-z0-9._-]+`.
+ * False whenever `storeId` is unknown (no Blob token: uploads are unavailable anyway).
+ */
+export function isOwnBlobUrl(url: string, opts: { storeId: string | null; prefix: string }): boolean {
+  const storeId = opts.storeId?.toLowerCase()
+  if (!storeId || typeof url !== 'string') return false
+  let u: URL
   try {
-    // `URL#hostname` is always lowercased; the store id segment of the token
-    // is mixed-case (verified against this project's actual token/store), so
-    // it must be lowercased too or every legitimate submission would fail.
-    return new URL(url).hostname === `${storeId.toLowerCase()}.public.blob.vercel-storage.com`
+    u = new URL(url)
   } catch {
     return false
   }
+  if (u.protocol !== 'https:' || u.hostname !== `${storeId}.public.blob.vercel-storage.com`) return false
+  if (u.search || u.hash || url.includes('?') || url.includes('#')) return false
+  if (u.username || u.password || u.port) return false
+  const pathname = u.pathname.replace(/^\//, '')
+  if (pathname.includes('..') || /%2f|%5c|%2e/i.test(pathname) || pathname.includes('\\')) return false
+  const prefix = opts.prefix.replace(/^\/+|\/+$/g, '')
+  if (!pathname.startsWith(`${prefix}/`)) return false
+  const basename = pathname.slice(prefix.length + 1)
+  return SAFE_BASENAME.test(basename)
 }
 
-function ownBlobStoreId(): string | null {
-  const token = process.env.BLOB_READ_WRITE_TOKEN ?? ''
-  const match = token.match(/^vercel_blob_rw_([a-zA-Z0-9]+)_/)
-  return match ? match[1] : null
+/** `{ prefix, filename }` of a Blob URL's pathname (filename decoded). */
+export function blobPathParts(url: string): { prefix: string; filename: string } {
+  const pathname = new URL(url).pathname.replace(/^\//, '')
+  const slash = pathname.lastIndexOf('/')
+  return {
+    prefix: slash >= 0 ? pathname.slice(0, slash) : '',
+    filename: decodeURIComponent(slash >= 0 ? pathname.slice(slash + 1) : pathname),
+  }
 }

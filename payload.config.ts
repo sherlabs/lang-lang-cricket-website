@@ -9,6 +9,9 @@ import { fileURLToPath } from 'url'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { Announcements } from './payload/collections/Announcements'
 import { Documents } from './payload/collections/Documents'
+import { EventPhotos } from './payload/collections/EventPhotos'
+import { EventRsvps } from './payload/collections/EventRsvps'
+import { Events } from './payload/collections/Events'
 import { GalleryPhotos } from './payload/collections/GalleryPhotos'
 import { Media } from './payload/collections/Media'
 import { People } from './payload/collections/People'
@@ -43,7 +46,7 @@ export default buildConfig({
     },
   },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos],
   globals: [Club, SiteSettings],
   editor: lexicalEditor(),
   db: postgresAdapter({
@@ -72,6 +75,7 @@ export default buildConfig({
           media: { prefix: '', disablePayloadAccessControl: true },
           documents: { prefix: 'documents', disablePayloadAccessControl: true },
           'gallery-photos': { prefix: 'gallery', disablePayloadAccessControl: true },
+          'event-photos': { prefix: 'events', disablePayloadAccessControl: true },
         },
       }),
     ),

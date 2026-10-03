@@ -1,12 +1,11 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { eq } from 'drizzle-orm'
-import { db } from '@/db'
-import { events, eventRsvps, type Event, type EventRsvp } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { getOccurrences, getOneTimeEventDateTime, nowAsEventClock } from '@/lib/event-occurrences'
-import { generateStoryToken } from '@/lib/story-tokens'
+import { getEventById, getRsvpByToken } from '@/lib/events-queries'
+import { getPayloadClient } from '@/lib/payload/client'
+import { generateStoryToken, isTokenShaped } from '@/lib/story-tokens'
 import {
   RSVP_COOKIE,
   parseRsvpCookie,
@@ -17,6 +16,16 @@ import {
 } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
 import { eventMealOptions, resolveMeal } from '@/lib/events-meal'
+
+/** Length caps (spec §3.9); the collection validators enforce the same limits. */
+const RSVP_CAPS = { name: 100, email: 200, note: 1000 } as const
+
+function textCapError(fields: { name: string; email: string; note: string }): string | null {
+  if (fields.name.length > RSVP_CAPS.name) return `Name must be ${RSVP_CAPS.name} characters or fewer.`
+  if (fields.email.length > RSVP_CAPS.email) return `Email must be ${RSVP_CAPS.email} characters or fewer.`
+  if (fields.note.length > RSVP_CAPS.note) return `Note must be ${RSVP_CAPS.note} characters or fewer.`
+  return null
+}
 
 /** Confirms `occurrenceDate` is a real occurrence of `event` — the only server-side check standing between a crafted request and an RSVP for a date that was never actually offered. */
 function isValidOccurrence(event: Event, occurrenceDate: Date): boolean {
@@ -65,12 +74,13 @@ export async function submitRsvp(formData: FormData): Promise<SubmitRsvpResult> 
   const dinner = String(formData.get('dinner') ?? '')
   const rawMeal = String(formData.get('meal') ?? '')
 
-  const rows = await db.select().from(events).where(eq(events.id, eventId))
-  const event = (rows[0] as Event | undefined) ?? null
+  const event = await getEventById(eventId)
   if (!event) return { error: 'Event not found.' }
 
   if (!name) return { error: 'Name is required.' }
   if (!isRsvpResponse(response)) return { error: 'Please choose yes or no.' }
+  const capError = textCapError({ name, email, note })
+  if (capError) return { error: capError }
 
   const occurrenceDate = parseOccurrence(event, occurrenceDateStr)
   if (!occurrenceDate) return { error: 'That date is not available for this event.' }
@@ -85,28 +95,29 @@ export async function submitRsvp(formData: FormData): Promise<SubmitRsvpResult> 
 
   // Reuse the row this device already made for the occurrence, if it still exists
   // and really belongs to this event (a stale/forged cookie must not let someone
-  // rewrite a row for a different event).
-  let editToken = memory.rsvps[key] ?? ''
-  let existing: EventRsvp | null = null
-  if (editToken) {
-    const found = await db.select().from(eventRsvps).where(eq(eventRsvps.editToken, editToken))
-    const row = (found[0] as EventRsvp | undefined) ?? null
-    existing = row && row.eventId === eventId ? row : null
-  }
+  // rewrite a row for a different event). Looked up by token, written by id.
+  const remembered = memory.rsvps[key] ?? ''
+  const existing = isTokenShaped(remembered) ? await getRsvpByToken(remembered) : null
+  const reuse = existing && existing.eventId === eventId ? existing : null
 
-  if (existing) {
-    await db.update(eventRsvps).set({ name, email, note, response, meal }).where(eq(eventRsvps.editToken, editToken))
+  const payload = await getPayloadClient()
+  // Allowlisted data only; the collection hooks revalidate /events and /events/<id>.
+  const data = { name, email, note, response, meal }
+  let editToken: string
+  if (reuse) {
+    await payload.update({ collection: 'event-rsvps', id: reuse.id, data, overrideAccess: true, depth: 0 })
+    editToken = remembered
   } else {
-    editToken = generateStoryToken()
-    await db.insert(eventRsvps).values({ eventId, occurrenceDate, name, email, note, response, meal, editToken })
+    const created = await payload.create({
+      collection: 'event-rsvps',
+      data: { ...data, event: eventId, occurrenceDate: occurrenceDate.toISOString(), editToken: generateStoryToken() },
+      overrideAccess: true,
+      depth: 0,
+    })
+    editToken = created.editToken as string
   }
 
   jar.set(RSVP_COOKIE, serializeRsvpCookie(upsertRsvpMemory(memory, key, editToken, { name, email })), rsvpCookieOptions())
-
-  revalidatePath('/events')
-  revalidatePath(`/events/${eventId}`)
-  revalidatePath(`/admin/events/${eventId}`)
-  revalidatePath('/admin/events')
 
   return { ok: true, response }
 }

@@ -41,7 +41,6 @@
   "exclude": [
     "node_modules",
     "payload/migrations/*.json",
-    "payload/components/_source/**",
     "tests/_pending/**"
   ]
 }

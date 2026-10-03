@@ -74,12 +74,20 @@ export interface Config {
     sponsors: Sponsor;
     people: Person;
     announcements: Announcement;
+    events: Event;
+    'event-rsvps': EventRsvp;
+    'event-photos': EventPhoto;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    events: {
+      photos: 'event-photos';
+      rsvps: 'event-rsvps';
+    };
+  };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -88,6 +96,9 @@ export interface Config {
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
     people: PeopleSelect<false> | PeopleSelect<true>;
     announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    'event-rsvps': EventRsvpsSelect<false> | EventRsvpsSelect<true>;
+    'event-photos': EventPhotosSelect<false> | EventPhotosSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -305,6 +316,119 @@ export interface Announcement {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  type: 'one_time' | 'recurring';
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  /**
+   * Shown on the event card and page.
+   */
+  cover?: (number | null) | Media;
+  /**
+   * 24-hour, e.g. 18:00
+   */
+  eventTime?: string | null;
+  /**
+   * The day of the event.
+   */
+  eventDate?: string | null;
+  /**
+   * Which day it runs every week.
+   */
+  dayOfWeek?: ('0' | '1' | '2' | '3' | '4' | '5' | '6') | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  /**
+   * Dinner choices offered on the RSVP form (e.g. Beef, Chicken, Veg). Leave empty for no dinner step.
+   */
+  mealOptions?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * e.g. "Buy tickets"
+   */
+  paymentLinkLabel?: string | null;
+  /**
+   * A full https:// link, or empty.
+   */
+  paymentLinkUrl?: string | null;
+  photos?: {
+    docs?: (number | EventPhoto)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  rsvps?: {
+    docs?: (number | EventRsvp)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-photos".
+ */
+export interface EventPhoto {
+  id: number;
+  event: number | Event;
+  caption?: string | null;
+  /**
+   * Lower numbers show first. Leave empty to put the photo at the front.
+   */
+  sortOrder?: number | null;
+  status?: ('approved' | 'pending') | null;
+  /**
+   * Who sent it in from the event page (admin context only).
+   */
+  submitterName?: string | null;
+  legacyUrl?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-rsvps".
+ */
+export interface EventRsvp {
+  id: number;
+  event: number | Event;
+  /**
+   * Which session this answer is for (club wall-clock time).
+   */
+  occurrenceDate: string;
+  name: string;
+  email?: string | null;
+  note?: string | null;
+  response?: ('yes' | 'no') | null;
+  /**
+   * The dinner option chosen when the RSVP was made; empty means no dinner.
+   */
+  meal?: string | null;
+  editToken?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -354,6 +478,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'announcements';
         value: number | Announcement;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'event-rsvps';
+        value: number | EventRsvp;
+      } | null)
+    | ({
+        relationTo: 'event-photos';
+        value: number | EventPhoto;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -525,6 +661,75 @@ export interface AnnouncementsSelect<T extends boolean = true> {
   published?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  type?: T;
+  title?: T;
+  description?: T;
+  location?: T;
+  cover?: T;
+  eventTime?: T;
+  eventDate?: T;
+  dayOfWeek?: T;
+  startDate?: T;
+  endDate?: T;
+  mealOptions?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  paymentLinkLabel?: T;
+  paymentLinkUrl?: T;
+  photos?: T;
+  rsvps?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-rsvps_select".
+ */
+export interface EventRsvpsSelect<T extends boolean = true> {
+  event?: T;
+  occurrenceDate?: T;
+  name?: T;
+  email?: T;
+  note?: T;
+  response?: T;
+  meal?: T;
+  editToken?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-photos_select".
+ */
+export interface EventPhotosSelect<T extends boolean = true> {
+  event?: T;
+  caption?: T;
+  sortOrder?: T;
+  status?: T;
+  submitterName?: T;
+  legacyUrl?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

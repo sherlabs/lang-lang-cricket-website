@@ -1,6 +1,7 @@
 import * as migration_20261003_011755_init from './20261003_011755_init';
 import * as migration_20261003_023132_wp2_content from './20261003_023132_wp2_content';
 import * as migration_20261003_033247_wp2_review_fixes from './20261003_033247_wp2_review_fixes';
+import * as migration_20261003_034609_wp3_events from './20261003_034609_wp3_events';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20261003_033247_wp2_review_fixes.up,
     down: migration_20261003_033247_wp2_review_fixes.down,
-    name: '20261003_033247_wp2_review_fixes'
+    name: '20261003_033247_wp2_review_fixes',
+  },
+  {
+    up: migration_20261003_034609_wp3_events.up,
+    down: migration_20261003_034609_wp3_events.down,
+    name: '20261003_034609_wp3_events'
   },
 ];

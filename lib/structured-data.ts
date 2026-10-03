@@ -1,4 +1,5 @@
-import type { Event, Story } from '@/db/schema'
+import type { Story } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { CLUB_TIMEZONE } from '@/config/site'
 import { clubDefaults } from '@/payload/seed/club-defaults'
 import { absoluteUrl } from './site-metadata'

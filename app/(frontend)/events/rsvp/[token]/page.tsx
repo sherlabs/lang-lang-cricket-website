@@ -8,13 +8,12 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, Clock01Icon, Location01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { DateTile } from '@/components/events/date-tile'
-import { getEventById } from '@/lib/events-queries'
+import { getEventById, getRsvpByToken } from '@/lib/events-queries'
 import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
-import type { Event, EventRsvp } from '@/db/schema'
+import type { Event, EventRsvp } from '@/lib/domain'
 import { eventMealOptions } from '@/lib/events-meal'
 import { isRsvpResponse } from '@/lib/rsvp-response'
-import { getRsvpByToken } from './actions'
 import { RsvpEditForm } from './rsvp-edit-form'
 
 export const dynamic = 'force-dynamic'
@@ -111,7 +110,7 @@ export default async function RsvpEditPage(props: { params: Promise<{ token: str
           <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
             <OccurrenceCard event={event} rsvp={rsvp} />
             <RsvpEditForm
-              token={rsvp.editToken}
+              token={params.token}
               initialName={rsvp.name}
               initialEmail={rsvp.email}
               initialNote={rsvp.note}

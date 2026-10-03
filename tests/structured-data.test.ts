@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- fixtures cast partial rows; retyped in WP2 (spec §15 ADAPT) */
 import { describe, expect, it } from 'vitest'
-import type { Event } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { resolveClub } from '@/lib/club-merge'
 import { eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, serializeJsonLd, storyJsonLd } from '@/lib/structured-data'
 
@@ -10,7 +10,7 @@ const club = resolveClub(null)
 const baseEvent = {
   id: 7, type: 'one_time', title: 'Presentation Night', description: 'Awards', location: 'Lang Lang Clubrooms',
   coverImageUrl: '', paymentLinkLabel: '', paymentLinkUrl: '', mealOptions: [], eventTime: '18:30',
-  eventDate: null, dayOfWeek: null, startDate: null, endDate: null, createdAt: new Date(),
+  eventDate: null, dayOfWeek: null, startDate: null, endDate: null, createdAt: new Date(), updatedAt: new Date(),
 } as Event
 
 describe('melbourneIso', () => {

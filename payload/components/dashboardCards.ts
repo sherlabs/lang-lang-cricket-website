@@ -1,16 +1,17 @@
 import type { CollectionSlug, Where } from 'payload'
+import { nowAsEventClock } from '../../lib/event-occurrences'
 
 /**
  * Dashboard count cards (spec §9). Each WP appends the cards for its own collections;
  * no card may reference a collection that is not registered yet.
- * WP2: documents, gallery photos, sponsors, people.
+ * WP2: documents, gallery photos, sponsors, people. WP3: upcoming events, pending event photos.
  */
 export type DashboardCard = {
   collection: CollectionSlug
   label: string
   note: string
-  /** Narrows the count. */
-  where?: Where
+  /** Narrows the count; a function is evaluated per request (e.g. anything relative to "now"). */
+  where?: Where | (() => Where)
   /** The matching list filter as a query string, e.g. `where[status][equals]=pending`. */
   listQuery?: string
 }
@@ -21,3 +22,30 @@ export const dashboardCards: DashboardCard[] = [
   { collection: 'sponsors', label: 'Sponsors', note: 'Logos by tier' },
   { collection: 'people', label: 'People', note: 'Committee, leadership and coaches' },
 ]
+
+/** Today's date as the events store it: UTC midnight of the club-timezone day (wall-clock-as-UTC). */
+function eventToday(): string {
+  const now = nowAsEventClock()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString()
+}
+
+dashboardCards.push(
+  {
+    collection: 'events',
+    label: 'Upcoming events',
+    note: 'One-time events from today, and recurring series still running',
+    where: (): Where => ({
+      or: [
+        { and: [{ type: { equals: 'one_time' } }, { eventDate: { greater_than_equal: eventToday() } }] },
+        { and: [{ type: { equals: 'recurring' } }, { endDate: { greater_than_equal: eventToday() } }] },
+      ],
+    }),
+  },
+  {
+    collection: 'event-photos',
+    label: 'Pending event photos',
+    note: 'Sent in from event pages, awaiting review',
+    where: { status: { equals: 'pending' } },
+    listQuery: 'where[status][equals]=pending',
+  },
+)

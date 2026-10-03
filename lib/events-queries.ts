@@ -1,16 +1,41 @@
-import { and, asc, eq, gte, sql } from 'drizzle-orm'
-import { db } from '@/db'
-import { events, eventPhotos, eventRsvps, type Event, type EventRsvp } from '@/db/schema'
+import 'server-only'
+import type { Where } from 'payload'
+import type { Event, EventPhoto, EventRsvp } from '@/lib/domain'
+import { getPayloadClient } from '@/lib/payload/client'
+import { toEvent, toEventRsvp } from '@/lib/payload/mappers'
+import { isTokenShaped } from '@/lib/story-tokens'
 import { getOccurrences, getOneTimeEventDateTime, nowAsEventClock } from './event-occurrences'
 import { rsvpKey, type RsvpMemory } from './rsvp-cookie'
 import { isRsvpResponse, type RsvpResponse, type RsvpTally } from './rsvp-response'
+
+/**
+ * Public event reads (spec §14). The Local API runs with overrideAccess, so:
+ * - every `events` read passes `joins: false` (the `rsvps`/`photos` joins would load tokens,
+ *   emails and pending photos);
+ * - photo reads filter `status: approved` themselves;
+ * - RSVPs are only ever counted, or looked up by a token-shaped edit token.
+ * Every comparison against "now" uses `nowAsEventClock()` (wall-clock-as-UTC).
+ */
 
 export type UpcomingItem = { event: Event; occurrenceDate: Date }
 
 const UPCOMING_WEEKS_AHEAD = 6
 
+async function findEvents(where?: Where): Promise<Event[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'events',
+    ...(where ? { where } : {}),
+    sort: 'id',
+    pagination: false,
+    depth: 1,
+    joins: false,
+  })
+  return docs.map(toEvent)
+}
+
 export async function listUpcomingItems(): Promise<UpcomingItem[]> {
-  const all = (await db.select().from(events)) as Event[]
+  const all = await findEvents()
   const now = nowAsEventClock()
   const items: UpcomingItem[] = []
 
@@ -36,7 +61,7 @@ export async function listUpcomingItems(): Promise<UpcomingItem[]> {
 }
 
 export async function listPastOneTimeEvents(): Promise<Event[]> {
-  const all = (await db.select().from(events).where(eq(events.type, 'one_time'))) as Event[]
+  const all = await findEvents({ type: { equals: 'one_time' } })
   const now = nowAsEventClock()
   return all
     .filter((e) => e.eventDate && getOneTimeEventDateTime({ eventDate: e.eventDate, eventTime: e.eventTime }) < now)
@@ -44,8 +69,9 @@ export async function listPastOneTimeEvents(): Promise<Event[]> {
 }
 
 export async function getEventById(id: number): Promise<Event | null> {
-  const rows = await db.select().from(events).where(eq(events.id, id))
-  return (rows[0] as Event | undefined) ?? null
+  if (!Number.isInteger(id) || id <= 0) return null
+  const [event] = await findEvents({ id: { equals: id } })
+  return event ?? null
 }
 
 /**
@@ -53,45 +79,77 @@ export async function getEventById(id: number): Promise<Event | null> {
  * returns approved photos — a publicly submitted photo that hasn't been
  * approved by an admin must never appear here.
  */
-export async function getEventPhotosPublic(eventId: number): Promise<{ url: string }[]> {
-  return db
-    .select({ url: eventPhotos.url })
-    .from(eventPhotos)
-    .where(and(eq(eventPhotos.eventId, eventId), eq(eventPhotos.status, 'approved')))
-    .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.id))
+export async function getEventPhotosPublic(eventId: number): Promise<EventPhoto[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'event-photos',
+    where: { and: [{ event: { equals: eventId } }, { status: { equals: 'approved' } }] },
+    sort: ['sortOrder', 'id'],
+    pagination: false,
+    depth: 0,
+  })
+  return docs.filter((d) => d.url).map((d) => ({ url: d.url as string }))
 }
 
 /** Public tally for one occurrence — counts only, never names/emails/notes. */
 export async function getRsvpTally(eventId: number, occurrenceDate: Date): Promise<RsvpTally> {
-  const rows = (await db
-    .select({ response: eventRsvps.response, count: sql<number>`count(*)` })
-    .from(eventRsvps)
-    .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.occurrenceDate, occurrenceDate)))
-    .groupBy(eventRsvps.response)) as { response: string; count: number }[]
-  const tally: RsvpTally = { yes: 0, no: 0 }
-  for (const row of rows) {
-    if (isRsvpResponse(row.response)) tally[row.response] += Number(row.count)
-  }
-  return tally
+  const payload = await getPayloadClient()
+  const count = async (response: RsvpResponse) =>
+    (
+      await payload.count({
+        collection: 'event-rsvps',
+        where: {
+          and: [
+            { event: { equals: eventId } },
+            { occurrenceDate: { equals: occurrenceDate.toISOString() } },
+            { response: { equals: response } },
+          ],
+        },
+      })
+    ).totalDocs
+  const [yes, no] = await Promise.all([count('yes'), count('no')])
+  return { yes, no }
 }
 
 /**
- * "Going" counts for every future occurrence in one grouped query, keyed by
- * `rsvpKey(eventId, occurrenceDate)` — for the small pill on the upcoming cards.
+ * "Going" counts for every future occurrence, keyed by `rsvpKey(eventId, occurrenceDate)` —
+ * for the small pill on the upcoming cards. Grouped in JS over a narrow `select`.
  */
 export async function listGoingCounts(): Promise<Map<string, number>> {
-  const rows = (await db
-    .select({ eventId: eventRsvps.eventId, occurrenceDate: eventRsvps.occurrenceDate, count: sql<number>`count(*)` })
-    .from(eventRsvps)
-    .where(and(eq(eventRsvps.response, 'yes'), gte(eventRsvps.occurrenceDate, nowAsEventClock())))
-    .groupBy(eventRsvps.eventId, eventRsvps.occurrenceDate)) as { eventId: number; occurrenceDate: Date; count: number }[]
-  return new Map(rows.map((r) => [rsvpKey(r.eventId, r.occurrenceDate), Number(r.count)]))
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'event-rsvps',
+    where: {
+      and: [{ response: { equals: 'yes' } }, { occurrenceDate: { greater_than_equal: nowAsEventClock().toISOString() } }],
+    },
+    select: { event: true, occurrenceDate: true },
+    pagination: false,
+    depth: 0,
+  })
+  const counts = new Map<string, number>()
+  for (const d of docs) {
+    const eventId = typeof d.event === 'number' ? d.event : d.event?.id
+    if (!eventId || !d.occurrenceDate) continue
+    const key = rsvpKey(eventId, new Date(d.occurrenceDate))
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return counts
 }
 
+/**
+ * The RSVP behind an edit link. Server-only (no longer a callable server action). A token
+ * that is not UUID-shaped never reaches the database.
+ */
 export async function getRsvpByToken(token: string): Promise<EventRsvp | null> {
-  if (!token) return null
-  const rows = await db.select().from(eventRsvps).where(eq(eventRsvps.editToken, token))
-  return (rows[0] as EventRsvp | undefined) ?? null
+  if (!isTokenShaped(token)) return null
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'event-rsvps',
+    where: { editToken: { equals: token } },
+    limit: 1,
+    depth: 0,
+  })
+  return docs[0] ? toEventRsvp(docs[0]) : null
 }
 
 /** What this device already answered for an occurrence — server-side only; the token never reaches the client. */
@@ -119,7 +177,7 @@ export async function getDeviceRsvp(memory: RsvpMemory, eventId: number, occurre
     response: isRsvpResponse(row.response) ? row.response : 'yes',
     name: row.name,
     email: row.email,
-    meal: row.meal ?? '',
+    meal: row.meal,
     note: row.note,
   }
 }

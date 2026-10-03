@@ -11,7 +11,8 @@ export async function Dashboard({ payload }: { payload: Payload }) {
   const counts = await Promise.all(
     dashboardCards.map(async (card) => {
       try {
-        const { totalDocs } = await payload.count({ collection: card.collection, where: card.where, overrideAccess: true })
+        const where = typeof card.where === 'function' ? card.where() : card.where
+        const { totalDocs } = await payload.count({ collection: card.collection, where, overrideAccess: true })
         return totalDocs
       } catch {
         return null

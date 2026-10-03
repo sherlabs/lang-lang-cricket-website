@@ -12,7 +12,7 @@ import { eventMealOptions } from '@/lib/events-meal'
 import { formatLongDate } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
-import type { Event } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { baseOpenGraph, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
 import { RsvpForm } from './rsvp-form'

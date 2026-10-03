@@ -15,7 +15,7 @@ import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
-import type { Event } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { baseOpenGraph, truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
 import { PhotoSubmitForm } from './photo-submit-form'

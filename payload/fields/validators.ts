@@ -40,3 +40,22 @@ export const maxChars =
     if (required && !s.trim()) return 'This field is required.'
     return s.length <= max ? true : `Keep this to ${max} characters or fewer.`
   }
+
+/** Runs each validator in turn; the first failure wins. */
+export const allOf =
+  (...validators: ((value: unknown, ctx?: Ctx) => true | string)[]) =>
+  (value: unknown, ctx?: Ctx): true | string => {
+    for (const v of validators) {
+      const r = v(value, ctx)
+      if (r !== true) return r
+    }
+    return true
+  }
+
+const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/** `HH:mm` (24-hour) or empty (spec §3.8 `eventTime`). */
+export const timeOrEmpty = (value: unknown, ctx?: Ctx): true | string =>
+  isEtl(ctx) || value == null || value === '' || (typeof value === 'string' && HH_MM.test(value))
+    ? true
+    : 'Use 24-hour time, e.g. 18:00, or leave it empty.'

@@ -187,3 +187,105 @@ describe('access: club content (WP2)', () => {
     expect(cache.revalidatePath).toHaveBeenCalledWith('/fixtures/[gameId]', 'page')
   })
 })
+
+// WP3: events, RSVPs, event photos (spec §2, §15 leak-path cases).
+describe('access: events (WP3)', () => {
+  let payload: Payload
+  let editor: string
+  const ctx = { disableRevalidate: true }
+  let eventId: number
+  let rsvpId: number
+  let approvedId: number
+  let pendingId: number
+  const TOKEN = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+
+  beforeAll(async () => {
+    payload = await getTestPayload()
+    for (const c of ['event-photos', 'event-rsvps', 'events'] as const) await clearCollection(payload, c)
+    editor = await tokenFor(payload, 'editor', 'wp3-editor@example.com')
+    eventId = (await payload.create({ collection: 'events', data: { type: 'one_time', title: 'E', eventDate: '2026-09-12T00:00:00.000Z' }, context: ctx })).id
+    rsvpId = (
+      await payload.create({
+        collection: 'event-rsvps',
+        data: { event: eventId, occurrenceDate: '2026-09-12T18:30:00.000Z', name: 'Pat Private', email: 'pat@example.com', note: 'secret', editToken: TOKEN },
+        context: ctx,
+      })
+    ).id
+    approvedId = (await payload.create({ collection: 'event-photos', data: { event: eventId, status: 'approved', submitterName: 'Shown Nowhere' }, context: ctx })).id
+    pendingId = (await payload.create({ collection: 'event-photos', data: { event: eventId, status: 'pending', submitterName: 'Anon Submitter' }, context: ctx })).id
+  })
+
+  afterAll(async () => {
+    await destroyTestPayload(payload)
+  })
+
+  const BODIES: Record<string, () => Record<string, unknown>> = {
+    events: () => ({ type: 'one_time', title: 'New', eventDate: '2026-12-01T00:00:00.000Z' }),
+    'event-rsvps': () => ({ event: eventId, occurrenceDate: '2026-09-12T18:30:00.000Z', name: 'New' }),
+    'event-photos': () => ({ event: eventId, caption: 'New' }),
+  }
+  const existing = () => ({ events: eventId, 'event-rsvps': rsvpId, 'event-photos': approvedId }) as Record<string, number>
+
+  for (const c of Object.keys(BODIES)) {
+    it(`anonymous REST cannot create, update or delete ${c}`, async () => {
+      const id = existing()[c]
+      expect((await rest('POST', `/${c}`, { body: BODIES[c]() })).status).toBe(403)
+      expect((await rest('PATCH', `/${c}/${id}`, { body: { title: 'x', name: 'x', caption: 'x' } })).status).toBe(403)
+      expect((await rest('DELETE', `/${c}/${id}`)).status).toBe(403)
+    })
+
+    it(`an editor can create, update and delete ${c}`, async () => {
+      const created = await rest('POST', `/${c}`, { token: editor, body: BODIES[c]() })
+      expect(created.status).toBe(201)
+      expect((await rest('PATCH', `/${c}/${created.json.doc.id}`, { token: editor, body: {} })).status).toBe(200)
+      expect((await rest('DELETE', `/${c}/${created.json.doc.id}`, { token: editor })).status).toBe(200)
+    })
+  }
+
+  it('anonymous cannot read RSVPs at all (names, emails, notes, tokens)', async () => {
+    expect((await rest('GET', '/event-rsvps')).status).toBe(403)
+    expect((await rest('GET', `/event-rsvps/${rsvpId}`)).status).toBe(403)
+    expect((await rest('GET', `/event-rsvps?where[editToken][equals]=${TOKEN}`)).status).toBe(403)
+  })
+
+  it('GET /api/events?depth=1 (and the joins) carry no RSVP data or pending photos anonymously', async () => {
+    for (const path of ['/events?depth=1', `/events/${eventId}?depth=1`]) {
+      const res = await rest('GET', path)
+      expect(res.status).toBe(200)
+      const body = JSON.stringify(res.json)
+      expect(body).not.toContain('Pat Private')
+      expect(body).not.toContain('pat@example.com')
+      expect(body).not.toContain(TOKEN)
+      expect(body).not.toContain('Anon Submitter')
+      const doc = path.includes('?depth') && res.json.docs ? res.json.docs[0] : res.json
+      expect(doc.rsvps?.docs ?? []).toEqual([])
+      expect((doc.photos?.docs ?? []).map((p: { id: number } | number) => (typeof p === 'number' ? p : p.id))).not.toContain(pendingId)
+    }
+  })
+
+  it('event photos: anonymous sees only approved rows, never submitterName, and cannot filter on it', async () => {
+    const all = await rest('GET', '/event-photos')
+    expect(all.json.docs.map((d: { id: number }) => d.id)).toEqual([approvedId])
+    expect(all.json.docs[0]).not.toHaveProperty('submitterName')
+    expect((await rest('GET', '/event-photos?where[status][equals]=pending')).json.totalDocs).toBe(0)
+    expect((await rest('GET', `/event-photos/${pendingId}`)).status).toBe(404)
+    const probe = await rest('GET', '/event-photos?where[submitterName][like]=Shown')
+    expect(probe.status === 200 ? probe.json.totalDocs : 0).toBe(0)
+    // Staff see everything, including submitterName.
+    const staff = await rest('GET', '/event-photos', { token: editor })
+    expect(staff.json.totalDocs).toBe(2)
+    expect(staff.json.docs.some((d: { submitterName?: string }) => d.submitterName === 'Anon Submitter')).toBe(true)
+  })
+
+  it('an editor cannot read-sort-filter past field access to change a token: editToken is not writable over REST', async () => {
+    const res = await rest('PATCH', `/event-rsvps/${rsvpId}`, { token: editor, body: { editToken: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee' } })
+    expect(res.status).toBe(200)
+    expect(res.json.doc.editToken).toBe(TOKEN)
+  })
+
+  it('the public events upload route answers 503 without a Blob store', async () => {
+    const { POST } = await import('@/app/api/public/events/upload/route')
+    const res = await POST(new Request('http://localhost:3000/api/public/events/upload', { method: 'POST', body: '{}' }))
+    expect(res.status).toBe(503)
+  })
+})

@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { events, players, stories } from '@/db/schema'
+import { players, stories } from '@/db/schema'
 import { getClub } from '@/lib/club'
+import { getPayloadClient } from '@/lib/payload/client'
 
 export const dynamic = 'force-dynamic' // DB-backed; revalidate=3600 would bake a static-only sitemap at build (Neon fetches are no-store)
 
@@ -32,14 +33,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   try {
+    const payload = await getPayloadClient()
     const [playerRows, storyRows, eventRows] = await Promise.all([
       db.select({ slug: players.slug, updatedAt: players.updatedAt }).from(players).where(eq(players.hidden, false)),
       db
         .select({ slug: stories.slug, publishedAt: stories.publishedAt, reviewedAt: stories.reviewedAt, createdAt: stories.createdAt })
         .from(stories)
         .where(eq(stories.status, 'published')),
-      // Events have no draft/visible flag: every row is public.
-      db.select({ id: events.id, createdAt: events.createdAt }).from(events),
+      // Events have no draft/visible flag: every row is public. joins:false — the Local API
+      // runs with overrideAccess and the rsvps/photos joins would otherwise be loaded.
+      payload
+        .find({ collection: 'events', pagination: false, depth: 0, joins: false, select: { createdAt: true }, sort: 'id' })
+        .then((r) => r.docs.map((d) => ({ id: d.id, createdAt: new Date(d.createdAt) }))),
     ])
     for (const p of playerRows) {
       entries.push({ url: `${SITE_URL}/players/${p.slug}`, lastModified: p.updatedAt, changeFrequency: 'monthly', priority: 0.5 })

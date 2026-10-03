@@ -13,7 +13,6 @@ const eslintConfig = [
       'payload-types.ts',
       'app/(payload)/admin/importMap.js',
       'payload/migrations/**',
-      'payload/components/_source/**',
     ],
   },
 ]

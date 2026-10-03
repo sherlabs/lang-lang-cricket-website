@@ -16,7 +16,7 @@ import { getEventPhotosPublic, listGoingCounts, listPastOneTimeEvents, listUpcom
 import { rsvpKey } from '@/lib/rsvp-cookie'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
-import type { Event } from '@/db/schema'
+import type { Event } from '@/lib/domain'
 import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
 
