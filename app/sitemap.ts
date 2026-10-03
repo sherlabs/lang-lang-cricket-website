@@ -13,6 +13,7 @@ const STATIC: { path: string; changeFrequency: Entry['changeFrequency']; priorit
   { path: '/players', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/stats', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/records', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/honours', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/history', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/history/submit', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/people', changeFrequency: 'monthly', priority: 0.6 },

@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { clubDefaults } from '../seed/club-defaults'
 import { dashboardCards } from './dashboardCards'
+import { MilestonesWidget } from './MilestonesWidget'
 import { PlayHQRefreshButton } from './PlayHQRefreshButton'
 
 /**
@@ -44,6 +45,7 @@ export async function Dashboard({ payload }: { payload: Payload }) {
           <p>Fixtures, results and ladders refresh on their own every 30 minutes. Refresh now if results were just entered.</p>
           <PlayHQRefreshButton />
         </div>
+        <MilestonesWidget payload={payload} />
         <div className="club-dashboard__panel">
           <h2>How this site works</h2>
           <ul>

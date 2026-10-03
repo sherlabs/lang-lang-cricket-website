@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 const LINKS = [
   { href: '/stats', label: 'Leaderboards' },
   { href: '/records', label: 'Records' },
+  { href: '/honours', label: 'Honours' },
 ] as const
 
 /** Section navigation as links (not a tablist: there are no tab panels). Scrolls inside its own box on phones. */

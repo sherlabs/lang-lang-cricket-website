@@ -25,6 +25,13 @@ beforeEach(() => {
 })
 
 describe('sitemap', () => {
+  it('includes the honour board and leaves the compare tool out', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const urls = (await sitemap()).map((e) => e.url)
+    expect(urls).toContain('https://club.test/honours')
+    expect(urls.some((u) => u.includes('/players/compare'))).toBe(false)
+  })
+
   it('lists only players that are not hidden (its own where, joins:false), with lastModified = updatedAt', async () => {
     const { default: sitemap } = await import('@/app/sitemap')
     const entries = await sitemap()

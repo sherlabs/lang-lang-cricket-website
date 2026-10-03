@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
   // Next writes AGENTS.md/CLAUDE.md on dev start otherwise.
   agentRules: false,
   experimental: { globalNotFound: true },
+  // The stat card reads the bundled crest from disk at render time (the font ships inside next/og).
+  outputFileTracingIncludes: { '/api/public/players/[slug]/card': ['./public/assets/branding/logo.png'] },
   async redirects() {
     return [
       // One canonical host for search engines: www and the production vercel.app
