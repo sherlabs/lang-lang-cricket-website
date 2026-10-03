@@ -46,7 +46,7 @@ function formData(fields: Record<string, string>): FormData {
 describe('submitEventPhoto', () => {
   it('inserts a pending photo for a valid past one-time event', async () => {
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(
       formData({
         eventId: '1',
@@ -67,7 +67,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a future one-time event', async () => {
     eventRow = { id: 2, type: 'one_time', eventDate: new Date('2027-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: '2', url: 'https://x.public.blob.vercel-storage.com/a.jpg' }))
     expect(result).toEqual({ error: 'Photos can only be submitted for a past event.' })
     expect(inserted).toBeNull()
@@ -75,7 +75,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a nonexistent event', async () => {
     eventRow = null
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: '999', url: 'https://x.public.blob.vercel-storage.com/a.jpg' }))
     expect(result).toEqual({ error: 'Event not found.' })
     expect(inserted).toBeNull()
@@ -91,7 +91,7 @@ describe('submitEventPhoto', () => {
       startDate: new Date('2026-01-01T00:00:00Z'),
       endDate: new Date('2026-03-01T00:00:00Z'),
     }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: '3', url: 'https://x.public.blob.vercel-storage.com/a.jpg' }))
     expect(result).toEqual({ error: 'Photos can only be submitted for a past event.' })
     expect(inserted).toBeNull()
@@ -99,7 +99,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a missing/non-Blob url without inserting anything', async () => {
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: '1', url: 'https://evil.example.com/a.jpg' }))
     expect(result).toEqual({ error: 'A photo is required.' })
     expect(inserted).toBeNull()
@@ -107,7 +107,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a Blob URL from outside events/pending/ (e.g. another entity\'s existing blob) without inserting anything', async () => {
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: '1', url: 'https://x.public.blob.vercel-storage.com/gallery/some-photo.jpg' }))
     expect(result).toEqual({ error: 'A photo is required.' })
     expect(inserted).toBeNull()
@@ -115,7 +115,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a URL with the right events/pending/ path but a foreign store hostname', async () => {
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(
       formData({ eventId: '1', url: 'https://attacker-store.public.blob.vercel-storage.com/events/pending/a.jpg' })
     )
@@ -125,7 +125,7 @@ describe('submitEventPhoto', () => {
 
   it('rejects a non-numeric eventId without crashing', async () => {
     eventRow = null
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(formData({ eventId: 'not-a-number', url: 'https://x.public.blob.vercel-storage.com/events/pending/a.jpg' }))
     expect(result).toEqual({ error: 'Event not found.' })
     expect(inserted).toBeNull()
@@ -134,7 +134,7 @@ describe('submitEventPhoto', () => {
   it('accepts a mixed-case store id in BLOB_READ_WRITE_TOKEN by lowercasing before comparing to the hostname', async () => {
     process.env.BLOB_READ_WRITE_TOKEN = 'vercel_blob_rw_AbC123_secret'
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const result = await submitEventPhoto(
       formData({ eventId: '1', url: 'https://abc123.public.blob.vercel-storage.com/events/pending/a.jpg' })
     )
@@ -144,7 +144,7 @@ describe('submitEventPhoto', () => {
 
   it('truncates an overly long caption and submitterName instead of erroring', async () => {
     eventRow = { id: 1, type: 'one_time', eventDate: new Date('2026-01-15T00:00:00Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }
-    const { submitEventPhoto } = await import('@/app/events/[id]/actions')
+    const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
     const longText = 'x'.repeat(500)
     const result = await submitEventPhoto(
       formData({ eventId: '1', url: 'https://x.public.blob.vercel-storage.com/events/pending/a.jpg', caption: longText, submitterName: longText })

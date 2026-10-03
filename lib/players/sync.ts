@@ -105,14 +105,14 @@ export async function syncPlayers(now = new Date()): Promise<SyncResult> {
     const rows = plan.seasonRows.map(({ playerId, newNameKey, ...rest }) => ({ ...rest, playerId: playerId ?? idByKey.get(newNameKey!)! }))
     const activeIds = [...plan.activePlayerIds, ...plan.activeNewNameKeys.map((k) => idByKey.get(k)!)]
 
-    // 3. Replace season rows + derived flags atomically (neon-http batch = one transaction).
-    await db.batch([
-      db.delete(playerSeasons),
-      ...chunk(rows, 500).map((part) => db.insert(playerSeasons).values(part)),
+    // 3. Replace season rows + derived flags atomically (one transaction).
+    await db.transaction(async (tx) => {
+      await tx.delete(playerSeasons)
+      for (const part of chunk(rows, 500)) await tx.insert(playerSeasons).values(part)
       // All players, not just source=playhq: a PlayHQ identity merged into a manual player carries seasons too.
-      db.update(players).set({ isActiveDerived: false }).where(sql`true`),
-      ...(activeIds.length ? [db.update(players).set({ isActiveDerived: true }).where(inArray(players.id, activeIds))] : []),
-    ] as never)
+      await tx.update(players).set({ isActiveDerived: false }).where(sql`true`)
+      if (activeIds.length) await tx.update(players).set({ isActiveDerived: true }).where(inArray(players.id, activeIds))
+    })
 
     await db.update(playerSyncRuns)
       .set({ status: 'ok', finishedAt: new Date(), playersCreated: plan.newPlayers.length, seasonRows: rows.length })

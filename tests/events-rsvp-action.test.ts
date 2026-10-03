@@ -85,7 +85,7 @@ const ONE_TIME_KEY = `1:${ONE_TIME_ISO}`
 describe('submitRsvp', () => {
   it('inserts a "yes" RSVP for a valid one-time event date and remembers it in the cookie', async () => {
     eventRow = ONE_TIME
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat Smith', email: 'pat@x.com' }))
     expect(result).toEqual({ ok: true, response: 'yes' })
     expect(inserted).toMatchObject({ eventId: 1, name: 'Pat Smith', response: 'yes', meal: '' })
@@ -97,7 +97,7 @@ describe('submitRsvp', () => {
 
   it('inserts a "no" RSVP (name still required, meal cleared)', async () => {
     eventRow = DINNER
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '3', occurrenceDate: ONE_TIME_ISO, response: 'no', name: 'Pat', dinner: 'yes', meal: 'Beef' }))
     expect(result).toEqual({ ok: true, response: 'no' })
     expect(inserted).toMatchObject({ response: 'no', meal: '' })
@@ -105,7 +105,7 @@ describe('submitRsvp', () => {
 
   it('rejects an invalid response', async () => {
     eventRow = ONE_TIME
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'maybe', name: 'Pat' }))
     expect(result).toEqual({ error: 'Please choose yes or no.' })
     expect(inserted).toBeNull()
@@ -113,7 +113,7 @@ describe('submitRsvp', () => {
 
   it('rejects a one-time RSVP for the wrong date', async () => {
     eventRow = ONE_TIME
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: '2026-11-16T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'That date is not available for this event.' })
     expect(inserted).toBeNull()
@@ -121,14 +121,14 @@ describe('submitRsvp', () => {
 
   it('accepts a valid recurring occurrence date', async () => {
     eventRow = RECURRING
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     await submitRsvp(formData({ eventId: '2', occurrenceDate: '2026-10-08T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(inserted).toMatchObject({ eventId: 2, name: 'Pat Smith' })
   })
 
   it('rejects a recurring occurrence date on the wrong weekday', async () => {
     eventRow = RECURRING
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     // 2026-10-09 is a Friday, not a Thursday.
     const result = await submitRsvp(formData({ eventId: '2', occurrenceDate: '2026-10-09T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'That date is not available for this event.' })
@@ -137,7 +137,7 @@ describe('submitRsvp', () => {
 
   it('rejects a recurring occurrence date past the series end date', async () => {
     eventRow = RECURRING
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '2', occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'That date is not available for this event.' })
     expect(inserted).toBeNull()
@@ -145,7 +145,7 @@ describe('submitRsvp', () => {
 
   it('rejects a missing name for both answers without inserting anything', async () => {
     eventRow = ONE_TIME
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     expect(await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: '  ' }))).toEqual({ error: 'Name is required.' })
     expect(await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'no', name: '' }))).toEqual({ error: 'Name is required.' })
     expect(inserted).toBeNull()
@@ -153,7 +153,7 @@ describe('submitRsvp', () => {
 
   it('rejects an RSVP for an event that does not exist', async () => {
     eventRow = null
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '999', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'Event not found.' })
     expect(inserted).toBeNull()
@@ -161,7 +161,7 @@ describe('submitRsvp', () => {
 
   it('rejects an already-past occurrence of an otherwise-valid one-time event', async () => {
     eventRow = { ...ONE_TIME, eventDate: new Date('2026-01-15T00:00:00Z') }
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: '2026-01-15T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'That date is not available for this event.' })
     expect(inserted).toBeNull()
@@ -169,7 +169,7 @@ describe('submitRsvp', () => {
 
   it('rejects an already-past occurrence of an otherwise-valid recurring event', async () => {
     eventRow = { ...RECURRING, startDate: new Date('2026-01-01T00:00:00Z'), endDate: new Date('2026-12-31T00:00:00Z') }
-    const { submitRsvp } = await import('@/app/events/actions')
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
     // 2026-01-15 is a Thursday, matches dayOfWeek 4, but is well in the past.
     const result = await submitRsvp(formData({ eventId: '2', occurrenceDate: '2026-01-15T18:00:00.000Z', response: 'yes', name: 'Pat Smith' }))
     expect(result).toEqual({ error: 'That date is not available for this event.' })
@@ -179,7 +179,7 @@ describe('submitRsvp', () => {
   describe('dinner', () => {
     it('requires the dinner answer when the event has meal options', async () => {
       eventRow = DINNER
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       const result = await submitRsvp(formData({ eventId: '3', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat' }))
       expect(result).toEqual({ error: 'Please tell us whether you want dinner.' })
       expect(inserted).toBeNull()
@@ -187,7 +187,7 @@ describe('submitRsvp', () => {
 
     it('dinner yes requires one of the options', async () => {
       eventRow = DINNER
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       expect(await submitRsvp(formData({ eventId: '3', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat', dinner: 'yes' }))).toEqual({
         error: 'Please choose a dinner option.',
       })
@@ -201,14 +201,14 @@ describe('submitRsvp', () => {
 
     it('dinner no stores an empty meal even if a type was sent', async () => {
       eventRow = DINNER
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       await submitRsvp(formData({ eventId: '3', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat', dinner: 'no', meal: 'Beef' }))
       expect(inserted).toMatchObject({ response: 'yes', meal: '' })
     })
 
     it('ignores meal fields when the event has no options', async () => {
       eventRow = ONE_TIME
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat', meal: 'Beef' }))
       expect(inserted).toMatchObject({ meal: '' })
     })
@@ -219,7 +219,7 @@ describe('submitRsvp', () => {
       eventRow = ONE_TIME
       rsvpRow = { id: 10, eventId: 1, editToken: 'tok-1', response: 'yes' }
       cookieValue = JSON.stringify({ name: 'Old', email: '', rsvps: { [ONE_TIME_KEY]: 'tok-1' } })
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'no', name: 'Pat Smith' }))
       expect(result).toEqual({ ok: true, response: 'no' })
       expect(inserted).toBeNull()
@@ -231,7 +231,7 @@ describe('submitRsvp', () => {
       eventRow = ONE_TIME
       rsvpRow = null
       cookieValue = JSON.stringify({ name: 'Old', email: '', rsvps: { [ONE_TIME_KEY]: 'gone' } })
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat Smith' }))
       expect(updated).toBeNull()
       expect(inserted).not.toBeNull()
@@ -242,7 +242,7 @@ describe('submitRsvp', () => {
       eventRow = ONE_TIME
       rsvpRow = { id: 10, eventId: 99, editToken: 'tok-other' }
       cookieValue = JSON.stringify({ name: '', email: '', rsvps: { [ONE_TIME_KEY]: 'tok-other' } })
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat' }))
       expect(updated).toBeNull()
       expect(inserted).not.toBeNull()
@@ -251,7 +251,7 @@ describe('submitRsvp', () => {
     it('treats a malformed cookie as empty', async () => {
       eventRow = ONE_TIME
       cookieValue = '{oops'
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       const result = await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat' }))
       expect(result).toEqual({ ok: true, response: 'yes' })
       expect(inserted).not.toBeNull()
@@ -262,7 +262,7 @@ describe('submitRsvp', () => {
       const rsvps: Record<string, string> = {}
       for (let i = 0; i < RSVP_COOKIE_MAX_ENTRIES; i++) rsvps[`${100 + i}:2026-10-01T00:00:00.000Z`] = `t${i}`
       cookieValue = JSON.stringify({ name: '', email: '', rsvps })
-      const { submitRsvp } = await import('@/app/events/actions')
+      const { submitRsvp } = await import('@/app/(frontend)/events/actions')
       await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Pat' }))
       const stored = JSON.parse(setCookie!.value).rsvps as Record<string, string>
       const keys = Object.keys(stored)

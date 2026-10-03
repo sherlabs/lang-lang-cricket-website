@@ -44,3 +44,9 @@ new-images/
 
 # raw sponsor logo drops (processed into public/assets/sponsors)
 logos/
+
+# Payload local storage (no Blob token in dev)
+/media/
+/documents/
+/gallery-photos/
+/event-photos/

@@ -63,7 +63,7 @@ function formData(fields: Record<string, string>): FormData {
 describe('updateRsvpByToken', () => {
   it('updates name/email/note for a matching token', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Old Name', response: 'yes', meal: '' }
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     const result = await updateRsvpByToken('tok', formData({ name: 'New Name', email: '', note: 'bringing salad' }))
     expect(result).toBeUndefined()
     expect(updated).toMatchObject({ name: 'New Name', note: 'bringing salad', response: 'yes' })
@@ -72,14 +72,14 @@ describe('updateRsvpByToken', () => {
   it('switches the yes/no answer and clears the meal on "no"', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Old Name', response: 'yes', meal: 'Beef' }
     eventRow = { id: 5, mealOptions: ['Beef'] }
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     await updateRsvpByToken('tok', formData({ name: 'Old Name', response: 'no', dinner: 'yes', meal: 'Beef' }))
     expect(updated).toMatchObject({ response: 'no', meal: '' })
   })
 
   it('keeps the stored answer when the response field is missing or invalid', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Old Name', response: 'no', meal: '' }
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     await updateRsvpByToken('tok', formData({ name: 'Old Name', response: 'maybe' }))
     expect(updated).toMatchObject({ response: 'no' })
   })
@@ -87,7 +87,7 @@ describe('updateRsvpByToken', () => {
   it('applies the dinner rule against the event options', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Pat', response: 'yes', meal: '' }
     eventRow = { id: 5, mealOptions: ['Beef', 'Chicken'] }
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     expect(await updateRsvpByToken('tok', formData({ name: 'Pat', response: 'yes' }))).toEqual({ error: 'Please tell us whether you want dinner.' })
     expect(await updateRsvpByToken('tok', formData({ name: 'Pat', response: 'yes', dinner: 'yes', meal: 'Fish' }))).toEqual({
       error: 'That dinner option is not available.',
@@ -102,14 +102,14 @@ describe('updateRsvpByToken', () => {
   it('keeps the stored meal when the event has been deleted', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Pat', response: 'yes', meal: 'Beef' }
     eventRow = null
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     await updateRsvpByToken('tok', formData({ name: 'Pat', response: 'yes' }))
     expect(updated).toMatchObject({ meal: 'Beef' })
   })
 
   it('returns an error for an unknown token without throwing', async () => {
     row = null
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     const result = await updateRsvpByToken('missing', formData({ name: 'New Name' }))
     expect(result).toEqual({ error: 'This RSVP link is no longer valid.' })
     expect(updated).toBeNull()
@@ -117,7 +117,7 @@ describe('updateRsvpByToken', () => {
 
   it('rejects an empty name', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Old Name', response: 'yes', meal: '' }
-    const { updateRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     const result = await updateRsvpByToken('tok', formData({ name: '' }))
     expect(result).toEqual({ error: 'Name is required.' })
     expect(updated).toBeNull()
@@ -128,7 +128,7 @@ describe('cancelRsvpByToken', () => {
   it('deletes the matching row and forgets it in the device cookie', async () => {
     row = { id: 1, eventId: 5, editToken: 'tok', name: 'Old Name' }
     cookieValue = JSON.stringify({ name: 'Pat', email: '', rsvps: { '5:2026-10-01T18:00:00.000Z': 'tok', '6:x': 'other' } })
-    const { cancelRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { cancelRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     const result = await cancelRsvpByToken('tok')
     expect(result).toBeUndefined()
     expect(deleted).toBe(true)
@@ -138,7 +138,7 @@ describe('cancelRsvpByToken', () => {
 
   it('returns an error for an unknown token', async () => {
     row = null
-    const { cancelRsvpByToken } = await import('@/app/events/rsvp/[token]/actions')
+    const { cancelRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
     const result = await cancelRsvpByToken('missing')
     expect(result).toEqual({ error: 'This RSVP link is no longer valid.' })
     expect(deleted).toBe(false)

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- fixtures cast partial rows; retyped in WP2 (spec §15 ADAPT) */
 import { describe, expect, it } from 'vitest'
 import type { Event } from '@/db/schema'
 import { eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, serializeJsonLd, storyJsonLd } from '@/lib/structured-data'

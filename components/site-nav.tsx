@@ -51,6 +51,8 @@ export function SiteNav() {
 
   // Backstop: any navigation closes both menus.
   useEffect(() => {
+    // Intentional: reset on route change (react-hooks v7 rule, new with eslint-config-next 16).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false)
     setClubOpen(false)
   }, [pathname])

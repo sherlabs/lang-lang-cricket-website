@@ -37,7 +37,7 @@ const EMPTY_DOC = JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }]
 
 describe('submitStory', () => {
   it('inserts a pending row for a valid submission', async () => {
-    const { submitStory } = await import('@/app/history/submit/actions')
+    const { submitStory } = await import('@/app/(frontend)/history/submit/actions')
     await expect(
       submitStory(formData({ authorName: 'Pat Smith', title: 'My First Season', contentJson: SAMPLE_DOC }))
     ).rejects.toBeDefined() // next/navigation's redirect() always throws, even on success
@@ -51,21 +51,21 @@ describe('submitStory', () => {
   })
 
   it('rejects submissions missing required fields without inserting anything', async () => {
-    const { submitStory } = await import('@/app/history/submit/actions')
+    const { submitStory } = await import('@/app/(frontend)/history/submit/actions')
     const result = await submitStory(formData({ authorName: '', title: '', contentJson: SAMPLE_DOC }))
     expect(result).toEqual({ error: 'Name, title and story body are required.' })
     expect(inserted).toBeNull()
   })
 
   it('rejects a body with no real text without inserting anything', async () => {
-    const { submitStory } = await import('@/app/history/submit/actions')
+    const { submitStory } = await import('@/app/(frontend)/history/submit/actions')
     const result = await submitStory(formData({ authorName: 'Pat Smith', title: 'Empty Story', contentJson: EMPTY_DOC }))
     expect(result).toEqual({ error: 'Story body cannot be empty.' })
     expect(inserted).toBeNull()
   })
 
   it('silently no-ops when the honeypot field is filled in', async () => {
-    const { submitStory } = await import('@/app/history/submit/actions')
+    const { submitStory } = await import('@/app/(frontend)/history/submit/actions')
     await expect(
       submitStory(
         formData({
