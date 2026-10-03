@@ -52,7 +52,7 @@ export function PendingPhotosField() {
   }, [api, id, version])
 
   const act = async (photo: PendingPhoto, action: 'approve' | 'reject') => {
-    if (action === 'reject' && !window.confirm('Reject this photo? It will be deleted.')) return
+    if (action === 'reject' && !window.confirm('Say no to this photo? It will be removed for good.')) return
     setBusyId(photo.id)
     try {
       const res =
@@ -79,8 +79,8 @@ export function PendingPhotosField() {
 
   return (
     <div className="club-field">
-      <h3 className="club-field__title">Pending photos ({photos.length})</h3>
-      <p className="club-muted">Sent in by the public from the event page. Approve to publish, reject to delete.</p>
+      <h3 className="club-field__title">Photos waiting for approval ({photos.length})</h3>
+      <p className="club-muted">Sent in from the event page on the website. Approve to put a photo on the page, or say no to remove it.</p>
       <ul className="club-photo-grid">
         {photos.map((p) => (
           <li key={p.id} className="club-photo-card">
@@ -93,7 +93,7 @@ export function PendingPhotosField() {
                   Approve
                 </Button>
                 <Button buttonStyle="secondary" size="small" disabled={busyId === p.id} onClick={() => act(p, 'reject')} type="button">
-                  Reject
+                  Say no
                 </Button>
               </div>
             </div>

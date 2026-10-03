@@ -20,8 +20,8 @@ export async function PendingQueueBanner({ payload, collectionSlug }: BeforeList
   const href = `${payload.config.routes.admin}/collections/${collectionSlug}?where[status][equals]=pending`
   return (
     <div className="club-queue-banner" role="status">
-      <strong>{pending}</strong> awaiting review —{' '}
-      <a href={href}>Show pending</a>
+      <strong>{pending}</strong> waiting for approval —{' '}
+      <a href={href}>Show them</a>
     </div>
   )
 }

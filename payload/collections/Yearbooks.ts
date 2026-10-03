@@ -37,9 +37,9 @@ const seasonName = (value: unknown, ctx?: { req?: { context?: Record<string, unk
  */
 export const Yearbooks: CollectionConfig = {
   slug: 'yearbooks',
-  labels: { singular: 'Yearbook', plural: 'Yearbooks' },
+  labels: { singular: 'Season yearbook', plural: 'Season yearbooks' },
   admin: {
-    group: 'Club',
+    group: false,
     useAsTitle: 'title',
     defaultColumns: ['title', 'seasonName', 'status', 'updatedAt'],
     listSearchableFields: ['title', 'seasonName'],
@@ -72,7 +72,7 @@ export const Yearbooks: CollectionConfig = {
       index: true,
       validate: seasonName,
       admin: {
-        description: 'Exactly as PlayHQ names the season, for example "Summer 2025/26". The stats and results on the page come from this season.',
+        description: 'The season this yearbook covers, written the way it appears on the Fixtures page, for example "Summer 2025/26". The stats and results fill in by themselves.',
       },
     },
     {

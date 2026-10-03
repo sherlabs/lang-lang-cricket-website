@@ -14,11 +14,15 @@ export const Documents: CollectionConfig = {
   slug: 'documents',
   labels: { singular: 'Document', plural: 'Documents' },
   admin: {
-    group: 'Club',
+    group: false,
+    hideAPIURL: true,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category', 'filename'],
+    defaultColumns: ['title', 'category'],
+    description: 'Forms, policies and newsletters that people can download from the Documents page. PDF files only.',
   },
   defaultSort: 'title',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   upload: {
     mimeTypes: ['application/pdf'],
@@ -39,13 +43,20 @@ export const Documents: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'title', type: 'text', required: true },
+    {
+      name: 'title',
+      label: 'Document name',
+      type: 'text',
+      required: true,
+      admin: { description: 'What people will see on the Documents page.', placeholder: 'e.g. Junior registration form 2026' },
+    },
     {
       name: 'category',
+      label: 'Section',
       type: 'select',
       required: true,
       options: [...DOCUMENT_CATEGORIES],
-      admin: { description: 'The section of the Documents page this file is listed under.' },
+      admin: { description: 'Where on the Documents page this file is listed.' },
     },
     sharedLegacyUrlField,
   ],

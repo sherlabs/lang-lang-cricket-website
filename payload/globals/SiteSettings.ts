@@ -9,6 +9,7 @@ import {
 import { DEFAULT_QUALIFICATION } from '../../lib/stats/qualify'
 import { CATEGORY_LABELS, GRADE_CATEGORIES, validateRulePattern } from '../../lib/stats/categories'
 import { anyone, isStaff } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 import { revalidatePaths } from '../hooks/revalidate'
 
 
@@ -120,7 +121,7 @@ const statsGroup: Field = {
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site settings',
-  admin: { group: 'Settings' },
+  admin: { group: false, hidden: hiddenFromEditors },
   access: { read: anyone, update: isStaff },
   hooks: {
     afterChange: [

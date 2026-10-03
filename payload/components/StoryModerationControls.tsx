@@ -7,11 +7,11 @@ type Action = { label: string; status: 'pending' | 'published' | 'rejected'; pri
 
 const ACTIONS: Record<string, Action[]> = {
   pending: [
-    { label: 'Approve', status: 'published', primary: true },
-    { label: 'Reject', status: 'rejected', confirm: 'Reject this story? It stays in the list and can be restored to review later.' },
+    { label: 'Approve and publish', status: 'published', primary: true },
+    { label: 'Say no', status: 'rejected', confirm: 'Say no to this story? It will not be shown, but you can bring it back later.' },
   ],
-  published: [{ label: 'Unpublish', status: 'rejected', confirm: 'Unpublish this story? It comes off the history page.' }],
-  rejected: [{ label: 'Restore to review', status: 'pending' }],
+  published: [{ label: 'Take off the website', status: 'rejected', confirm: 'Take this story off the history page? You can bring it back later.' }],
+  rejected: [{ label: 'Put back to review', status: 'pending' }],
 }
 
 /**

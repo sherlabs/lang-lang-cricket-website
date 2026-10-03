@@ -27,10 +27,12 @@ import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997e
 import { StoryLinksField as StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4 } from '../../../payload/components/StoryLinksField'
 import { StoryModerationControls as StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad } from '../../../payload/components/StoryModerationControls'
 import { MergePlayerField as MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb } from '../../../payload/components/MergePlayerField'
-import { PlayerSyncPanel as PlayerSyncPanel_933b8e560f261ef3be8d4e3dce05b922 } from '../../../payload/components/PlayerSyncPanel'
 import { Icon as Icon_25a5cf3faf5e08eebe54818d469bcd19 } from '../../../payload/components/Icon'
 import { Logo as Logo_c7b97bbbec2f12a09b3a4e5bba180831 } from '../../../payload/components/Logo'
+import { AdminNav as AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0 } from '../../../payload/components/AdminNav'
 import { Dashboard as Dashboard_85b72bc5c0d30238d51de444df4399a6 } from '../../../payload/components/Dashboard'
+import { ApprovalsView as ApprovalsView_6fd9fb6bf2a22c9cee6bed03081abd5b } from '../../../payload/components/ApprovalsView'
+import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 
@@ -65,10 +67,12 @@ export const importMap = {
   "/payload/components/StoryLinksField#StoryLinksField": StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4,
   "/payload/components/StoryModerationControls#StoryModerationControls": StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad,
   "/payload/components/MergePlayerField#MergePlayerField": MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb,
-  "/payload/components/PlayerSyncPanel#PlayerSyncPanel": PlayerSyncPanel_933b8e560f261ef3be8d4e3dce05b922,
   "/payload/components/Icon#Icon": Icon_25a5cf3faf5e08eebe54818d469bcd19,
   "/payload/components/Logo#Logo": Logo_c7b97bbbec2f12a09b3a4e5bba180831,
+  "/payload/components/AdminNav#AdminNav": AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0,
   "/payload/components/Dashboard#Dashboard": Dashboard_85b72bc5c0d30238d51de444df4399a6,
+  "/payload/components/ApprovalsView#ApprovalsView": ApprovalsView_6fd9fb6bf2a22c9cee6bed03081abd5b,
+  "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e
 }

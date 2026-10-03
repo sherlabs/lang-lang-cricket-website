@@ -149,10 +149,10 @@ export function RsvpSummaryField() {
 
   return (
     <div className="club-field">
-      <h3 className="club-field__title">RSVPs</h3>
+      <h3 className="club-field__title">Who is coming (RSVPs)</h3>
       {error && <p className="club-error">{error}</p>}
       {!rows && !error && <p className="club-muted">Loading…</p>}
-      {rows && groups.length === 0 && <p className="club-muted">No RSVPs yet.</p>}
+      {rows && groups.length === 0 && <p className="club-muted">Nobody has replied yet.</p>}
       {groups.map((g) => (
         <Occurrence key={g.iso} group={g} hasMealOptions={hasMealOptions} onDelete={onDelete} busyId={busyId} />
       ))}

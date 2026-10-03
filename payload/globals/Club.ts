@@ -1,5 +1,6 @@
 import type { Field, GlobalConfig } from 'payload'
 import { anyone, isAdmin } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 import { revalidatePaths } from '../hooks/revalidate'
 import { clubDefaults as d, SEO_PAGES, SOCIAL_PLATFORMS, type SeoPage } from '../seed/club-defaults'
 
@@ -43,8 +44,8 @@ const pageSeoFields: Field[] = SEO_PAGES.map((key) => ({
  */
 export const Club: GlobalConfig = {
   slug: 'club',
-  label: 'Club',
-  admin: { group: 'Settings' },
+  label: 'Club details',
+  admin: { group: false, hidden: hiddenFromEditors, description: 'Club name, contact details, social links and page titles for search engines.' },
   access: { read: anyone, update: isAdmin },
   hooks: {
     afterChange: [

@@ -161,12 +161,20 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * People who can sign in to this admin. Editors run the day-to-day website; admins also see the advanced settings.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * Shown in the greeting, e.g. "Hello, Sam".
+   */
   name?: string | null;
+  /**
+   * Editors see a short, simple menu. Admins also see the Advanced section.
+   */
   role: 'admin' | 'editor';
   updatedAt: string;
   createdAt: string;
@@ -189,11 +197,16 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Every picture uploaded to the site. Normally you add pictures from the form that needs them (a sponsor logo, a contact photo, an event cover).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * A few words for people who cannot see the picture, e.g. "Under 12s celebrating the 2024 grand final".
+   */
   alt?: string | null;
   legacyUrl?: string | null;
   prefix?: string | null;
@@ -211,14 +224,19 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Forms, policies and newsletters that people can download from the Documents page. PDF files only.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "documents".
  */
 export interface Document {
   id: number;
+  /**
+   * What people will see on the Documents page.
+   */
   title: string;
   /**
-   * The section of the Documents page this file is listed under.
+   * Where on the Documents page this file is listed.
    */
   category: 'Codes of Conduct' | 'Policies' | 'Child Safety' | 'Game Day' | 'CCCA Directory';
   legacyUrl?: string | null;
@@ -237,13 +255,16 @@ export interface Document {
   focalY?: number | null;
 }
 /**
- * Lower sort numbers show first; the first six appear on the home page. New uploads go to the front.
+ * Photos on the Gallery page. New photos go to the front, and the first six also show on the home page. Use "Bulk Upload" to add lots at once.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gallery-photos".
  */
 export interface GalleryPhoto {
   id: number;
+  /**
+   * Optional. A few words about the photo.
+   */
   caption?: string | null;
   /**
    * Lower numbers show first. Leave empty on upload to put the photo at the front.
@@ -265,26 +286,36 @@ export interface GalleryPhoto {
   focalY?: number | null;
 }
 /**
+ * Businesses that support the club. They appear on the Sponsors page, grouped by level.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sponsors".
  */
 export interface Sponsor {
   id: number;
   name: string;
+  /**
+   * Higher levels are shown first and bigger. If unsure, leave it as it is.
+   */
   tier: 'Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player';
   /**
-   * Optional. Without a logo the sponsor name is shown as text.
+   * Optional. Click the button, then drop the logo picture in. Without a logo the sponsor name is shown as text.
    */
   logo?: (number | null) | Media;
+  /**
+   * Optional. Where the logo should take people when clicked.
+   */
   linkUrl?: string | null;
   /**
-   * Order within the tier; lower shows first.
+   * Leave as 0. A smaller number (such as -1) shows this sponsor before others at the same level.
    */
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Committee members, coaches and the people families can contact. They appear on the Contact and People pages.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "people".
  */
@@ -296,23 +327,25 @@ export interface Person {
    */
   role: string;
   /**
-   * Which group the person is listed under on /people and the contact page.
+   * Which group of people this person is shown with on the website.
    */
   section?: ('leadership' | 'committee' | 'coach') | null;
   phone?: string | null;
   email?: string | null;
   /**
-   * Shown square; use the crop tool on the image to frame the face.
+   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.
    */
   photo?: (number | null) | Media;
   /**
-   * Lower numbers show first.
+   * Leave as 0 unless the order matters. Smaller numbers show first (1 is at the top).
    */
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * News for members. The newest one that is switched on shows as a banner at the top of the home page.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "announcements".
  */
@@ -320,17 +353,19 @@ export interface Announcement {
   id: number;
   title: string;
   /**
-   * Plain text. Leave a blank line between paragraphs. The first line shows in the home page banner.
+   * Leave a blank line between paragraphs. The first line shows in the banner on the home page.
    */
   body?: string | null;
   /**
-   * The newest published announcement shows as a banner on the home page.
+   * Nothing shows on the website until this is switched on. Switch it off later to take the announcement down without deleting it.
    */
   published?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Dinners, working bees and presentation days. People can RSVP from the event page on the website.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
@@ -338,28 +373,28 @@ export interface Event {
   id: number;
   type: 'one_time' | 'recurring';
   title: string;
-  description?: string | null;
-  location?: string | null;
-  /**
-   * Shown on the event card and page.
-   */
-  cover?: (number | null) | Media;
-  /**
-   * 24-hour, e.g. 18:00
-   */
-  eventTime?: string | null;
   /**
    * The day of the event.
    */
   eventDate?: string | null;
-  /**
-   * Which day it runs every week.
-   */
   dayOfWeek?: ('0' | '1' | '2' | '3' | '4' | '5' | '6') | null;
   startDate?: string | null;
   endDate?: string | null;
   /**
-   * Dinner choices offered on the RSVP form (e.g. Beef, Chicken, Veg). Leave empty for no dinner step.
+   * Type the time using the 24-hour clock, for example 18:00 for 6pm.
+   */
+  eventTime?: string | null;
+  location?: string | null;
+  /**
+   * A few lines for people deciding whether to come.
+   */
+  description?: string | null;
+  /**
+   * Shown on the event card and page. Click the button, then drop the picture in.
+   */
+  cover?: (number | null) | Media;
+  /**
+   * The meals people can pick when they RSVP (e.g. Beef, Chicken, Veg). Leave empty if there is no dinner.
    */
   mealOptions?:
     | {
@@ -367,12 +402,9 @@ export interface Event {
         id?: string | null;
       }[]
     | null;
-  /**
-   * e.g. "Buy tickets"
-   */
   paymentLinkLabel?: string | null;
   /**
-   * A full https:// link, or empty.
+   * Where people pay, starting with https://. Leave empty if there is nothing to pay.
    */
   paymentLinkUrl?: string | null;
   photos?: {
@@ -395,14 +427,20 @@ export interface Event {
 export interface EventPhoto {
   id: number;
   event: number | Event;
+  /**
+   * Optional. A few words about the photo.
+   */
   caption?: string | null;
   /**
    * Lower numbers show first. Leave empty to put the photo at the front.
    */
   sortOrder?: number | null;
+  /**
+   * Only approved photos show on the event page.
+   */
   status: 'approved' | 'pending';
   /**
-   * Who sent it in from the event page (admin context only).
+   * Who sent it in from the event page. Never shown on the website.
    */
   submitterName?: string | null;
   legacyUrl?: string | null;
@@ -444,6 +482,8 @@ export interface EventRsvp {
   createdAt: string;
 }
 /**
+ * Memories and stories about the club. Members can send them in from the website; they wait here for you to approve.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stories".
  */
@@ -454,10 +494,6 @@ export interface Story {
    * Set from the title when the story is created; never changes.
    */
   slug?: string | null;
-  /**
-   * Shown on the history page cards. Leave empty to use the start of the story.
-   */
-  excerpt?: string | null;
   content: {
     root: {
       type: string;
@@ -473,15 +509,25 @@ export interface Story {
     };
     [k: string]: unknown;
   };
+  /**
+   * Click the button, then drop the picture in.
+   */
   coverImage?: (number | null) | Media;
   /**
-   * Shown as "By …". Defaults to the club name for stories written here.
+   * Shown as "By …". Type your name, or the club name.
    */
   authorName: string;
   /**
-   * Given by the submitter; never published.
+   * Shown on the story card. Leave empty and the start of the story is used.
+   */
+  excerpt?: string | null;
+  /**
+   * Given by the person who sent it in. Never shown on the website.
    */
   authorEmail?: string | null;
+  /**
+   * Use the Approve button at the top, or choose here.
+   */
   status: 'pending' | 'published' | 'rejected';
   /**
    * Written in the admin rather than sent in by the public.
@@ -495,7 +541,7 @@ export interface Story {
   createdAt: string;
 }
 /**
- * Senior players are synced from PlayHQ every night. Add photos, bios and honours here; they're never overwritten by the sync. Create a player to add someone from before PlayHQ.
+ * Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "players".
@@ -510,23 +556,23 @@ export interface Player {
    */
   slug?: string | null;
   /**
-   * PlayHQ players come from the nightly sync and cannot be deleted.
+   * PlayHQ players come in automatically and cannot be deleted.
    */
   source?: ('playhq' | 'manual') | null;
   /**
-   * Shown square on the players page; use the crop tool to frame the face.
+   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.
    */
   photo?: (number | null) | Media;
   /**
-   * Plain text. Leave a blank line between paragraphs.
+   * Leave a blank line between paragraphs.
    */
   bio?: string | null;
   /**
-   * Years played, e.g. 1978–1992. Shown when the player has no synced seasons.
+   * For example 1978–1992. Shown when the player has no seasons recorded automatically.
    */
   manualYears?: string | null;
   /**
-   * Leave empty to decide from the synced seasons (played this season or last = active).
+   * Leave empty and the site decides (played this season or last = current player).
    */
   activeOverride?: ('active' | 'past') | null;
   /**
@@ -534,11 +580,11 @@ export interface Player {
    */
   isActiveDerived?: boolean | null;
   /**
-   * Hidden players are left off the public site.
+   * Tick to keep this player off the public website.
    */
   hidden?: boolean | null;
   /**
-   * Drag to reorder. Shown on the player page in this order.
+   * Awards and roles, e.g. "Club champion". Drag to change the order.
    */
   honours?:
     | {
@@ -647,7 +693,7 @@ export interface Yearbook {
    */
   title: string;
   /**
-   * Exactly as PlayHQ names the season, for example "Summer 2025/26". The stats and results on the page come from this season.
+   * The season this yearbook covers, written the way it appears on the Fixtures page, for example "Summer 2025/26". The stats and results fill in by themselves.
    */
   seasonName: string;
   /**
@@ -944,14 +990,14 @@ export interface AnnouncementsSelect<T extends boolean = true> {
 export interface EventsSelect<T extends boolean = true> {
   type?: T;
   title?: T;
-  description?: T;
-  location?: T;
-  cover?: T;
-  eventTime?: T;
   eventDate?: T;
   dayOfWeek?: T;
   startDate?: T;
   endDate?: T;
+  eventTime?: T;
+  location?: T;
+  description?: T;
+  cover?: T;
   mealOptions?:
     | T
     | {
@@ -1013,10 +1059,10 @@ export interface EventPhotosSelect<T extends boolean = true> {
 export interface StoriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  excerpt?: T;
   content?: T;
   coverImage?: T;
   authorName?: T;
+  excerpt?: T;
   authorEmail?: T;
   status?: T;
   submittedByAdmin?: T;
@@ -1174,6 +1220,8 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * Club name, contact details, social links and page titles for search engines.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "club".
  */

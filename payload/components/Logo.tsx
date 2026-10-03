@@ -12,8 +12,8 @@ export function Logo() {
         <img src={clubDefaults.assets.logo} alt={`${clubDefaults.name} crest`} width={48} height={60} />
       </span>
       <span className="club-logo__text">
-        <span className="club-logo__eyebrow">{clubDefaults.shortName}</span>
-        <span className="club-logo__title">Admin sign-in</span>
+        <span className="club-logo__eyebrow">{clubDefaults.name}</span>
+        <span className="club-logo__title">Website Admin</span>
       </span>
     </span>
   )

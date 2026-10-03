@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, isStaffField, staffOr } from '../access'
+import { adminOnlyCondition } from '../admin/visibility'
 import { sortOrderField } from '../fields/sortOrderField'
 import { maxChars } from '../fields/validators'
 import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
@@ -27,11 +28,14 @@ export const EventPhotos: CollectionConfig = {
   slug: 'event-photos',
   labels: { singular: 'Event photo', plural: 'Event photos' },
   admin: {
-    group: 'Events',
+    group: false,
+    hideAPIURL: true,
     defaultColumns: ['filename', 'event', 'status', 'submitterName', 'createdAt'],
     components: { beforeList: ['/payload/components/PendingQueueBanner#PendingQueueBanner'] },
   },
   defaultSort: 'sortOrder',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: {
     read: staffOr({ status: { equals: 'approved' } }),
     create: isStaff,
@@ -53,9 +57,13 @@ export const EventPhotos: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'event', type: 'relationship', relationTo: 'events', required: true, index: true },
-    { name: 'caption', type: 'text', defaultValue: '', validate: maxChars(200) },
-    sortOrderField('Lower numbers show first. Leave empty to put the photo at the front.', { withDefault: false }),
+    { name: 'event', label: 'Which event', type: 'relationship', relationTo: 'events', required: true, index: true },
+    { name: 'caption', type: 'text', defaultValue: '', validate: maxChars(200), admin: { description: 'Optional. A few words about the photo.' } },
+    {
+      ...sortOrderField('Lower numbers show first. Leave empty to put the photo at the front.', { withDefault: false }),
+      label: 'Position',
+      admin: { step: 1, condition: adminOnlyCondition(), description: 'Lower numbers show first. Leave empty to put the photo at the front.' },
+    },
     {
       name: 'status',
       type: 'select',
@@ -63,9 +71,10 @@ export const EventPhotos: CollectionConfig = {
       defaultValue: 'approved',
       index: true,
       options: [
-        { label: 'Approved (public)', value: 'approved' },
-        { label: 'Pending review', value: 'pending' },
+        { label: 'Approved (on the website)', value: 'approved' },
+        { label: 'Waiting for approval', value: 'pending' },
       ],
+      admin: { description: 'Only approved photos show on the event page.' },
     },
     {
       name: 'submitterName',
@@ -74,7 +83,7 @@ export const EventPhotos: CollectionConfig = {
       validate: maxChars(200),
       // Never shown publicly (spec §2, A1).
       access: { read: isStaffField },
-      admin: { description: 'Who sent it in from the event page (admin context only).' },
+      admin: { description: 'Who sent it in from the event page. Never shown on the website.' },
     },
     legacyUrlField,
   ],

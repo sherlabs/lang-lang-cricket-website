@@ -1,12 +1,15 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, nobody } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 
 /** PlayHQ sync runs (spec §3.15) ← `public.player_sync_runs`. Written only by `syncPlayers`. */
 export const PlayerSyncRuns: CollectionConfig = {
   slug: 'player-sync-runs',
   labels: { singular: 'Sync run', plural: 'Sync runs' },
   admin: {
-    group: 'Players',
+    group: false,
+    hideAPIURL: true,
+    hidden: hiddenFromEditors,
     defaultColumns: ['startedAt', 'status', 'playersCreated', 'seasonRows', 'finishedAt'],
   },
   defaultSort: '-startedAt',

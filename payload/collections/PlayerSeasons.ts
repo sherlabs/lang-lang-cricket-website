@@ -1,5 +1,6 @@
 import type { CollectionConfig, Field } from 'payload'
 import { nobody, staffOr } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 
 const COUNT_FIELDS = [
   'games',
@@ -29,7 +30,9 @@ export const PlayerSeasons: CollectionConfig = {
   slug: 'player-seasons',
   labels: { singular: 'Player season', plural: 'Player seasons' },
   admin: {
-    group: 'Players',
+    group: false,
+    hideAPIURL: true,
+    hidden: hiddenFromEditors,
     defaultColumns: ['player', 'seasonName', 'teamName', 'games', 'batRuns', 'bowlWickets'],
     description: 'Written by the PlayHQ sync; read only.',
   },

@@ -23,13 +23,18 @@ const ROLE_SUGGESTIONS = [
 /** People (spec §3.6) ← `public.committee_contacts`. */
 export const People: CollectionConfig = {
   slug: 'people',
-  labels: { singular: 'Person', plural: 'People' },
+  labels: { singular: 'Person', plural: 'Committee & contacts' },
   admin: {
-    group: 'Club',
+    group: false,
+    hideAPIURL: true,
     useAsTitle: 'name',
-    defaultColumns: ['name', 'role', 'section', 'sortOrder'],
+    defaultColumns: ['name', 'role', 'phone', 'email'],
+    listSearchableFields: ['name', 'role'],
+    description: 'Committee members, coaches and the people families can contact. They appear on the Contact and People pages.',
   },
   defaultSort: 'sortOrder',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
     beforeValidate: [trimStrings(['name', 'role', 'phone', 'email'])],
@@ -38,28 +43,34 @@ export const People: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'name', type: 'text', required: true },
+    { name: 'name', label: 'Full name', type: 'text', required: true, admin: { placeholder: 'e.g. Sam Taylor' } },
     {
       name: 'role',
+      label: 'Job or role',
       type: 'text',
       required: true,
       admin: { description: `For example: ${ROLE_SUGGESTIONS.join(', ')}.` },
     },
     {
       name: 'section',
+      label: 'Listed under',
       type: 'select',
       defaultValue: DEFAULT_SECTION,
       options: PEOPLE_SECTIONS.map((s) => ({ label: s.label, value: s.key })),
-      admin: { description: 'Which group the person is listed under on /people and the contact page.' },
+      admin: { description: 'Which group of people this person is shown with on the website.' },
     },
-    { name: 'phone', type: 'text', defaultValue: '' },
-    { name: 'email', type: 'text', defaultValue: '', validate: emailOrEmpty },
+    { name: 'phone', label: 'Phone number', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. 0400 000 000' } },
+    { name: 'email', label: 'Email address', type: 'text', defaultValue: '', validate: emailOrEmpty, admin: { placeholder: 'name@example.com' } },
     {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'Shown square; use the crop tool on the image to frame the face.' },
+      admin: { description: 'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.' },
     },
-    sortOrderField(),
+    {
+      ...sortOrderField(),
+      label: 'Order on the page',
+      admin: { step: 1, description: 'Leave as 0 unless the order matters. Smaller numbers show first (1 is at the top).' },
+    },
   ],
 }
