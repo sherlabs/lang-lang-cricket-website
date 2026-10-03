@@ -65,11 +65,17 @@ Then pick one way to fill `langlang_dev`:
 - **Demo content (no legacy DB).** A fresh club or a new developer:
 
   ```bash
+  export PAYLOAD_PUSH=false
   pnpm payload migrate
   INITIAL_ADMIN_EMAIL=you@example.com INITIAL_ADMIN_PASSWORD='…' \
     pnpm seed:admin --target 127.0.0.1/langlang_dev --confirm
   pnpm seed:demo --target 127.0.0.1/langlang_dev --confirm
   ```
+
+  On a migrated database, run every command with `PAYLOAD_PUSH=false` (as
+  here, or export it in the shell): a Payload boot with push on writes a
+  dev-mode marker into `payload_migrations`, after which `payload migrate`
+  prompts and hangs in a non-interactive shell.
 
   `seed:demo` seeds the `club` global and a small set of documents, gallery
   photos, sponsors, people, announcements, events, a story and players from
@@ -156,6 +162,7 @@ place (no bytes move), `/assets/…` files are uploaded, and anything else is
 flagged in the report.
 
 ```bash
+export PAYLOAD_PUSH=false   # the target is migrated; see Setup
 pnpm etl --target 127.0.0.1/langlang_dev --dry-run --blob-store-id <store id> --report tmp/etl-dry.json
 pnpm etl --target 127.0.0.1/langlang_dev --confirm --blob-store-id <store id> --report tmp/etl.json
 pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
