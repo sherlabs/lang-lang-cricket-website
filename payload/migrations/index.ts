@@ -6,6 +6,7 @@ import * as migration_20261003_042619_wp3_review_fixes from './20261003_042619_w
 import * as migration_20261003_044835_wp4_stories from './20261003_044835_wp4_stories';
 import * as migration_20261003_055903_wp5_players from './20261003_055903_wp5_players';
 import * as migration_20261003_064657_wp5_review_fixes from './20261003_064657_wp5_review_fixes';
+import * as migration_20261003_101141_dup_shared_legacy_url from './20261003_101141_dup_shared_legacy_url';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20261003_064657_wp5_review_fixes.up,
     down: migration_20261003_064657_wp5_review_fixes.down,
-    name: '20261003_064657_wp5_review_fixes'
+    name: '20261003_064657_wp5_review_fixes',
+  },
+  {
+    up: migration_20261003_101141_dup_shared_legacy_url.up,
+    down: migration_20261003_101141_dup_shared_legacy_url.down,
+    name: '20261003_101141_dup_shared_legacy_url'
   },
 ];

@@ -22,7 +22,7 @@ export async function generateMetadata(props: { params: Promise<{ token: string 
   const params = await props.params;
   const [club, rsvp] = await Promise.all([getClub(), getRsvpByToken(params.token)])
   return {
-    title: titleWithSuffix(club, rsvp ? 'Manage your RSVP' : 'RSVP not found'),
+    title: titleWithSuffix(club, rsvp ? club.pageCopy.rsvpEdit.header.title : 'RSVP not found'),
     robots: { index: false, follow: false },
   }
 }

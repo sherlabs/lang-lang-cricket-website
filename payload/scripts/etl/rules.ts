@@ -20,8 +20,9 @@ export const importedEventIds = (events: readonly LegacyRow[]) => new Set(events
 export const importedPlayerIds = (players: readonly LegacyRow[]) => new Set(players.filter(importsPlayer).map((p) => Number(p.id)))
 
 /**
- * Ids of rows whose `url` an earlier (lower-id) kept row already has. `legacyUrl` is unique, so
- * only the first such row can own the file.
+ * Ids of rows whose `url` an earlier (lower-id) kept row already has. Event photos skip them
+ * (a resubmission; `legacyUrl` is unique there). Documents and gallery photos keep every row:
+ * the first owns the file, each later one gets a copy of it (media.ts `dupCopyName`).
  */
 export function duplicateUrlIds(rows: readonly LegacyRow[], keep: (r: LegacyRow) => boolean): Set<number> {
   const seen = new Set<string>()

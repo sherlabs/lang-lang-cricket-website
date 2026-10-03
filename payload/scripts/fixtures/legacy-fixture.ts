@@ -73,6 +73,10 @@ const documents: Row[] = [
   { id: 6, category: 'CCCA Directory', title: 'CCCA Directory 2025/26', url: blob('documents/1726300000000-ccca-directory-25-26.pdf'), created_at: ts('2025-09-20T08:00:00') },
   // Outside the documents/ prefix: the ETL must take the collision/re-upload fallback and report it.
   { id: 9, category: 'Policies', title: 'Conflict Resolution Policy', url: blob('misc/llcc-conflict-resolution-policy-Hn4Tg6Vb2NcXz8QwEr5Ty0.pdf'), created_at: ts('2026-02-02T10:30:00') },
+  // Duplicate URLs (the legacy admin allowed them): same file as #4 (own-store blob) and #2
+  // (/assets/), different title/category. The ETL keeps both rows and gives each a copy.
+  { id: 10, category: 'Policies', title: 'Game Day Checklist (second copy)', url: blob('documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf'), created_at: ts('2026-02-03T10:30:00') },
+  { id: 11, category: 'Child Safety', title: 'Extreme Weather Policy (child safety)', url: '/assets/documents/ccca-extreme-weather-policy.pdf', created_at: ts('2026-02-04T10:30:00') },
 ]
 
 const galleryPhotos: Row[] = [
@@ -82,6 +86,9 @@ const galleryPhotos: Row[] = [
   // Same basename as /assets/gallery/photo-01.jpg but a blob under gallery/.
   { id: 4, url: blob('gallery/photo-01.jpg'), caption: 'Re-uploaded classic', sort_order: -1, created_at: ts('2026-01-11T05:00:00') },
   { id: 7, url: blob('gallery/IMG_2041-Zy8Xw6Vu4Ts2Rq0Po8Nm6Lk.webp'), caption: 'Under 14s', sort_order: 2, created_at: ts('2026-03-02T01:00:00') },
+  // Duplicate URLs: same file as #3 (own-store blob) and #2 (/assets/), different caption.
+  { id: 8, url: blob('gallery/team-photo-Ab3De5Fg7Hi9Jk1Lm3No5Pq.jpg'), caption: 'Seniors 2025 (again)', sort_order: 3, created_at: ts('2026-03-03T01:00:00') },
+  { id: 9, url: '/assets/gallery/photo-02.jpg', caption: 'Second look', sort_order: 4, created_at: ts('2026-03-04T01:00:00') },
 ]
 
 const sponsors: Row[] = [

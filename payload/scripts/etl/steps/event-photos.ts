@@ -21,8 +21,8 @@ type Row = {
  * approved/pending (the legacy app deleted rejects, so e.g. `rejected` is anomalous) is
  * skipped and reported rather than coerced: coercing to `pending` would resurface an
  * already-rejected photo in the review queue. A photo whose URL an earlier imported photo
- * already has is a resubmission: skipped and reported (`legacyUrl` is unique, so it could only
- * be imported without a file, which an admin could then approve).
+ * already has is a resubmission: skipped and reported (`legacyUrl` is unique here, so it could
+ * only be imported without a file, which an admin could then approve).
  */
 export const eventPhotosStep: EtlStep = {
   name: 'event-photos',

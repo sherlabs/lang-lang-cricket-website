@@ -236,7 +236,7 @@ Conventions used throughout:
 | (upload) | `mimeTypes: ['application/pdf']`, `filesRequiredOnCreate: false` | |
 | title | text, required | |
 | category | select, required | `Codes of Conduct`, `Policies`, `Child Safety`, `Game Day`, `CCCA Directory`. The option list is exported from `lib/documents.ts` (`DOCUMENT_CATEGORIES`, also the public `CATEGORY_ORDER`). |
-| legacyUrl | text, unique, hidden | |
+| legacyUrl | text, indexed (not unique), hidden | shared by duplicate-URL rows (§12.4); migration `dup_shared_legacy_url` |
 
 - **Access:** read anyone, write staff. **Admin:** `useAsTitle: 'title'`, `defaultColumns: ['title','category','filename']`, `defaultSort: 'title'`, group **Club**.
 - **Revalidate:** `/documents`.
@@ -249,7 +249,7 @@ Conventions used throughout:
 | (upload) | images, `filesRequiredOnCreate: false` | |
 | caption | text, default `''` | |
 | sortOrder | number, default 0, indexed | lower shows first; first six on the home page |
-| legacyUrl | hidden unique | |
+| legacyUrl | hidden, indexed (not unique) | shared by duplicate-URL rows (§12.4) |
 
 - **Hook `sortFirst`:** on `create`, when `sortOrder` is not supplied, set it to `min(sortOrder) - 1`. New uploads land at the front, as `addGalleryPhotos` does today, without rewriting every row.
 - **Access:** read anyone, write staff. **Admin:** `defaultSort: 'sortOrder'`, `defaultColumns: ['filename','caption','sortOrder']`, group **Club**. Bulk upload is Payload's native one.
@@ -976,7 +976,7 @@ Foreign keys force this order. Each step is idempotent.
 - `allowIDOnCreate` is honoured only when `PAYLOAD_ETL=true`, so the running app never accepts client-chosen ids.
 - For each id-preserving collection the ETL does `findByID`. If the row exists it is skipped, or updated in place with `--update`. Otherwise it is created with `data.id`.
 - `--reconcile-deletes` (only with `--update`) deletes target rows whose id is ≤ the legacy max id and missing from legacy, and reports Payload-native rows (id > legacy max). It exists for the re-attempt fallback (§13.4), not the normal cutover.
-- Media is deduplicated on `legacyUrl`, which is unique, and aliases on `nameKey`.
+- Media is deduplicated on `legacyUrl`, which is unique there (documents and gallery photos share it between duplicate-URL rows, §12.4), and aliases on `nameKey`.
 - A re-run therefore never duplicates anything. A partial run can be resumed with `--only`. Skip-if-exists idempotency assumes the source did not change between runs; the frozen cutover window guarantees that.
 
 ### 12.4 Media import: the 3-way branch (`payload/scripts/etl/media.ts`)
@@ -991,6 +991,8 @@ Foreign keys force this order. Each step is idempotent.
 | other | anything else (a foreign store, http, data:) | **Flag**: relation null, recorded in the report with table, id, field and url. |
 
 A `filename` uniqueness collision on register (the same basename under two prefixes), or a `documents`/`gallery-photos`/`event-photos` URL whose path is not under that collection's prefix (it would be nested, §1), falls back to downloading the blob and uploading it through Payload, which renames it. The fallback is reported. It only happens on a real run with a token, and its `legacyUrl` is set so the read rule (§1) keeps showing the original until decommission. Registration creates pass no `url` and are checked by verify (§12.2 step 18).
+
+**Duplicate URLs.** The legacy admin allowed two `documents` or `gallery_photos` rows with the same `url`, so `legacyUrl` is non-unique on those two collections (migration `dup_shared_legacy_url`; `media` and `event-photos` stay unique). Every legacy row is imported. The lowest id owns the original blob (registered in place, or uploaded, as above). Each later row keeps its own title, category or caption and its `legacyUrl` (provenance, and the read rule keeps serving the original), but gets its own file: a copy stored under the collection prefix as `<stem>-dup<legacyId><ext>`. The ETL downloads the original and re-uploads it through Payload (a `/assets/` file is read from disk); without a Blob token it registers the row under the copy's name without bytes (`duplicate-copy-local`, reported as `media-duplicate-url`). The name is deterministic and the row exists afterwards, so a re-run writes nothing and `--update` keeps the copy. The original blob is only read: the delete guard (§7.5) skips every blob delete of a row with a `legacyUrl`, so deleting a copy's row cannot remove the shared original. Verify (§12.2 step 18) requires each such row to hold a file named as its copy and exempts it from the plugin-URL check. Nothing in the legacy data needs fixing by hand. Event photos are different: a later photo with an earlier photo's URL is a resubmission and is skipped and reported (`duplicate-url-skipped`).
 
 ### 12.5 Rehearsal (WP6 acceptance)
 

@@ -15,8 +15,9 @@
  *   and the inline image count equals the legacy count minus the drops;
  * - documents / gallery-photos / event-photos: each row's file is its legacy row's (`legacyUrl`
  *   equals the legacy url when importable), and a legacy row with a file never became a
- *   file-less row (a foreign URL, or a duplicate of another row's URL) unnoticed;
- * - every own-store upload row: the plugin's `generateURL` with the collection prefix and the
+ *   file-less row (a foreign URL) unnoticed. A documents / gallery row whose URL an earlier row
+ *   also has must hold its own copy: stored under the collection prefix as `<stem>-dup<id><ext>`;
+ * - every own-store upload row (copies excepted): the plugin's `generateURL` with the collection prefix and the
  *   stored `prefix` equals `legacyUrl`. Only fallbacks (§12.4) are exempt and listed: in-run,
  *   those the ETL report says took a fallback; standalone, rows stored under exactly the
  *   collection prefix (where a re-upload puts them) whose URL differs. Anything else fails;
@@ -34,8 +35,8 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import { sectionOf } from '../../../lib/people'
 import { lexicalToTiptapHtml, normaliseStoryHtml, type StoryContent } from '../../../lib/stories-convert'
 import { fullName } from '../../hooks/displayName'
-import { classify, COLLECTION_PREFIX, importableUrl, storeIdFromToken, type UploadCollection } from './media'
-import { expectedRows, importedEventIds, importedPlayerIds } from './rules'
+import { classify, COLLECTION_PREFIX, dupCopyName, importableUrl, isDupCopyName, sourceFilename, storeIdFromToken, type UploadCollection } from './media'
+import { duplicateUrlIds, expectedRows, importedEventIds, importedPlayerIds } from './rules'
 import { ID_PRESERVING, nextSequenceValue } from './sequences'
 import type { LegacyRow, LegacySource } from './source'
 import { legacyHtml } from './steps/stories'
@@ -343,8 +344,13 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
     const c = check("upload rows: each row's file is its legacy row's")
     for (const collection of ['documents', 'gallery-photos', 'event-photos'] as const) {
       if (!want(collection) || !target[collection]) continue
+      // The row that owns each file: the lowest id holding the url (documents / gallery rows may share a legacyUrl).
       const owner = new Map<string, number>()
-      for (const d of target[collection].values()) if (d.legacyUrl) owner.set(d.legacyUrl as string, d.id as number)
+      for (const d of [...target[collection].values()].sort((a, b) => (a.id as number) - (b.id as number))) {
+        if (d.legacyUrl && !owner.has(d.legacyUrl as string)) owner.set(d.legacyUrl as string, d.id as number)
+      }
+      // Rows whose url an earlier legacy row also has: each must hold its own copy of the file.
+      const copies = collection === 'event-photos' ? new Set<number>() : duplicateUrlIds(legacyOf[collection], () => true)
       for (const r of legacyOf[collection].filter(expected[collection])) {
         const d = target[collection].get(r.id as number)
         if (!d) continue
@@ -353,10 +359,17 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
         const have = (d.legacyUrl as string | null | undefined) ?? null
         c.checked++
         if (wantUrl !== null) {
-          if (have === wantUrl) continue
+          if (have === wantUrl && !copies.has(r.id as number)) continue
+          if (have === wantUrl) {
+            const copyName = dupCopyName(sourceFilename(classify(r.url, storeId))!, r.id as number)
+            const isCopy = isDupCopyName(d.filename, sourceFilename(classify(r.url, storeId))!, r.id as number) && ((d.prefix as string | null) ?? '') === COLLECTION_PREFIX[collection]
+            if (isCopy) c.note(`${w}: own copy "${d.prefix ? `${d.prefix}/` : ''}${d.filename}" of ${collection}#${owner.get(wantUrl)}'s file (same legacy url)`)
+            else c.fail(`${w}: shares legacy url ${show(wantUrl)} with ${collection}#${owner.get(wantUrl)} but its file ${show(d.filename ?? '(none)')} is not its own copy (expected "${copyName}" under "${COLLECTION_PREFIX[collection]}")`)
+            continue
+          }
           const other = owner.get(wantUrl)
           if (have === null && !d.filename && other !== undefined && other !== r.id) {
-            c.fail(`${w}: no file — its legacy url ${show(wantUrl)} is also ${collection}#${other}'s (legacyUrl is unique); the page would show an empty link/broken image`)
+            c.fail(`${w}: no file — its legacy url ${show(wantUrl)} is also ${collection}#${other}'s and the copy for this row is missing (re-run the ETL with --update)`)
           } else {
             c.fail(`${w}.legacyUrl: legacy ${show(wantUrl)} ≠ target ${show(have)}${have === null && d.filename ? ` (target file ${show(d.filename)})` : ''}`)
           }
@@ -417,9 +430,16 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
       c.note('no Blob token and no --blob-store-id: own-store URLs cannot be recognised; check skipped')
     } else {
       const fallbacks: string[] = []
+      // A duplicate-URL row (documents / gallery) holds its own copy under the owner's legacyUrl: checked in 2b.
+      const firstOf = new Map<string, number>()
+      for (const { collection, doc: d } of [...uploadDocs].sort((a, b) => (a.doc.id as number) - (b.doc.id as number))) {
+        const k = `${collection} ${d.legacyUrl}`
+        if (!firstOf.has(k)) firstOf.set(k, d.id as number)
+      }
       for (const { collection, doc: d } of uploadDocs) {
         const legacyUrl = d.legacyUrl as string
         if (classify(legacyUrl, storeId).kind !== 'own-blob') continue
+        if (firstOf.get(`${collection} ${legacyUrl}`) !== d.id) continue
         const url = d.filename ? pluginUrl(collection, d) : null
         // A fallback (§12.4) is exempt: in-run, by what the ETL did with this URL; standalone,
         // only a row stored under exactly the collection prefix (where the re-upload puts it).

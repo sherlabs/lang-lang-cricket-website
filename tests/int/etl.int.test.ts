@@ -145,7 +145,8 @@ describe('legacy ETL (fixture)', () => {
   it('first run: imports every table, skips and reports orphans, takes all three media branches', async () => {
     first = await runEtl()
     const c = (s: string) => first.report.counts(s)
-    expect(c('documents').created).toBe(6)
+    expect(c('documents').created).toBe(8)
+    expect(c('gallery-photos').created).toBe(7)
     expect(c('event-rsvps')).toMatchObject({ created: 6, skipped: 1 })
     expect(c('event-photos')).toMatchObject({ created: 4, skipped: 2 })
     expect(c('stories').created).toBe(5)
@@ -240,6 +241,66 @@ describe('legacy ETL (fixture)', () => {
     expect(second.report.writes()).toBe(0)
     expect(blob.put).not.toHaveBeenCalled()
     expect(await snapshot()).toEqual(afterFirst)
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it('duplicate-URL documents and gallery photos keep every row and get their own copy; verify accepts them', async () => {
+    const BLOB = 'https://fakestore.public.blob.vercel-storage.com'
+    const row = async (collection: 'documents' | 'gallery-photos', id: number) =>
+      (await payload.findByID({ collection, id, depth: 0, overrideAccess: true })) as unknown as Record<string, unknown>
+    const doc10 = await row('documents', 10)
+    expect(doc10).toMatchObject({
+      title: 'Game Day Checklist (second copy)', category: 'Policies', prefix: 'documents',
+      filename: 'game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1-dup10.pdf',
+      legacyUrl: `${BLOB}/documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf`,
+    })
+    // The owner is untouched: registered in place under its own name.
+    expect(await row('documents', 4)).toMatchObject({ filename: 'game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf', legacyUrl: doc10.legacyUrl })
+    expect(await row('documents', 11)).toMatchObject({ category: 'Child Safety', filename: 'ccca-extreme-weather-policy-dup11.pdf', legacyUrl: '/assets/documents/ccca-extreme-weather-policy.pdf' })
+    expect(await row('gallery-photos', 8)).toMatchObject({ caption: 'Seniors 2025 (again)', filename: 'team-photo-Ab3De5Fg7Hi9Jk1Lm3No5Pq-dup8.jpg', prefix: 'gallery' })
+    expect(await row('gallery-photos', 9)).toMatchObject({ caption: 'Second look', filename: 'photo-02-dup9.jpg', legacyUrl: '/assets/gallery/photo-02.jpg' })
+    // A local-asset duplicate really copies the bytes; an own-store one waits for a token (no fetch here).
+    expect(first.report.media['duplicate-copy']).toBe(2)
+    expect(first.report.media['duplicate-copy-local']).toBe(2)
+    const kinds = first.report.items.filter((i) => i.kind === 'media-duplicate-url').map((i) => `${i.table}#${i.id}`)
+    expect(kinds).toEqual(['documents#10', 'documents#11', 'gallery_photos#8', 'gallery_photos#9'])
+    const result = await verify(['documents', 'gallery-photos'])
+    expect(failuresOf(result)).toBe('')
+    expect(result.checks.flatMap((c) => c.notes).filter((n) => n.includes('own copy'))).toHaveLength(4)
+  })
+
+  it('verify fails a duplicate-URL row that has no copy (file-less, or a file that is not its own copy)', async () => {
+    const saved = await sqlRows<{ filename: string }>(`SELECT filename FROM "payload"."documents" WHERE id = 10`)
+    try {
+      await sqlRows(`UPDATE "payload"."documents" SET filename = NULL WHERE id = 10`)
+      expect(failuresOf(await verify(['documents']))).toContain('documents#10')
+      await sqlRows(`UPDATE "payload"."documents" SET filename = 'not-its-own-copy.pdf' WHERE id = 10`)
+      expect(failuresOf(await verify(['documents']))).toContain('documents#10: shares legacy url')
+    } finally {
+      await sqlRows(`UPDATE "payload"."documents" SET filename = '${saved[0].filename}' WHERE id = 10`)
+    }
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it("deleting a duplicate's doc never deletes the shared original blob; --update keeps the copy and --update heals a file-less duplicate", async () => {
+    const original = `${'https://fakestore.public.blob.vercel-storage.com'}/documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf`
+    blob.del.mockClear()
+    await payload.delete({ collection: 'documents', id: 10, overrideAccess: true, context: { disableRevalidate: true } })
+    expect(blob.del).not.toHaveBeenCalled() // legacyUrl rows keep their blobs until decommission
+    expect(await payload.count({ collection: 'documents', where: { legacyUrl: { equals: original } }, overrideAccess: true })).toEqual({ totalDocs: 1 })
+    const gone = await runEtl({}, ['documents'])
+    expect(gone.report.counts('documents').created).toBe(1)
+    expect(gone.report.media['duplicate-copy-local']).toBe(1)
+    // --update treats the copy as its legacy row's own file (no file-conflict re-import, no copy).
+    blob.put.mockClear()
+    const upd = await runEtl({ update: true }, ['documents', 'gallery-photos'])
+    expect(upd.report.items.filter((i) => i.kind === 'file-conflict-replaced')).toEqual([])
+    expect(upd.report.media['duplicate-copy'] ?? 0).toBe(0)
+    expect(blob.put).not.toHaveBeenCalled()
+    // A duplicate an older ETL left file-less is replaced by a copy.
+    await sqlRows(`UPDATE "payload"."documents" SET filename = NULL, prefix = NULL, legacy_url = NULL WHERE id = 10`)
+    const heal = await runEtl({ update: true }, ['documents'])
+    expect(heal.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)).toEqual(['file-conflict-replaced documents#10', 'media-duplicate-url documents#10'])
     expect((await verify()).ok).toBe(true)
   })
 
@@ -465,8 +526,22 @@ describe('legacy ETL, two stores (preview rehearsal)', () => {
       const heads = fetchSpy.mock.calls.filter(([, init]) => (init as { method?: string } | undefined)?.method === 'HEAD').map(([u]) => String(u))
       expect(heads.length).toBeGreaterThan(0)
 
+      // Duplicate URLs: the original blob is downloaded and re-uploaded under -dup<id> names.
+      const original = `${PROD}documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf`
+      expect(gets.filter((u) => u === original)).toHaveLength(1) // registered in place, so only the copy downloads it
+      expect(ctx.report.media['duplicate-copy']).toBe(4)
+      expect(ctx.report.media['duplicate-copy-local'] ?? 0).toBe(0)
+      const copy = (await payload.findByID({ collection: 'documents', id: 10, depth: 0, overrideAccess: true })) as unknown as Record<string, unknown>
+      expect(copy).toMatchObject({ filename: 'game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1-dup10.pdf', prefix: 'documents', legacyUrl: original })
+      expect(blob.put.mock.calls.map(([p]) => String(p))).toContain('documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1-dup10.pdf')
+      expect(blob.put.mock.calls.map(([p]) => String(p))).not.toContain('documents/game-day-training-checklist-Qx7Lm2Pa9RtYb3Kd8WcZs1.pdf')
+
       const before = await snapshot()
+      blob.put.mockClear()
+      fetchSpy.mockClear()
       const again = await runEtl({ token: PREVIEW_TOKEN, storeId: 'fakestore' })
+      expect(blob.put).not.toHaveBeenCalled()
+      expect(fetchSpy).not.toHaveBeenCalled()
       expect(again.report.writes()).toBe(0)
       expect(await snapshot()).toEqual(before)
     } finally {

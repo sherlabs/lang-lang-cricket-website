@@ -39,13 +39,14 @@ export class EtlReport {
    */
   writes(): number {
     const rows = Object.values(this.steps).reduce((n, c) => n + c.created + c.updated + c.deleted, 0)
-    const files = ['register', 'upload-local-asset', 'fallback-local', 'fallback-reupload'].reduce((n, k) => n + (this.media[k] ?? 0), 0)
+    const files = ['register', 'upload-local-asset', 'fallback-local', 'fallback-reupload', 'duplicate-copy', 'duplicate-copy-local'].reduce((n, k) => n + (this.media[k] ?? 0), 0)
     return rows + files
   }
 
   /**
    * What the media branch did per upload row in this run, keyed `<collection> <legacyUrl>`
-   * (register / fallback-local / fallback-reupload / upload-local-asset). Verify uses it to
+   * (register / fallback-local / fallback-reupload / upload-local-asset; a duplicate-URL copy
+   * is not keyed here: it shares its owner's URL, so verify recognises copies by their name). Verify uses it to
    * tell registered rows from fallbacks instead of guessing from the stored filename.
    */
   readonly files = new Map<string, string>()

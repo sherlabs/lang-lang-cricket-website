@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { anyone, isStaff } from '../access'
 import { sortOrderField } from '../fields/sortOrderField'
 import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
-import { legacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
+import { sharedLegacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { sortFirst } from '../hooks/sortFirst'
 import { MEDIA_MAX_BYTES } from './Media'
@@ -34,5 +34,5 @@ export const GalleryPhotos: CollectionConfig = {
     afterDelete: [revalidateAfterDelete(PATHS)],
   },
   timestamps: true,
-  fields: [{ name: 'caption', type: 'text', defaultValue: '' }, sortOrderField('Lower numbers show first. Leave empty on upload to put the photo at the front.', { withDefault: false }), legacyUrlField],
+  fields: [{ name: 'caption', type: 'text', defaultValue: '' }, sortOrderField('Lower numbers show first. Leave empty on upload to put the photo at the front.', { withDefault: false }), sharedLegacyUrlField],
 }

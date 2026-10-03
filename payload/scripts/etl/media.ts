@@ -14,9 +14,18 @@
  * Payload — only possible with a Blob token. Without one (local rehearsal), the row is
  * registered the way the re-upload would store it (collection prefix, disambiguated filename);
  * its `legacyUrl` keeps rendering the original through the read rule. Every fallback is reported.
+ *
+ * Duplicate URLs (documents / gallery photos only; `legacyUrl` is non-unique there): the first
+ * row owns the original blob (registered in place as above). Each later row with the same URL
+ * keeps its own data and `legacyUrl` but gets its own file: a copy of the original, stored under
+ * the collection prefix as `<stem>-dup<legacyId><ext>` (deterministic, so a re-run finds the row
+ * and writes nothing). The copy is a download + re-upload (a /assets/ file is read from disk);
+ * without a Blob token the row is registered under the copy's name without bytes. The original is
+ * only ever read. Every row with a `legacyUrl` keeps the delete guard, so no blob is deleted
+ * before decommission.
  */
 import { head } from '@vercel/blob'
-import { existsSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { APIError, type CollectionSlug, type Payload } from 'payload'
 import type { EtlReport } from './report'
@@ -146,11 +155,30 @@ async function findOne(payload: Payload, collection: UploadCollection, field: 'l
     collection: collection as CollectionSlug,
     where: { [field]: { equals: value } },
     limit: 1,
+    sort: 'id',
     depth: 0,
     overrideAccess: true,
   })
   return (docs[0] as { id: number; legacyUrl?: string | null } | undefined) ?? null
 }
+
+/** The stored filename of the copy a duplicate-URL row gets: `<stem>-dup<legacyId><ext>`. */
+export function dupCopyName(filename: string, id: number | string): string {
+  const ext = path.extname(filename)
+  return `${filename.slice(0, filename.length - ext.length)}-dup${id}${ext}`
+}
+
+/** True when `actual` is the copy name for `id` (Payload may append `-<n>` against a name clash). */
+export function isDupCopyName(actual: unknown, filename: string, id: number | string): boolean {
+  if (typeof actual !== 'string') return false
+  const want = dupCopyName(filename, id)
+  const ext = path.extname(want)
+  return actual === want || new RegExp(`^${want.slice(0, want.length - ext.length).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-\\d+${ext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).test(actual)
+}
+
+/** The filename a classified importable URL is stored under (the basis of its copies' names). */
+export const sourceFilename = (c: Classified): string | null =>
+  c.kind === 'own-blob' ? c.filename : c.kind === 'local-asset' ? path.basename(c.file) : null
 
 /** `<prefix with / → ->-<filename>`: unique per legacy path, used only for the local (no-token) fallback. */
 const disambiguate = (prefix: string, filename: string) => (prefix ? `${prefix.replace(/\//g, '-')}-${filename}` : filename)
@@ -222,10 +250,65 @@ export async function importFile(
     report.mediaAction('reused')
     return { id: existing.id, action: 'reused' }
   }
-  if (existing) {
-    // legacyUrl is unique: a second legacy row pointing at the same file keeps its data, not the file.
-    note('media-duplicate-url', `already imported${existing.id ? ` as ${collection}#${existing.id}` : ' by an earlier row'}; this row is written without a file`)
-    return fileless('duplicate-url')
+  // An earlier (lower-id) row has this file: this row gets a copy. (A higher-id holder means this
+  // row is the true first one, re-imported by --update after its file conflicted; it registers.)
+  if (existing && (existing.id === null || existing.id < Number(where.id))) {
+    const srcName = sourceFilename(c)!
+    const copyName = dupCopyName(srcName, where.id)
+    const collectionPrefix = COLLECTION_PREFIX[collection]
+    const real = c.kind === 'local-asset' || Boolean(ctx.token)
+    const action = real ? 'duplicate-copy' : 'duplicate-copy-local'
+    let mimeType = mimeFromName(srcName)
+    let bytes: Buffer | null = null
+    let localFile: string | null = null
+    if (c.kind === 'local-asset') {
+      localFile = path.join(ctx.publicDir, c.file)
+      if (!localFile.startsWith(ctx.publicDir + path.sep) || !existsSync(localFile) || !statSync(localFile).isFile()) {
+        note('media-missing', `public${c.file} does not exist; relation left empty`)
+        return fileless('missing')
+      }
+    }
+    note(
+      'media-duplicate-url',
+      `already imported${existing.id ? ` as ${collection}#${existing.id}` : ' by an earlier row'}; this row gets its own copy "${collectionPrefix ? `${collectionPrefix}/` : ''}${copyName}"${real ? '' : ' (no Blob token — registered without bytes; a real run copies)'}`,
+    )
+    if (dryRun) {
+      report.mediaAction(action)
+      report.claimed.filenames.add(claimKey(copyName))
+      return { id: null, action }
+    }
+    if (localFile) {
+      bytes = readFileSync(localFile)
+    } else if (ctx.token) {
+      const res = await fetch(legacyUrl)
+      if (!res.ok) {
+        note('media-download-failed', `HTTP ${res.status}; the duplicate row is left without a file`)
+        return fileless('duplicate-copy-failed')
+      }
+      bytes = Buffer.from(await res.arrayBuffer())
+      const served = res.headers?.get?.('content-type')?.split(';')[0].trim()
+      if (served) mimeType = served
+    }
+    if (bytes) {
+      try {
+        const id = await create({
+          data: { ...data, legacyUrl },
+          file: { data: bytes, mimetype: mimeType, name: copyName, size: bytes.length },
+        })
+        report.mediaAction(action)
+        return { id, action }
+      } catch (err) {
+        if (!(err instanceof APIError)) throw err
+        note('media-fallback-failed', `copy upload rejected (${(err as Error).message}); the duplicate row is left without a file`)
+        return fileless('duplicate-copy-failed')
+      }
+    }
+    // No token, own-store blob: nothing to download. Registered the way the copy would be stored.
+    report.mediaAction(action)
+    const id = await create({
+      data: { ...data, filename: copyName, prefix: collectionPrefix, mimeType, focalX: 50, focalY: 50, legacyUrl },
+    })
+    return { id, action }
   }
 
   if (c.kind === 'local-asset') {
@@ -362,11 +445,6 @@ export async function fileConflict(
   const want = importableUrl(url, ctx.storeId, ctx.publicDir)
   const have = (existing.legacyUrl as string | null | undefined) ?? null
   if (have === want && (want !== null || !existing.filename)) return null
-  if (want !== null && have === null && !existing.filename) {
-    // A duplicate legacy URL: another row owns the file, this one is file-less by design.
-    const owner = await findOne(ctx.payload, collection, 'legacyUrl', want)
-    if (owner && owner.id !== existing.id) return null
-  }
   return have !== null
     ? `stored legacyUrl ${JSON.stringify(have)} ≠ legacy ${JSON.stringify(want)}`
     : existing.filename

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   return {
-    title: titleWithSuffix(await getClub(), 'Edit your story'),
+    title: titleWithSuffix(await getClub(), (await getClub()).pageCopy.storyDraftEdit.header.title),
     robots: { index: false, follow: false },
   }
 }

@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { DOCUMENT_CATEGORIES } from '../../lib/documents'
 import { anyone, isStaff } from '../access'
 import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
-import { legacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
+import { sharedLegacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 export const DOCUMENT_MAX_BYTES = 25 * 1024 * 1024
@@ -47,6 +47,6 @@ export const Documents: CollectionConfig = {
       options: [...DOCUMENT_CATEGORIES],
       admin: { description: 'The section of the Documents page this file is listed under.' },
     },
-    legacyUrlField,
+    sharedLegacyUrlField,
   ],
 }

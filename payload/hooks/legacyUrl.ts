@@ -20,6 +20,14 @@ export const legacyUrlField: TextField = {
   access: { create: () => false, update: () => false },
 }
 
+/**
+ * `legacyUrl` for collections where several legacy rows may legitimately share one file
+ * (documents, gallery photos): non-unique, still indexed. The first row owns the blob; each
+ * later row with the same URL gets its own copy (ETL, spec §12.4) but keeps the legacy URL for
+ * provenance, and the delete guard then keeps every blob of such a row until decommission.
+ */
+export const sharedLegacyUrlField: TextField = { ...legacyUrlField, unique: false }
+
 const BLOB_HOST_SUFFIX = '.public.blob.vercel-storage.com'
 
 /**
