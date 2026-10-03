@@ -38,6 +38,8 @@ export const PLANTED = {
   veteran: { firstName: 'Vic', lastName: 'Veteran', slug: 'vic-veteran', manualYears: '1998–2024' },
   hidden: ['hidden-star-one', 'hidden-star-two', 'hidden-star-three'],
   wicketLeader: { firstName: 'Wally', lastName: 'Wicketking', slug: 'wally-wicketking' },
+  /** A visible player whose first name starts with `=`, so CSV export tests can prove the formula guard. */
+  formulaName: { firstName: '=Formula', lastName: 'Injection', slug: 'formula-injection' },
 } as const
 
 function mulberry32(seed: number) {
@@ -185,6 +187,11 @@ export function generateStatsSeed(seed = 20261003): SeedPlayer[] {
     }
     players.push({ firstName: f, lastName: l, hidden: false, manualYears: '', honours, rows })
   }
+  // Modest, visible player with a spreadsheet-formula name (CSV injection guard).
+  players.push({
+    firstName: PLANTED.formulaName.firstName, lastName: PLANTED.formulaName.lastName, hidden: false, manualYears: '', honours: [],
+    rows: SEED_SEASONS.slice(0, 2).map((s) => row(s, GRADES[2], { games: 12, ...batting(r, 12, 180), catches: 2 })),
+  })
   // Sanity: the planted leader's career total is exact.
   const lead = players[0].rows
   if (sumRows(lead, 'batRuns') !== PLANTED.careerLeader.runs) throw new Error('stats seed: planted career leader total drifted')

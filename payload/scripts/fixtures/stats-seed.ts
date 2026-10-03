@@ -6,13 +6,13 @@
  *
  * Refuses unless DATABASE_URI is 127.0.0.1 and the database is langlang_dev or langlang_test.
  * Players are `source: 'manual'` with a bio starting `[seed]`; re-running first deletes the
- * previously seeded players (their seasons cascade). Yearbook seeds arrive with the yearbooks
- * collection in WP-C.
+ * previously seeded players (their seasons cascade). Also seeds two yearbooks (one published with
+ * messages, sponsors and photos, one draft).
  */
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { checkGuard, guard } from '../_guard'
-import { seedStats } from './stats-seed-db'
+import { seedStats, seedYearbooks } from './stats-seed-db'
 
 const ALLOWED_DBS = new Set(['langlang_dev', 'langlang_test'])
 
@@ -26,6 +26,8 @@ async function main() {
   try {
     const out = await seedStats(payload)
     console.log(`[fixture:stats] seeded ${out.players} players, ${out.rows} season rows into ${g.target}`)
+    const yb = await seedYearbooks(payload, { photos: true })
+    console.log(`[fixture:stats] seeded ${yb.yearbooks} yearbooks with ${yb.photos} photos`)
   } finally {
     await payload.destroy()
   }

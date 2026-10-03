@@ -5,6 +5,9 @@ const LINKS = [
   { href: '/stats', label: 'Leaderboards' },
   { href: '/records', label: 'Records' },
   { href: '/honours', label: 'Honours' },
+  { href: '/statlab', label: 'StatLab' },
+  { href: '/yearbooks', label: 'Yearbooks' },
+  { href: '/matches', label: 'Matches' },
 ] as const
 
 /** Section navigation as links (not a tablist: there are no tab panels). Scrolls inside its own box on phones. */

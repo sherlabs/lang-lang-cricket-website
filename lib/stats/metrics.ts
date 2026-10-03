@@ -62,6 +62,8 @@ export const METRICS: readonly Metric[] = [
   simple('sixes', 'Sixes', '6s', 'batting', (c) => c.batSixes),
   simple('fours', 'Fours', '4s', 'batting', (c) => c.batFours),
   simple('innings', 'Innings', 'Inns', 'batting', (c) => c.batInnings),
+  simple('notOuts', 'Not outs', 'NO', 'batting', (c) => c.batNotOuts),
+  simple('balls', 'Balls faced', 'Balls', 'batting', (c) => c.batBalls),
   simple('boundaryPct', 'Boundary runs %', 'Bdy%', 'batting', (c) => (c.batRuns > 0 ? ((c.batFours * 4 + c.batSixes * 6) / c.batRuns) * 100 : null), { digits: 1, qualifier: 'sr' }),
   simple('runsPerGame', 'Runs per game', 'R/G', 'batting', (c) => per(c.batRuns, c.games), { digits: 1 }),
   simple('wickets', 'Wickets', 'Wkts', 'bowling', (c) => c.bowlWickets),
@@ -76,6 +78,14 @@ export const METRICS: readonly Metric[] = [
     higherIsBetter: true, qualifier: 'count',
   },
   simple('maidens', 'Maidens', 'Mdns', 'bowling', (c) => c.bowlMaidens),
+  {
+    // Value is balls / 6 (a plain number to sort and filter on); display is cricket notation, e.g. 12.3.
+    key: 'overs', label: 'Overs bowled', short: 'Overs', group: 'bowling',
+    value: (c) => (c.bowlBalls > 0 ? c.bowlBalls / 6 : null),
+    format: (c) => (c.bowlBalls > 0 ? bowl(c).overs : '–'),
+    higherIsBetter: true, qualifier: 'count',
+  },
+  simple('bowlRuns', 'Runs conceded', 'Runs', 'bowling', (c) => (c.bowlBalls > 0 ? c.bowlRuns : null)),
   simple('wicketsPerGame', 'Wickets per game', 'W/G', 'bowling', (c) => per(c.bowlWickets, c.games), { digits: 2 }),
   simple('catches', 'Catches', 'Ct', 'fielding', (c) => c.catches),
   simple('catchesPerGame', 'Catches per game', 'Ct/G', 'fielding', (c) => per(c.catches, c.games), { digits: 2 }),
