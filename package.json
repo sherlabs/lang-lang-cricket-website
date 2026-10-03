@@ -20,6 +20,8 @@
     "check:generated": "pnpm generate && git diff --exit-code payload-types.ts 'app/(payload)/admin/importMap.js'",
     "check:migrations": "node scripts/check-migrations.mjs",
     "seed:admin": "payload run payload/scripts/seed-admin.ts --",
+    "seed:club": "payload run payload/scripts/seed-club.ts --",
+    "etl": "PAYLOAD_ETL=true payload run payload/scripts/etl-legacy.ts --",
     "fixture:legacy": "tsx --env-file=.env.local payload/scripts/fixtures/legacy-fixture.ts"
   },
   "dependencies": {

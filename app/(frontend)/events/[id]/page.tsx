@@ -16,7 +16,8 @@ import { formatLocalTime } from '@/lib/playhq/format'
 import { RSVP_COOKIE, parseRsvpCookie } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
 import type { Event } from '@/db/schema'
-import { baseOpenGraph, truncateDescription, canonicalFor } from "@/lib/site-metadata"
+import { baseOpenGraph, truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 import { PhotoSubmitForm } from './photo-submit-form'
 import { RsvpPanel } from './rsvp-panel'
 
@@ -35,7 +36,7 @@ async function loadEvent(id: string): Promise<Event | null> {
 }
 
 /** When/where summary first, then the admin-written blurb, trimmed for link previews. */
-function eventDescription(event: Event): string {
+function eventDescription(event: Event, clubName: string): string {
   const when =
     event.type === 'recurring' && event.dayOfWeek != null
       ? `Every ${DAYS[event.dayOfWeek]}`
@@ -46,19 +47,19 @@ function eventDescription(event: Event): string {
   const parts = [[when, time].filter(Boolean).join(' · '), event.location && `at ${event.location}`].filter(Boolean)
   const where = parts.join(' ')
   const summary = where ? `${where}.` : ''
-  return truncateDescription([summary, event.description].filter(Boolean).join(' ') || 'A Lang Lang Cricket Club event.')
+  return truncateDescription([summary, event.description].filter(Boolean).join(' ') || `A ${clubName} event.`)
 }
 
 export async function generateMetadata(props: Props) {
   const params = await props.params;
-  const event = await loadEvent(params.id)
+  const [club, event] = await Promise.all([getClub(), loadEvent(params.id)])
   return {
     alternates: canonicalFor(`/events/${params.id}`),
-    title: event ? `${event.title} | Lang Lang Cricket Club` : 'Event not found | Lang Lang Cricket Club',
-    description: event ? eventDescription(event) : undefined,
+    title: titleWithSuffix(club, event ? event.title : 'Event not found'),
+    description: event ? eventDescription(event, club.name) : undefined,
     openGraph: event?.coverImageUrl
-      ? { ...baseOpenGraph, images: [{ url: event.coverImageUrl, alt: event.title }] }
-      : baseOpenGraph,
+      ? { ...baseOpenGraph(club), images: [{ url: event.coverImageUrl, alt: event.title }] }
+      : baseOpenGraph(club),
   }
 }
 
@@ -74,7 +75,7 @@ function isPastOneTime(event: Event): event is Event & { eventDate: Date } {
 export default async function EventDetailPage(props: Props) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const event = await loadEvent(params.id)
+  const [club, event] = await Promise.all([getClub(), loadEvent(params.id)])
   if (!event) notFound()
 
   const past = isPastOneTime(event)
@@ -99,7 +100,7 @@ export default async function EventDetailPage(props: Props) {
 
   return (
     <main>
-      <JsonLd data={eventJsonLd(event, pollDate)} />
+      <JsonLd data={eventJsonLd(event, pollDate, club)} />
       <PageHeader
         eyebrow={past ? 'Past event' : isRecurring ? 'Every ' + DAYS[event.dayOfWeek!] : 'Event'}
         title={event.title}

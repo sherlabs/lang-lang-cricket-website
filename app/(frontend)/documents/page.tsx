@@ -1,51 +1,16 @@
-import { asc } from 'drizzle-orm'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  Download01Icon,
-  FileTextIcon,
-  ShieldCheckIcon,
-  ScrollIcon,
-  ClipboardListIcon,
-  BookOpen01Icon,
-  JusticeScale01Icon,
-} from '@hugeicons/core-free-icons'
-import { db } from '@/db'
-import { documents } from '@/db/schema'
+import { Download01Icon, FileTextIcon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
-import { canonicalFor } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
+import { clubIcon } from '@/lib/club-icons'
+import { listDocuments } from '@/lib/content-queries'
+import { CATEGORY_ORDER } from '@/lib/documents'
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/documents'),
-  title: 'Documents & Policies | Lang Lang Cricket Club',
-  description:
-    'Codes of conduct, child safety, game day information and policies for members and families of Lang Lang Cricket Club.',
-}
-
-const CATEGORY_ORDER = ['Codes of Conduct', 'Policies', 'Child Safety', 'Game Day', 'CCCA Directory']
-
-const CATEGORY_META: Record<string, { icon: typeof FileTextIcon; blurb: string }> = {
-  'Codes of Conduct': {
-    icon: JusticeScale01Icon,
-    blurb: 'Expected behaviour for players, parents and juniors across the Cardinia Casey Cricket Association.',
-  },
-  Policies: {
-    icon: ScrollIcon,
-    blurb: 'Cricket Victoria and CCCA policies covering weather, social media, screening and complaints.',
-  },
-  'Child Safety': {
-    icon: ShieldCheckIcon,
-    blurb: 'Safeguarding children and young people is a core commitment of the club.',
-  },
-  'Game Day': {
-    icon: ClipboardListIcon,
-    blurb: 'Practical checklists for training and match days.',
-  },
-  'CCCA Directory': {
-    icon: BookOpen01Icon,
-    blurb: 'Association contacts and club listings for the current season.',
-  },
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/documents'), ...pageSeo(await getClub(), 'documents') }
 }
 
 function slug(s: string) {
@@ -53,7 +18,9 @@ function slug(s: string) {
 }
 
 export default async function DocumentsPage() {
-  const rows = await db.select().from(documents).orderBy(asc(documents.title))
+  const [club, rows] = await Promise.all([getClub(), listDocuments()])
+  const header = club.pageCopy.documents.header
+  const categoryMeta = new Map(club.pageCopy.documentCategories.map((c) => [c.category, c]))
   const extra = Array.from(new Set(rows.map((r) => r.category))).filter(
     (c) => !CATEGORY_ORDER.includes(c)
   )
@@ -63,11 +30,7 @@ export default async function DocumentsPage() {
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Documents & policies"
-        title="Club rules, policies and resources"
-        intro="Official Cricket Victoria and Cardinia Casey Cricket Association documents that apply to everyone at Lang Lang. All files open as PDFs."
-      >
+      <PageHeader eyebrow={header.eyebrow} title={header.title} intro={header.intro}>
         {categories.length > 0 && (
           <nav aria-label="Document categories" className="mt-8 flex flex-wrap gap-2">
             {categories.map(({ cat, items }) => (
@@ -86,12 +49,13 @@ export default async function DocumentsPage() {
       <section className="container-site space-y-16 py-16 lg:space-y-20 lg:py-24">
         {categories.length === 0 && (
           <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-            Documents will be published soon.
+            {club.pageCopy.emptyStates.documents}
           </p>
         )}
         {categories.map(({ cat, items }) => {
-          const meta = CATEGORY_META[cat] ?? { icon: FileTextIcon, blurb: '' }
-          const Icon = meta.icon
+          const meta = categoryMeta.get(cat)
+          const Icon = meta ? clubIcon(meta.icon) : FileTextIcon
+          const blurb = meta?.blurb ?? ''
           return (
             <section key={cat} id={slug(cat)} className="scroll-mt-28 grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-12">
               <div className="lg:sticky lg:top-28 lg:self-start">
@@ -99,7 +63,7 @@ export default async function DocumentsPage() {
                   <HugeiconsIcon icon={Icon} className="h-5 w-5" aria-hidden />
                 </span>
                 <h2 className="display mt-4 text-3xl text-brand-black sm:text-4xl">{cat}</h2>
-                {meta.blurb && <p className="mt-2 text-sm leading-relaxed text-brand-grey">{meta.blurb}</p>}
+                {blurb && <p className="mt-2 text-sm leading-relaxed text-brand-grey">{blurb}</p>}
               </div>
               <ul className="divide-y divide-brand-black/5 overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5">
                 {items.map((d) => (

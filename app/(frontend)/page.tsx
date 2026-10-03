@@ -4,24 +4,17 @@ import { canonicalFor } from '@/lib/site-metadata'
 import Image from 'next/image'
 import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  ArrowRight01Icon,
-  UserGroupIcon,
-  TrophyIcon,
-  ShieldCheckIcon,
-  BankIcon,
-  Mail01Icon,
-} from '@hugeicons/core-free-icons'
-import { asc } from 'drizzle-orm'
+import { ArrowRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
 import { cookies } from 'next/headers'
-import { db } from '@/db'
-import { sponsors, committeeContacts, galleryPhotos } from '@/db/schema'
 import { SectionHeading } from '@/components/section-heading'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SponsorStrip } from '@/components/sponsor-logos'
 import { SponsorCarousel, selectCarouselSponsors } from '@/components/sponsor-carousel'
 import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
+import { listGalleryPhotos, listPeople, listSponsors } from '@/lib/content-queries'
+import { getClub } from '@/lib/club'
+import { clubIcon } from '@/lib/club-icons'
 import { getLatestAnnouncement } from '@/lib/announcements-queries'
 import { ANNOUNCEMENT_DISMISS_COOKIE, excerpt, shouldShowBanner } from '@/lib/announcements-format'
 
@@ -30,37 +23,16 @@ export const metadata = { alternates: canonicalFor('/') }
 // Reads the announcement-dismissed cookie, so this page is per-request anyway.
 export const dynamic = 'force-dynamic'
 
-const highlights = [
-  {
-    icon: UserGroupIcon,
-    title: 'Juniors and seniors',
-    body: 'Teams for kids picking up a bat for the first time through to experienced senior cricketers.',
-  },
-  {
-    icon: TrophyIcon,
-    title: 'Everyone gets a game',
-    body: 'A friendly, welcoming club where beginners and seasoned players train and play side by side.',
-  },
-  {
-    icon: BankIcon,
-    title: 'A modern home ground',
-    body: 'Our Caldermeade facility was developed with support from Cardinia Shire Council and Community Bank Lang Lang.',
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: 'Safe for young players',
-    body: "We follow Cricket Australia's Safeguarding Children and Young People Framework and a Member Protection Policy.",
-  },
-]
-
 export default async function HomePage() {
-  const [sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement] = await Promise.all([
-    db.select().from(sponsors),
-    db.select().from(committeeContacts).orderBy(asc(committeeContacts.sortOrder)),
-    db.select().from(galleryPhotos).orderBy(asc(galleryPhotos.sortOrder)).limit(6),
+  const [club, sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement] = await Promise.all([
+    getClub(),
+    listSponsors(),
+    listPeople(),
+    listGalleryPhotos(6),
     getSponsorCarouselTiers(),
     getLatestAnnouncement(),
   ])
+  const { hero, highlights, about, galleryTeaser, committee, sponsors, joinCta } = club.home
   // Leadership and junior coaches have their own sections on /people; the home page shows the committee only.
   const contacts = allContacts.filter((c) => c.section === 'committee')
   const carouselSponsors = selectCarouselSponsors(sponsorRows, carouselTiers)
@@ -70,7 +42,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={organizationJsonLd(club)} />
       {/* Latest announcement (dismissable, per announcement) */}
       {showBanner && latestAnnouncement && (
         <AnnouncementBanner
@@ -83,12 +55,14 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px] lg:min-h-[700px]">
         <Image
-          src="/assets/branding/hero.jpg"
-          alt="The Lang Lang Cricket Club pavilion and oval at Caldermeade"
+          src={club.assets.heroImage}
+          alt={hero.imageAlt}
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[center_60%]"
+          // Tailwind needs a literal class; any other focal point goes inline.
+          className={hero.focalY === 60 ? 'object-cover object-[center_60%]' : 'object-cover'}
+          style={hero.focalY === 60 ? undefined : { objectPosition: `center ${hero.focalY}%` }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-black/90 via-brand-black/60 to-brand-black/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-black/80 via-transparent to-transparent" />
@@ -96,30 +70,27 @@ export default async function HomePage() {
         <div className="container-site relative flex min-h-[560px] flex-col justify-end pb-16 pt-24 sm:min-h-[640px] sm:pb-24 lg:min-h-[700px]">
           <div className="mb-6 inline-flex w-fit items-center gap-3 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-xs font-medium backdrop-blur">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white p-0.5">
-              <Image src="/assets/branding/logo.png" alt="" width={20} height={25} className="h-5 w-auto" />
+              <Image src={club.logoUrl} alt="" width={20} height={25} className="h-5 w-auto" />
             </span>
-            Junior &amp; senior cricket in Caldermeade, Victoria
+            {hero.eyebrow}
           </div>
           <h1 className="display max-w-4xl text-balance text-6xl sm:text-7xl lg:text-8xl">
-            Play your cricket <span className="text-brand-gold">with Lang Lang</span>
+            {hero.headline} <span className="text-brand-gold">{hero.headlineAccent}</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
-            A community club with room for every player, from first-time juniors to seasoned seniors,
-            based at a modern home ground in Caldermeade.
-          </p>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">{hero.intro}</p>
           <div className="mt-9 flex flex-wrap gap-3">
             <a
-              href="mailto:langlangcricketclub@gmail.com"
+              href={`mailto:${club.email}`}
               className="inline-flex items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
               <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
-              Get in touch
+              {hero.primaryCta.label}
             </a>
             <Link
-              href="/contact"
+              href={hero.secondaryCta.href}
               className="inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:border-brand-gold hover:text-brand-gold"
             >
-              Meet the committee
+              {hero.secondaryCta.label}
               <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -132,32 +103,29 @@ export default async function HomePage() {
       {/* About */}
       <section className="container-site grid gap-12 py-20 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-20 lg:py-28">
         <div>
-          <SectionHeading
-            eyebrow="About the club"
-            title="Local cricket, played the right way."
-            intro="Lang Lang Cricket Club fields junior and senior sides out of Caldermeade, in Victoria's south-east. We are a club built by volunteers and families, and we make a point of being welcoming whether you are learning the basics or have played for decades."
-          />
-          <p className="mt-5 max-w-2xl leading-relaxed text-brand-grey">
-            Our home ground is a modern facility developed with support from Cardinia Shire Council and
-            Bendigo Bank&apos;s Community Bank Lang Lang. Off the field, the club is committed to a safe
-            and respectful environment for everyone: we follow Cricket Australia&apos;s Safeguarding Children
-            and Young People Framework and a Member Protection Policy that sets clear standards for
-            members, coaches and volunteers.
-          </p>
+          <SectionHeading eyebrow={about.eyebrow} title={about.title} intro={about.intro} />
+          <p className="mt-5 max-w-2xl leading-relaxed text-brand-grey">{about.body}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/history"
-              className="inline-flex items-center gap-2 rounded-md bg-brand-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-charcoal"
-            >
-              Our history
-              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-            </Link>
-            <Link
-              href="/documents"
-              className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
-            >
-              Policies &amp; documents
-            </Link>
+            {about.links.map((link, i) =>
+              i === 0 ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="inline-flex items-center gap-2 rounded-md bg-brand-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-charcoal"
+                >
+                  {link.label}
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+                </Link>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
           </div>
         </div>
 
@@ -168,7 +136,7 @@ export default async function HomePage() {
               className="group rounded-2xl bg-brand-stone p-6 ring-1 ring-brand-black/5 transition hover:bg-brand-gold-pale hover:ring-brand-gold/40"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30 transition group-hover:bg-brand-gold group-hover:text-brand-black group-hover:ring-brand-gold">
-                <HugeiconsIcon icon={h.icon} className="h-5 w-5" aria-hidden />
+                <HugeiconsIcon icon={clubIcon(h.icon)} className="h-5 w-5" aria-hidden />
               </span>
               <h3 className="mt-4 font-bold tracking-tight text-brand-black">{h.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-brand-grey">{h.body}</p>
@@ -183,16 +151,14 @@ export default async function HomePage() {
           <div className="container-site">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="eyebrow text-brand-gold">Around the club</p>
-                <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
-                  Life at Lang Lang
-                </h2>
+                <p className="eyebrow text-brand-gold">{galleryTeaser.eyebrow}</p>
+                <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">{galleryTeaser.title}</h2>
               </div>
               <Link
                 href="/gallery"
                 className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-brand-gold transition hover:text-brand-gold-light"
               >
-                View the full gallery
+                {galleryTeaser.ctaLabel}
                 <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -206,7 +172,7 @@ export default async function HomePage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={p.url}
-                      alt={p.caption || 'Lang Lang Cricket Club'}
+                      alt={p.caption || club.name}
                       loading="lazy"
                       className="aspect-square h-full w-full object-cover opacity-95 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
                     />
@@ -222,16 +188,12 @@ export default async function HomePage() {
       <section className="bg-brand-cream py-20 lg:py-28">
         <div className="container-site">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeading
-              eyebrow="Committee"
-              title="The people running the club"
-              intro="Volunteers who keep the season ticking over. Reach out to any of them with questions about playing, coaching or helping out."
-            />
+            <SectionHeading eyebrow={committee.eyebrow} title={committee.title} intro={committee.intro} />
             <Link
               href="/contact"
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md text-sm font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 transition hover:text-brand-gold-deep"
             >
-              Contact page
+              {committee.ctaLabel}
               <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -242,19 +204,14 @@ export default async function HomePage() {
       {/* Sponsors */}
       {sponsorRows.length > 0 && (
         <section className="container-site py-20 lg:py-28">
-          <SectionHeading
-            align="center"
-            eyebrow="Our sponsors"
-            title="Backed by local businesses"
-            intro="The club is only possible thanks to the businesses that support us every season."
-          />
+          <SectionHeading align="center" eyebrow={sponsors.eyebrow} title={sponsors.title} intro={sponsors.intro} />
           <SponsorStrip sponsors={sponsorRows} className="mt-12" />
           <div className="mt-10 text-center">
             <Link
               href="/sponsors"
               className="inline-flex items-center gap-2 rounded-md border border-brand-black/15 px-4 py-2.5 text-sm font-semibold text-brand-black transition hover:border-brand-gold hover:bg-brand-gold-pale"
             >
-              See all sponsors
+              {sponsors.ctaLabel}
               <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -270,20 +227,16 @@ export default async function HomePage() {
           />
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
-              <p className="eyebrow text-brand-gold">Join us</p>
-              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
-                Keen to play, coach or volunteer?
-              </h2>
-              <p className="mt-4 text-white/80">
-                Send the club an email and we will point you to the right person.
-              </p>
+              <p className="eyebrow text-brand-gold">{joinCta.eyebrow}</p>
+              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">{joinCta.title}</h2>
+              <p className="mt-4 text-white/80">{joinCta.intro}</p>
             </div>
             <a
-              href="mailto:langlangcricketclub@gmail.com"
+              href={`mailto:${club.email}`}
               className="inline-flex w-fit max-w-full items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
               <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="break-all">langlangcricketclub@gmail.com</span>
+              <span className="break-all">{club.email}</span>
             </a>
           </div>
         </div>

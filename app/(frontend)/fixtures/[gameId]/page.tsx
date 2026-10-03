@@ -8,7 +8,8 @@ import { ScorecardInnings } from '@/components/playhq/scorecard-innings'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/lib/playhq'
 import type { Scorecard } from '@/lib/playhq/types'
-import { truncateDescription, canonicalFor } from "@/lib/site-metadata"
+import { truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 900
@@ -86,8 +87,8 @@ function buildResult(sc: Scorecard): string | null {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const loaded = await load(params.gameId, searchParams.season)
-  if (loaded.kind !== 'ok') return { title: 'Scorecard | Lang Lang Cricket Club' }
+  const [site, loaded] = await Promise.all([getClub(), load(params.gameId, searchParams.season)])
+  if (loaded.kind !== 'ok') return { title: titleWithSuffix(site, 'Scorecard') }
   const { club, opp } = sides(loaded.sc)
   const { sc } = loaded
   const date = sc.startsAt ? formatIsoMelbourne(sc.startsAt) : null
@@ -97,7 +98,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     : `Scorecard: ${club.name} v ${opp.name}${date ? `, ${date}` : ''}.`
   return {
     alternates: canonicalFor(`/fixtures/${params.gameId}`),
-    title: `${club.name} v ${opp.name} scorecard | Lang Lang Cricket Club`,
+    title: titleWithSuffix(site, `${club.name} v ${opp.name} scorecard`),
     description: truncateDescription(description),
   }
 }

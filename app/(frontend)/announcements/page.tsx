@@ -1,30 +1,25 @@
 import { PageHeader } from '@/components/page-header'
 import { listPublishedAnnouncements } from '@/lib/announcements-queries'
 import { bodyParagraphs, formatAnnouncementDate } from '@/lib/announcements-format'
-import { canonicalFor } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/announcements'),
-  title: 'Announcements | Lang Lang Cricket Club',
-  description:
-    'Latest news and notices from Lang Lang Cricket Club in Caldermeade, Victoria.',
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/announcements'), ...pageSeo(await getClub(), 'announcements') }
 }
 
 export default async function AnnouncementsPage() {
-  const items = await listPublishedAnnouncements()
+  const [club, items] = await Promise.all([getClub(), listPublishedAnnouncements()])
+  const header = club.pageCopy.announcements.header
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Clubhouse"
-        title="Announcements"
-        intro="Club notices, in one place — training changes, working bees, presentation nights and anything else the committee needs you to know."
-      />
+      <PageHeader eyebrow={header.eyebrow} title={header.title} intro={header.intro} />
       <section className="container-site py-16 lg:py-20">
         {items.length === 0 ? (
-          <p className="text-brand-grey">Nothing to announce right now — check back soon.</p>
+          <p className="text-brand-grey">{club.pageCopy.emptyStates.announcements}</p>
         ) : (
           <div className="mx-auto max-w-3xl divide-y divide-brand-black/10">
             {items.map((a) => {

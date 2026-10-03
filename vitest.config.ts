@@ -9,6 +9,8 @@ const shared = {
   resolve: {
     alias: {
       '@payload-config': path.resolve(root, 'payload.config.ts'),
+      // Next resolves this to an empty module under the react-server condition; vitest does not.
+      'server-only': path.resolve(root, 'node_modules/server-only/empty.js'),
       '@': root,
     },
   },

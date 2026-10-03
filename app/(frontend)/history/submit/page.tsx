@@ -1,13 +1,15 @@
-import { canonicalFor } from '@/lib/site-metadata'
+import { getClub } from '@/lib/club'
+import { canonicalFor, pageSeo } from '@/lib/site-metadata'
 import { SubmitStoryPageClient } from './submit-story-page-client'
 
-export const metadata = {
-  alternates: canonicalFor('/history/submit'),
-  title: 'Share your story | Lang Lang Cricket Club',
-  description:
-    'Share your memories of Lang Lang Cricket Club in Caldermeade and help us preserve our history.',
+// Club copy is read per request, like every other public page.
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/history/submit'), ...pageSeo(await getClub(), 'historySubmit') }
 }
 
-export default function SubmitStoryPage() {
-  return <SubmitStoryPageClient />
+export default async function SubmitStoryPage() {
+  const club = await getClub()
+  return <SubmitStoryPageClient intro={club.storySubmitIntro} />
 }

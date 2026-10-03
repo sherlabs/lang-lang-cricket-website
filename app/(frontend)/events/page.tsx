@@ -17,14 +17,13 @@ import { rsvpKey } from '@/lib/rsvp-cookie'
 import { formatLongDate, DAYS } from '@/lib/events-format'
 import { formatLocalTime } from '@/lib/playhq/format'
 import type { Event } from '@/db/schema'
-import { canonicalFor } from "@/lib/site-metadata"
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/events'),
-  title: 'Events | Lang Lang Cricket Club',
-  description: 'Upcoming club events, training, and how to RSVP.',
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/events'), ...pageSeo(await getClub(), 'events') }
 }
 
 function SectionRule({ title, count }: { title: string; count?: number }) {

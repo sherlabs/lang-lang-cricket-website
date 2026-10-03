@@ -5,22 +5,24 @@ import { notFound } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { getPublishedStoryBySlug } from '@/lib/stories-queries'
-import { baseOpenGraph, truncateDescription, canonicalFor } from "@/lib/site-metadata"
+import { baseOpenGraph, truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
-  const story = await getPublishedStoryBySlug(params.slug)
+  const [club, story] = await Promise.all([getClub(), getPublishedStoryBySlug(params.slug)])
   if (!story) return { title: 'Story not found' }
+  const og = baseOpenGraph(club)
   return {
     alternates: canonicalFor(`/history/${story.slug}`),
-    title: `${story.title} | Lang Lang Cricket Club`,
-    description: truncateDescription(story.excerpt) || `A story from the history of Lang Lang Cricket Club, shared by ${story.authorName}.`,
+    title: titleWithSuffix(club, story.title),
+    description: truncateDescription(story.excerpt) || `A story from the history of ${club.name}, shared by ${story.authorName}.`,
     openGraph: {
-      ...baseOpenGraph,
+      ...og,
       type: 'article',
-      images: story.coverImageUrl ? [{ url: story.coverImageUrl, alt: story.title }] : baseOpenGraph.images,
+      images: story.coverImageUrl ? [{ url: story.coverImageUrl, alt: story.title }] : og.images,
       ...(story.publishedAt ? { publishedTime: story.publishedAt.toISOString() } : {}),
     },
   }
@@ -28,12 +30,12 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
 
 export default async function StoryDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
-  const story = await getPublishedStoryBySlug(params.slug)
+  const [club, story] = await Promise.all([getClub(), getPublishedStoryBySlug(params.slug)])
   if (!story) notFound()
 
   return (
     <main className="py-12 lg:py-16">
-      <JsonLd data={storyJsonLd(story)} />
+      <JsonLd data={storyJsonLd(story, club)} />
       <article className="container-site max-w-2xl">
         <Link
           href="/history"

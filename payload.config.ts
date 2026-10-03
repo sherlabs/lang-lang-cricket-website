@@ -7,8 +7,15 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
+import { Announcements } from './payload/collections/Announcements'
+import { Documents } from './payload/collections/Documents'
+import { GalleryPhotos } from './payload/collections/GalleryPhotos'
 import { Media } from './payload/collections/Media'
+import { People } from './payload/collections/People'
+import { Sponsors } from './payload/collections/Sponsors'
 import { Users } from './payload/collections/Users'
+import { Club } from './payload/globals/Club'
+import { SiteSettings } from './payload/globals/SiteSettings'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
 
 // First statement: every entry point (next dev/start/build, the payload CLI incl.
@@ -30,9 +37,14 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' — Club admin' },
+    components: {
+      graphics: { Logo: '/payload/components/Logo#Logo', Icon: '/payload/components/Icon#Icon' },
+      beforeDashboard: ['/payload/components/Dashboard#Dashboard'],
+    },
   },
   graphQL: { disable: true },
-  collections: [Users, Media],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements],
+  globals: [Club, SiteSettings],
   editor: lexicalEditor(),
   db: postgresAdapter({
     pool: {
@@ -58,6 +70,8 @@ export default buildConfig({
         collections: {
           // MUST be '' — any other collection prefix nests per-row prefixes (spec §1).
           media: { prefix: '', disablePayloadAccessControl: true },
+          documents: { prefix: 'documents', disablePayloadAccessControl: true },
+          'gallery-photos': { prefix: 'gallery', disablePayloadAccessControl: true },
         },
       }),
     ),

@@ -69,6 +69,11 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    documents: Document;
+    'gallery-photos': GalleryPhoto;
+    sponsors: Sponsor;
+    people: Person;
+    announcements: Announcement;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +83,11 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
+    'gallery-photos': GalleryPhotosSelect<false> | GalleryPhotosSelect<true>;
+    sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
+    people: PeopleSelect<false> | PeopleSelect<true>;
+    announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -87,8 +97,14 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    club: Club;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    club: ClubSelect<false> | ClubSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -169,6 +185,126 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents".
+ */
+export interface Document {
+  id: number;
+  title: string;
+  /**
+   * The section of the Documents page this file is listed under.
+   */
+  category: 'Codes of Conduct' | 'Policies' | 'Child Safety' | 'Game Day' | 'CCCA Directory';
+  legacyUrl?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Lower sort numbers show first; the first six appear on the home page. New uploads go to the front.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-photos".
+ */
+export interface GalleryPhoto {
+  id: number;
+  caption?: string | null;
+  /**
+   * Lower numbers show first.
+   */
+  sortOrder?: number | null;
+  legacyUrl?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sponsors".
+ */
+export interface Sponsor {
+  id: number;
+  name: string;
+  tier: 'Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player';
+  /**
+   * Optional. Without a logo the sponsor name is shown as text.
+   */
+  logo?: (number | null) | Media;
+  linkUrl?: string | null;
+  /**
+   * Order within the tier; lower shows first.
+   */
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people".
+ */
+export interface Person {
+  id: number;
+  name: string;
+  /**
+   * For example: President, Vice President, Secretary, Treasurer, Child Safety Officer, Junior Coordinator, Senior Captain, Coach.
+   */
+  role: string;
+  /**
+   * Which group the person is listed under on /people and the contact page.
+   */
+  section?: ('leadership' | 'committee' | 'coach') | null;
+  phone?: string | null;
+  email?: string | null;
+  /**
+   * Shown square; use the crop tool on the image to frame the face.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * Lower numbers show first.
+   */
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcements".
+ */
+export interface Announcement {
+  id: number;
+  title: string;
+  /**
+   * Plain text. Leave a blank line between paragraphs. The first line shows in the home page banner.
+   */
+  body?: string | null;
+  /**
+   * The newest published announcement shows as a banner on the home page.
+   */
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -198,6 +334,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: number | Document;
+      } | null)
+    | ({
+        relationTo: 'gallery-photos';
+        value: number | GalleryPhoto;
+      } | null)
+    | ({
+        relationTo: 'sponsors';
+        value: number | Sponsor;
+      } | null)
+    | ({
+        relationTo: 'people';
+        value: number | Person;
+      } | null)
+    | ({
+        relationTo: 'announcements';
+        value: number | Announcement;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -289,6 +445,89 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
+  legacyUrl?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-photos_select".
+ */
+export interface GalleryPhotosSelect<T extends boolean = true> {
+  caption?: T;
+  sortOrder?: T;
+  legacyUrl?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sponsors_select".
+ */
+export interface SponsorsSelect<T extends boolean = true> {
+  name?: T;
+  tier?: T;
+  logo?: T;
+  linkUrl?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people_select".
+ */
+export interface PeopleSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  section?: T;
+  phone?: T;
+  email?: T;
+  photo?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcements_select".
+ */
+export interface AnnouncementsSelect<T extends boolean = true> {
+  title?: T;
+  body?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -326,6 +565,285 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "club".
+ */
+export interface Club {
+  id: number;
+  name: string;
+  /**
+   * Short form of the name, e.g. on the admin sign-in screen.
+   */
+  shortName?: string | null;
+  /**
+   * Shown under the club name, e.g. the home ground location.
+   */
+  tagline?: string | null;
+  sport?: string | null;
+  /**
+   * Canonical site URL (no trailing slash). Drives canonical links, the sitemap and structured data.
+   */
+  siteUrl?: string | null;
+  /**
+   * Falls back to /assets/branding/logo.png.
+   */
+  logo?: (number | null) | Media;
+  locale?: string | null;
+  ogLocale?: string | null;
+  email?: string | null;
+  sponsorshipSubject?: string | null;
+  address?: {
+    locality?: string | null;
+    region?: string | null;
+    regionName?: string | null;
+    country?: string | null;
+    countryName?: string | null;
+  };
+  /**
+   * Google Maps search for the contact page map.
+   */
+  mapQuery?: string | null;
+  /**
+   * An empty URL shows the label as plain text.
+   */
+  socials?:
+    | {
+        platform: 'facebook' | 'instagram' | 'x' | 'youtube' | 'tiktok';
+        url?: string | null;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  defaultTitle?: string | null;
+  titleSuffix?: string | null;
+  defaultDescription?: string | null;
+  /**
+   * Falls back to /og-image.jpg (1200×630).
+   */
+  ogImage?: (number | null) | Media;
+  ogImageAlt?: string | null;
+  pages?: {
+    home?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    sponsors?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    gallery?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    documents?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    contact?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    people?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    announcements?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    history?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    historySubmit?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    events?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    players?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    fixtures?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  history?: {
+    /**
+     * Separate paragraphs with a blank line.
+     */
+    narrative?: string | null;
+    pullQuote?: string | null;
+    callout?: {
+      eyebrow?: string | null;
+      title?: string | null;
+      body?: string | null;
+    };
+  };
+  storySubmitIntro?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Sponsors in these tiers scroll across the home page under the hero. Leave empty to hide the carousel.
+   */
+  sponsorCarouselTiers?: ('Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player')[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "club_select".
+ */
+export interface ClubSelect<T extends boolean = true> {
+  name?: T;
+  shortName?: T;
+  tagline?: T;
+  sport?: T;
+  siteUrl?: T;
+  logo?: T;
+  locale?: T;
+  ogLocale?: T;
+  email?: T;
+  sponsorshipSubject?: T;
+  address?:
+    | T
+    | {
+        locality?: T;
+        region?: T;
+        regionName?: T;
+        country?: T;
+        countryName?: T;
+      };
+  mapQuery?: T;
+  socials?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        label?: T;
+        id?: T;
+      };
+  defaultTitle?: T;
+  titleSuffix?: T;
+  defaultDescription?: T;
+  ogImage?: T;
+  ogImageAlt?: T;
+  pages?:
+    | T
+    | {
+        home?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        sponsors?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        gallery?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        documents?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        contact?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        people?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        announcements?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        history?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        historySubmit?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        events?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        players?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        fixtures?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  history?:
+    | T
+    | {
+        narrative?: T;
+        pullQuote?: T;
+        callout?:
+          | T
+          | {
+              eyebrow?: T;
+              title?: T;
+              body?: T;
+            };
+      };
+  storySubmitIntro?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  sponsorCarouselTiers?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

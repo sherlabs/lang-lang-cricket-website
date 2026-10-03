@@ -4,7 +4,8 @@ import { playerJsonLd } from '@/lib/structured-data'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPlayerProfile } from '@/lib/players/queries'
-import { baseOpenGraph, canonicalFor } from "@/lib/site-metadata"
+import { baseOpenGraph, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 import { battingView, bowlingView, initials } from '@/lib/players/view'
 import { PlayerSeasonTables } from '@/components/players/player-season-tables'
 
@@ -14,25 +15,25 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata(props: Props) {
   const params = await props.params;
-  const profile = await getPlayerProfile(params.slug)
-  if (!profile) return { title: 'Player | Lang Lang Cricket Club' }
+  const [club, profile] = await Promise.all([getClub(), getPlayerProfile(params.slug)])
+  if (!profile) return { title: titleWithSuffix(club, 'Player') }
   const summary = [profile.active ? 'Active player' : 'Past player', profile.yearsLabel, profile.grades.join(' · ')]
     .filter(Boolean)
     .join(' — ')
   return {
     alternates: canonicalFor(`/players/${profile.player.slug}`),
-    title: `${profile.name} | Lang Lang Cricket Club`,
-    description: `${summary}. Career stats and club honours at Lang Lang Cricket Club.`,
+    title: titleWithSuffix(club, profile.name),
+    description: `${summary}. Career stats and club honours at ${club.name}.`,
     // Share previews show the player's own photo when the club has added one.
     openGraph: profile.player.photoUrl
-      ? { ...baseOpenGraph, images: [{ url: profile.player.photoUrl, alt: profile.name }] }
-      : baseOpenGraph,
+      ? { ...baseOpenGraph(club), images: [{ url: profile.player.photoUrl, alt: profile.name }] }
+      : baseOpenGraph(club),
   }
 }
 
 export default async function PlayerPage(props: Props) {
   const params = await props.params;
-  const profile = await getPlayerProfile(params.slug)
+  const [club, profile] = await Promise.all([getClub(), getPlayerProfile(params.slug)])
   if (!profile) notFound()
   const { player, career } = profile
   const bat = career ? battingView(career) : null
@@ -56,7 +57,7 @@ export default async function PlayerPage(props: Props) {
 
   return (
     <main>
-      <JsonLd data={playerJsonLd({ slug: player.slug, name: profile.name, photoUrl: player.photoUrl })} />
+      <JsonLd data={playerJsonLd({ slug: player.slug, name: profile.name, photoUrl: player.photoUrl }, club)} />
       <section className="relative overflow-hidden bg-brand-black text-white">
         <div
           aria-hidden

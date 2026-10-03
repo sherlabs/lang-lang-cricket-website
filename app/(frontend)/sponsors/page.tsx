@@ -1,37 +1,33 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon } from '@hugeicons/core-free-icons'
-import { db } from '@/db'
-import { sponsors } from '@/db/schema'
+import { getClub } from '@/lib/club'
+import { listSponsors } from '@/lib/content-queries'
 import { PageHeader } from '@/components/page-header'
 import { SponsorCard, TIER_STYLES, groupByTier } from '@/components/sponsor-logos'
 import { cn } from '@/lib/utils'
-import { canonicalFor } from "@/lib/site-metadata"
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/sponsors'),
-  title: 'Sponsors | Lang Lang Cricket Club',
-  description:
-    'The local businesses and supporters who back Lang Lang Cricket Club in Caldermeade, Victoria.',
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/sponsors'), ...pageSeo(await getClub(), 'sponsors') }
 }
 
 export default async function SponsorsPage() {
-  const rows = await db.select().from(sponsors)
+  const [club, rows] = await Promise.all([getClub(), listSponsors()])
   const groups = groupByTier(rows)
+  const copy = club.pageCopy.sponsors
+  const blurbs = new Map(club.pageCopy.tierBlurbs.map((t) => [t.tier, t.blurb]))
+  const subject = encodeURIComponent(club.sponsorshipSubject)
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Sponsors & partners"
-        title="The businesses behind the club"
-        intro="From the pavilion lights to junior kit, our sponsors make the season possible. Please support them where you can."
-      />
+      <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
 
       <section className="container-site space-y-20 py-16 lg:py-24">
         {groups.length === 0 && (
           <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">
-            Sponsor details will be published soon.
+            {club.pageCopy.emptyStates.sponsors}
           </p>
         )}
         {groups.map(({ tier, items }) => {
@@ -50,7 +46,7 @@ export default async function SponsorsPage() {
                 <h2 id={`tier-${tier}`} className="display text-3xl text-brand-black sm:text-4xl">
                   {tier} {items.length === 1 ? 'sponsor' : 'sponsors'}
                 </h2>
-                <span className="hidden text-sm text-brand-grey sm:inline">{style.blurb}</span>
+                <span className="hidden text-sm text-brand-grey sm:inline">{blurbs.get(tier) ?? ''}</span>
                 <span className="ml-auto hidden h-px flex-1 bg-brand-black/10 sm:block" />
               </div>
               <div className={cn('grid gap-5', style.grid)}>
@@ -69,21 +65,16 @@ export default async function SponsorsPage() {
           />
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
-              <p className="eyebrow text-brand-gold">Become a sponsor</p>
-              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">
-                Put your business in front of the local community.
-              </h2>
-              <p className="mt-4 text-white/80">
-                Sponsorship packages are available at every tier. Drop the committee a line to find out
-                more.
-              </p>
+              <p className="eyebrow text-brand-gold">{copy.cta.eyebrow}</p>
+              <h2 className="display mt-3 text-balance text-4xl sm:text-5xl">{copy.cta.title}</h2>
+              <p className="mt-4 text-white/80">{copy.cta.intro}</p>
             </div>
             <a
-              href="mailto:langlangcricketclub@gmail.com?subject=Sponsorship%20enquiry"
+              href={`mailto:${club.email}?subject=${subject}`}
               className="inline-flex w-fit items-center gap-2 rounded-md bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
             >
               <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
-              Enquire about sponsorship
+              {copy.cta.ctaLabel}
             </a>
           </div>
         </div>

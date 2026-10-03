@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-vi.mock('@/db', () => ({ db: {} }))
+// Pure split (spec §15 ADAPT): no database, no Payload. The global read is covered by site-settings.int.
 
 describe('normaliseTiers', () => {
   it('returns null for anything that is not a list', async () => {
-    const { normaliseTiers } = await import('@/lib/site-settings')
+    const { normaliseTiers } = await import('@/lib/site-settings-core')
     expect(normaliseTiers(undefined)).toBeNull()
     expect(normaliseTiers(null)).toBeNull()
     expect(normaliseTiers('Gold')).toBeNull()
@@ -12,17 +12,17 @@ describe('normaliseTiers', () => {
   })
 
   it('keeps an empty list as an explicit "show nothing"', async () => {
-    const { normaliseTiers } = await import('@/lib/site-settings')
+    const { normaliseTiers } = await import('@/lib/site-settings-core')
     expect(normaliseTiers([])).toEqual([])
   })
 
   it('drops unknown and non-string entries', async () => {
-    const { normaliseTiers } = await import('@/lib/site-settings')
+    const { normaliseTiers } = await import('@/lib/site-settings-core')
     expect(normaliseTiers(['Gold', 'Diamond', 42, null, 'gold'])).toEqual(['Gold'])
   })
 
   it('dedupes and orders by tier rank', async () => {
-    const { normaliseTiers } = await import('@/lib/site-settings')
+    const { normaliseTiers } = await import('@/lib/site-settings-core')
     expect(normaliseTiers(['Bronze', 'Platinum', 'Gold', 'Platinum'])).toEqual(['Platinum', 'Gold', 'Bronze'])
   })
 })

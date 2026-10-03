@@ -22,7 +22,7 @@ function readDraftCookie(): { title: string; editToken: string; viewToken: strin
   }
 }
 
-function SubmitStoryForm() {
+function SubmitStoryForm({ intro }: { intro: string }) {
   const params = useSearchParams()
   const submitted = params.get('submitted') === '1'
   const [busy, setBusy] = useState(false)
@@ -64,7 +64,7 @@ function SubmitStoryForm() {
       <PageHeader
         eyebrow="Your story"
         title="Share your story"
-        intro="Old photos, scorebooks, match reports, memories from the clubrooms — tell us your Lang Lang story. A committee member reviews every submission before it appears on the site."
+        intro={intro}
       />
       <section className="container-site py-12 lg:py-16">
         <form onSubmit={submitKeepingInput(onSubmit)} className="mx-auto flex max-w-2xl flex-col">
@@ -86,10 +86,10 @@ function SubmitStoryForm() {
   )
 }
 
-export function SubmitStoryPageClient() {
+export function SubmitStoryPageClient({ intro }: { intro: string }) {
   return (
     <Suspense fallback={null}>
-      <SubmitStoryForm />
+      <SubmitStoryForm intro={intro} />
     </Suspense>
   )
 }

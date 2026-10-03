@@ -2,12 +2,16 @@ import { notFound } from 'next/navigation'
 import { getStoryByEditToken } from '@/lib/stories-queries'
 import { PageHeader } from '@/components/page-header'
 import { DraftEditForm } from './draft-edit-form'
+import { getClub } from '@/lib/club'
+import { titleWithSuffix } from '@/lib/site-metadata'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  title: 'Edit your story | Lang Lang Cricket Club',
-  robots: { index: false, follow: false },
+export async function generateMetadata() {
+  return {
+    title: titleWithSuffix(await getClub(), 'Edit your story'),
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function DraftEditPage(props: { params: Promise<{ token: string }> }) {

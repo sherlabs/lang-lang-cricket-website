@@ -1,12 +1,14 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getStoryByViewToken } from '@/lib/stories-queries'
+import { getClub } from '@/lib/club'
+import { titleWithSuffix } from '@/lib/site-metadata'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   // Token URL: keep out of search and don't leak the draft's title into previews.
-  return { title: 'Your story | Lang Lang Cricket Club', robots: { index: false, follow: false } }
+  return { title: titleWithSuffix(await getClub(), 'Your story'), robots: { index: false, follow: false } }
 }
 
 const STATUS_LABEL: Record<string, string> = {

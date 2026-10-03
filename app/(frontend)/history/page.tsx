@@ -5,19 +5,19 @@ import { ArrowRight01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
 import { buttonVariants } from '@/components/ui/button'
 import { listPublishedStories } from '@/lib/stories-queries'
-import { canonicalFor } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/history'),
-  title: 'History | Lang Lang Cricket Club',
-  description:
-    'Stories, memories and milestones from the long history of Lang Lang Cricket Club in Caldermeade, Victoria.',
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/history'), ...pageSeo(await getClub(), 'history') }
 }
 
 export default async function HistoryPage() {
-  const stories = await listPublishedStories()
+  const [club, stories] = await Promise.all([getClub(), listPublishedStories()])
+  const history = club.history
+  const narrative = history.narrative.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   return (
     <main>
@@ -31,43 +31,32 @@ export default async function HistoryPage() {
         <div className="relative overflow-hidden rounded-3xl bg-brand-stone shadow-card ring-1 ring-brand-black/5 lg:sticky lg:top-28">
           <Image
             src="/assets/gallery/photo-01.jpg"
-            alt="Lang Lang Cricket Club players on the field at Caldermeade"
+            alt={club.pageCopy.history.imageAlt}
             width={1400}
             height={934}
             className="aspect-[3/2] h-full w-full object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-black/80 to-transparent p-6 text-white">
-            <p className="eyebrow text-brand-gold">Caldermeade, Victoria</p>
-            <p className="display mt-1 text-2xl">Lang Lang Cricket Club</p>
+            <p className="eyebrow text-brand-gold">{club.tagline}</p>
+            <p className="display mt-1 text-2xl">{club.name}</p>
           </div>
         </div>
 
         <div>
           <blockquote className="font-heading border-l-4 border-brand-gold pl-6 text-3xl font-semibold leading-tight text-brand-black sm:text-4xl lg:text-5xl">
-            You cannot make history without knowing where you started.
+            {history.pullQuote}
           </blockquote>
 
           <div className="mt-10 space-y-5 leading-relaxed text-brand-charcoal">
-            <p>
-              Much of the club&apos;s written record had faded or gone missing over the decades. In the
-              2022&ndash;23 season that changed: through the work of the Club Committee, the
-              club&apos;s history records were restored and brought back into the clubrooms.
-            </p>
-            <p>
-              Those records now sit alongside a modern home ground in Caldermeade, developed with the
-              support of Cardinia Shire Council and Community Bank Lang Lang, giving the next
-              generation of juniors and seniors a place to add their own chapter.
-            </p>
+            {narrative.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
           </div>
 
           <div className="mt-10 rounded-2xl bg-brand-gold-pale p-6 ring-1 ring-brand-gold/30">
-            <p className="eyebrow">With thanks</p>
-            <p className="display mt-2 text-2xl text-brand-black">
-              The Club Committee
-            </p>
-            <p className="mt-2 text-sm text-brand-charcoal">
-              For restoring the club&apos;s history records in 2022&ndash;23.
-            </p>
+            <p className="eyebrow">{history.callout.eyebrow}</p>
+            <p className="display mt-2 text-2xl text-brand-black">{history.callout.title}</p>
+            <p className="mt-2 text-sm text-brand-charcoal">{history.callout.body}</p>
           </div>
 
         </div>

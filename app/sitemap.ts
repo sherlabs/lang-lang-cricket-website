@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { events, players, stories } from '@/db/schema'
-import { SITE_URL } from '@/lib/site-metadata'
+import { getClub } from '@/lib/club'
 
 export const dynamic = 'force-dynamic' // DB-backed; revalidate=3600 would bake a static-only sitemap at build (Neon fetches are no-store)
 
@@ -24,6 +24,7 @@ const STATIC: { path: string; changeFrequency: Entry['changeFrequency']; priorit
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const SITE_URL = (await getClub()).siteUrl
   const entries: MetadataRoute.Sitemap = STATIC.map((s) => ({
     url: `${SITE_URL}${s.path}`,
     changeFrequency: s.changeFrequency,

@@ -15,15 +15,13 @@ import { todayMelbourne } from '@/lib/playhq/games'
 import { groupByDate, latestResultsWindow, nextRoundWindow } from '@/lib/playhq/rounds'
 import type { ClubTeam, Game, Ladder, SeasonGroup } from '@/lib/playhq/types'
 import { formatLocalDate, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
-import { canonicalFor } from "@/lib/site-metadata"
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
+import { getClub } from '@/lib/club'
 
 export const revalidate = 1800
 
-export const metadata = {
-  alternates: canonicalFor('/fixtures'),
-  title: 'Fixtures, Results & Teams | Lang Lang Cricket Club',
-  description:
-    'Fixtures, results and teams for Lang Lang Cricket Club in Caldermeade, Victoria, across every grade and season.',
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/fixtures'), ...pageSeo(await getClub(), 'fixtures') }
 }
 
 type Props = { searchParams: Promise<{ season?: string; team?: string }> }
@@ -125,6 +123,7 @@ async function loadLadders(teams: ClubTeam[]) {
 }
 
 async function HubView({ season, teams, games }: { season: string; teams: ClubTeam[]; games: Game[] }) {
+  const club = await getClub()
   const today = todayMelbourne()
   const nextUp = nextRoundWindow(games, today)
   const remaining = sortUpcoming(games.filter((g) => !isFinished(g) && (g.localDate ?? '9999-12-31') >= today))
@@ -176,7 +175,7 @@ async function HubView({ season, teams, games }: { season: string; teams: ClubTe
       <section aria-labelledby="our-teams">
         <HubHeading id="our-teams" title="Our teams" count={teams.length} />
         <div className="mt-5 space-y-8">
-          {teams.length === 0 && <Note>No Lang Lang sides have been entered for this season yet.</Note>}
+          {teams.length === 0 && <Note>{club.pageCopy.fixtures.noTeams}</Note>}
           <TeamGrid title="Senior sides" teams={teams.filter((t) => !t.isJunior)} ladders={ladders} season={season} />
           <TeamGrid title="Junior sides" teams={teams.filter((t) => t.isJunior)} ladders={ladders} season={season} />
         </div>
@@ -188,6 +187,7 @@ async function HubView({ season, teams, games }: { season: string; teams: ClubTe
 // ---- single-team view ----
 
 async function TeamView({ team, teams, games, season }: { team: ClubTeam; teams: ClubTeam[]; games: Game[]; season: string }) {
+  const club = await getClub()
   const ids = new Set(teams.map((t) => t.id))
   const mine = games.filter((g) => g.club.id === team.id || g.opponent.id === team.id)
   const [ladder, players] = await Promise.all([
@@ -218,7 +218,7 @@ async function TeamView({ team, teams, games, season }: { team: ClubTeam; teams:
                 {team.gradeName ?? 'Ladder'}
               </summary>
               <div className="mt-3">
-                <LadderTable ladder={ladder} />
+                <LadderTable ladder={ladder} clubLabel={club.familiarName} />
               </div>
             </details>
           ) : (
@@ -276,6 +276,7 @@ async function TeamView({ team, teams, games, season }: { team: ClubTeam; teams:
 // ---- page ----
 
 export default async function FixturesPage(props: Props) {
+  const club = await getClub()
   const searchParams = await props.searchParams;
   // Read search params outside the try so Next's dynamic-rendering bail-out isn't swallowed.
   const { season: seasonParam, team: teamParam } = searchParams
@@ -328,7 +329,7 @@ export default async function FixturesPage(props: Props) {
       <PageHeader
         eyebrow="Fixtures, results & teams"
         title="This season's matches"
-        intro="The next round, the latest results and every Lang Lang side — straight from PlayHQ."
+        intro={club.pageCopy.fixtures.intro}
       >
         <ExternalCta />
       </PageHeader>

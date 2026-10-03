@@ -1,48 +1,27 @@
 import Link from 'next/link'
-import { db } from '@/db'
-import { committeeContacts } from '@/db/schema'
-import { groupPeople, type Section } from '@/lib/people'
+import { getClub } from '@/lib/club'
+import { listPeople } from '@/lib/content-queries'
+import { groupPeople } from '@/lib/people'
 import { PageHeader } from '@/components/page-header'
 import { CommitteeCards } from '@/components/committee-cards'
 import { SectionHeading } from '@/components/section-heading'
-import { canonicalFor } from "@/lib/site-metadata"
+import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  alternates: canonicalFor('/people'),
-  title: 'Our People | Lang Lang Cricket Club',
-  description:
-    'Meet the coaches, committee and volunteers who keep Lang Lang Cricket Club in Caldermeade, Victoria running.',
-}
-
-const SECTION_COPY: Record<Section, { title: string; intro: string }> = {
-  leadership: {
-    title: 'Leading our senior program',
-    intro: 'The group responsible for selection, coaching and the direction of our senior sides.',
-  },
-  committee: {
-    title: 'Meet the committee',
-    intro:
-      'The volunteers who keep the club running, on and off the field. Our Child Safety Officer is your first point of contact for any safeguarding concern.',
-  },
-  coach: {
-    title: 'Coaching our juniors',
-    intro: 'The coaches who look after our junior squads each week, from first-time players through to the older age groups.',
-  },
+export async function generateMetadata() {
+  return { alternates: canonicalFor('/people'), ...pageSeo(await getClub(), 'people') }
 }
 
 export default async function PeoplePage() {
-  const rows = await db.select().from(committeeContacts)
+  const [club, rows] = await Promise.all([getClub(), listPeople()])
   const groups = groupPeople(rows)
+  const header = club.pageCopy.people.header
+  const sectionCopy = new Map(club.pageCopy.peopleSections.map((s) => [s.key as string, s]))
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Clubhouse"
-        title="Our People"
-        intro="Lang Lang is run by volunteers: the committee, the senior leadership team and the coaches who give their weekends to our juniors. Here is who they are and how to reach them."
-      />
+      <PageHeader eyebrow={header.eyebrow} title={header.title} intro={header.intro} />
 
       {groups.length === 0 ? (
         <section className="container-site py-16 lg:py-20">
@@ -56,12 +35,16 @@ export default async function PeoplePage() {
         </section>
       ) : (
         <div className="container-site divide-y divide-brand-black/5">
-          {groups.map((g) => (
-            <section key={g.key} className="py-16 lg:py-20" aria-label={g.label}>
-              <SectionHeading eyebrow={g.label} title={SECTION_COPY[g.key].title} intro={SECTION_COPY[g.key].intro} />
+          {groups.map((g) => {
+            const copy = sectionCopy.get(g.key)
+            const label = copy?.label ?? g.label
+            return (
+            <section key={g.key} className="py-16 lg:py-20" aria-label={label}>
+              <SectionHeading eyebrow={label} title={copy?.heading ?? label} intro={copy?.intro} />
               <CommitteeCards contacts={g.people} className="mt-12" />
             </section>
-          ))}
+            )
+          })}
         </div>
       )}
     </main>

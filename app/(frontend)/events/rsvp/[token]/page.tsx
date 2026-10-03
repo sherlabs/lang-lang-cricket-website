@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { getClub } from '@/lib/club'
+import { titleWithSuffix } from '@/lib/site-metadata'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, Clock01Icon, Location01Icon } from '@hugeicons/core-free-icons'
 import { PageHeader } from '@/components/page-header'
@@ -19,9 +21,9 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(props: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const params = await props.params;
-  const rsvp = await getRsvpByToken(params.token)
+  const [club, rsvp] = await Promise.all([getClub(), getRsvpByToken(params.token)])
   return {
-    title: rsvp ? `Manage your RSVP | Lang Lang Cricket Club` : 'RSVP not found | Lang Lang Cricket Club',
+    title: titleWithSuffix(club, rsvp ? 'Manage your RSVP' : 'RSVP not found'),
     robots: { index: false, follow: false },
   }
 }

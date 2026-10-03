@@ -1,0 +1,151 @@
+/* Payload admin brand layer (spec §9). Uses Payload's CSS variables, not Tailwind.
+   --theme-elevation-* is untouched; success and the primary button go gold on black. */
+:root {
+  --club-gold: #f5b700;
+  --club-gold-light: #ffd966;
+  --club-black: #0b0b0d;
+  --color-success-50: #fff4cc;
+  --color-success-100: #ffeaa3;
+  --color-success-150: #ffe27f;
+  --color-success-200: #ffd966;
+  --color-success-250: #fcc933;
+  --color-success-300: #f5b700;
+  --color-success-350: #e0a800;
+  --color-success-400: #c99400;
+  --color-success-450: #a87b00;
+  --color-success-500: #8a6500;
+}
+
+.btn--style-primary {
+  --bg-color: var(--club-gold);
+  --hover-bg: var(--club-gold-light);
+  --color: var(--club-black);
+  --hover-color: var(--club-black);
+  background-color: var(--club-gold);
+  color: var(--club-black);
+}
+.btn--style-primary:hover:not(:disabled) {
+  background-color: var(--club-gold-light);
+  color: var(--club-black);
+}
+
+/* Logo / Icon */
+.club-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+.club-logo__tile,
+.club-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px rgb(11 11 13 / 0.1);
+}
+.club-logo__tile {
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0.25rem;
+}
+.club-logo__tile img {
+  height: 3rem;
+  width: auto;
+}
+.club-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.125rem;
+}
+.club-icon img {
+  height: 1.25rem;
+  width: auto;
+}
+.club-logo__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.club-logo__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-elevation-500);
+}
+.club-logo__title {
+  margin-top: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+/* Dashboard */
+.club-dashboard {
+  margin-bottom: calc(var(--base) * 2);
+}
+.club-dashboard__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--base);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.club-dashboard__card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: calc(var(--base) * 1.25);
+  border-radius: var(--style-radius-m, 8px);
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-100);
+  color: var(--theme-text);
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+.club-dashboard__card:hover,
+.club-dashboard__card:focus-visible {
+  border-color: var(--club-gold);
+}
+.club-dashboard__count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.club-dashboard__label {
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+.club-dashboard__note {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--theme-elevation-500);
+}
+.club-dashboard__panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--base);
+  margin-top: var(--base);
+}
+.club-dashboard__panel {
+  padding: calc(var(--base) * 1.25);
+  border-radius: var(--style-radius-m, 8px);
+  border: 1px solid var(--theme-elevation-100);
+}
+.club-dashboard__panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+.club-dashboard__panel p,
+.club-dashboard__panel li {
+  color: var(--theme-elevation-650);
+  font-size: 0.9375rem;
+}
+.club-dashboard__panel ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
