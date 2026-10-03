@@ -82,6 +82,7 @@ export interface Config {
     'player-aliases': PlayerAlias;
     'player-seasons': PlayerSeason;
     'player-sync-runs': PlayerSyncRun;
+    yearbooks: Yearbook;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -113,6 +114,7 @@ export interface Config {
     'player-aliases': PlayerAliasesSelect<false> | PlayerAliasesSelect<true>;
     'player-seasons': PlayerSeasonsSelect<false> | PlayerSeasonsSelect<true>;
     'player-sync-runs': PlayerSyncRunsSelect<false> | PlayerSyncRunsSelect<true>;
+    yearbooks: YearbooksSelect<false> | YearbooksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -633,6 +635,50 @@ export interface PlayerSyncRun {
   createdAt: string;
 }
 /**
+ * One page per season, with your messages and photos beside the stats worked out automatically. Do not upload unreleased photos until you publish: files are reachable by direct link even while the yearbook is a draft.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "yearbooks".
+ */
+export interface Yearbook {
+  id: number;
+  /**
+   * For example "2025/26 Yearbook".
+   */
+  title: string;
+  /**
+   * Exactly as PlayHQ names the season, for example "Summer 2025/26". The stats and results on the page come from this season.
+   */
+  seasonName: string;
+  /**
+   * Set from the season when the yearbook is created; never changes.
+   */
+  slug?: string | null;
+  status: 'draft' | 'published';
+  publishedAt?: string | null;
+  cover?: (number | null) | Media;
+  /**
+   * Optional headline, for example "A Grade premiers".
+   */
+  premiership?: string | null;
+  /**
+   * Leave a blank line between paragraphs.
+   */
+  presidentMessage?: string | null;
+  /**
+   * Leave a blank line between paragraphs.
+   */
+  coachMessage?: string | null;
+  /**
+   * Leave a blank line between paragraphs.
+   */
+  sponsorMessage?: string | null;
+  photos?: (number | GalleryPhoto)[] | null;
+  featuredSponsors?: (number | Sponsor)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -715,6 +761,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'player-sync-runs';
         value: number | PlayerSyncRun;
+      } | null)
+    | ({
+        relationTo: 'yearbooks';
+        value: number | Yearbook;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1065,6 +1115,26 @@ export interface PlayerSyncRunsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "yearbooks_select".
+ */
+export interface YearbooksSelect<T extends boolean = true> {
+  title?: T;
+  seasonName?: T;
+  slug?: T;
+  status?: T;
+  publishedAt?: T;
+  cover?: T;
+  premiership?: T;
+  presidentMessage?: T;
+  coachMessage?: T;
+  sponsorMessage?: T;
+  photos?: T;
+  featuredSponsors?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1227,6 +1297,14 @@ export interface Club {
       description?: string | null;
     };
     statlab?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    yearbooks?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    matches?: {
       title?: string | null;
       description?: string | null;
     };
@@ -1459,6 +1537,18 @@ export interface ClubSelect<T extends boolean = true> {
               description?: T;
             };
         statlab?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        yearbooks?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        matches?:
           | T
           | {
               title?: T;

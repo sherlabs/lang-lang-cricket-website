@@ -51,6 +51,8 @@ export const SEO_PAGES = [
   'honours',
   'compare',
   'statlab',
+  'yearbooks',
+  'matches',
 ] as const
 export type SeoPage = (typeof SEO_PAGES)[number]
 
@@ -164,6 +166,9 @@ export type ClubDefaults = ClubGlobalDefaults & {
       unknownPlayer: string
       sameLabel: string
     }
+    statlab: { header: HeaderCopy; empty: string; presetsHeading: string; coverageNote: string }
+    yearbooks: { header: HeaderCopy; empty: string; printLabel: string; statsHeading: string }
+    matches: { header: HeaderCopy; empty: string; coverageNote: string; narrowHint: string }
     storyDraftEdit: { header: HeaderCopy }
     emptyStates: { sponsors: string; documents: string; announcements: string }
   }
@@ -276,6 +281,14 @@ export const clubDefaults: ClubDefaults = {
     statlab: {
       title: 'StatLab',
       description: 'Build your own Lang Lang Cricket Club stats table: pick columns, filters and sorting, and export to CSV.',
+    },
+    yearbooks: {
+      title: 'Season Yearbooks',
+      description: 'Season-by-season yearbooks for Lang Lang Cricket Club: messages from the club, the stats leaders, results and photos.',
+    },
+    matches: {
+      title: 'Match Archive',
+      description: 'Every finished Lang Lang Cricket Club match this season by grade, with results and links to the full scorecards.',
     },
   },
 
@@ -585,6 +598,36 @@ export const clubDefaults: ClubDefaults = {
       empty: 'Choose two players to compare.',
       unknownPlayer: 'We could not find that player. Pick someone from the list.',
       sameLabel: 'Pick two different players.',
+    },
+    statlab: {
+      header: {
+        eyebrow: 'Build your own',
+        title: 'StatLab',
+        intro: 'Pick the stats, filter the players and sort the table. Copy the link to save a report, or download it as a spreadsheet.',
+      },
+      empty: 'No players match these filters.',
+      presetsHeading: 'Quick reports',
+      coverageNote: 'Figures cover seasons from the first season on record in the database; earlier history is not included.',
+    },
+    yearbooks: {
+      header: {
+        eyebrow: 'Season by season',
+        title: 'Yearbooks',
+        intro: 'One page for each season: messages from the club, the stats leaders, the results and the photos.',
+      },
+      empty: 'No yearbooks have been published yet.',
+      printLabel: 'Print or save as PDF',
+      statsHeading: 'The numbers',
+    },
+    matches: {
+      header: {
+        eyebrow: 'Match archive',
+        title: 'Past matches',
+        intro: 'Every finished match by season and grade. Open a match for the full scorecard.',
+      },
+      empty: 'No finished matches match these filters.',
+      coverageNote: 'Only seasons listed on PlayHQ are available here; earlier matches are not in the archive.',
+      narrowHint: 'This season has a lot of matches, so only the latest rounds are shown. Choose a grade to see them all.',
     },
     storyDraftEdit: {
       header: {
