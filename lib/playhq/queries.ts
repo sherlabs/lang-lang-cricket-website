@@ -1,4 +1,5 @@
 import { PLAYHQ_ORG_ID, mapLimit, phqFetch, phqFetchAll } from './client'
+import { JUNIOR_GRADE_RE } from './junior-rules'
 import { groupSeasons, isJuniorCompetition, pickDefaultSeason } from './seasons'
 import { dedupeGames, isFinished, mapGame } from './games'
 import { mapScorecard } from './scorecard'
@@ -83,7 +84,7 @@ export async function findClubTeam(teamId: string, seasonHint?: string | null) {
 }
 
 export function isJuniorGrade(gradeName: string) {
-  return isJuniorCompetition(gradeName) || /u1\d|under/i.test(gradeName)
+  return isJuniorCompetition(gradeName) || JUNIOR_GRADE_RE.test(gradeName)
 }
 export { isFinished }
 
