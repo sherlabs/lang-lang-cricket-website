@@ -35,7 +35,3 @@ export function renderStoryHtml(doc: JSONContent): string {
     }
   }
 }
-
-// The excerpt helper is pure and lives in ./story-excerpt (the Payload hook imports it
-// without pulling in jsdom/Tiptap); re-exported for existing callers.
-export { htmlToExcerpt } from './story-excerpt'

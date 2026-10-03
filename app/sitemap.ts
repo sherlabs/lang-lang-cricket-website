@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 
-export const dynamic = 'force-dynamic' // DB-backed; revalidate=3600 would bake a static-only sitemap at build (Neon fetches are no-store)
+export const dynamic = 'force-dynamic' // DB-backed (Payload Local API): revalidate=3600 would bake a static-only sitemap at build
 
 type Entry = MetadataRoute.Sitemap[number]
 

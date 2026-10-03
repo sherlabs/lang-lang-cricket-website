@@ -1,8 +1,8 @@
 // Vercel build entry (spec §11.5): `pnpm vercel-build`.
 //  0. Refuse when PROD_DATABASE_HOST is empty (the preview guard would fail open).
 //  1. production: `payload migrate` over DATABASE_URI_UNPOOLED, then `next build`.
-//  2. preview: refuse when either DB URL host is the production host (ignoring a
-//     -pooler suffix) or BLOB_DELETE_DISABLED !== '1'; migrate the branch, build.
+//  2. preview: refuse when any host of either DB URL (URL host, ?host=, ?hostaddr=) is the
+//     production host (case-insensitive, ignoring a -pooler suffix) or BLOB_DELETE_DISABLED !== '1'; migrate the branch, build.
 //  3. otherwise: `next build` only.
 import { execFileSync } from 'node:child_process'
 
@@ -11,19 +11,23 @@ const fail = (msg) => {
   console.error(`[vercel-build] ${msg}`)
   process.exit(1)
 }
-const bareHost = (url, name) => {
+// Every host pg could connect to: each ?host= / ?hostaddr= entry (comma lists) plus the URL
+// host — the same set as dbHostsOf() in payload/env.ts — lowercased, -pooler stripped.
+const bareHost = (h) => h.trim().toLowerCase().replace('-pooler', '')
+const hostsOf = (url, name) => {
   if (!url) fail(`${name} is not set`)
+  let u
   try {
-    // pg lets a ?host= query parameter override the URL host; compare the one it would use.
-    const u = new URL(url)
-    return (u.searchParams.get('host')?.split(',')[0] || u.hostname).replace('-pooler', '')
+    u = new URL(url)
   } catch {
     fail(`${name} is not a valid URL`)
   }
+  const fromParams = ['host', 'hostaddr'].flatMap((k) => u.searchParams.getAll(k).flatMap((v) => v.split(',')))
+  return [...fromParams, u.hostname].map(bareHost).filter(Boolean)
 }
 const run = (cmd, args, extraEnv = {}) => execFileSync(cmd, args, { stdio: 'inherit', env: { ...env, ...extraEnv } })
 
-const prodHost = (env.PROD_DATABASE_HOST ?? '').trim().replace('-pooler', '')
+const prodHost = bareHost(env.PROD_DATABASE_HOST ?? '')
 if (!prodHost) fail('PROD_DATABASE_HOST is empty; set it (a hostname, not a secret) for all environments')
 
 const payload = './node_modules/.bin/payload'
@@ -34,7 +38,7 @@ if (env.VERCEL_ENV === 'production') {
   run(next, ['build'])
 } else if (env.VERCEL_ENV === 'preview') {
   for (const name of ['DATABASE_URI', 'DATABASE_URI_UNPOOLED']) {
-    if (bareHost(env[name], name) === prodHost) fail(`${name} points at the production database host; previews must use a Neon branch`)
+    if (hostsOf(env[name], name).includes(prodHost)) fail(`${name} points at the production database host; previews must use a Neon branch`)
   }
   if (env.BLOB_DELETE_DISABLED !== '1') fail('BLOB_DELETE_DISABLED must be "1" on previews')
   run(payload, ['migrate'], { DATABASE_URI: env.DATABASE_URI_UNPOOLED })

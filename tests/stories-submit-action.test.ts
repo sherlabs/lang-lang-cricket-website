@@ -172,6 +172,8 @@ describe('updateDraftByToken', () => {
     const legacy = `${STORE}/stories/old-cover.jpg`
     const form = () => formData({ authorName: 'Pat', title: 'Edited', contentJson: doc(p('Text'), img(legacy)) })
     vi.stubEnv('VERCEL', '1')
+    vi.stubEnv('VERCEL_URL', 'site-abc123.vercel.app')
+    vi.stubEnv('NEXT_PUBLIC_SERVER_URL', 'https://example.org')
     vi.stubEnv('BLOB_READ_WRITE_TOKEN', 'vercel_blob_rw_previewstore_x')
     try {
       vi.stubEnv('VERCEL_ENV', 'production')

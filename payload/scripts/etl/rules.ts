@@ -19,9 +19,38 @@ export const importedEventIds = (events: readonly LegacyRow[]) => new Set(events
 /** Legacy ids the players step imports. */
 export const importedPlayerIds = (players: readonly LegacyRow[]) => new Set(players.filter(importsPlayer).map((p) => Number(p.id)))
 
-/** Legacy rows each id-preserving collection is expected to hold, given the parents' imported ids. */
-export function expectedRows(parents: { eventIds: ReadonlySet<number>; playerIds: ReadonlySet<number> }): Record<string, (r: LegacyRow) => boolean> {
+/**
+ * Ids of rows whose `url` an earlier (lower-id) kept row already has. `legacyUrl` is unique, so
+ * only the first such row can own the file.
+ */
+export function duplicateUrlIds(rows: readonly LegacyRow[], keep: (r: LegacyRow) => boolean): Set<number> {
+  const seen = new Set<string>()
+  const dups = new Set<number>()
+  for (const r of rows.filter(keep).sort((a, b) => Number(a.id) - Number(b.id))) {
+    if (typeof r.url !== 'string' || !r.url) continue
+    if (seen.has(r.url)) dups.add(Number(r.id))
+    else seen.add(r.url)
+  }
+  return dups
+}
+
+/** An event photo the legacy app would import at all: its event imports and its status is known. */
+export const eventPhotoImportable = (eventIds: ReadonlySet<number>) => (r: LegacyRow) =>
+  eventIds.has(Number(r.event_id)) && EVENT_PHOTO_STATUSES.has(r.status as string)
+
+/**
+ * Legacy rows each id-preserving collection is expected to hold, given the parents' imported ids.
+ * An event photo whose URL an earlier imported photo already has is a resubmission (the legacy
+ * `rejectEventPhoto` exists for exactly this) and is skipped, not imported without a file.
+ */
+export function expectedRows(parents: {
+  eventIds: ReadonlySet<number>
+  playerIds: ReadonlySet<number>
+  eventPhotos?: readonly LegacyRow[]
+}): Record<string, (r: LegacyRow) => boolean> {
   const { eventIds, playerIds } = parents
+  const photoImportable = eventPhotoImportable(eventIds)
+  const photoDuplicates = duplicateUrlIds(parents.eventPhotos ?? [], photoImportable)
   return {
     documents: () => true,
     'gallery-photos': () => true,
@@ -30,7 +59,7 @@ export function expectedRows(parents: { eventIds: ReadonlySet<number>; playerIds
     announcements: () => true,
     events: importsEvent,
     'event-rsvps': (r) => eventIds.has(Number(r.event_id)) && RSVP_RESPONSES.has(r.response as string),
-    'event-photos': (r) => eventIds.has(Number(r.event_id)) && EVENT_PHOTO_STATUSES.has(r.status as string),
+    'event-photos': (r) => photoImportable(r) && !photoDuplicates.has(Number(r.id)),
     stories: (r) => STORY_STATUSES.has(r.status as string),
     players: importsPlayer,
     'player-seasons': (r) => playerIds.has(Number(r.player_id)),

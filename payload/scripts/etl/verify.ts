@@ -164,7 +164,7 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
     player_sync_runs: await L('player_sync_runs'),
   }
   const playerIds = importedPlayerIds(legacy.players)
-  const expected = expectedRows({ eventIds: importedEventIds(legacy.events), playerIds })
+  const expected = expectedRows({ eventIds: importedEventIds(legacy.events), playerIds, eventPhotos: legacy.event_photos })
   const legacyOf: Record<string, LegacyRow[]> = {
     documents: legacy.documents,
     'gallery-photos': legacy.gallery_photos,

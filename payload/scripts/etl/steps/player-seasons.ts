@@ -1,3 +1,4 @@
+import { getTableColumns, sql } from '@payloadcms/db-postgres/drizzle'
 import { chunk, playerTables } from '../../../../lib/players/db'
 import { bumpSequence, importableParentIds } from '../rows'
 import { importedPlayerIds } from '../rules'
@@ -35,12 +36,14 @@ const n = (v: unknown) => Number(v ?? 0)
  * Step 14: `player-seasons`, bulk-inserted through drizzle in chunks of 500 with ids kept and
  * `ON CONFLICT (id) DO NOTHING`, so a partially failed run resumes cleanly (no row-count
  * shortcut). The sync rewrites these rows nightly anyway. Seasons of players that did not
- * import are skipped and reported. `--update` does not rewrite existing rows.
+ * import are skipped and reported. `--update` rewrites existing ids (`ON CONFLICT (id) DO UPDATE`):
+ * after a rollback the legacy sync hands out ids from the range Payload's sync used, so an id
+ * can exist on both sides with different data (spec §13.4).
  */
 export const playerSeasonsStep: EtlStep = {
   name: 'player-seasons',
   async run(ctx) {
-    const { payload, source, report, dryRun } = ctx
+    const { payload, source, report, dryRun, update } = ctx
     const counts = report.counts('player-seasons')
     const rows = await source.rows<Row>('player_seasons')
     counts.read = rows.length
@@ -86,10 +89,25 @@ export const playerSeasonsStep: EtlStep = {
         updatedAt: stamp,
       })
     }
+    // Every column but id / createdAt takes the legacy row's value on --update.
+    const updateSet = Object.fromEntries(
+      Object.entries(getTableColumns(t.player_seasons))
+        .filter(([key]) => key !== 'id' && key !== 'createdAt')
+        .map(([key, column]) => [key, sql.raw(`excluded."${(column as { name: string }).name}"`)]),
+    )
     for (const part of chunk(values, 500)) {
-      const inserted: { id: number }[] = await payload.db.drizzle
-        .insert(t.player_seasons)
-        .values(part)
+      const insert = payload.db.drizzle.insert(t.player_seasons).values(part)
+      if (update) {
+        // xmax = 0 only on a freshly inserted row version, so it tells created from updated.
+        const written: { id: number; inserted: boolean }[] = await insert
+          .onConflictDoUpdate({ target: t.player_seasons.id, set: updateSet })
+          .returning({ id: t.player_seasons.id, inserted: sql<boolean>`(xmax = 0)` })
+        const created = written.filter((w) => w.inserted).length
+        counts.created += created
+        counts.updated += written.length - created
+        continue
+      }
+      const inserted: { id: number }[] = await insert
         .onConflictDoNothing({ target: t.player_seasons.id })
         .returning({ id: t.player_seasons.id })
       counts.created += inserted.length

@@ -1,10 +1,7 @@
 import type { Event, Story } from '@/lib/domain'
 import { CLUB_TIMEZONE } from '@/config/site'
-import { clubDefaults } from '@/payload/seed/club-defaults'
 import { absoluteUrl } from './site-metadata'
 
-/** Defaults-module value only; pages pass the resolved club (spec §14). */
-export const CLUB_EMAIL = clubDefaults.email
 const MELBOURNE = CLUB_TIMEZONE
 const CONTEXT = 'https://schema.org'
 

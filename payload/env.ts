@@ -3,7 +3,7 @@
  * dev/start/build, the payload CLI, scripts, tests — is covered) and by the
  * ETL's legacy source (`LEGACY_DATABASE_URL`). Spec §1 / D4.
  *
- * Deliberately keyed on `process.env.VERCEL`, not NODE_ENV: a local `next start`
+ * Deliberately keyed on the Vercel deployment markers (isOnVercel), not NODE_ENV: a local `next start`
  * runs with NODE_ENV=production and must still be guarded.
  */
 
@@ -49,13 +49,48 @@ export function isLocalDbUrl(url: string): boolean {
   return dbHostsOf(url).every((h) => LOCAL_HOSTS.has(h))
 }
 
+const isLocalHttpUrl = (url: string | undefined): boolean => {
+  if (!url) return false
+  try {
+    return LOCAL_HOSTS.has(new URL(url).hostname) || new URL(url).hostname === '[::1]'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * True only inside a real Vercel build or function. `VERCEL=1` alone is not enough:
+ * `vercel env pull` / `vercel pull` write it into local env files (with an empty VERCEL_URL),
+ * and `vercel dev` sets it with VERCEL_ENV=development and a localhost VERCEL_URL. Real
+ * deployments set VERCEL, VERCEL_ENV and VERCEL_URL at both build time and runtime.
+ * Throws when VERCEL is set but those markers are missing, so a pulled env file fails loudly
+ * instead of switching every guard off.
+ */
+export function isOnVercel(env: Env = process.env): boolean {
+  if (!env.VERCEL) return false
+  const deployed =
+    env.VERCEL === '1' &&
+    (env.VERCEL_ENV === 'production' || env.VERCEL_ENV === 'preview') &&
+    Boolean(env.VERCEL_URL) &&
+    !isLocalHttpUrl(`https://${env.VERCEL_URL}`) &&
+    !isLocalHttpUrl(env.NEXT_PUBLIC_SERVER_URL)
+  if (deployed) return true
+  if (env.VERCEL_ENV === 'development' || isLocalHttpUrl(`http://${env.VERCEL_URL}`)) return false // `vercel dev`: guards apply
+  throw new Error(
+    `[env] Refusing to start: VERCEL=${JSON.stringify(env.VERCEL)} is set but this is not a Vercel deployment ` +
+      `(VERCEL_ENV=${JSON.stringify(env.VERCEL_ENV ?? '')}, VERCEL_URL=${JSON.stringify(env.VERCEL_URL ?? '')}, ` +
+      `NEXT_PUBLIC_SERVER_URL=${JSON.stringify(env.NEXT_PUBLIC_SERVER_URL ?? '')}). ` +
+      'A pulled Vercel env file (vercel env pull / vercel pull) must never be used locally; remove it.',
+  )
+}
+
 /**
  * Off Vercel: refuse a non-local DATABASE_URI (unless ALLOW_REMOTE_DB=yes) and
  * any BLOB_READ_WRITE_TOKEN (unless ALLOW_REMOTE_BLOB=yes). Only the operator's
  * cutover shell sets those flags.
  */
 export function assertSafeEnv(env: Env = process.env, dbVar = 'DATABASE_URI'): void {
-  if (env.VERCEL) return
+  if (isOnVercel(env)) return
   const url = env[dbVar]
   if (url && !isLocalDbUrl(url) && env.ALLOW_REMOTE_DB !== 'yes') {
     throw new Error(
@@ -87,7 +122,7 @@ export function assertLocalDb(env: Env = process.env): true {
  * - otherwise undefined → plugin disabled, core local storage on disk.
  */
 export function blobToken(env: Env = process.env): string | undefined {
-  if (env.VERCEL || env.ALLOW_REMOTE_BLOB === 'yes') return env.BLOB_READ_WRITE_TOKEN || undefined
+  if (isOnVercel(env) || env.ALLOW_REMOTE_BLOB === 'yes') return env.BLOB_READ_WRITE_TOKEN || undefined
   if (env.PAYLOAD_BLOB_FAKE === '1') return FAKE_BLOB_TOKEN
   return undefined
 }

@@ -16,20 +16,7 @@ import {
 } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
 import { eventMealOptions, resolveMeal } from '@/lib/events-meal'
-import { isEmailOrEmpty } from '@/payload/fields/validators'
-
-/** Length caps (spec §3.9); the collection validators enforce the same limits. */
-const RSVP_CAPS = { name: 100, email: 200, note: 1000 } as const
-
-function textCapError(fields: { name: string; email: string; note: string }): string | null {
-  if (fields.name.length > RSVP_CAPS.name) return `Name must be ${RSVP_CAPS.name} characters or fewer.`
-  if (fields.email.length > RSVP_CAPS.email) return `Email must be ${RSVP_CAPS.email} characters or fewer.`
-  if (fields.note.length > RSVP_CAPS.note) return `Note must be ${RSVP_CAPS.note} characters or fewer.`
-  // Same rule as the collection's email validator, checked first so a value the browser's
-  // type="email" accepts (e.g. `sam@localhost`) returns a message instead of throwing.
-  if (!isEmailOrEmpty(fields.email)) return 'Enter a valid email address, or leave it empty.'
-  return null
-}
+import { rsvpTextError } from '@/lib/rsvp-validation'
 
 /** Confirms `occurrenceDate` is a real occurrence of `event` — the only server-side check standing between a crafted request and an RSVP for a date that was never actually offered. */
 function isValidOccurrence(event: Event, occurrenceDate: Date): boolean {
@@ -83,7 +70,7 @@ export async function submitRsvp(formData: FormData): Promise<SubmitRsvpResult> 
 
   if (!name) return { error: 'Name is required.' }
   if (!isRsvpResponse(response)) return { error: 'Please choose yes or no.' }
-  const capError = textCapError({ name, email, note })
+  const capError = rsvpTextError({ name, email, note })
   if (capError) return { error: capError }
 
   const occurrenceDate = parseOccurrence(event, occurrenceDateStr)

@@ -6,6 +6,7 @@
  */
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import { DEFAULT_CANONICAL_HOST } from '../../config/site'
 import { clubDefaults } from '../seed/club-defaults'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { guard } from './_guard'
@@ -20,7 +21,7 @@ async function main() {
         ? '[seed-club] the club global is already saved; nothing to do (pass --force to overwrite it with the defaults)'
         : `[seed-club] club global ${result} from the defaults`,
     )
-    const canonical = process.env.CANONICAL_HOST ?? 'langlangcricketclub.com'
+    const canonical = process.env.CANONICAL_HOST ?? DEFAULT_CANONICAL_HOST
     const club = await payload.findGlobal({ slug: 'club', depth: 0 })
     const host = new URL(club.siteUrl || clubDefaults.siteUrl).host
     if (host !== canonical) {

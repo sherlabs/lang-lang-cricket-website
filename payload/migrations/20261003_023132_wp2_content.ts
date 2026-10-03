@@ -137,8 +137,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"pages_fixtures_title" varchar DEFAULT 'Fixtures, Results & Teams',
   	"pages_fixtures_description" varchar DEFAULT 'Fixtures, results and teams for Lang Lang Cricket Club in Caldermeade, Victoria, across every grade and season.',
   	"history_narrative" varchar DEFAULT 'Much of the club''s written record had faded or gone missing over the decades. In the 2022–23 season that changed: through the work of the Club Committee, the club''s history records were restored and brought back into the clubrooms.
-  
-  Those records now sit alongside a modern home ground in Caldermeade, developed with the support of Cardinia Shire Council and Community Bank Lang Lang, giving the next generation of juniors and seniors a place to add their own chapter.',
+
+Those records now sit alongside a modern home ground in Caldermeade, developed with the support of Cardinia Shire Council and Community Bank Lang Lang, giving the next generation of juniors and seniors a place to add their own chapter.',
   	"history_pull_quote" varchar DEFAULT 'You cannot make history without knowing where you started.',
   	"history_callout_eyebrow" varchar DEFAULT 'With thanks',
   	"history_callout_title" varchar DEFAULT 'The Club Committee',

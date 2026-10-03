@@ -1,13 +1,18 @@
 import type { Player, PlayerSeason } from '@/lib/domain'
 import { battingAverages, bowlingAverages } from '@/lib/playhq/players'
 import { EMPTY_COUNTS, combineCounts, pickCounts, type SeasonCounts } from './season-math'
+import { PLAYHQ_DEFAULTS } from '@/config/site'
 
 export function isActive(p: Pick<Player, 'activeOverride' | 'isActiveDerived'>) {
   return p.activeOverride ? p.activeOverride === 'active' : p.isActiveDerived
 }
 export const playerName = (p: Pick<Player, 'firstName' | 'lastName'>) => `${p.firstName} ${p.lastName}`.trim()
 export const seasonYears = (name: string) => /\d{4}(\/\d{2})?/.exec(name)?.[0] ?? name
-export const teamLabel = (teamName: string) => teamName.replace(/^Lang Lang\s+/i, '')
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/** "Lang Lang B Grade" → "B Grade": strips the club's PlayHQ team-name prefix. */
+export const teamLabel = (teamName: string, prefix: string = PLAYHQ_DEFAULTS.teamNamePrefix) =>
+  prefix ? teamName.replace(new RegExp(`^${escapeRegExp(prefix)}\\s+`, 'i'), '') : teamName
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).slice(0, 2).join('')
 
 export type SeasonLite = Pick<PlayerSeason, 'seasonName' | 'seasonOrder' | 'teamName'>

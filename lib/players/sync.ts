@@ -17,24 +17,8 @@ import { buildSyncPlan, type TeamAggregate } from './plan'
 export const LOCK_MS = 10 * 60 * 1000
 export type SyncResult = { status: 'ok' | 'error' | 'locked'; playersCreated: number; seasonRows: number; error?: string }
 
-export type SyncRunRow = {
-  id: number
-  startedAt: string
-  finishedAt: string | null
-  status: 'running' | 'ok' | 'error' | null
-  playersCreated: number | null
-  seasonRows: number | null
-  error: string | null
-}
-
 export function isLocked(latest: { status: string | null; startedAt: Date } | undefined, now: Date): boolean {
   return !!latest && latest.status === 'running' && now.getTime() - latest.startedAt.getTime() < LOCK_MS
-}
-
-export async function latestSyncRun(payload: Payload): Promise<SyncRunRow | null> {
-  const t = playerTables(payload)
-  const rows = await payload.db.drizzle.select().from(t.player_sync_runs).orderBy(desc(t.player_sync_runs.startedAt)).limit(1)
-  return (rows[0] as SyncRunRow | undefined) ?? null
 }
 
 /** `/players` and every `/players/[slug]` page. The legacy `/history` call is dropped (nothing there reads players). */

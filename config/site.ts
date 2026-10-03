@@ -7,8 +7,24 @@
 /** Cookie names are `${COOKIE_PREFIX}_…` (llcc_rsvps, llcc_story_draft, llcc_ann_dismissed). */
 export const COOKIE_PREFIX = 'llcc'
 
-/** Wall-clock timezone for event dates, JSON-LD offsets and announcement dates. */
+/** Wall-clock timezone for event dates, JSON-LD offsets, announcement and PlayHQ dates. */
 export const CLUB_TIMEZONE = 'Australia/Melbourne'
+
+/** BCP 47 locale for displayed dates (keep in step with `club.locale`). */
+export const CLUB_LOCALE = 'en-AU'
+
+/** Fallback for CANONICAL_HOST (next.config redirects, seed-club's siteUrl check). */
+export const DEFAULT_CANONICAL_HOST = 'langlangcricketclub.com'
+
+/**
+ * PlayHQ defaults; env `PLAYHQ_ORG_ID` / `PLAYHQ_CLUB_URL` override them. `teamNamePrefix`
+ * is stripped from PlayHQ team names for display ("Lang Lang B Grade" → "B Grade").
+ */
+export const PLAYHQ_DEFAULTS = {
+  orgId: '484ced51-403a-466c-9a94-bd95eedf7319',
+  clubUrl: 'https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51',
+  teamNamePrefix: 'Lang Lang',
+} as const
 
 /** Footer credit; `utm_source` is the club site's host so visits are attributable. */
 export const AGENCY_CREDIT = {

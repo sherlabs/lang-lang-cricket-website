@@ -20,7 +20,6 @@ export type MetadataClub = {
 };
 
 export const SITE_URL = clubDefaults.siteUrl;
-export const SITE_NAME = clubDefaults.name;
 
 /** The share image every page uses unless it sets its own. */
 export function defaultOgImage(club: Pick<MetadataClub, "ogImage" | "ogImageAlt">) {

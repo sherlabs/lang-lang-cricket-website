@@ -63,12 +63,6 @@ export async function getStoryByViewToken(viewToken: string): Promise<Story | nu
   return doc ? toStory(doc) : null
 }
 
-/** Edit access via secret link — any status. */
-export async function getStoryByEditToken(editToken: string): Promise<Story | null> {
-  const doc = await findByToken('editToken', editToken)
-  return doc ? toStory(doc) : null
-}
-
 /**
  * What the token edit page needs: the story, the submitter's own email (they hold the edit
  * link) and the body as HTML for Tiptap (spec §5 step 5).

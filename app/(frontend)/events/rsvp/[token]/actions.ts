@@ -6,7 +6,7 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { RSVP_COOKIE, parseRsvpCookie, removeRsvpToken, rsvpCookieOptions, serializeRsvpCookie } from '@/lib/rsvp-cookie'
 import { isRsvpResponse, type RsvpResponse } from '@/lib/rsvp-response'
 import { eventMealOptions, resolveMeal } from '@/lib/events-meal'
-import { isEmailOrEmpty } from '@/payload/fields/validators'
+import { rsvpTextError } from '@/lib/rsvp-validation'
 
 const INVALID_LINK = { error: 'This RSVP link is no longer valid.' }
 
@@ -28,11 +28,9 @@ export async function updateRsvpByToken(token: string, formData: FormData): Prom
   if (!name) return { error: 'Name is required.' }
   const email = String(formData.get('email') ?? '').trim()
   const note = String(formData.get('note') ?? '').trim()
-  if (name.length > 100) return { error: 'Name must be 100 characters or fewer.' }
-  if (email.length > 200) return { error: 'Email must be 200 characters or fewer.' }
-  if (note.length > 1000) return { error: 'Note must be 1000 characters or fewer.' }
-  // Checked before the write: the collection validator would otherwise throw a ValidationError.
-  if (!isEmailOrEmpty(email)) return { error: 'Enter a valid email address, or leave it empty.' }
+  // Checked before the write: the collection validators would otherwise throw a ValidationError.
+  const textError = rsvpTextError({ name, email, note })
+  if (textError) return { error: textError }
 
   const rawResponse = formData.get('response')
   const stored: RsvpResponse = isRsvpResponse(rsvp.response) ? rsvp.response : 'yes'

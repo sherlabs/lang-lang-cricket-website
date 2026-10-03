@@ -25,6 +25,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+import { dbHostsOf, isLocalDbUrl } from '../../env'
 
 export const FAKE_STORE_ID = 'fakestore'
 export const BLOB_BASE = `https://${FAKE_STORE_ID}.public.blob.vercel-storage.com`
@@ -323,10 +324,10 @@ function arg(name: string): string | undefined {
   return i >= 0 ? process.argv[i + 1] : undefined
 }
 
+/** Every host pg could connect to (URL host, ?host=, ?hostaddr=) must be local. */
 export function assertLocalUrl(url: string): void {
-  const host = new URL(url).hostname
-  if (host !== '127.0.0.1' && host !== 'localhost') {
-    throw new Error(`legacy-fixture: refusing non-local host "${host}" (only 127.0.0.1 / localhost)`)
+  if (!isLocalDbUrl(url)) {
+    throw new Error(`legacy-fixture: refusing non-local host(s) ${dbHostsOf(url).join(', ')} (only 127.0.0.1 / localhost)`)
   }
 }
 

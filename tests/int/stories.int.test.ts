@@ -293,13 +293,13 @@ describe('stories: public submit → approve → render, and the token edit', ()
 
 describe('stories: query layer', () => {
   it('lists published stories only, newest publishedAt first, and refuses non-token-shaped tokens', async () => {
-    const { listPublishedStories, getStoryByEditToken, getStoryByViewToken } = await import('@/lib/stories-queries')
+    const { listPublishedStories, getStoryForEdit, getStoryByViewToken } = await import('@/lib/stories-queries')
     const list = await listPublishedStories()
     expect(list.length).toBeGreaterThan(0)
     expect(list.every((s) => s.status === 'published')).toBe(true)
     const times = list.map((s) => s.publishedAt?.getTime() ?? 0)
     expect([...times].sort((a, b) => b - a)).toEqual(times)
-    expect(await getStoryByEditToken('')).toBeNull()
+    expect(await getStoryForEdit('')).toBeNull()
     expect(await getStoryByViewToken('short')).toBeNull()
   })
 })

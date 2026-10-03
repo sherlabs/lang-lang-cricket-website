@@ -251,6 +251,16 @@ describe('legacy ETL (fixture)', () => {
     expect((await sqlRows(`SELECT id FROM "payload"."player_seasons" ORDER BY id`)).map((r) => Number(r.id))).toEqual(ids)
   })
 
+  it('--update rewrites a player-seasons id that exists on both sides with stale data', async () => {
+    const ids = (await legacy('player_seasons')).map((r) => r.id as number)
+    await sqlRows(`UPDATE "payload"."player_seasons" SET season_name = 'stale', games = 999 WHERE id = ${ids[0]}`)
+    const ctx = await runEtl({ update: true }, ['player-seasons'])
+    expect(ctx.report.counts('player-seasons')).toMatchObject({ created: 0, updated: ids.length })
+    const [row] = await sqlRows(`SELECT season_name, games FROM "payload"."player_seasons" WHERE id = ${ids[0]}`)
+    const [want] = (await legacy('player_seasons')).filter((r) => r.id === ids[0])
+    expect([row.season_name, Number(row.games)]).toEqual([want.season_name, Number(want.games)])
+  })
+
   it('verify fails on a tampered preserved field and on a missing row', async () => {
     const [story] = await legacy('stories')
     await sqlRows(`UPDATE "payload"."stories" SET slug = 'tampered' WHERE id = ${story.id}`)

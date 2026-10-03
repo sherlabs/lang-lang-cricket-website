@@ -134,7 +134,7 @@ export type ClubDefaults = ClubGlobalDefaults & {
     people: { header: HeaderCopy }
     peopleSections: { key: 'leadership' | 'committee' | 'coach'; label: string; heading: string; intro: string }[]
     announcements: { header: HeaderCopy }
-    history: { imageAlt: string }
+    history: { header: HeaderCopy; image: string; imageAlt: string }
     fixtures: { intro: string; noTeams: string }
     emptyStates: { sponsors: string; documents: string; announcements: string }
   }
@@ -453,7 +453,16 @@ export const clubDefaults: ClubDefaults = {
           'Club notices, in one place — training changes, working bees, presentation nights and anything else the committee needs you to know.',
       },
     },
-    history: { imageAlt: 'Lang Lang Cricket Club players on the field at Caldermeade' },
+    history: {
+      header: {
+        eyebrow: 'Our history',
+        title: 'Where the club comes from',
+        intro:
+          'A community cricket club is the sum of the people who have pulled on the colours over the years. Here is how we are piecing that story back together.',
+      },
+      image: '/assets/gallery/photo-01.jpg',
+      imageAlt: 'Lang Lang Cricket Club players on the field at Caldermeade',
+    },
     fixtures: {
       intro: 'The next round, the latest results and every Lang Lang side — straight from PlayHQ.',
       noTeams: 'No Lang Lang sides have been entered for this season yet.',

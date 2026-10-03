@@ -12,7 +12,7 @@ The operator copy of spec §13 (`docs/superpowers/specs/2026-10-03-payload-cms-m
 | Production Blob store id (`<id>.public.blob.vercel-storage.com`) | `____________________` |
 | Preview Blob store id | `____________________` |
 | Production Neon project / branch | ____________________ |
-| Planned window (local time, ~30 min, low traffic) | ____________________ |
+| Planned window (local time, ~30 min, low traffic; **must end before 17:00 UTC**, see D) | ____________________ |
 
 Sections A–D happen before the window. E is the window. F is the smoke list, G the rollback, H the decommission.
 
@@ -62,7 +62,7 @@ The production values are unused until a deployment of the new app is promoted (
 ### A.4 Vercel Firewall
 
 - [ ] **Login rate limit (live):** a per-IP rate limit on `POST /api/users/login` (forgot-password is disabled, so login is the only lockout surface). Rule name: ________ Limit: ____ requests / ____ s.
-- [ ] **Write freeze (prepared, DISABLED):** a custom rule that denies every `POST` whose host is `langlangcricketclub.com`, `www.langlangcricketclub.com` or `lang-lang-cricket-website.vercel.app`. Server actions are POSTs to page URLs, so this freezes RSVPs, story submits and edits, and photo submits on the legacy site. The cron is a GET and is not affected. Match on those hostnames only, so the new deployment's own URL stays usable during E.8. Rule name: ________
+- [ ] **Write freeze (prepared, DISABLED):** a custom rule that denies every `POST` whose host is `langlangcricketclub.com`, `www.langlangcricketclub.com` or `lang-lang-cricket-website.vercel.app`. Server actions are POSTs to page URLs, so this freezes RSVPs, story submits and edits, and photo submits on the legacy site. The cron is a GET and is **not** affected, which is why the window must end before 17:00 UTC (D). Match on those hostnames only, so the new deployment's own URL stays usable during E.8. Rule name: ________
 
 ---
 
@@ -101,7 +101,8 @@ echo "$TARGET"   # must be the branch host, not PROD_DATABASE_HOST
 
 - [ ] `pnpm payload migrate` (a no-op after the preview build; it must not prompt).
 - [ ] `INITIAL_ADMIN_EMAIL=… INITIAL_ADMIN_PASSWORD=… pnpm seed:admin --target $TARGET --confirm` (type them with `read -rs` as above).
-- [ ] `pnpm etl --target $TARGET --dry-run --blob-store-id $PROD_STORE --preview-rehearsal --report ../cutover-reports/b-etl-dry.json`. Review: orphans, flagged media (`other`), collisions and prefix fallbacks. Notes: ________
+- [ ] `pnpm etl --target $TARGET --dry-run --blob-store-id $PROD_STORE --preview-rehearsal --report ../cutover-reports/b-etl-dry.json`. Review: orphans, flagged media (`other`), collisions, prefix fallbacks and duplicate URLs. Notes: ________
+- [ ] **Duplicate URLs.** `duplicate-url-skipped` (event photos): a later photo with the same URL as an earlier one is a resubmission and is skipped; nothing to do. `media-duplicate-url` (documents, gallery photos): the row would import without a file and verify fails it ("no file — its legacy url is also …#N's"). Fix each in the **legacy** admin before the window: delete the duplicate row, or give it its own file. Rows fixed: ________
 - [ ] `pnpm etl --target $TARGET --confirm --blob-store-id $PROD_STORE --preview-rehearsal --report ../cutover-reports/b-etl.json`. It ends with `VERIFY PASSED`. Any `media-fallback-failed` item (a re-upload Payload rejected; the run continues and verify fails that row) must be resolved before the window. Rows written: ________
 - [ ] Run it again: **0 rows written**.
 - [ ] `pnpm verify:cutover --target $TARGET --blob-store-id $PROD_STORE --preview-rehearsal` passes, including "registered rows: generateURL(prefix, filename) = legacyUrl" and the HEAD sample.
@@ -141,11 +142,12 @@ pg_restore --no-owner -d postgres://postgres:postgres@127.0.0.1:54329/langlang_l
 export DATABASE_URI=postgres://postgres:postgres@127.0.0.1:54329/langlang_rehearsal
 export LEGACY_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:54329/langlang_legacy
 export PAYLOAD_PUSH=false
-unset BLOB_READ_WRITE_TOKEN
+export PAYLOAD_SECRET=$(openssl rand -hex 32) NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+unset BLOB_READ_WRITE_TOKEN ALLOW_REMOTE_DB ALLOW_REMOTE_BLOB BLOB_DELETE_DISABLED VERCEL VERCEL_ENV VERCEL_URL
 export PROD_STORE=<production Blob store id>   # as recorded at the top of this checklist
 ```
 
-(Run it from the clone root, where `pg` resolves. `WITH (FORCE)` needs Postgres ≥ 13; `createdb`/`dropdb` work too where the client tools are installed.) Then, against the fresh `langlang_rehearsal` with **no Blob token** (no `--preview-rehearsal`: without a token there is no second store):
+Use a **new shell**, not the B.2 one: that shell holds the preview `NEXT_PUBLIC_SERVER_URL` (wrong `serverURL`/`csrf` for `pnpm start` on localhost), `ALLOW_REMOTE_DB` and `BLOB_DELETE_DISABLED`; the clean clone has no `.env.local`, so `PAYLOAD_SECRET` and `NEXT_PUBLIC_SERVER_URL` must be exported here. (Run it from the clone root, where `pg` resolves. `WITH (FORCE)` needs Postgres ≥ 13; `createdb`/`dropdb` work too where the client tools are installed.) Then, against the fresh `langlang_rehearsal` with **no Blob token** (no `--preview-rehearsal`: without a token there is no second store):
 
 - [ ] `pnpm payload migrate`
 - [ ] `pnpm etl --target 127.0.0.1/langlang_rehearsal --dry-run --blob-store-id $PROD_STORE`, then the same with `--confirm`
@@ -160,6 +162,7 @@ Dump taken (UTC): ________ Rehearsal passed (UTC): ________ Delete the dump afte
 ## D. Before the window
 
 - [ ] B passed, and C passed within the last 48 h.
+- [ ] **The window ends before 17:00 UTC** (E.2 to E.10). The legacy cron `/api/cron/players-sync` runs at 17:00 UTC, is a GET (the write freeze does not block it) and rewrites `public.players`, `player_seasons` (new ids), `player_aliases` and `player_sync_runs`: the ETL's source. If it overlapped, the ETL would read a half-synced source and verify would fail mid-window (or the Payload copy would be stale). If the window cannot avoid 17:00 UTC, prepare a second disabled Firewall rule denying `/api/cron/players-sync` on the legacy hosts, enable it at E.2 and disable it at E.10. Window end (UTC): ________
 - [ ] **Production domain auto-assignment: OFF** (Settings → Domains / Git → "Auto-assign custom production domains"), as late as possible before the window. From now on a push to `main` (a legacy hotfix) builds but does not go live: promote such a deployment by hand (`vercel promote`) if one is needed before E. It stays off until the decommission (H). Done on ________ by ________.
 - [ ] Add the **Production** scope to `ENABLE_EXPERIMENTAL_COREPACK=1` (A.2). It only affects production builds, which no longer take the domain.
 - [ ] `feat/payload-cms` is **not merged** to `main`.
@@ -215,15 +218,15 @@ Reports go to `../cutover-reports/`, outside the clone: step 8 deploys from the 
 | # | Step | Time (UTC) | By |
 |---|---|---|---|
 | 1 | Announce the admin freeze: the committee stops editing in the old `/admin`. | | |
-| 2 | **Freeze public writes:** enable the Firewall "deny POST" rule. Check that a POST to the apex is blocked: `curl -s -o /dev/null -w '%{http_code}' -X POST https://langlangcricketclub.com/events` → 403. | | |
+| 2 | **Freeze public writes:** enable the Firewall "deny POST" rule (and the cron deny rule, if D needed one). Check that a POST to the apex is blocked: `curl -s -o /dev/null -w '%{http_code}' -X POST https://langlangcricketclub.com/events` → 403. | | |
 | 3 | Record the Neon restore point (timestamp) of the production branch: ________ | | |
 | 4 | `pnpm payload migrate` — creates schema `payload` and its tables; `public.*` is untouched. | | |
 | 5 | `INITIAL_ADMIN_EMAIL=… INITIAL_ADMIN_PASSWORD=… pnpm seed:admin --target $TARGET --confirm` | | |
-| 6 | `pnpm etl --target $TARGET --dry-run --report ../cutover-reports/e-etl-dry.json`. Review orphans, flagged media, collisions and prefix fallbacks against the B/C reports. Anything new: ________ | | |
+| 6 | `pnpm etl --target $TARGET --dry-run --report ../cutover-reports/e-etl-dry.json`. Review orphans, flagged media, collisions, prefix fallbacks and duplicate URLs against the B/C reports; a new `media-duplicate-url` item means verify will fail that row (fix it in legacy as in B.3, then re-run the dry run). Anything new: ________ | | |
 | 7 | `pnpm etl --target $TARGET --confirm --report ../cutover-reports/e-etl.json` → `VERIFY PASSED`. Then `pnpm verify:cutover --target $TARGET` passes (per-row URL equality included). Rows written: ________ | | |
 | 8 | **Production deployment without the domain**, from the clean clone (`vercel link` to the project first; there is no `tmp/` and no report or dump file inside the clone): `vercel deploy --prod --skip-domain`. Its build runs `payload migrate` (a no-op now). Deployment URL: `https://____________________`. On it: `/admin` login, the dashboard and a collection list load, and two public pages render. (Saving in the admin is checked after promotion: `csrf` trusts only the apex origin.) | | |
 | 9 | **Promote that deployment:** `vercel promote <deployment URL>`. The apex now serves Payload; the next 17:00 UTC cron runs on it. **Step-9 time** (for `export:since`): ________ | | |
-| 10 | Disable the Firewall "deny POST" rule. | | |
+| 10 | Disable the Firewall "deny POST" rule (and the cron deny rule, if enabled). | | |
 | 11 | Run the smoke list (F) on the apex. | | |
 | 12 | Fast-forward `main`: `git push origin <cutover commit>:main` (a fast-forward; never force). The resulting production build does not take the domain (auto-assign is off). Leave auto-assign off until H. Instant Rollback stays the rollback path. | | |
 | 13 | Invite the committee: admins create the other users in the Payload admin (Users → Create). | | |

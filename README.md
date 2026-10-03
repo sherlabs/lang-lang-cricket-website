@@ -27,7 +27,10 @@ database URL or a `BLOB_READ_WRITE_TOKEN` in it, and never `vercel env pull`
 into this checkout. Two guards enforce this:
 
 - `assertSafeEnv()` (`payload/env.ts`, called by `payload.config.ts`) refuses
-  a non-local `DATABASE_URI` and any Blob token off Vercel, so `next dev`,
+  a non-local `DATABASE_URI` and any Blob token off Vercel ("on Vercel" means
+  `VERCEL=1` *with* `VERCEL_ENV` production/preview, a non-local `VERCEL_URL`
+  and a non-localhost `NEXT_PUBLIC_SERVER_URL`; a pulled env file's bare
+  `VERCEL=1` makes it refuse to start), so `next dev`,
   `next start`, `next build` and the Payload CLI cannot reach production by
   accident. An operator shell can override it with `ALLOW_REMOTE_DB=yes` /
   `ALLOW_REMOTE_BLOB=yes`, exported for that one shell only.
@@ -129,6 +132,7 @@ See `.env.example` for the full list with comments. In short:
 | `BLOB_DELETE_DISABLED` | Preview: `1` (required by the preview build). Every plugin blob delete becomes a logged no-op. |
 | `LEGACY_BLOBS_RELEASED` | Unset until the decommission PR sets it to `yes` (blob deletes for imported rows resume). |
 | `CRON_SECRET`, `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | App + cron. |
+| `PLAYHQ_CLUB_URL` | Optional: the club's public PlayHQ page (fixtures links). Defaults to `PLAYHQ_DEFAULTS` in `config/site.ts`. |
 | `CANONICAL_HOST`, `REDIRECT_HOSTS` | Host redirects and canonical URLs. |
 | `PROD_DATABASE_HOST` | Vercel, all environments: the preview build refuses to run against this host, and every build refuses when it is empty. |
 | `ENABLE_EXPERIMENTAL_COREPACK` | Vercel: `1`, so the build uses the pnpm pinned in `package.json`. |

@@ -17,21 +17,18 @@ export async function generateMetadata() {
 export default async function HistoryPage() {
   const [club, stories] = await Promise.all([getClub(), listPublishedStories()])
   const history = club.history
+  const copy = club.pageCopy.history
   const narrative = history.narrative.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Our history"
-        title="Where the club comes from"
-        intro="A community cricket club is the sum of the people who have pulled on the colours over the years. Here is how we are piecing that story back together."
-      />
+      <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
 
       <section className="container-site grid gap-12 py-16 lg:grid-cols-[1fr_1.2fr] lg:items-start lg:gap-20 lg:py-24">
         <div className="relative overflow-hidden rounded-3xl bg-brand-stone shadow-card ring-1 ring-brand-black/5 lg:sticky lg:top-28">
           <Image
-            src="/assets/gallery/photo-01.jpg"
-            alt={club.pageCopy.history.imageAlt}
+            src={copy.image}
+            alt={copy.imageAlt}
             width={1400}
             height={934}
             className="aspect-[3/2] h-full w-full object-cover"

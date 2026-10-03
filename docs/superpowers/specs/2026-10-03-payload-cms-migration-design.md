@@ -1018,10 +1018,10 @@ A `filename` uniqueness collision on register (the same basename under two prefi
 
 ### 13.2 Steps
 
-Run these in a low-traffic window, around 30 minutes. The operator shell exports `ALLOW_REMOTE_DB=yes ALLOW_REMOTE_BLOB=yes` plus the production `DATABASE_URI` (unpooled), `LEGACY_DATABASE_URL` (the same unpooled URL) and `BLOB_READ_WRITE_TOKEN`. Nothing is written to a file.
+Run these in a low-traffic window, around 30 minutes, that **ends before 17:00 UTC**: the legacy PlayHQ cron (`/api/cron/players-sync`, a GET the write freeze does not block) rewrites `public.players`, `player_seasons` (new ids), `player_aliases` and `player_sync_runs` — the ETL's source. If the window cannot avoid 17:00 UTC, deny `/api/cron/players-sync` on the legacy hosts in the Firewall from step 2 to step 10. The operator shell exports `ALLOW_REMOTE_DB=yes ALLOW_REMOTE_BLOB=yes` plus the production `DATABASE_URI` (unpooled), `LEGACY_DATABASE_URL` (the same unpooled URL) and `BLOB_READ_WRITE_TOKEN`. Nothing is written to a file.
 
 1. Announce the admin freeze, so the committee stops editing in the old `/admin`.
-2. **Freeze public writes:** enable the Firewall "deny POST" rule. RSVPs, story submits and edits, and photo submits on the legacy site fail with a block page for the duration. The ETL source can no longer change, so there is no delta pass and no id gap.
+2. **Freeze public writes:** enable the Firewall "deny POST" rule. RSVPs, story submits and edits, and photo submits on the legacy site fail with a block page for the duration. With the cron kept out of the window (above), the ETL source can no longer change, so there is no delta pass and no id gap.
 3. Record the Neon restore point (timestamp) for the production branch.
 4. `pnpm payload migrate`. This creates schema `payload` and the tables. `public.*` is untouched.
 5. `pnpm seed:admin --target <host>/<db> --confirm`. Even before this, first-register is closed by the `users` `beforeOperation` hook (§3.1).

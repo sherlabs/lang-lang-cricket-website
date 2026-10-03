@@ -48,13 +48,29 @@ export async function openLegacySource(opts: { url?: string; schema?: string } =
   }
   const schema = opts.schema ?? 'public'
   const pool = new pg.Pool({ connectionString: url, max: 2, types })
+  // Queued as the client's first query (pg runs a client's queries in order); a failure is
+  // caught by the per-connection check below rather than swallowed.
   pool.on('connect', (client) => {
     client.query('SET default_transaction_read_only = on').catch(() => {})
   })
 
+  // Defence in depth behind `BEGIN READ ONLY` (spec §12.1): every pooled connection must report
+  // default_transaction_read_only = on, checked once per connection OUTSIDE a transaction block
+  // (inside `BEGIN READ ONLY`, transaction_read_only is always on and proves nothing).
+  const verified = new WeakSet<pg.PoolClient>()
+  async function assertSessionReadOnly(client: pg.PoolClient): Promise<void> {
+    if (verified.has(client)) return
+    const res = await client.query<{ default_transaction_read_only: string }>('SHOW default_transaction_read_only')
+    if (res.rows[0]?.default_transaction_read_only !== 'on') {
+      throw new Error('[etl] legacy source session is not read-only (default_transaction_read_only); refusing to continue')
+    }
+    verified.add(client)
+  }
+
   async function readOnly<T>(fn: (c: pg.PoolClient) => Promise<T>): Promise<T> {
     const client = await pool.connect()
     try {
+      await assertSessionReadOnly(client)
       await client.query('BEGIN READ ONLY')
       const out = await fn(client)
       await client.query('COMMIT')
@@ -67,8 +83,8 @@ export async function openLegacySource(opts: { url?: string; schema?: string } =
     }
   }
 
-  const ro = await readOnly((c) => c.query<{ transaction_read_only: string }>('SHOW transaction_read_only'))
-  if (ro.rows[0]?.transaction_read_only !== 'on') throw new Error('[etl] legacy source is not read-only; refusing to continue')
+  // Fail fast at open (readOnly() runs the per-connection session check first).
+  await readOnly(async () => undefined)
 
   const source: LegacySource = {
     schema,

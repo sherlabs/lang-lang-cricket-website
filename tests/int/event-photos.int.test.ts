@@ -138,6 +138,34 @@ describe('blob delete guards (spec §7.5)', () => {
     expect(blob.del).not.toHaveBeenCalled()
   })
 
+  it('the client-upload route never issues an overwrite receipt for a legacyUrl blob', async () => {
+    const issue = (filename: string) =>
+      rest('POST', '/vercel-blob-client-upload-route?issue-client-upload=1', {
+        body: { collectionSlug: 'event-photos', filename, mimeType: 'image/jpeg', docPrefix: 'events/pending' },
+        token: editor,
+      })
+    const data = { prefix: 'events/pending', mimeType: 'image/jpeg', focalX: 50, focalY: 50, event: pastEvent, status: 'pending' as const }
+    await payload.create({ collection: 'event-photos', data: { ...data, filename: 'overwrite-legacy.jpg', legacyUrl: `${BASE}/events/pending/overwrite-legacy.jpg` }, context: { etl: true, ...ctx } })
+    await payload.create({ collection: 'event-photos', data: { ...data, filename: 'overwrite-new.jpg' }, context: { etl: true, ...ctx } })
+
+    // Control: the plugin grants an overwrite for a non-legacy row at the same path.
+    const control = await issue('overwrite-new.jpg')
+    expect(control.status).toBe(200)
+    expect(control.json.clientUploadContext.allowOverwrite).toBe(true)
+
+    expect((await issue('overwrite-legacy.jpg')).status).toBe(403)
+    process.env.LEGACY_BLOBS_RELEASED = 'yes'
+    try {
+      expect((await issue('overwrite-legacy.jpg')).status).toBe(200)
+    } finally {
+      delete process.env.LEGACY_BLOBS_RELEASED
+    }
+    // A new file name is unaffected (no overwrite involved).
+    const fresh = await issue('brand-new.jpg')
+    expect(fresh.status).toBe(200)
+    expect(fresh.json.clientUploadContext?.allowOverwrite).not.toBe(true)
+  })
+
   it('BLOB_DELETE_DISABLED=1 (Preview) skips every blob delete', async () => {
     process.env.BLOB_DELETE_DISABLED = '1'
     try {

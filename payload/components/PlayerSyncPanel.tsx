@@ -1,8 +1,9 @@
 import type { BeforeListServerProps } from 'payload'
 import { PlayerSyncButton } from './PlayerSyncButton'
+import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 
-const melbourne = new Intl.DateTimeFormat('en-AU', {
-  timeZone: 'Australia/Melbourne',
+const melbourne = new Intl.DateTimeFormat(CLUB_LOCALE, {
+  timeZone: CLUB_TIMEZONE,
   day: 'numeric',
   month: 'short',
   year: 'numeric',

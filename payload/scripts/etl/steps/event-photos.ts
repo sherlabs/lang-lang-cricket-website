@@ -1,6 +1,6 @@
 import { ETL_CONTEXT, fileConflict, importFile } from '../media'
 import { bumpSequence, existingById, importableParentIds, restoreTimestamps } from '../rows'
-import { EVENT_PHOTO_STATUSES, importedEventIds } from '../rules'
+import { EVENT_PHOTO_STATUSES, duplicateUrlIds, eventPhotoImportable, importedEventIds } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = {
@@ -20,7 +20,9 @@ type Row = {
  * Orphans (no such legacy event, or one the events step skipped) are skipped and reported. A status other than
  * approved/pending (the legacy app deleted rejects, so e.g. `rejected` is anomalous) is
  * skipped and reported rather than coerced: coercing to `pending` would resurface an
- * already-rejected photo in the review queue.
+ * already-rejected photo in the review queue. A photo whose URL an earlier imported photo
+ * already has is a resubmission: skipped and reported (`legacyUrl` is unique, so it could only
+ * be imported without a file, which an admin could then approve).
  */
 export const eventPhotosStep: EtlStep = {
   name: 'event-photos',
@@ -29,9 +31,15 @@ export const eventPhotosStep: EtlStep = {
     const counts = report.counts('event-photos')
     const events = await importableParentIds(ctx, 'events', importedEventIds(await source.rows('events')))
     const rows = await source.rows<Row>('event_photos')
+    const duplicates = duplicateUrlIds(rows, eventPhotoImportable(events))
     counts.read = rows.length
     for (const r of rows) {
       const where = { step: 'event-photos', table: 'event_photos', id: r.id, field: 'url' }
+      if (duplicates.has(r.id)) {
+        report.add({ ...where, url: r.url, kind: 'duplicate-url-skipped', detail: 'an earlier event photo has the same URL (a resubmission); skipped' })
+        counts.skipped++
+        continue
+      }
       if (!events.has(r.event_id)) {
         report.add({ ...where, field: 'event_id', url: r.url, kind: 'orphan-skipped', detail: `event ${r.event_id} does not exist or was not imported` })
         counts.skipped++

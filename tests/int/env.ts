@@ -2,9 +2,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync, readFileSync } from 'node:fs'
 import { parseEnv } from 'node:util'
+import { isLocalDbUrl } from '../../payload/env'
 
 /** Only a local *_test database may ever be used by the int project (spec §15). */
-export const TEST_DB_PATTERN = /^postgres(ql)?:\/\/[^@]+@(127\.0\.0\.1|localhost):\d+\/[a-z_]+_test$/
+export const TEST_DB_NAME_PATTERN = /^\/[a-z_]+_test$/
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -31,8 +32,22 @@ export function intTestEnv(): Record<string, string> {
   }
 }
 
+/**
+ * Every host pg could connect to must be local (isLocalDbUrl also covers ?host= / ?hostaddr=),
+ * and the parsed database name — not a regex over the raw string — must end in _test.
+ */
+export function isTestDbUrl(uri: string | undefined): boolean {
+  if (!uri) return false
+  try {
+    const parsed = new URL(uri)
+    return /^postgres(ql)?:$/.test(parsed.protocol) && isLocalDbUrl(uri) && TEST_DB_NAME_PATTERN.test(parsed.pathname)
+  } catch {
+    return false
+  }
+}
+
 export function assertTestDb(uri: string | undefined): asserts uri is string {
-  if (!uri || !TEST_DB_PATTERN.test(uri)) {
+  if (!isTestDbUrl(uri)) {
     throw new Error(`[int] refusing to run: DATABASE_URI must be a local *_test database (got "${uri ?? ''}")`)
   }
 }
