@@ -46,6 +46,9 @@ export const SEO_PAGES = [
   'events',
   'players',
   'fixtures',
+  'stats',
+  'records',
+  'statlab',
 ] as const
 export type SeoPage = (typeof SEO_PAGES)[number]
 
@@ -149,6 +152,8 @@ export type ClubDefaults = ClubGlobalDefaults & {
     }
     rsvpEdit: { header: HeaderCopy }
     players: { header: HeaderCopy; empty: string }
+    stats: { header: HeaderCopy; empty: string; notEnoughHeading: string; notEnoughNote: string }
+    records: { header: HeaderCopy; empty: string }
     storyDraftEdit: { header: HeaderCopy }
     emptyStates: { sponsors: string; documents: string; announcements: string }
   }
@@ -241,6 +246,18 @@ export const clubDefaults: ClubDefaults = {
     fixtures: {
       title: 'Fixtures, Results & Teams',
       description: 'Fixtures, results and teams for Lang Lang Cricket Club in Caldermeade, Victoria, across every grade and season.',
+    },
+    stats: {
+      title: 'Stats & Leaderboards',
+      description: 'Batting, bowling and fielding leaderboards for Lang Lang Cricket Club in Caldermeade, Victoria, by season and grade.',
+    },
+    records: {
+      title: 'Club Records',
+      description: 'Club batting, bowling and fielding records for Lang Lang Cricket Club, across every season on record.',
+    },
+    statlab: {
+      title: 'StatLab',
+      description: 'Build your own Lang Lang Cricket Club stats table: pick columns, filters and sorting, and export to CSV.',
     },
   },
 
@@ -512,6 +529,24 @@ export const clubDefaults: ClubDefaults = {
       },
       empty: 'Player records are on their way.',
     },
+    stats: {
+      header: {
+        eyebrow: 'The numbers',
+        title: 'Stats & leaderboards',
+        intro: 'Who has scored the most, taken the most wickets and held the most catches for our senior teams.',
+      },
+      empty: 'No stats match these filters yet.',
+      notEnoughHeading: 'Not enough data yet',
+      notEnoughNote: 'These players have a result but fall below the minimum, so they are not ranked.',
+    },
+    records: {
+      header: {
+        eyebrow: 'The record books',
+        title: 'Club records',
+        intro: 'The best individual performances on record for our senior teams, across seasons and in a single season.',
+      },
+      empty: 'No records are available yet.',
+    },
     storyDraftEdit: {
       header: {
         eyebrow: 'Your story',
@@ -532,6 +567,7 @@ export const clubDefaults: ClubDefaults = {
       { href: '/fixtures', label: 'Fixtures' },
       { href: '/events', label: 'Events' },
       { href: '/players', label: 'Players' },
+      { href: '/stats', label: 'Stats' },
       { href: '/history', label: 'History' },
     ],
     // Around the clubrooms: grouped under a "Clubhouse" disclosure on desktop.
@@ -552,6 +588,8 @@ export const clubDefaults: ClubDefaults = {
           { href: '/fixtures', label: 'Fixtures' },
           { href: '/events', label: 'Events' },
           { href: '/players', label: 'Players' },
+          { href: '/stats', label: 'Stats' },
+          { href: '/records', label: 'Records' },
           { href: '/history', label: 'History' },
           { href: '/contact', label: 'Contact' },
         ],

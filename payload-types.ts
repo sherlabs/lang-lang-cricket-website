@@ -1202,6 +1202,18 @@ export interface Club {
       title?: string | null;
       description?: string | null;
     };
+    stats?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    records?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    statlab?: {
+      title?: string | null;
+      description?: string | null;
+    };
   };
   history?: {
     /**
@@ -1229,6 +1241,67 @@ export interface SiteSetting {
    * Sponsors in these tiers scroll across the home page under the hero. Leave empty to hide the carousel.
    */
   sponsorCarouselTiers?: ('Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player')[] | null;
+  stats?: {
+    /**
+     * Visitors can add juniors with the toggle. Categories with no data are not offered.
+     */
+    defaultIncludedCategories?: ('senior' | 'junior' | 'womens' | 'masters' | 'mixed')[] | null;
+    /**
+     * Extra patterns that decide a grade category. They are tried before the built-in rules, in order.
+     */
+    gradeRules?:
+      | {
+          category: 'senior' | 'junior' | 'womens' | 'masters' | 'mixed';
+          /**
+           * A regular expression tested against the grade name, then the team name.
+           */
+          pattern: string;
+          flags?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Players below a minimum are listed under "Not enough data yet" and never ranked.
+     */
+    qualification?: {
+      career?: {
+        batAvgRuns?: number | null;
+        batAvgInnings?: number | null;
+        srBalls?: number | null;
+        bowlAvgWickets?: number | null;
+        econBalls?: number | null;
+      };
+      season?: {
+        batAvgRuns?: number | null;
+        batAvgInnings?: number | null;
+        srBalls?: number | null;
+        bowlAvgWickets?: number | null;
+        econBalls?: number | null;
+      };
+    };
+    milestoneThresholds?: {
+      games?: number[] | null;
+      runs?: number[] | null;
+      wickets?: number[] | null;
+      catches?: number[] | null;
+    };
+    approachWindow?: {
+      games?: number | null;
+      runs?: number | null;
+      wickets?: number | null;
+      catches?: number | null;
+    };
+    /**
+     * Groups on the honour board. An honour is placed in the first category whose keyword it contains; anything else is "Other". Leave empty for the defaults.
+     */
+    honourCategories?:
+      | {
+          label: string;
+          keywords: string[];
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1345,6 +1418,24 @@ export interface ClubSelect<T extends boolean = true> {
               title?: T;
               description?: T;
             };
+        stats?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        records?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        statlab?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
       };
   history?:
     | T
@@ -1370,6 +1461,64 @@ export interface ClubSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   sponsorCarouselTiers?: T;
+  stats?:
+    | T
+    | {
+        defaultIncludedCategories?: T;
+        gradeRules?:
+          | T
+          | {
+              category?: T;
+              pattern?: T;
+              flags?: T;
+              id?: T;
+            };
+        qualification?:
+          | T
+          | {
+              career?:
+                | T
+                | {
+                    batAvgRuns?: T;
+                    batAvgInnings?: T;
+                    srBalls?: T;
+                    bowlAvgWickets?: T;
+                    econBalls?: T;
+                  };
+              season?:
+                | T
+                | {
+                    batAvgRuns?: T;
+                    batAvgInnings?: T;
+                    srBalls?: T;
+                    bowlAvgWickets?: T;
+                    econBalls?: T;
+                  };
+            };
+        milestoneThresholds?:
+          | T
+          | {
+              games?: T;
+              runs?: T;
+              wickets?: T;
+              catches?: T;
+            };
+        approachWindow?:
+          | T
+          | {
+              games?: T;
+              runs?: T;
+              wickets?: T;
+              catches?: T;
+            };
+        honourCategories?:
+          | T
+          | {
+              label?: T;
+              keywords?: T;
+              id?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

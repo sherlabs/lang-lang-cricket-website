@@ -16,6 +16,9 @@ const PAGE_LABELS: Record<SeoPage, string> = {
   events: 'Events',
   players: 'Players',
   fixtures: 'Fixtures',
+  stats: 'Stats',
+  records: 'Records',
+  statlab: 'StatLab',
 }
 
 const pageSeoFields: Field[] = SEO_PAGES.map((key) => ({

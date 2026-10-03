@@ -7,6 +7,7 @@ import * as migration_20261003_044835_wp4_stories from './20261003_044835_wp4_st
 import * as migration_20261003_055903_wp5_players from './20261003_055903_wp5_players';
 import * as migration_20261003_064657_wp5_review_fixes from './20261003_064657_wp5_review_fixes';
 import * as migration_20261003_101141_dup_shared_legacy_url from './20261003_101141_dup_shared_legacy_url';
+import * as migration_20261003_113720_stats_settings from './20261003_113720_stats_settings';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261003_101141_dup_shared_legacy_url.up,
     down: migration_20261003_101141_dup_shared_legacy_url.down,
-    name: '20261003_101141_dup_shared_legacy_url'
+    name: '20261003_101141_dup_shared_legacy_url',
+  },
+  {
+    up: migration_20261003_113720_stats_settings.up,
+    down: migration_20261003_113720_stats_settings.down,
+    name: '20261003_113720_stats_settings'
   },
 ];
