@@ -57,4 +57,12 @@ describe('sitemap', () => {
     expect(calls[0].args).toMatchObject({ joins: false, depth: 0, pagination: false, select: { createdAt: true } })
     expect(entries.find((e) => e.url === 'https://club.test/events/7')?.lastModified).toEqual(new Date('2025-12-01T00:00:00.000Z'))
   })
+
+  it('lists the stats and records pages', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const entries = await sitemap()
+    const byUrl = new Map(entries.map((e) => [e.url, e]))
+    expect(byUrl.get('https://club.test/stats')).toMatchObject({ changeFrequency: 'weekly', priority: 0.7 })
+    expect(byUrl.get('https://club.test/records')).toMatchObject({ changeFrequency: 'weekly', priority: 0.6 })
+  })
 })

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Event } from '@/lib/domain'
 import { resolveClub } from '@/lib/club-merge'
-import { eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, serializeJsonLd, storyJsonLd } from '@/lib/structured-data'
+import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd } from '@/lib/structured-data'
 
 // The unseeded club (defaults module) — the values pages pass in before `seed:club`.
 const club = resolveClub(null)
@@ -95,5 +95,20 @@ describe('json-ld builders', () => {
     const out = serializeJsonLd({ a: '</script><b>' })
     expect(out).not.toContain('<')
     expect(JSON.parse(out).a).toBe('</script><b>')
+  })
+
+  it('breadcrumbs: ordered ListItems with absolute URLs', () => {
+    const b = breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }], club) as any
+    expect(b['@type']).toBe('BreadcrumbList')
+    expect(b.itemListElement.map((i: any) => [i.position, i.name, i.item])).toEqual([
+      [1, 'Home', 'https://langlangcricketclub.com/'],
+      [2, 'Stats', 'https://langlangcricketclub.com/stats'],
+    ])
+  })
+  it('leaderboard ItemList: Person names and urls only, null when empty', () => {
+    const l = playerListJsonLd('Runs leaders', [{ name: 'Pat Lee', slug: 'pat-lee' }], club) as any
+    expect(l['@type']).toBe('ItemList')
+    expect(l.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, item: { '@type': 'Person', name: 'Pat Lee', url: 'https://langlangcricketclub.com/players/pat-lee' } })
+    expect(playerListJsonLd('x', [], club)).toBeNull()
   })
 })

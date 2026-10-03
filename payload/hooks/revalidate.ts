@@ -42,16 +42,16 @@ const resolve = (paths: PathsArg, doc: Record<string, unknown>) => (typeof paths
 
 /** `hooks: { afterChange: [revalidateAfterChange(['/', '/sponsors'])] }` */
 export const revalidateAfterChange =
-  (paths: PathsArg): CollectionAfterChangeHook =>
+  (paths: PathsArg, tags: readonly string[] = []): CollectionAfterChangeHook =>
   async ({ doc, previousDoc, req }) => {
     const all = new Set([...resolve(paths, doc), ...(previousDoc ? resolve(paths, previousDoc) : [])])
-    await revalidatePaths([...all], req.context)
+    await revalidatePaths([...all], req.context, tags)
     return doc
   }
 
 export const revalidateAfterDelete =
-  (paths: PathsArg): CollectionAfterDeleteHook =>
+  (paths: PathsArg, tags: readonly string[] = []): CollectionAfterDeleteHook =>
   async ({ doc, req }) => {
-    await revalidatePaths(resolve(paths, doc), req.context)
+    await revalidatePaths(resolve(paths, doc), req.context, tags)
     return doc
   }

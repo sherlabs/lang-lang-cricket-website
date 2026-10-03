@@ -25,6 +25,8 @@ export type StatsParams = {
   cats: GradeCategory[] | null
   juniors: boolean
   metric: string
+  /** True when `?metric=` named a valid metric (full list view); false shows the group hub. */
+  metricGiven: boolean
   group: MetricGroup
 }
 
@@ -54,6 +56,7 @@ export function parseStatsParams(raw: Raw, known: StatsKnown): StatsParams {
     cats: cats.length ? cats : null,
     juniors,
     metric,
+    metricGiven: !!metricIn && LEADERBOARD_METRIC_KEYS.includes(metricIn),
     group: getMetric(metric)!.group,
   }
 }

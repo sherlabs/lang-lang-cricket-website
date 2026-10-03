@@ -9,7 +9,11 @@ import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidat
 import { uniqueSlug } from '../hooks/slug'
 import { trimHonours, trimStrings } from '../hooks/trimStrings'
 
-const paths = (doc: Record<string, unknown>) => (doc.slug ? ['/players', `/players/${doc.slug}`] : ['/players'])
+// Hidden/name/honours changes also move the leaderboards and records, which read the `player-stats` cache tag.
+const STATS_PATHS = ['/stats', '/records']
+const STATS_TAGS = ['player-stats']
+const paths = (doc: Record<string, unknown>) =>
+  doc.slug ? ['/players', `/players/${doc.slug}`, ...STATS_PATHS] : ['/players', ...STATS_PATHS]
 
 /** Hook- or sync-owned: read-only in the admin AND unwritable over REST (spec §2: `admin.readOnly` is UI only). */
 const syncOwned = { create: nobodyField, update: nobodyField }
@@ -50,8 +54,8 @@ export const Players: CollectionConfig = {
         { collection: 'player-seasons', field: 'player' },
       ]),
     ],
-    afterChange: [revalidateAfterChange(paths)],
-    afterDelete: [revalidateAfterDelete(paths)],
+    afterChange: [revalidateAfterChange(paths, STATS_TAGS)],
+    afterDelete: [revalidateAfterDelete(paths, STATS_TAGS)],
   },
   endpoints: [mergePlayersEndpoint],
   timestamps: true,

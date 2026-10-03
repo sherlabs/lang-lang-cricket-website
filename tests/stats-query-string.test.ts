@@ -6,7 +6,7 @@ const known = { seasons: ['Summer 2025/26', 'Summer 2024/25'], grades: ['A Grade
 
 describe('parseStatsParams', () => {
   it('defaults on empty input', () => {
-    expect(parseStatsParams({}, known)).toMatchObject({ season: 'all', grade: 'all', cats: null, juniors: false, metric: 'runs', group: 'batting' })
+    expect(parseStatsParams({}, known)).toMatchObject({ season: 'all', grade: 'all', cats: null, juniors: false, metric: 'runs', group: 'batting', metricGiven: false })
   })
   it('accepts known values', () => {
     expect(parseStatsParams({ season: 'Summer 2025/26', grade: 'B Grade', metric: 'wickets', cat: 'senior,womens', juniors: '1' }, known)).toMatchObject({
@@ -19,7 +19,7 @@ describe('parseStatsParams', () => {
     expect(parseStatsParams({ season: 'x'.repeat(5000), metric: 'm'.repeat(5000) }, known).season).toBe('all')
   })
   it('duplicate keys use the first value; a group alone picks its first metric', () => {
-    expect(parseStatsParams({ metric: ['wickets', 'runs'] }, known).metric).toBe('wickets')
+    expect(parseStatsParams({ metric: ['wickets', 'runs'] }, known)).toMatchObject({ metric: 'wickets', metricGiven: true })
     expect(parseStatsParams({ group: 'fielding' }, known)).toMatchObject({ metric: 'catches', group: 'fielding' })
     expect(parseStatsParams({ group: 'bowling', metric: 'runs' }, known).group).toBe('batting')
   })

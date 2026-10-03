@@ -39,4 +39,11 @@ describe('revalidate hook helpers', () => {
     const del = revalidateAfterDelete(['/'])
     expect(await del({ doc, req } as never)).toBe(doc)
   })
+
+  it('collection hooks pass cache tags through', async () => {
+    const doc = { slug: 'a' }
+    await revalidateAfterChange(['/players'], ['player-stats'])({ doc, req: { context: {} } } as never)
+    await revalidateAfterDelete(['/players'], ['player-stats'])({ doc, req: { context: {} } } as never)
+    expect(cache.revalidateTag.mock.calls).toEqual([['player-stats', 'max'], ['player-stats', 'max']])
+  })
 })

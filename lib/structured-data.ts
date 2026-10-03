@@ -129,3 +129,27 @@ export function storyJsonLd(
     mainEntityOfPage: absoluteUrl(`/history/${story.slug}`, club.siteUrl),
   }
 }
+
+/** BreadcrumbList for the stats pages. Relative hrefs are resolved against the club's site URL. */
+export function breadcrumbJsonLd(items: { name: string; href: string }[], club: Pick<JsonLdClub, 'siteUrl'>): JsonLd {
+  return {
+    '@context': CONTEXT,
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: absoluteUrl(it.href, club.siteUrl) })),
+  }
+}
+
+/** Ordered list of players for a leaderboard: names and profile URLs only, never the stat values. */
+export function playerListJsonLd(name: string, players: { name: string; slug: string }[], club: Pick<JsonLdClub, 'siteUrl'>): JsonLd | null {
+  if (!players.length) return null
+  return {
+    '@context': CONTEXT,
+    '@type': 'ItemList',
+    name,
+    itemListElement: players.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: { '@type': 'Person', name: p.name, url: absoluteUrl(`/players/${p.slug}`, club.siteUrl) },
+    })),
+  }
+}

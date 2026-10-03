@@ -21,9 +21,13 @@ export function isLocked(latest: { status: string | null; startedAt: Date } | un
   return !!latest && latest.status === 'running' && now.getTime() - latest.startedAt.getTime() < LOCK_MS
 }
 
-/** `/players` and every `/players/[slug]` page. The legacy `/history` call is dropped (nothing there reads players). */
+/**
+ * `/players`, every `/players/[slug]` page and the stats pages (tag `player-stats`). The legacy
+ * `/history` call is dropped (nothing there reads players). `revalidatePaths` swallows the
+ * errors Next throws outside a request (`payload run`, ETL, tests).
+ */
 export async function revalidatePlayerPages(): Promise<void> {
-  await revalidatePaths(['/players'])
+  await revalidatePaths(['/players', '/stats', '/records'], undefined, ['player-stats'])
   try {
     const { revalidatePath } = await import('next/cache')
     revalidatePath('/players/[slug]', 'page')
