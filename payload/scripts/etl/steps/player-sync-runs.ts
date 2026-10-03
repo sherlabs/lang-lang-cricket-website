@@ -1,4 +1,5 @@
 import { bumpSequence, upsertRow } from '../rows'
+import { SYNC_RUN_STATUSES } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = {
@@ -11,7 +12,6 @@ type Row = {
   error: string | null
 }
 
-const STATUSES = new Set(['running', 'ok', 'error'])
 
 /**
  * Step 15: `player-sync-runs` (id kept). The legacy table has no created/updated columns:
@@ -26,7 +26,7 @@ export const playerSyncRunsStep: EtlStep = {
     const rows = await source.rows<Row>('player_sync_runs')
     counts.read = rows.length
     for (const r of rows) {
-      if (!STATUSES.has(r.status)) {
+      if (!SYNC_RUN_STATUSES.has(r.status)) {
         report.add({ step: 'player-sync-runs', table: 'player_sync_runs', id: r.id, field: 'status', kind: 'skipped', detail: `unknown status "${r.status}"` })
         counts.skipped++
         continue

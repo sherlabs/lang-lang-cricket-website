@@ -43,6 +43,16 @@ export class EtlReport {
     return rows + files
   }
 
+  /**
+   * What the media branch did per upload row in this run, keyed `<collection> <legacyUrl>`
+   * (register / fallback-local / fallback-reupload / upload-local-asset). Verify uses it to
+   * tell registered rows from fallbacks instead of guessing from the stored filename.
+   */
+  readonly files = new Map<string, string>()
+
+  /** Dry run only: legacyUrls and filenames a real run would have claimed so far, per collection. */
+  readonly claimed = { urls: new Set<string>(), filenames: new Set<string>() }
+
   /** Verify outcome, written into the JSON report. */
   verify: unknown = null
 

@@ -1,12 +1,12 @@
 /**
  * Standalone cutover verification (spec §12.2 step 18, §13.2 step 7). Read-only on both sides.
  *
- *   pnpm verify:cutover --target 127.0.0.1/langlang_dev [--blob-store-id <id>] [--only stories,players]
+ *   pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <id> [--only stories,players]
  *                       [--source-schema public] [--report tmp/verify.json]
  *
  * Compares LEGACY_DATABASE_URL (read-only, unpooled) with the Payload database: ids and counts,
  * preserved fields, story text and images, the per-row plugin URL of every registered upload,
- * sequences, and (with a Blob token) a HEAD sample. Exits 1 when any check fails.
+ * sequences, and (with a Blob token) a HEAD sample. A store id (token or --blob-store-id) is required. Exits 1 when any check fails.
  */
 import config from '@payload-config'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -25,7 +25,9 @@ async function main(): Promise<boolean> {
   const reportFile = argValue(argv, '--report')
   const token = blobToken()
   const storeId = storeIdFromToken(token) ?? argValue(argv, '--blob-store-id')?.toLowerCase() ?? null
-  if (!storeId) console.warn('[verify] no Blob token and no --blob-store-id: the registered-URL check is skipped')
+  // Without a store id own-store URLs are unrecognisable: every legacyUrl comparison would fail
+  // spuriously and the registered-URL check could not run.
+  if (!storeId) throw new Error('[verify] pass --blob-store-id <id> (the legacy Blob host) or run with BLOB_READ_WRITE_TOKEN')
 
   const source = await openLegacySource({ schema: argValue(argv, '--source-schema') ?? 'public' })
   const payload = await getPayload({ config })

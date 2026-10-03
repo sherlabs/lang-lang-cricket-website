@@ -1,6 +1,7 @@
 import { fullName } from '../../../hooks/displayName'
 import { ETL_CONTEXT, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
+import { importsPlayer } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = {
@@ -39,7 +40,7 @@ export const playersStep: EtlStep = {
     counts.read = rows.length
     for (const r of rows) {
       const where = { step: 'players', table: 'players', id: r.id }
-      if (r.source !== 'playhq' && r.source !== 'manual') {
+      if (!importsPlayer(r)) {
         report.add({ ...where, field: 'source', kind: 'skipped', detail: `unknown source "${r.source}"` })
         counts.skipped++
         continue

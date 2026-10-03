@@ -4,7 +4,8 @@
  * max (max id or sequence `last_value`) and missing from legacy are deleted; rows above it are
  * Payload-native and only reported. Deletes run through the Local API (`context.etl`, so cascades
  * and the legacy-blob delete guard apply) except `player-seasons`, which is plain drizzle like
- * its import. Children first. Aliases are keyed by `nameKey` and owned by the sync, so they are
+ * its import. Children first. It runs before the import steps, so a stale row never holds a
+ * unique key (slug, token, filename) that legacy has since given to another id. Aliases are keyed by `nameKey` and owned by the sync, so they are
  * left alone (a deleted player cascades its aliases).
  */
 import { sql } from '@payloadcms/db-postgres/drizzle'

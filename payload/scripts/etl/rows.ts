@@ -57,3 +57,15 @@ export async function upsertRow(
   counts.created++
   return 'created'
 }
+
+/**
+ * Ids of the parent rows a child step may point at: the legacy ids the parent step imports
+ * (the shared rule in etl/rules), and — on a real run — only those actually in the target, so a
+ * child never references a row that is not there (a foreign-key failure mid-run).
+ */
+export async function importableParentIds(ctx: EtlContext, collection: 'events' | 'players', legacyIds: ReadonlySet<number>): Promise<Set<number>> {
+  if (ctx.dryRun) return new Set(legacyIds)
+  const { docs } = await ctx.payload.find({ collection, pagination: false, depth: 0, joins: false, select: {}, overrideAccess: true })
+  const inTarget = new Set(docs.map((d) => d.id))
+  return new Set([...legacyIds].filter((id) => inTarget.has(id)))
+}

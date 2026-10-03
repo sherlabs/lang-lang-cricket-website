@@ -1,5 +1,6 @@
 import { chunk, playerTables } from '../../../../lib/players/db'
-import { bumpSequence } from '../rows'
+import { bumpSequence, importableParentIds } from '../rows'
+import { importedPlayerIds } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = {
@@ -48,9 +49,7 @@ export const playerSeasonsStep: EtlStep = {
       return
     }
     const t = playerTables(payload)
-    const players = new Set(
-      (await payload.find({ collection: 'players', pagination: false, depth: 0, joins: false, select: {}, overrideAccess: true })).docs.map((p) => p.id),
-    )
+    const players = await importableParentIds(ctx, 'players', importedPlayerIds(await source.rows('players')))
     const stamp = new Date().toISOString()
     const values = []
     for (const r of rows) {

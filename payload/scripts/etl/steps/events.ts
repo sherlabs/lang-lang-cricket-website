@@ -1,5 +1,6 @@
 import { importFile } from '../media'
 import { bumpSequence, existingById, upsertRow } from '../rows'
+import { importsEvent } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = {
@@ -36,7 +37,7 @@ export const eventsStep: EtlStep = {
     const rows = await source.rows<Row>('events')
     counts.read = rows.length
     for (const r of rows) {
-      if (r.type !== 'one_time' && r.type !== 'recurring') {
+      if (!importsEvent(r)) {
         report.add({ step: 'events', table: 'events', id: r.id, field: 'type', kind: 'skipped', detail: `unknown type "${r.type}"` })
         counts.skipped++
         continue

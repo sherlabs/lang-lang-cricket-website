@@ -2,6 +2,7 @@ import { htmlToLexical, imageAlts, normaliseStoryHtml, resolveUploadNodes } from
 import { renderStoryHtml } from '../../../../lib/stories-content'
 import { ETL_CONTEXT, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
+import { STORY_STATUSES } from '../rules'
 import type { EtlStep } from './types'
 
 export type LegacyStoryRow = {
@@ -23,7 +24,7 @@ export type LegacyStoryRow = {
   reviewed_at: Date | null
 }
 
-export const STORY_STATUSES = new Set(['pending', 'published', 'rejected'])
+export { STORY_STATUSES } from '../rules'
 
 const iso = (d: Date | null) => (d instanceof Date ? d.toISOString() : null)
 

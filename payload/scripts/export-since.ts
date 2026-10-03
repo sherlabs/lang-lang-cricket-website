@@ -8,11 +8,14 @@
  *
  * One CSV with a `collection` column; scalar fields as-is, relations as ids, arrays/objects as
  * JSON (stories' Lexical content as plain text). Secrets (user hashes/salts) are never exported.
+ * The `club` and `site-settings` globals are exported as one row each (`collection` =
+ * `global:<slug>`) when their `updatedAt` is at or after `--since`. `--collections` may name
+ * globals too.
  */
 import config from '@payload-config'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { getPayload, type CollectionSlug } from 'payload'
+import { getPayload, type CollectionSlug, type GlobalSlug } from 'payload'
 import { storyPlainText, type StoryContent } from '../../lib/stories-convert'
 import { argValue, guard } from './_guard'
 
@@ -28,8 +31,12 @@ export const EXPORT_COLLECTIONS: CollectionSlug[] = [
   'event-photos',
   'stories',
   'players',
+  'player-aliases',
   'media',
 ]
+
+/** Globals an admin can edit after cutover: exported (one row each) when updated since. */
+export const EXPORT_GLOBALS: GlobalSlug[] = ['club', 'site-settings']
 
 const SKIP_FIELDS = new Set(['hash', 'salt', 'sessions', 'resetPasswordToken', 'resetPasswordExpiration', 'loginAttempts', 'lockUntil', 'sizes'])
 
@@ -50,7 +57,9 @@ async function main() {
   const sinceArg = argValue(argv, '--since')
   const since = sinceArg ? new Date(sinceArg) : null
   if (!since || Number.isNaN(since.getTime())) throw new Error('[export-since] pass --since <ISO timestamp>, e.g. 2026-10-10T09:30:00Z')
-  const collections = (argValue(argv, '--collections')?.split(',').map((s) => s.trim()) ?? EXPORT_COLLECTIONS) as CollectionSlug[]
+  const names = argValue(argv, '--collections')?.split(',').map((s) => s.trim())
+  const collections = (names?.filter((n) => !(EXPORT_GLOBALS as string[]).includes(n)) ?? EXPORT_COLLECTIONS) as CollectionSlug[]
+  const globals = (names?.filter((n) => (EXPORT_GLOBALS as string[]).includes(n)) ?? EXPORT_GLOBALS) as GlobalSlug[]
   // A file, not stdout: the guard and Payload's logger also write to stdout.
   const out = argValue(argv, '--out') ?? 'tmp/export-since.csv'
 
@@ -76,6 +85,17 @@ async function main() {
         rows.push(row)
       }
       console.log(`[export-since] ${collection}: ${docs.length} row(s)`)
+    }
+    for (const slug of globals) {
+      const doc = (await payload.findGlobal({ slug, depth: 0, overrideAccess: true })) as unknown as Record<string, unknown>
+      const updated = doc.updatedAt ? new Date(doc.updatedAt as string) : null
+      const changed = Boolean(updated && updated.getTime() >= since.getTime())
+      if (changed) {
+        const row: Record<string, unknown> = { collection: `global:${slug}` }
+        for (const [k, v] of Object.entries(doc)) if (!SKIP_FIELDS.has(k)) row[k] = v
+        rows.push(row)
+      }
+      console.log(`[export-since] global ${slug}: ${changed ? 'updated since' : 'unchanged'}`)
     }
   } finally {
     await payload.destroy()

@@ -72,17 +72,19 @@ async function context(overrides: Partial<Ctx> = {}): Promise<Ctx> {
   }
 }
 
-async function runEtl(overrides: Partial<Ctx> = {}, only?: string[]) {
-  const { ETL_STEPS } = await import('@/payload/scripts/etl/steps')
+async function runEtl(overrides: Partial<Ctx> = {}, only?: string[], reconcile = false) {
+  const { runEtl: run } = await import('@/payload/scripts/etl/run')
   const ctx = await context(overrides)
-  for (const step of ETL_STEPS) if (!only || only.includes(step.name)) await step.run(ctx)
+  await run(ctx, { only, reconcile })
   return ctx
 }
 
-async function verify(only?: string[]) {
+async function verify(only?: string[], extra: Partial<import('@/payload/scripts/etl/verify').VerifyOptions> = {}) {
   const { verifyCutover } = await import('@/payload/scripts/etl/verify')
-  return verifyCutover({ payload, source, storeId: 'fakestore', publicDir: path.resolve('public'), only })
+  return verifyCutover({ payload, source, storeId: 'fakestore', publicDir: path.resolve('public'), only, ...extra })
 }
+
+const failuresOf = (result: { checks: { failures: string[] }[] }) => result.checks.flatMap((c) => c.failures).join('\n')
 
 /** Every payload content table: row count + hash of all rows (all columns) in id order. */
 async function snapshot(): Promise<Record<string, string>> {
@@ -124,6 +126,7 @@ afterAll(async () => {
 describe('legacy ETL (fixture)', () => {
   let first: Ctx
   let afterFirst: Record<string, string>
+  let dry: Ctx
 
   it('the source is read-only', async () => {
     await expect(source.query(`INSERT INTO "${SCHEMA}"."announcements" (title) VALUES ('x')`)).rejects.toThrow(/read-only/)
@@ -133,6 +136,7 @@ describe('legacy ETL (fixture)', () => {
     const before = await snapshot()
     const ctx = await runEtl({ dryRun: true })
     expect(ctx.report.counts('stories').planned).toBe(5)
+    dry = ctx
     expect(await snapshot()).toEqual(before)
     expect(blob.put).not.toHaveBeenCalled()
   })
@@ -156,6 +160,15 @@ describe('legacy ETL (fixture)', () => {
     expect(first.report.media.empty).toBeGreaterThan(0)
     expect(first.report.media['fallback-local']).toBeGreaterThan(0)
     expect(fetchSpy).not.toHaveBeenCalled()
+    // The dry run tracks what the run claimed so far: within-run filename collisions, prefix
+    // fallbacks and reuses show up in it too. (A local upload's name can still differ: Payload
+    // also renames against files left on disk in ./<collection>, which a clean checkout lacks.)
+    const fallbacks = (r: Ctx['report']) => r.items.filter((i) => i.kind === 'media-fallback-local').map((i) => `${i.table}#${i.id}`)
+    expect(fallbacks(dry.report)).toEqual(expect.arrayContaining(fallbacks(first.report)))
+    expect(fallbacks(dry.report)).toEqual(expect.arrayContaining(['committee_contacts#3', 'players#2', 'players#6', 'documents#9', 'gallery_photos#4']))
+    expect(dry.report.media.reused).toBe(first.report.media.reused)
+    expect(dry.report.media['upload-local-asset']).toBe(first.report.media['upload-local-asset'])
+    expect(dry.report.media.register + dry.report.media['fallback-local']).toBe(first.report.media.register + first.report.media['fallback-local'])
     afterFirst = await snapshot()
   })
 
@@ -287,5 +300,107 @@ describe('legacy ETL (fixture)', () => {
     expect(ctx2.report.counts('reconcile:players').deleted).toBe(1)
     expect(await payload.count({ collection: 'players', where: { id: { equals: player.id } }, overrideAccess: true })).toEqual({ totalDocs: 1 })
     await payload.delete({ collection: 'announcements', id: native.id, overrideAccess: true, context: { disableRevalidate: true } })
+  })
+
+  it('verify: a registered row whose stored name changed fails (standalone and in-run); fallbacks are listed', async () => {
+    const url = 'https://fakestore.public.blob.vercel-storage.com/sponsors/harbour-plumbing-Kd8WcZs1Qx7Lm2Pa9RtYb3.png'
+    const [row] = await sqlRows<{ id: number; filename: string }>(`SELECT id, filename FROM "payload"."media" WHERE legacy_url = '${url}'`)
+    await sqlRows(`UPDATE "payload"."media" SET filename = 'harbour-plumbing-Kd8WcZs1Qx7Lm2Pa9RtYb3-1.png' WHERE id = ${row.id}`)
+    try {
+      const standalone = await verify()
+      expect(standalone.ok).toBe(false)
+      expect(failuresOf(standalone)).toContain(`media#${row.id}: plugin URL`)
+      const inRun = await verify(undefined, { fileActions: new Map([[`media ${url}`, 'register']]) })
+      expect(failuresOf(inRun)).toContain(`media#${row.id}: plugin URL`)
+      // Only what the ETL itself did can exempt it.
+      const exempt = await verify(undefined, { fileActions: new Map([[`media ${url}`, 'fallback-local']]) })
+      expect(exempt.ok).toBe(true)
+    } finally {
+      await sqlRows(`UPDATE "payload"."media" SET filename = '${row.filename}' WHERE id = ${row.id}`)
+    }
+    const ok = await verify()
+    expect(ok.ok).toBe(true)
+    const notes = ok.checks.find((c) => c.name.startsWith('registered rows'))!.notes.join('\n')
+    expect(notes).toMatch(/fallback row\(s\)/)
+    expect(notes).toContain('contacts/logo.png')
+    expect(notes).toContain('documents#9')
+  })
+
+  it('verify with a token HEADs the plugin URL of rows from every upload collection', async () => {
+    fetchSpy.mockResolvedValue({ ok: true, status: 200 })
+    try {
+      const result = await verify(undefined, { token: 'vercel_blob_rw_fakestore_x', headSample: 1000 })
+      expect(result.ok).toBe(true)
+      const heads = fetchSpy.mock.calls.map(([u]) => String(u))
+      for (const prefix of ['sponsors/', 'documents/', 'gallery/', 'events/']) expect(heads.some((u) => u.startsWith(`https://fakestore.public.blob.vercel-storage.com/${prefix}`))).toBe(true)
+      // A fallback row is HEADed at its own (re-uploaded) URL, not at legacyUrl.
+      expect(heads).toContain('https://fakestore.public.blob.vercel-storage.com/documents/llcc-conflict-resolution-policy-Hn4Tg6Vb2NcXz8QwEr5Ty0.pdf')
+      expect(heads.every((u) => !u.includes('/misc/'))).toBe(true)
+    } finally {
+      fetchSpy.mockReset()
+    }
+  })
+
+  it('children of an event the events step skipped (unknown type) are orphans, not a foreign-key crash', async () => {
+    await sqlRows(`INSERT INTO "${SCHEMA}"."events" (id, type, title) VALUES (60, 'multi_day', 'Tour')`)
+    await sqlRows(`INSERT INTO "${SCHEMA}"."event_rsvps" (id, event_id, occurrence_date, name, edit_token) VALUES (60, 60, '2026-11-01 00:00:00', 'Kim', 'tok-60')`)
+    await sqlRows(`INSERT INTO "${SCHEMA}"."event_photos" (id, event_id, url) VALUES (60, 60, '/assets/branding/hero.jpg')`)
+    try {
+      for (const dryRun of [true, false]) {
+        const ctx = await runEtl({ dryRun }, ['events', 'event-rsvps', 'event-photos'])
+        const kinds = ctx.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)
+        expect(kinds).toEqual(expect.arrayContaining(['skipped events#60', 'orphan-skipped event_rsvps#60', 'orphan-skipped event_photos#60']))
+      }
+      expect((await verify(['events', 'event-rsvps', 'event-photos'])).ok).toBe(true)
+    } finally {
+      for (const t of ['event_photos', 'event_rsvps', 'events']) await sqlRows(`DELETE FROM "${SCHEMA}"."${t}" WHERE id = 60`)
+    }
+  })
+
+  it("verify catches an upload row whose file is not its legacy row's; --update replaces it", async () => {
+    const [saved] = await sqlRows<{ filename: string; prefix: string; legacy_url: string }>(`SELECT filename, prefix, legacy_url FROM "payload"."gallery_photos" WHERE id = 3`)
+    // A Payload-native row of a failed window holding a reused legacy id.
+    await sqlRows(`UPDATE "payload"."gallery_photos" SET legacy_url = NULL, filename = 'native-upload.jpg', prefix = 'gallery' WHERE id = 3`)
+    const bad = await verify(['gallery-photos'])
+    expect(bad.ok).toBe(false)
+    expect(failuresOf(bad)).toContain('gallery-photos#3.legacyUrl')
+    const ctx = await runEtl({ update: true }, ['gallery-photos'])
+    expect(ctx.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)).toEqual(['file-conflict-replaced gallery_photos#3'])
+    expect(ctx.report.counts('gallery-photos')).toMatchObject({ deleted: 1, created: 1 })
+    const [now] = await sqlRows<{ filename: string; prefix: string; legacy_url: string }>(`SELECT filename, prefix, legacy_url FROM "payload"."gallery_photos" WHERE id = 3`)
+    expect(now).toEqual(saved)
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it('verify fails a row a foreign URL left without a file', async () => {
+    await sqlRows(`INSERT INTO "${SCHEMA}"."documents" (id, category, title, url) VALUES (15, 'Policies', 'Foreign', 'https://example.org/foreign.pdf')`)
+    try {
+      const ctx = await runEtl({}, ['documents'])
+      expect(ctx.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)).toEqual(['media-flagged documents#15'])
+      const result = await verify(['documents'])
+      expect(result.ok).toBe(false)
+      expect(failuresOf(result)).toContain('documents#15: no file')
+    } finally {
+      await sqlRows(`DELETE FROM "${SCHEMA}"."documents" WHERE id = 15`)
+      await sqlRows(`DELETE FROM "payload"."documents" WHERE id = 15`)
+    }
+    expect((await verify()).ok).toBe(true)
+  })
+
+  it('--reconcile-deletes runs before the steps, so a re-keyed unique slug imports on the first run', async () => {
+    const stories = await legacy('stories')
+    const story = stories[0]
+    const newId = Math.max(...stories.map((r) => r.id as number)) + 3 // inside the legacy sequence range
+    await sqlRows(`UPDATE "${SCHEMA}"."stories" SET id = ${newId} WHERE id = ${story.id}`)
+    try {
+      const ctx = await runEtl({ update: true }, ['stories'], true)
+      expect(ctx.report.counts('reconcile:stories').deleted).toBe(1)
+      expect(ctx.report.counts('stories').created).toBe(1)
+      expect((await verify(['stories'])).ok).toBe(true)
+    } finally {
+      await sqlRows(`UPDATE "${SCHEMA}"."stories" SET id = ${story.id} WHERE id = ${newId}`)
+      await runEtl({ update: true }, ['stories'], true)
+    }
+    expect((await verify()).ok).toBe(true)
   })
 })

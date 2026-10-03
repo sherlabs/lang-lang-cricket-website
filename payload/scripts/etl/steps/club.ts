@@ -50,7 +50,22 @@ export const clubStep: EtlStep = {
     const counts = report.counts('club')
     counts.read = 1
     if (dryRun) {
+      // Plan the branding uploads the real run would make, so the dry run's media counts match.
       counts.planned++
+      const current = await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })
+      const plan = (sitePath: string, name: string) => {
+        if (report.claimed.urls.has(`media ${sitePath}`)) return
+        if (!existsSync(path.join(ctx.publicDir, sitePath))) {
+          report.add({ step: 'club', table: 'club', id: 'global', url: sitePath, kind: 'media-missing', detail: `public${sitePath} does not exist` })
+          return
+        }
+        report.mediaAction('upload-local-asset')
+        report.claimed.urls.add(`media ${sitePath}`)
+        report.claimed.filenames.add(`media ${name}`)
+      }
+      const ext = (p: string) => path.extname(p).toLowerCase()
+      if (!current.logo) plan(clubDefaults.assets.logo, `club-logo${ext(clubDefaults.assets.logo)}`)
+      if (!current.ogImage) plan(clubDefaults.assets.ogImage.url, `club-og-image${ext(clubDefaults.assets.ogImage.url)}`)
       return
     }
     let result = await seedClubGlobal(payload)

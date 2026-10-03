@@ -1,4 +1,4 @@
-import { importFile } from '../media'
+import { ETL_CONTEXT, fileConflict, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
 import type { EtlStep } from './types'
 
@@ -26,10 +26,18 @@ export const galleryPhotosStep: EtlStep = {
           counts.skipped++
           continue
         }
-        await payload.update({ collection: 'gallery-photos', id: r.id, data, overrideAccess: true, depth: 0, context: { etl: true, disableRevalidate: true } })
-        await restoreTimestamps(payload, 'gallery-photos', r.id, r.created_at)
-        counts.updated++
-        continue
+        // The kept file must be this legacy row's: after a rollback a reused id can hold a
+        // Payload-native row of the failed window (§13.4); if not, the row is replaced.
+        const conflict = await fileConflict(ctx, 'gallery-photos', existing, r.url)
+        if (!conflict) {
+          await payload.update({ collection: 'gallery-photos', id: r.id, data, overrideAccess: true, depth: 0, context: { etl: true, disableRevalidate: true } })
+          await restoreTimestamps(payload, 'gallery-photos', r.id, r.created_at)
+          counts.updated++
+          continue
+        }
+        report.add({ ...where, kind: 'file-conflict-replaced', detail: `${conflict}; row deleted and re-imported` })
+        await payload.delete({ collection: 'gallery-photos', id: r.id, overrideAccess: true, context: { ...ETL_CONTEXT } })
+        counts.deleted++
       }
       const res = await importFile(ctx, { collection: 'gallery-photos', url: r.url, data: { ...data, id: r.id }, relation: false, where })
       if (res.id) {

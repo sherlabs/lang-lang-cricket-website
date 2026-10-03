@@ -47,7 +47,7 @@ All on `127.0.0.1:54329`:
 
 | Database | Purpose |
 |---|---|
-| `langlang_dev` | Day-to-day development. Push mode (`PAYLOAD_PUSH=true`) is allowed here. |
+| `langlang_dev` | Day-to-day development. It is **migrated** (Setup below), so `.env.local` has `PAYLOAD_PUSH=false`. |
 | `langlang_mig` | Migration replay only. `pnpm check:migrations` drops and recreates it. Push and migrate are never mixed on one DB. |
 | `langlang_test` | Integration tests (`pnpm test:int`). The harness refuses any URL that is not a local `*_test` database. |
 | `langlang_legacy` | A restored `pg_dump --schema=public` of the old app, the ETL source for a rehearsal. Without a dump, `pnpm fixture:legacy` loads a deterministic fixture into it. |
@@ -56,41 +56,43 @@ All on `127.0.0.1:54329`:
 
 ```bash
 pnpm install
-cp .env.example .env.local      # then fill in PAYLOAD_SECRET, CRON_SECRET, PLAYHQ_CLIENT_ID
+cp .env.example .env.local      # then fill in PAYLOAD_SECRET, CRON_SECRET, PLAYHQ_CLIENT_ID,
+                                # and set PAYLOAD_PUSH=false (see below)
 # create the databases above (CREATE DATABASE langlang_dev; …)
 ```
+
+Push and migrate are never mixed on one database. Both ways of filling
+`langlang_dev` below migrate it, so keep `PAYLOAD_PUSH=false` in `.env.local`
+from then on: a Payload boot with push on (`pnpm dev`, any script) writes a
+dev-mode marker into `payload_migrations`, after which `payload migrate`
+prompts and hangs in a non-interactive shell. Schema changes go through
+`pnpm payload migrate:create <name>` and `pnpm payload migrate`.
+`PAYLOAD_PUSH=true` is only for a scratch database that is never migrated.
 
 Then pick one way to fill `langlang_dev`:
 
 - **Demo content (no legacy DB).** A fresh club or a new developer:
 
   ```bash
-  export PAYLOAD_PUSH=false
   pnpm payload migrate
   INITIAL_ADMIN_EMAIL=you@example.com INITIAL_ADMIN_PASSWORD='…' \
     pnpm seed:admin --target 127.0.0.1/langlang_dev --confirm
   pnpm seed:demo --target 127.0.0.1/langlang_dev --confirm
   ```
 
-  On a migrated database, run every command with `PAYLOAD_PUSH=false` (as
-  here, or export it in the shell): a Payload boot with push on writes a
-  dev-mode marker into `payload_migrations`, after which `payload migrate`
-  prompts and hangs in a non-interactive shell.
-
   `seed:demo` seeds the `club` global and a small set of documents, gallery
   photos, sponsors, people, announcements, events, a story and players from
   the files in `public/assets` (local disk, never Blob). It only fills
   collections that are empty, so it is safe to re-run.
 
-- **Legacy data.** Restore (or `pnpm fixture:legacy`) `langlang_legacy`, then
-  run the ETL (below) against `langlang_dev`.
+- **Legacy data.** Restore (or `pnpm fixture:legacy`) `langlang_legacy`, run
+  `pnpm payload migrate`, then run the ETL (below) against `langlang_dev`.
 
-Start the app with `pnpm dev` and open <http://localhost:3000> (admin at
-`/admin`). With `PAYLOAD_PUSH=true`, `next dev` pushes schema changes
-straight to `langlang_dev`. If a push would be destructive it prompts and
-hangs in a non-interactive shell. In that case reset the schema
+Start the app with `pnpm dev` (with `PAYLOAD_PUSH=false`) and open
+<http://localhost:3000> (admin at `/admin`). If `langlang_dev` was ever booted
+with push on and `payload migrate` now hangs, reset the schema
 (`pnpm reset:payload-schema --target 127.0.0.1/langlang_dev --confirm`) and
-then migrate again.
+migrate again.
 
 First-register is closed: `/admin/create-first-user` refuses to create a
 user. The first admin always comes from `seed:admin`, and admins invite
@@ -162,7 +164,6 @@ place (no bytes move), `/assets/…` files are uploaded, and anything else is
 flagged in the report.
 
 ```bash
-export PAYLOAD_PUSH=false   # the target is migrated; see Setup
 pnpm etl --target 127.0.0.1/langlang_dev --dry-run --blob-store-id <store id> --report tmp/etl-dry.json
 pnpm etl --target 127.0.0.1/langlang_dev --confirm --blob-store-id <store id> --report tmp/etl.json
 pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
@@ -177,9 +178,16 @@ pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
   have gone from legacy (the fallback for a second cutover attempt; spec
   §13.4).
 - Every real run ends with the same checks `verify:cutover` runs: ids and
-  counts, preserved fields, story text and images, the plugin URL of every
-  registered upload versus its original URL, and sequences. With a token it
-  also HEADs a sample of 20 media URLs. A failed check exits 1.
+  counts, preserved fields, that each document/gallery/event photo row's file
+  is its legacy row's (a foreign or duplicate URL that left a row file-less
+  fails), story text and images, the plugin URL of every registered upload
+  versus its original URL, and sequences. With a token it also HEADs the
+  plugin URL of a sample of 20 uploads. A failed check exits 1.
+  `verify:cutover` needs the store id (token or `--blob-store-id`).
+- `--update` keeps an existing upload row's file only when it is the legacy
+  row's; otherwise (e.g. an id reused after a rollback) the row is deleted
+  and re-imported, and reported. `--reconcile-deletes` runs before the import
+  steps.
 
 The production cutover runbook (spec §13) is run by a human operator from a
 one-off shell. Agents never run it and never merge `feat/payload-cms` to

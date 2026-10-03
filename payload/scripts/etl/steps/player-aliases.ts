@@ -1,4 +1,6 @@
 import { ETL_CONTEXT } from '../media'
+import { importableParentIds } from '../rows'
+import { importedPlayerIds } from '../rules'
 import type { EtlStep } from './types'
 
 type Row = { name_key: string; player_id: number }
@@ -15,11 +17,7 @@ export const playerAliasesStep: EtlStep = {
     const counts = report.counts('player-aliases')
     const rows = await source.rows<Row>('player_aliases', 'name_key')
     counts.read = rows.length
-    const players = new Set(
-      dryRun
-        ? (await source.rows<{ id: number }>('players')).map((p) => p.id)
-        : (await payload.find({ collection: 'players', pagination: false, depth: 0, joins: false, select: {}, overrideAccess: true })).docs.map((p) => p.id),
-    )
+    const players = await importableParentIds(ctx, 'players', importedPlayerIds(await source.rows('players')))
     for (const r of rows) {
       const where = { step: 'player-aliases', table: 'player_aliases', id: r.name_key }
       if (!players.has(r.player_id)) {

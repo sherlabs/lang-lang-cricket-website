@@ -1,8 +1,8 @@
 /**
  * Cutover verification (spec §12.2 step 18). Runs after every non-dry ETL run and standalone as
- * `payload/scripts/verify-cutover.ts`. It has no ETL report to lean on, so every skip and drop
- * is re-derived from the legacy source with the same rules the steps apply (orphans, unknown
- * statuses/types/sources, `normaliseStoryHtml` image drops, missing `/assets/` files).
+ * `payload/scripts/verify-cutover.ts`. Every skip and drop is re-derived from the legacy source
+ * with the rules the steps apply (etl/rules: orphans, unknown statuses/types/sources;
+ * `normaliseStoryHtml` image drops; missing `/assets/` files).
  *
  * Checks:
  * - ids: per id-preserving table, the target holds exactly the legacy ids minus the skipped
@@ -13,12 +13,16 @@
  *   per-table `updatedAt` rule), RSVP `occurrenceDate.toISOString()`, relations' `legacyUrl`;
  * - stories: whitespace-normalised plain text of the legacy HTML equals the Lexical content's,
  *   and the inline image count equals the legacy count minus the drops;
- * - every REGISTERED upload row (own-store `legacyUrl` whose decoded basename is the stored
- *   `filename` and whose path sits under the collection prefix — the ETL's register branch):
- *   the plugin's `generateURL` with the collection prefix and the stored `prefix` equals
- *   `legacyUrl`. Fallback rows (renamed or out-of-prefix, §12.4) are listed, not failed;
+ * - documents / gallery-photos / event-photos: each row's file is its legacy row's (`legacyUrl`
+ *   equals the legacy url when importable), and a legacy row with a file never became a
+ *   file-less row (a foreign URL, or a duplicate of another row's URL) unnoticed;
+ * - every own-store upload row: the plugin's `generateURL` with the collection prefix and the
+ *   stored `prefix` equals `legacyUrl`. Only fallbacks (§12.4) are exempt and listed: in-run,
+ *   those the ETL report says took a fallback; standalone, rows stored under exactly the
+ *   collection prefix (where a re-upload puts them) whose URL differs. Anything else fails;
  * - sequences: the next id is above both MAX(id) and the legacy `last_value`;
- * - with a Blob token: HEAD on a sample of 20 `legacyUrl`s.
+ * - with a Blob token: HEAD on the plugin URL of a sample of 20 rows across the four upload
+ *   collections (the URL the app serves once the `legacyUrl` read rule is dropped).
  */
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -30,10 +34,11 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import { sectionOf } from '../../../lib/people'
 import { lexicalToTiptapHtml, normaliseStoryHtml, type StoryContent } from '../../../lib/stories-convert'
 import { fullName } from '../../hooks/displayName'
-import { classify, COLLECTION_PREFIX, isUnderPrefix, type UploadCollection } from './media'
+import { classify, COLLECTION_PREFIX, importableUrl, type UploadCollection } from './media'
+import { expectedRows, importedEventIds, importedPlayerIds } from './rules'
 import { ID_PRESERVING, nextSequenceValue } from './sequences'
 import type { LegacyRow, LegacySource } from './source'
-import { legacyHtml, STORY_STATUSES } from './steps/stories'
+import { legacyHtml } from './steps/stories'
 import { sponsorRanks } from './steps/sponsors'
 
 export type VerifyCheck = { name: string; ok: boolean; checked: number; failures: string[]; notes: string[] }
@@ -49,6 +54,8 @@ export type VerifyOptions = {
   only?: readonly string[]
   /** HEAD sample size when a token is present (spec: 20). */
   headSample?: number
+  /** In-run only: the ETL report's media action per `<collection> <legacyUrl>` (EtlReport.files). */
+  fileActions?: ReadonlyMap<string, string>
 }
 
 type Doc = Record<string, unknown>
@@ -131,12 +138,8 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
     const file = path.join(publicDir, c.file)
     return file.startsWith(publicDir + path.sep) && existsSync(file)
   }
-  /** The legacyUrl a relation should carry: the URL itself when importable, else null. */
-  const expectedRelationUrl = (url: unknown): string | null => {
-    const c = classify(url, storeId)
-    if (c.kind === 'empty' || c.kind === 'other') return null
-    return assetExists(url as string) ? (url as string) : null
-  }
+  /** The legacyUrl a relation or upload row should carry: the URL itself when importable, else null. */
+  const expectedRelationUrl = (url: unknown): string | null => importableUrl(url, storeId, publicDir)
   const relationUrl = (v: unknown) => {
     const id = relId(v)
     return id === null ? null : ((media.get(id)?.legacyUrl as string | null | undefined) ?? `(media#${id} without legacyUrl)`)
@@ -160,22 +163,8 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
     player_seasons: await L('player_seasons'),
     player_sync_runs: await L('player_sync_runs'),
   }
-  const eventIds = new Set(legacy.events.filter((e) => e.type === 'one_time' || e.type === 'recurring').map((e) => e.id as number))
-  const playerIds = new Set(legacy.players.filter((p) => p.source === 'playhq' || p.source === 'manual').map((p) => p.id as number))
-  const expected: Record<string, (r: LegacyRow) => boolean> = {
-    documents: () => true,
-    'gallery-photos': () => true,
-    sponsors: () => true,
-    people: () => true,
-    announcements: () => true,
-    events: (r) => eventIds.has(r.id as number),
-    'event-rsvps': (r) => eventIds.has(r.event_id as number) && (r.response === 'yes' || r.response === 'no'),
-    'event-photos': (r) => eventIds.has(r.event_id as number) && (r.status === 'approved' || r.status === 'pending'),
-    stories: (r) => STORY_STATUSES.has(r.status as string),
-    players: (r) => playerIds.has(r.id as number),
-    'player-seasons': (r) => playerIds.has(r.player_id as number),
-    'player-sync-runs': (r) => ['running', 'ok', 'error'].includes(r.status as string),
-  }
+  const playerIds = importedPlayerIds(legacy.players)
+  const expected = expectedRows({ eventIds: importedEventIds(legacy.events), playerIds })
   const legacyOf: Record<string, LegacyRow[]> = {
     documents: legacy.documents,
     'gallery-photos': legacy.gallery_photos,
@@ -347,6 +336,46 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
     })
   }
 
+  // ---- 2b. upload rows: the file is the legacy row's ------------------------------------
+  // `--update` keeps an existing row's file, so the field checks above say nothing about it:
+  // the row must carry the legacy url (or, when that is not importable, no file at all).
+  {
+    const c = check("upload rows: each row's file is its legacy row's")
+    for (const collection of ['documents', 'gallery-photos', 'event-photos'] as const) {
+      if (!want(collection) || !target[collection]) continue
+      const owner = new Map<string, number>()
+      for (const d of target[collection].values()) if (d.legacyUrl) owner.set(d.legacyUrl as string, d.id as number)
+      for (const r of legacyOf[collection].filter(expected[collection])) {
+        const d = target[collection].get(r.id as number)
+        if (!d) continue
+        const w = `${collection}#${r.id}`
+        const wantUrl = expectedRelationUrl(r.url)
+        const have = (d.legacyUrl as string | null | undefined) ?? null
+        c.checked++
+        if (wantUrl !== null) {
+          if (have === wantUrl) continue
+          const other = owner.get(wantUrl)
+          if (have === null && !d.filename && other !== undefined && other !== r.id) {
+            c.fail(`${w}: no file — its legacy url ${show(wantUrl)} is also ${collection}#${other}'s (legacyUrl is unique); the page would show an empty link/broken image`)
+          } else {
+            c.fail(`${w}.legacyUrl: legacy ${show(wantUrl)} ≠ target ${show(have)}${have === null && d.filename ? ` (target file ${show(d.filename)})` : ''}`)
+          }
+          continue
+        }
+        if (have !== null || d.filename) {
+          c.fail(`${w}: target has a file (${show(have ?? d.filename)}) but legacy url ${show(r.url ?? '')} has none to import`)
+          continue
+        }
+        const cl = classify(r.url, storeId)
+        if (cl.kind === 'other') {
+          c.fail(`${w}: no file — legacy url ${show(r.url)} is not an own-store Blob URL or /assets/ path (flagged by the ETL); the page would show an empty link/broken image`)
+        } else if (cl.kind === 'local-asset') {
+          c.note(`${w}: no file — public${cl.file} does not exist (already broken in legacy)`)
+        }
+      }
+    }
+  }
+
   // ---- 3. stories: plain text and inline images -----------------------------------------
   if (want('stories') && target.stories) {
     const text = check('stories: plain text equal (whitespace-normalised)')
@@ -373,31 +402,38 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
   }
 
   // ---- 4. registered rows: plugin URL === legacyUrl --------------------------------------
+  const uploadDocs: { collection: UploadCollection; doc: Doc }[] = []
+  for (const collection of ['media', 'documents', 'gallery-photos', 'event-photos'] as UploadCollection[]) {
+    const docs = collection === 'media' ? [...media.values()] : await all(collection, { where: { legacyUrl: { exists: true } } })
+    for (const doc of docs) if (doc.legacyUrl) uploadDocs.push({ collection, doc })
+  }
+  const baseUrl = storeId ? `https://${storeId}.public.blob.vercel-storage.com` : ''
+  const generateURL = await loadGenerateURL()
+  const pluginUrl = (collection: UploadCollection, d: Doc) =>
+    generateURL({ baseUrl, collectionPrefix: COLLECTION_PREFIX[collection], filename: d.filename as string, prefix: (d.prefix as string | null) ?? undefined })
   {
     const c = check('registered rows: generateURL(prefix, filename) = legacyUrl')
     if (!storeId) {
       c.note('no Blob token and no --blob-store-id: own-store URLs cannot be recognised; check skipped')
     } else {
-      const baseUrl = `https://${storeId}.public.blob.vercel-storage.com`
-      const generateURL = await loadGenerateURL()
       const fallbacks: string[] = []
-      for (const collection of ['media', 'documents', 'gallery-photos', 'event-photos'] as UploadCollection[]) {
-        const docs = collection === 'media' ? [...media.values()] : await all(collection, { where: { legacyUrl: { exists: true } } })
-        for (const d of docs) {
-          const legacyUrl = d.legacyUrl as string | null
-          if (!legacyUrl) continue
-          const cl = classify(legacyUrl, storeId)
-          if (cl.kind !== 'own-blob') continue
-          // Registered in place iff the ETL's register branch applied: same basename, path under
-          // the collection prefix. A changed stored prefix is NOT a fallback — it must fail below.
-          if (d.filename !== cl.filename || !isUnderPrefix(cl.prefix, COLLECTION_PREFIX[collection])) {
-            fallbacks.push(`${collection}#${d.id} ${legacyUrl} → stored as ${show(`${d.prefix ? `${d.prefix}/` : ''}${d.filename}`)}`)
-            continue
-          }
-          c.checked++
-          const url = generateURL({ baseUrl, collectionPrefix: COLLECTION_PREFIX[collection], filename: d.filename as string, prefix: d.prefix as string })
-          if (url !== legacyUrl) c.fail(`${collection}#${d.id}: plugin URL ${url} ≠ legacyUrl ${legacyUrl}`)
+      for (const { collection, doc: d } of uploadDocs) {
+        const legacyUrl = d.legacyUrl as string
+        if (classify(legacyUrl, storeId).kind !== 'own-blob') continue
+        const url = d.filename ? pluginUrl(collection, d) : null
+        // A fallback (§12.4) is exempt: in-run, by what the ETL did with this URL; standalone,
+        // only a row stored under exactly the collection prefix (where the re-upload puts it).
+        // A row the ETL registered in place must match, whatever its stored name now says.
+        const action = opts.fileActions?.get(`${collection} ${legacyUrl}`)
+        const fallback = action
+          ? action.startsWith('fallback')
+          : url !== legacyUrl && ((d.prefix as string | null) ?? '') === COLLECTION_PREFIX[collection]
+        if (fallback) {
+          fallbacks.push(`${collection}#${d.id} ${legacyUrl} → stored as ${show(`${d.prefix ? `${d.prefix}/` : ''}${d.filename}`)}`)
+          continue
         }
+        c.checked++
+        if (url !== legacyUrl) c.fail(`${collection}#${d.id}: plugin URL ${url ?? '(no filename)'} ≠ legacyUrl ${legacyUrl}`)
       }
       if (fallbacks.length) c.note(`${fallbacks.length} fallback row(s) (not registered in place, §12.4; the legacyUrl read rule serves the original):`)
       for (const f of fallbacks) c.note(`  ${f}`)
@@ -418,17 +454,20 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
   }
 
   // ---- 6. HEAD sample (token only) ------------------------------------------------------
-  if (token) {
-    const c = check('media reachability (HEAD, sampled)')
-    const urls = [...media.values()].map((d) => d.legacyUrl as string | null).filter((u): u is string => !!u && classify(u, storeId).kind === 'own-blob')
+  // The plugin URL, not legacyUrl: legacyUrl is always reachable during cutover, the plugin URL
+  // is what the app serves once the read rule is dropped (§13.5).
+  if (token && storeId) {
+    const c = check('upload reachability: HEAD generateURL(...), sampled across the upload collections')
+    const urls = uploadDocs.filter(({ doc }) => doc.filename).map(({ collection, doc }) => `${collection}#${doc.id} ${pluginUrl(collection, doc)}`)
     const sample = urls.sort(() => Math.random() - 0.5).slice(0, opts.headSample ?? 20)
-    for (const u of sample) {
+    for (const entry of sample) {
+      const u = entry.slice(entry.indexOf(' ') + 1)
       c.checked++
       try {
         const res = await fetch(u, { method: 'HEAD' })
-        if (!res.ok) c.fail(`${u}: HTTP ${res.status}`)
+        if (!res.ok) c.fail(`${entry}: HTTP ${res.status}`)
       } catch (err) {
-        c.fail(`${u}: ${(err as Error).message}`)
+        c.fail(`${entry}: ${(err as Error).message}`)
       }
     }
   }

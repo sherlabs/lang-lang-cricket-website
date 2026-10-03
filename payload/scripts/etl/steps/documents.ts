@@ -1,5 +1,5 @@
 import { DOCUMENT_CATEGORIES, type DocumentCategory } from '../../../../lib/documents'
-import { importFile } from '../media'
+import { ETL_CONTEXT, fileConflict, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
 import type { EtlStep } from './types'
 
@@ -20,8 +20,9 @@ export const documentsStep: EtlStep = {
         category = 'Policies'
       }
       const data = { title: r.title, category }
+      const docWhere = { step: 'documents', table: 'documents', id: r.id, field: 'url' }
       if (dryRun) {
-        await importFile(ctx, { collection: 'documents', url: r.url, data, relation: false, where: { step: 'documents', table: 'documents', id: r.id, field: 'url' } })
+        await importFile(ctx, { collection: 'documents', url: r.url, data, relation: false, where: docWhere })
         counts.planned++
         continue
       }
@@ -31,13 +32,20 @@ export const documentsStep: EtlStep = {
           counts.skipped++
           continue
         }
-        // --update: data only; files are never replaced on a legacy row.
-        await payload.update({ collection: 'documents', id: r.id, data, overrideAccess: true, depth: 0, context: { etl: true, disableRevalidate: true } })
-        await restoreTimestamps(payload, 'documents', r.id, r.created_at)
-        counts.updated++
-        continue
+        // --update: data only; a legacy row's file is never replaced. The kept file must be this legacy row's: after a rollback a reused id can hold a
+        // Payload-native row of the failed window (§13.4); if not, the row is replaced.
+        const conflict = await fileConflict(ctx, 'documents', existing, r.url)
+        if (!conflict) {
+          await payload.update({ collection: 'documents', id: r.id, data, overrideAccess: true, depth: 0, context: { etl: true, disableRevalidate: true } })
+          await restoreTimestamps(payload, 'documents', r.id, r.created_at)
+          counts.updated++
+          continue
+        }
+        report.add({ ...docWhere, kind: 'file-conflict-replaced', detail: `${conflict}; row deleted and re-imported` })
+        await payload.delete({ collection: 'documents', id: r.id, overrideAccess: true, context: { ...ETL_CONTEXT } })
+        counts.deleted++
       }
-      const res = await importFile(ctx, { collection: 'documents', url: r.url, data: { ...data, id: r.id }, relation: false, where: { step: 'documents', table: 'documents', id: r.id, field: 'url' } })
+      const res = await importFile(ctx, { collection: 'documents', url: r.url, data: { ...data, id: r.id }, relation: false, where: docWhere })
       if (res.id) {
         await restoreTimestamps(payload, 'documents', res.id, r.created_at)
         counts.created++
