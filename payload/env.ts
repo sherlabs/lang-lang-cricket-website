@@ -93,6 +93,17 @@ export function blobToken(env: Env = process.env): string | undefined {
 }
 
 /**
+ * The store id legacy (ETL'd) Blob URLs are checked against, or null for "any public Blob
+ * host". Null without a token (local dev on a restored dump) and on previews: a preview
+ * writes to its own store while its branch-restored legacy rows point at the production
+ * store (spec §1 "legacyUrl wins on read", §11.5). Production: the token's store.
+ */
+export function legacyBlobStoreId(env: Env = process.env): string | null {
+  if (env.VERCEL_ENV === 'preview') return null
+  return blobToken(env)?.match(/^vercel_blob_rw_([a-z\d]+)_/i)?.[1]?.toLowerCase() ?? null
+}
+
+/**
  * Payload's serverURL. Never '' — an unset serverURL makes Payload treat every
  * URL as local and leaves `csrf` empty (which disables the Origin check).
  */

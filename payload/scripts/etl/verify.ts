@@ -34,7 +34,7 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import { sectionOf } from '../../../lib/people'
 import { lexicalToTiptapHtml, normaliseStoryHtml, type StoryContent } from '../../../lib/stories-convert'
 import { fullName } from '../../hooks/displayName'
-import { classify, COLLECTION_PREFIX, importableUrl, type UploadCollection } from './media'
+import { classify, COLLECTION_PREFIX, importableUrl, storeIdFromToken, type UploadCollection } from './media'
 import { expectedRows, importedEventIds, importedPlayerIds } from './rules'
 import { ID_PRESERVING, nextSequenceValue } from './sequences'
 import type { LegacyRow, LegacySource } from './source'
@@ -458,7 +458,16 @@ export async function verifyCutover(opts: VerifyOptions): Promise<VerifyResult> 
   // is what the app serves once the read rule is dropped (§13.5).
   if (token && storeId) {
     const c = check('upload reachability: HEAD generateURL(...), sampled across the upload collections')
-    const urls = uploadDocs.filter(({ doc }) => doc.filename).map(({ collection, doc }) => `${collection}#${doc.id} ${pluginUrl(collection, doc)}`)
+    // A preview rehearsal writes to its own store: files registered in place live in the legacy
+    // store (plugin URL = legacyUrl), everything the ETL uploaded lives in the token's store.
+    const writeStoreId = storeIdFromToken(token)
+    const writeBase = writeStoreId ? `https://${writeStoreId}.public.blob.vercel-storage.com` : baseUrl
+    const headUrl = (collection: UploadCollection, d: Doc) => {
+      const url = pluginUrl(collection, d)
+      if (writeBase === baseUrl || url === d.legacyUrl) return url
+      return generateURL({ baseUrl: writeBase, collectionPrefix: COLLECTION_PREFIX[collection], filename: d.filename as string, prefix: (d.prefix as string | null) ?? undefined })
+    }
+    const urls = uploadDocs.filter(({ doc }) => doc.filename).map(({ collection, doc }) => `${collection}#${doc.id} ${headUrl(collection, doc)}`)
     const sample = urls.sort(() => Math.random() - 0.5).slice(0, opts.headSample ?? 20)
     for (const entry of sample) {
       const u = entry.slice(entry.indexOf(' ') + 1)

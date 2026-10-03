@@ -19,7 +19,7 @@ import path from 'node:path'
 import { getPayload } from 'payload'
 import { blobToken } from '../env'
 import { argValue, guard } from './_guard'
-import { storeIdFromToken, type EtlContext } from './etl/media'
+import { legacyStoreId, storeIdFromToken, type EtlContext } from './etl/media'
 import { EtlReport } from './etl/report'
 import { runEtl } from './etl/run'
 import { openLegacySource } from './etl/source'
@@ -45,7 +45,11 @@ async function main() {
   if (unknown?.length) throw new Error(`[etl] unknown step(s) in --only: ${unknown.join(', ')} (known: ${ETL_STEPS.map((s) => s.name).join(', ')})`)
 
   const token = blobToken()
-  const storeId = storeIdFromToken(token) ?? argValue(argv, '--blob-store-id')?.toLowerCase() ?? null
+  const storeId = legacyStoreId(token, argValue(argv, '--blob-store-id'))
+  const writeStoreId = storeIdFromToken(token)
+  if (storeId && writeStoreId && storeId !== writeStoreId) {
+    console.warn(`[etl] legacy store "${storeId}" differs from the token's store "${writeStoreId}": legacy URLs are registered in place, new files go to the token's store (preview rehearsal)`)
+  }
   if (!storeId) console.warn('[etl] no Blob token and no --blob-store-id: every Blob URL will be flagged instead of registered')
 
   const source = await openLegacySource({ schema: sourceSchema })

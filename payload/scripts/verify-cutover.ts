@@ -14,7 +14,7 @@ import path from 'node:path'
 import { getPayload } from 'payload'
 import { blobToken } from '../env'
 import { argValue, guard } from './_guard'
-import { storeIdFromToken } from './etl/media'
+import { legacyStoreId, storeIdFromToken } from './etl/media'
 import { openLegacySource } from './etl/source'
 import { formatVerify, verifyCutover } from './etl/verify'
 
@@ -24,7 +24,11 @@ async function main(): Promise<boolean> {
   const only = argValue(argv, '--only')?.split(',').map((s) => s.trim()).filter(Boolean)
   const reportFile = argValue(argv, '--report')
   const token = blobToken()
-  const storeId = storeIdFromToken(token) ?? argValue(argv, '--blob-store-id')?.toLowerCase() ?? null
+  const storeId = legacyStoreId(token, argValue(argv, '--blob-store-id'))
+  const writeStoreId = storeIdFromToken(token)
+  if (storeId && writeStoreId && storeId !== writeStoreId) {
+    console.warn(`[verify] legacy store "${storeId}" differs from the token's store "${writeStoreId}": legacy URLs are registered in place, new files go to the token's store (preview rehearsal)`)
+  }
   // Without a store id own-store URLs are unrecognisable: every legacyUrl comparison would fail
   // spuriously and the registered-URL check could not run.
   if (!storeId) throw new Error('[verify] pass --blob-store-id <id> (the legacy Blob host) or run with BLOB_READ_WRITE_TOKEN')

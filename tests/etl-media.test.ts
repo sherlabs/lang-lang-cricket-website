@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classify, isUnderPrefix, mimeFromName, storeIdFromToken } from '@/payload/scripts/etl/media'
+import { classify, isUnderPrefix, legacyStoreId, mimeFromName, storeIdFromToken } from '@/payload/scripts/etl/media'
 import { parseLegacyTimestamp } from '@/payload/scripts/etl/source'
 
 const BASE = 'https://fakestore.public.blob.vercel-storage.com'
@@ -45,5 +45,17 @@ describe('legacy timestamp parsing (spec §12.1)', () => {
   it('reads timestamp-without-time-zone as UTC and truncates to milliseconds', () => {
     expect(parseLegacyTimestamp('2026-09-12 18:30:00').toISOString()).toBe('2026-09-12T18:30:00.000Z')
     expect(parseLegacyTimestamp('2026-09-12 18:30:00.123456').toISOString()).toBe('2026-09-12T18:30:00.123Z')
+  })
+})
+
+describe('legacyStoreId (preview rehearsal)', () => {
+  const token = 'vercel_blob_rw_PreviewStore_secret'
+  it('an explicit --blob-store-id wins over the token store', () => {
+    expect(legacyStoreId(token, 'ProdStore')).toBe('prodstore')
+  })
+  it('falls back to the token store, then null', () => {
+    expect(legacyStoreId(token, undefined)).toBe('previewstore')
+    expect(legacyStoreId(token, '  ')).toBe('previewstore')
+    expect(legacyStoreId(undefined, undefined)).toBeNull()
   })
 })

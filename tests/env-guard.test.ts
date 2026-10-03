@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FAKE_BLOB_STORE_ID, assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, isLocalDbUrl, resolveServerURL } from '@/payload/env'
+import { FAKE_BLOB_STORE_ID, assertLocalDb, legacyBlobStoreId, assertSafeEnv, blobToken, csrfOrigins, isLocalDbUrl, resolveServerURL } from '@/payload/env'
 import { checkGuard } from '@/payload/scripts/_guard'
 
 const LOCAL = 'postgres://postgres:postgres@127.0.0.1:54329/langlang_dev'
@@ -105,4 +105,22 @@ describe('script guard', () => {
     expect(() => checkGuard({ write: false }, ['--target', 'db.example.com/prod'], remote)).toThrow(/ALLOW_REMOTE_DB/)
     expect(checkGuard({ write: false }, ['--target', 'db.example.com/prod'], { ...remote, ALLOW_REMOTE_DB: 'yes' }).local).toBe(false)
   })
+})
+
+describe('legacyBlobStoreId / legacyUrl read rule on previews', () => {
+  const token = 'vercel_blob_rw_PreviewStore_secret'
+  it('production: the token store', () => {
+    expect(legacyBlobStoreId({ VERCEL: '1', VERCEL_ENV: 'production', BLOB_READ_WRITE_TOKEN: token })).toBe('previewstore')
+  })
+  it('preview and token-less: any public Blob host (null)', () => {
+    expect(legacyBlobStoreId({ VERCEL: '1', VERCEL_ENV: 'preview', BLOB_READ_WRITE_TOKEN: token })).toBeNull()
+    expect(legacyBlobStoreId({})).toBeNull()
+  })
+  it('isOwnStoreLegacyUrl accepts the production store on a preview', async () => {
+    const { isOwnStoreLegacyUrl } = await import('@/payload/hooks/legacyUrl')
+    const prodUrl = 'https://prodstore.public.blob.vercel-storage.com/sponsors/a.png'
+    expect(isOwnStoreLegacyUrl(prodUrl, 'previewstore')).toBe(false)
+    expect(isOwnStoreLegacyUrl(prodUrl, null)).toBe(true)
+    expect(isOwnStoreLegacyUrl('/assets/x.png', null)).toBe(false)
+  }, 60_000)
 })

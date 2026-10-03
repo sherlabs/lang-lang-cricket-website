@@ -5,7 +5,7 @@ import {
   type CollectionBeforeValidateHook,
   type TextField,
 } from 'payload'
-import { blobToken } from '../env'
+import { legacyBlobStoreId } from '../env'
 
 /**
  * `legacyUrl` on upload collections (spec §1 "legacyUrl wins on read", §7.5).
@@ -26,8 +26,13 @@ const BLOB_HOST_SUFFIX = '.public.blob.vercel-storage.com'
  * True for an https Vercel Blob URL on our own store. With a token we know the
  * store id and require it; without one (local dev on a restored dump, no Blob
  * token by design) any public Blob host is accepted — it is still a legacy row.
+ * Previews are treated like the token-less case: they write to a separate
+ * preview store while their (branch-restored) legacy rows point at the
+ * production store, and the rule exists to keep those rendering (spec §1).
+ * `legacyUrl` is ETL-only (create/update access denied), so this widens nothing
+ * a user can set.
  */
-export function isOwnStoreLegacyUrl(url: unknown, token = blobToken()): url is string {
+export function isOwnStoreLegacyUrl(url: unknown, storeId = legacyBlobStoreId()): url is string {
   if (typeof url !== 'string' || !url) return false
   let parsed: URL
   try {
@@ -36,7 +41,6 @@ export function isOwnStoreLegacyUrl(url: unknown, token = blobToken()): url is s
     return false
   }
   if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith(BLOB_HOST_SUFFIX)) return false
-  const storeId = token?.match(/^vercel_blob_rw_([a-z\d]+)_/i)?.[1]?.toLowerCase()
   return storeId ? parsed.hostname === `${storeId}${BLOB_HOST_SUFFIX}` : true
 }
 

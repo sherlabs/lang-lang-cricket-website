@@ -14,9 +14,8 @@ import {
   type StoryContent,
 } from '@/lib/stories-convert'
 import { htmlToExcerpt } from '@/lib/story-excerpt'
-import { blobStoreId } from '@/lib/blob-url'
 import { isEmailOrEmpty } from '@/payload/fields/validators'
-import { blobToken } from '@/payload/env'
+import { legacyBlobStoreId } from '@/payload/env'
 
 /**
  * The public story write pipeline shared by `submitStory` and `updateDraftByToken` (spec §5,
@@ -87,7 +86,9 @@ export async function parseStoryForm(
 
   const rendered = tiptapJsonToSafeHtml(String(rawContent))
   if ('error' in rendered) return rendered
-  const storeId = blobStoreId(blobToken())
+  // Production: this store's Blob URLs only. A preview also accepts the production store's
+  // (its legacy rows point there); resolveUploadNodes stays the gate either way.
+  const storeId = legacyBlobStoreId()
   const normalised = normaliseStoryHtml(rendered.html, { storeId })
   if (normalised.droppedImages.length) return { error: FOREIGN_IMAGE_ERROR }
   const excerpt = htmlToExcerpt(normalised.html)

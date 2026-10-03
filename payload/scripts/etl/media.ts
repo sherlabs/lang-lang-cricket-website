@@ -31,7 +31,10 @@ export type EtlContext = {
   dryRun: boolean
   /** Update existing rows in place instead of skipping them (spec §12.3). */
   update: boolean
-  /** Own Blob store id (from the token, or --blob-store-id for local/dry runs). */
+  /**
+   * The legacy (own) Blob store id: the store the legacy URLs live in. `--blob-store-id` when
+   * given, otherwise the token's store (see `legacyStoreId`).
+   */
   storeId: string | null
   /** The Blob token (blobToken()); undefined locally. */
   token: string | undefined
@@ -72,6 +75,16 @@ export type Classified =
 
 export function storeIdFromToken(token: string | undefined): string | null {
   return token?.match(/^vercel_blob_rw_([a-z\d]+)_/i)?.[1]?.toLowerCase() ?? null
+}
+
+/**
+ * The store whose URLs count as own-blob (registered in place). An explicit `--blob-store-id`
+ * wins over the token's store: a preview rehearsal (cutover checklist) writes with the
+ * preview store's token while the legacy rows point at the production store. In production
+ * both are the same store and the flag is omitted.
+ */
+export function legacyStoreId(token: string | undefined, explicit: string | undefined): string | null {
+  return explicit?.trim().toLowerCase() || storeIdFromToken(token)
 }
 
 export function classify(url: unknown, storeId: string | null): Classified {
@@ -205,7 +218,9 @@ export async function importFile(
   const collision = dryRun ? report.claimed.filenames.has(claimKey(c.filename)) : Boolean(await findOne(payload, collection, 'filename', c.filename))
   let mimeType = mimeFromName(c.filename)
   let filesize: number | undefined
-  if (ctx.token && !dryRun) {
+  // head() needs the token of the store that holds the blob; on a preview rehearsal the token is
+  // the preview store's, so skip it there (filesize stays null, as on a token-less run).
+  if (ctx.token && !dryRun && storeIdFromToken(ctx.token) === ctx.storeId) {
     try {
       const meta = await head(legacyUrl, { token: ctx.token })
       filesize = meta.size
