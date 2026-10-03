@@ -408,7 +408,7 @@ Everything else:
 | Field | Type | Notes |
 |---|---|---|
 | slug | text, unique, index, readOnly, create/update `nobody` | on create: `makeUniqueSlug` (manual) or set by sync; reset on update |
-| firstName, lastName | text, required | |
+| firstName, lastName | text; `firstName` required, `lastName` optional (default `''`) | trimmed (`beforeValidate`, not under `context.etl`). PlayHQ players with one name sync with `lastName ''`, as legacy allowed. |
 | displayName | text, readOnly, `admin.hidden` in the edit view, create/update `nobody` | `useAsTitle`. The `displayName.ts` `beforeChange` hook sets it to `${firstName} ${lastName}`. Sync and the ETL write it too. |
 | photo | upload → media | |
 | bio | textarea, default `''` | plain text, split on blank lines |
@@ -417,7 +417,7 @@ Everything else:
 | activeOverride | select `active`/`past`, optional (empty means auto) | |
 | isActiveDerived | checkbox, readOnly, create/update `nobody` | written only by sync |
 | hidden | checkbox, default false, index | |
-| honours | array `{ years: text req, title: text req }` | table `players_honours`; drag-reorder replaces `HonoursEditor` |
+| honours | array `{ years: text (optional, default `''`), title: text req }`, both trimmed | table `players_honours`; drag-reorder replaces `HonoursEditor` |
 | seasons | join → `player-seasons` on `player` | read-only table in the edit view |
 | aliases | join → `player-aliases` on `player` | |
 | merge | ui → `MergePlayerField` | shown only on existing docs |
@@ -437,7 +437,7 @@ Everything else:
 
 | Field | Type | Notes |
 |---|---|---|
-| nameKey | text, required, unique, index | `first|last` lower-cased. It was the legacy PK and is now a unique column on a serial id. |
+| nameKey | text, required, unique, index | `first|last` lower-cased (a `beforeValidate` hook trims and lower-cases hand-typed keys, not under `context.etl`). It was the legacy PK and is now a unique column on a serial id. |
 | player | relationship → players, required, index | |
 
 - **Access:** read staff, create/update/delete admin (manual repair only). Sync and merge write it directly.
@@ -1459,6 +1459,6 @@ Recorded 2026-10-03 (local Postgres, fixture `langlang_legacy`, no Blob token; P
 | Sync-owned fields | `source`, `isActiveDerived`, `displayName`, `slug` have `create/update: nobody` field access **and** `beforeChange` field hooks (`keepStored`, `playerSource`, `displayName`, `uniqueSlug` with a title function) that reset them unless `context.etl`/`context.sync`. An editor PATCH of `source=manual` leaves `playhq`; the following DELETE is 403 (`access.int`). |
 | `PlayerSyncPanel` | A **server** `beforeList` component (Local API read of the latest run) with a client `PlayerSyncButton` child (POST, spinner, toast, `router.refresh()`), instead of a client component reading REST — same pattern and reason as the WP3 count cells. |
 | Revalidation | Sync and merge revalidate `/players` and `/players/[slug]` (page) / both slugs through the guarded helper (no-op outside a request). The legacy `/history` and `/admin/players` calls are dropped. |
-| Field rules (small) | `firstName`/`lastName`/honours `years`/`title` are required with ETL-bypassed validators (the legacy admin allowed an empty last name and empty honour years; ETL'd rows keep them). `manualYears` shows unless `source === 'playhq'` (so also on create). Seasons/aliases joins are read-only tables (`allowCreate: false`). |
+| Field rules (small) | `firstName` and honours `title` are required with ETL-bypassed validators; `lastName` and honours `years` are optional (default `''`, migration `wp5_review_fixes`), as in the legacy admin, so one-name PlayHQ players and legacy honours without years stay editable. Names and honour fields are trimmed (`trimStrings`/`trimHonours`). `manualYears` shows unless `source === 'playhq'` (so also on create). Seasons/aliases joins are read-only tables (`allowCreate: false`). |
 | Admin smoke | `/admin` shows the "Players" card (6); `/admin/collections/players` renders the sync panel (last run, "Run sync now"); the edit view renders honours, the seasons/aliases joins and `MergePlayerField` (not on create). Not clicked in a browser: "Run sync now" (it would call the live PlayHQ API; the route is covered by `access.int` and the sync by `players-sync.int`) and the merge modal (endpoint covered by `players.int`). |
 | Dev DB | `langlang_dev` carried a pushed (`dev`) schema from earlier WPs, so `payload migrate` prompted; it was reset (`DROP SCHEMA payload CASCADE`, `migrate`, full `pnpm etl`, `seed:admin`). The worktree `.env.local` sets `PAYLOAD_PUSH`, so `next dev` pushes again. A `next dev` `.next` cache reached 2.2 GB and filled the disk (ENOSPC) once; delete `.next` between runs on a tight disk. |

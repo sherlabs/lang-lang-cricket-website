@@ -75,6 +75,32 @@ describe('players: hooks', () => {
     expect(res.json.doc).toMatchObject({ slug: 'ann-lee', displayName: 'Ann Leigh' })
   })
 
+  it('a player with an empty last name (one-name PlayHQ player) can still be saved, with empty honour years', async () => {
+    const id = await playhqPlayer('Cher', '')
+    const res = await rest('PATCH', `/players/${id}`, { token: editor, body: { bio: 'hello', honours: [{ years: '', title: 'Life Member' }] } })
+    expect(res.status).toBe(200)
+    expect(res.json.doc).toMatchObject({ lastName: '', displayName: 'Cher', bio: 'hello', honours: [{ years: '', title: 'Life Member' }] })
+    const bad = await rest('PATCH', `/players/${id}`, { token: editor, body: { firstName: '  ', honours: [{ years: '2020', title: ' ' }] } })
+    expect(bad.status).toBe(400)
+  })
+
+  it('names and honour fields are trimmed (displayName has single spaces)', async () => {
+    const res = await rest('POST', '/players', {
+      token: editor,
+      body: { firstName: ' Ann ', lastName: ' Lee ', honours: [{ years: ' 2024 ', title: ' Captain ' }] },
+    })
+    expect(res.status).toBe(201)
+    expect(res.json.doc).toMatchObject({ firstName: 'Ann', lastName: 'Lee', displayName: 'Ann Lee', slug: 'ann-lee', honours: [{ years: '2024', title: 'Captain' }] })
+  })
+
+  it('a hand-typed alias nameKey is trimmed and lower-cased', async () => {
+    const admin = await tokenFor(payload, 'admin', 'players-admin@example.com')
+    const { doc: p } = (await rest('POST', '/players', { token: editor, body: { firstName: 'Kim', lastName: 'Ng' } })).json
+    const res = await rest('POST', '/player-aliases', { token: admin, body: { nameKey: ' Kim|NG ', player: p.id } })
+    expect(res.status).toBe(201)
+    expect(res.json.doc.nameKey).toBe('kim|ng')
+  })
+
   it('an editor PATCHing source, isActiveDerived or displayName leaves the stored values', async () => {
     const id = await playhqPlayer('Sam', 'Ward', { isActiveDerived: true })
     const res = await rest('PATCH', `/players/${id}`, { token: editor, body: { source: 'manual', isActiveDerived: false, displayName: 'X', bio: 'Keeper.' } })

@@ -7,6 +7,7 @@ import { displayName, fullName } from '../hooks/displayName'
 import { keepStored, playerSource, refusePlayhqDelete } from '../hooks/playerGuards'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { uniqueSlug } from '../hooks/slug'
+import { trimHonours, trimStrings } from '../hooks/trimStrings'
 
 const paths = (doc: Record<string, unknown>) => (doc.slug ? ['/players', `/players/${doc.slug}`] : ['/players'])
 
@@ -41,6 +42,7 @@ export const Players: CollectionConfig = {
     delete: isStaff,
   },
   hooks: {
+    beforeValidate: [trimStrings(['firstName', 'lastName']), trimHonours],
     beforeDelete: [
       refusePlayhqDelete,
       cascadeDelete([
@@ -58,7 +60,8 @@ export const Players: CollectionConfig = {
       type: 'row',
       fields: [
         { name: 'firstName', type: 'text', required: true, validate: maxChars(100, { required: true }) },
-        { name: 'lastName', type: 'text', required: true, validate: maxChars(100, { required: true }) },
+        // Optional, as in legacy: PlayHQ players with one name are synced with lastName ''.
+        { name: 'lastName', type: 'text', defaultValue: '', validate: maxChars(100) },
       ],
     },
     {
@@ -146,7 +149,7 @@ export const Players: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'years', type: 'text', required: true, validate: maxChars(50, { required: true }), admin: { width: '30%' } },
+            { name: 'years', type: 'text', defaultValue: '', validate: maxChars(50), admin: { width: '30%' } },
             { name: 'title', type: 'text', required: true, validate: maxChars(200, { required: true }), admin: { width: '70%' } },
           ],
         },

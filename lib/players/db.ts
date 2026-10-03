@@ -30,7 +30,7 @@ export function playerTables(payload: Payload): PlayerTables {
 
 /** Every column key `lib/players` and the merge endpoint read or write, per table. */
 export const PLAYER_COLUMN_KEYS: Record<keyof PlayerTables, readonly string[]> = {
-  players: ['id', 'slug', 'firstName', 'lastName', 'displayName', 'source', 'photo', 'bio', 'isActiveDerived', 'hidden', 'createdAt', 'updatedAt'],
+  players: ['id', 'slug', 'firstName', 'lastName', 'displayName', 'source', 'photo', 'bio', 'manualYears', 'isActiveDerived', 'hidden', 'createdAt', 'updatedAt'],
   player_aliases: ['id', 'nameKey', 'player', 'createdAt', 'updatedAt'],
   player_seasons: [
     'id', 'player', 'seasonName', 'seasonOrder', 'teamId', 'teamName', 'gradeName',

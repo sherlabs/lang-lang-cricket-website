@@ -1,4 +1,8 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, FieldHook } from 'payload'
+
+/** Hand-typed keys must match the sync's `first|last` lower-case form (§3.13). The ETL keeps values verbatim. */
+const normaliseNameKey: FieldHook = ({ value, req }) =>
+  req.context?.etl || typeof value !== 'string' ? value : value.trim().toLowerCase()
 import { isAdmin, isStaff } from '../access'
 
 /**
@@ -18,7 +22,7 @@ export const PlayerAliases: CollectionConfig = {
   access: { read: isStaff, create: isAdmin, update: isAdmin, delete: isAdmin },
   timestamps: true,
   fields: [
-    { name: 'nameKey', type: 'text', required: true, unique: true, index: true },
+    { name: 'nameKey', type: 'text', required: true, unique: true, index: true, hooks: { beforeValidate: [normaliseNameKey] } },
     { name: 'player', type: 'relationship', relationTo: 'players', required: true, index: true },
   ],
 }

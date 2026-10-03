@@ -501,7 +501,7 @@ export interface Story {
 export interface Player {
   id: number;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
   displayName?: string | null;
   /**
    * Set from the name when the player is created; never changes.
@@ -540,7 +540,7 @@ export interface Player {
    */
   honours?:
     | {
-        years: string;
+        years?: string | null;
         title: string;
         id?: string | null;
       }[]

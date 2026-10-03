@@ -14,3 +14,15 @@ export const trimStrings =
     }
     return data
   }
+
+/** beforeValidate: trim each `players.honours` row's `years` and `title` (legacy trimmed both). Skipped under `context.etl`. */
+export const trimHonours: CollectionBeforeValidateHook = ({ data, req }) => {
+  if (!data || req.context?.etl || !Array.isArray(data.honours)) return data
+  data.honours = data.honours.map((h: unknown) => {
+    if (!h || typeof h !== 'object') return h
+    const row = { ...(h as Record<string, unknown>) }
+    for (const f of ['years', 'title']) if (typeof row[f] === 'string') row[f] = (row[f] as string).trim()
+    return row
+  })
+  return data
+}

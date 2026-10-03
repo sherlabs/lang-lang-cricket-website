@@ -5,6 +5,7 @@ import * as migration_20261003_034609_wp3_events from './20261003_034609_wp3_eve
 import * as migration_20261003_042619_wp3_review_fixes from './20261003_042619_wp3_review_fixes';
 import * as migration_20261003_044835_wp4_stories from './20261003_044835_wp4_stories';
 import * as migration_20261003_055903_wp5_players from './20261003_055903_wp5_players';
+import * as migration_20261003_064657_wp5_review_fixes from './20261003_064657_wp5_review_fixes';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261003_055903_wp5_players.up,
     down: migration_20261003_055903_wp5_players.down,
-    name: '20261003_055903_wp5_players'
+    name: '20261003_055903_wp5_players',
+  },
+  {
+    up: migration_20261003_064657_wp5_review_fixes.up,
+    down: migration_20261003_064657_wp5_review_fixes.down,
+    name: '20261003_064657_wp5_review_fixes'
   },
 ];
