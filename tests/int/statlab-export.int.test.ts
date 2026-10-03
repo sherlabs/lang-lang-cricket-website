@@ -22,9 +22,15 @@ describe('GET /statlab/export', () => {
     await destroyTestPayload(payload)
   })
 
-  const call = async (qs = '') => {
+  const raw = async (qs = '') => {
     const { GET } = await import('@/app/(frontend)/statlab/export/route')
     return GET(new Request(`http://localhost:3000/statlab/export${qs}`))
+  }
+  // Follows the canonicalising redirect once, as a browser or CDN client would.
+  const call = async (qs = '') => {
+    const res = await raw(qs)
+    if (res.status !== 308) return res
+    return raw(new URL(res.headers.get('location')!, 'http://localhost:3000').search)
   }
   const lines = async (res: Response) => (await res.text()).trimEnd().split('\r\n')
 
@@ -69,6 +75,13 @@ describe('GET /statlab/export', () => {
   it('never includes a hidden player', async () => {
     const text = await (await call('?scope=team-season&cols=runs,wickets,catches')).text()
     expect(text).not.toMatch(/Hidden Star/)
+  })
+
+  it('redirects a non-canonical query (extras, reordering) to the canonical URL, and serves the canonical one', async () => {
+    const res = await raw('?x=1&cols=runs,wickets&scope=season')
+    expect(res.status).toBe(308)
+    expect(res.headers.get('location')).toBe('/statlab/export?cols=runs,wickets&scope=season')
+    expect((await raw('?cols=runs,wickets&scope=season')).status).toBe(200)
   })
 
   it('garbage params fall back safely to a valid CSV', async () => {

@@ -1,4 +1,4 @@
-import { EXPORT_ROWS, rawFromSearchParams, statLabCsv } from '@/lib/stats/statlab'
+import { EXPORT_ROWS, rawFromSearchParams, statLabCsv, statLabHref } from '@/lib/stats/statlab'
 import { runStatLab } from '@/lib/stats/statlab-queries'
 
 // Public and recomputed per query string, so it is CDN cached (the key is the URL) and bounded
@@ -6,7 +6,13 @@ import { runStatLab } from '@/lib/stats/statlab-queries'
 export const runtime = 'nodejs'
 
 export async function GET(request: Request): Promise<Response> {
-  const { params, result } = await runStatLab(rawFromSearchParams(new URL(request.url).searchParams))
+  const url = new URL(request.url)
+  const { params, result } = await runStatLab(rawFromSearchParams(url.searchParams))
+  // One cache entry per report: redirect any non-canonical query (extras, reordering) to the canonical URL.
+  const canonical = statLabHref('/statlab/export', params)
+  if (`${url.pathname}${url.search}` !== canonical) {
+    return new Response(null, { status: 308, headers: { Location: canonical, 'Cache-Control': 'public, s-maxage=600', 'X-Robots-Tag': 'noindex' } })
+  }
   const { csv, truncated } = statLabCsv(params, result, EXPORT_ROWS)
   return new Response(csv, {
     headers: {

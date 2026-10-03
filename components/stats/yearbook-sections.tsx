@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import { Panel } from '@/components/playhq/player-stats-tables'
-import { SponsorCard, type Sponsor } from '@/components/sponsor-logos'
+import { SponsorCard, dedupeByHighestTier, groupByTier, type Sponsor } from '@/components/sponsor-logos'
 import { GameRows } from '@/components/playhq/game-rows'
 import { SubHeading } from '@/components/stats/sub-heading'
 import type { Game } from '@/lib/playhq/types'
@@ -115,7 +115,7 @@ export function YearbookSponsors({ sponsors }: { sponsors: Sponsor[] }) {
     <section aria-labelledby="yb-sponsors" className="print-section space-y-6">
       <SubHeading id="yb-sponsors" title="Our sponsors" count={sponsors.length} />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {sponsors.map((s) => <SponsorCard key={s.id} sponsor={s} tier="Silver" />)}
+        {dedupeByHighestTier(groupByTier(sponsors).flatMap((g) => g.items)).map((s) => <SponsorCard key={s.id} sponsor={s} tier={s.tier} />)}
       </div>
     </section>
   )

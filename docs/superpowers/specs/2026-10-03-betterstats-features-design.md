@@ -137,7 +137,7 @@ Two native `<select>` pickers (server-provided list of public players, sorted by
 - **Theme.** Colours come from the club theme via `getClub()` (the same CSS-variable channels DESIGN.md describes), converted to rgb strings at render time; no hex baked into the route. Fall back to the default theme values from `club-defaults.ts` if absent.
 - **Assets.** satori cannot render webp or svg, and the club logo is a Blob URL. The route uses a bundled local PNG crest under `public/` or `assets/` when the logo is not PNG/JPEG, and otherwise fetches the logo with a 2s `AbortSignal.timeout` and falls back to the bundled PNG (or no crest) on any failure. "No network at render" therefore holds for the font and fallback, not the logo fetch. The font file is read via `fs`, so `next.config.ts` gets `outputFileTracingIncludes` for this route's font/PNG assets.
 - **Bounded variants.** `?format` is whitelisted to `{og, square}` and `?season` to known season names (from the cached season index); unknown values are ignored (treated as default), so the cache key space is finite.
-- **Caching and hiding.** `Cache-Control: public, s-maxage=3600, stale-while-revalidate=600` for 200; the 404 for hidden/unknown players uses `s-maxage=60` so unhiding recovers quickly. The Players `afterChange` hook `revalidatePath`s `/api/public/players/<slug>/card` so a newly hidden player's card stops being served promptly rather than after the TTL. Route is unauthenticated and CPU-heavy: the same visible-only cached rows, no per-request DB scans beyond one player lookup.
+- **Caching and hiding.** `Cache-Control: public, s-maxage=300` for 200 (short because `revalidatePath` does not purge route-handler responses, so a hidden player must age out of the CDN quickly); the 404 for hidden/unknown players uses `s-maxage=60` so unhiding recovers quickly. The Players `afterChange` hook `revalidatePath`s `/api/public/players/<slug>/card` so a newly hidden player's card stops being served promptly rather than after the TTL. Route is unauthenticated and CPU-heavy: the same visible-only cached rows, no per-request DB scans beyond one player lookup.
 - Profile `generateMetadata` uses it as OG image when the player has no photo.
 
 ### A7 Honour board `/honours`
@@ -266,3 +266,10 @@ Accepted with adjustments (not taken verbatim):
 - 15: qualification defaults are explicitly an unverified assumption, with a data check required in WP-A before defaults are hardcoded.
 
 Rejected: none outright. Not verified here (to be confirmed during implementation): whether `satori` in the installed `next/og` supports the font format chosen, and the exact `revalidateTag` signature.
+
+
+## Known limitations
+
+- The `overs` metric value is balls/6 (true decimal overs) while it displays in cricket notation, so a `min.overs` of 12.3 means 12.3 true overs, not 12.3 cricket overs.
+- Strike rate is career runs over career balls; a few legacy `player_seasons` rows have runs but no recorded balls, which inflates SR for affected players.
+- `/matches` and yearbook results include junior grades (consistent with `/fixtures`), while yearbook stat leaders exclude them by default.

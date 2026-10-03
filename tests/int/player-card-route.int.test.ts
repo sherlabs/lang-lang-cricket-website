@@ -33,7 +33,7 @@ describe('GET /api/public/players/[slug]/card', () => {
     const res = await call(PLANTED.careerLeader.slug)
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('image/png')
-    expect(res.headers.get('cache-control')).toBe('public, s-maxage=3600, stale-while-revalidate=600')
+    expect(res.headers.get('cache-control')).toBe('public, s-maxage=300')
     expect(res.headers.get('x-robots-tag')).toBe('noindex')
     expect(size(Buffer.from(await res.arrayBuffer()))).toEqual({ width: 1200, height: 630 })
   }, 60_000)
