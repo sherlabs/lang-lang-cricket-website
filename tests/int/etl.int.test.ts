@@ -443,6 +443,8 @@ describe('legacy ETL, two stores (preview rehearsal)', () => {
       expect(ctx.report.media['fallback-local'] ?? 0).toBe(0)
       const kinds = ctx.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)
       expect(kinds).toContain('media-fallback-failed players#6')
+      expect(ctx.report.files.get(`media ${PROD}players/headshot.jpg`)).toBe('fallback-failed')
+      expect(ctx.report.media['fallback-failed']).toBe(1)
       expect(ctx.report.counts('players').created).toBe(6)
       const { docs: [photo] } = await payload.find({ collection: 'gallery-photos', where: { legacyUrl: { equals: `${PROD}gallery/photo-01.jpg` } }, overrideAccess: true })
       expect(photo.mimeType).toBe('image/png')

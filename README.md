@@ -167,7 +167,7 @@ See `.env.example` for the full list with comments. In short:
 | `pnpm seed:club --target … --confirm` | Seeds the `club` global from `payload/seed/club-defaults.ts`. |
 | `pnpm seed:demo --target … --confirm` | Demo content from `public/assets` (above). |
 | `pnpm etl --target … [--dry-run \| --confirm] …` | Legacy → Payload ETL (below). |
-| `pnpm verify:cutover --target … [--blob-store-id …]` | Read-only legacy vs Payload comparison (below). |
+| `pnpm verify:cutover --target … [--blob-store-id … [--preview-rehearsal]]` | Read-only legacy vs Payload comparison (below). |
 | `pnpm export:since --target … --since <ISO>` | CSV (`tmp/export-since.csv`) of every row created or updated since a time. Rollback aid. |
 | `pnpm reset:payload-schema --target … --confirm` | `DROP SCHEMA payload CASCADE` and nothing else. |
 | `pnpm payload run payload/scripts/add-gallery-photos.ts -- …` | Bulk-adds gallery photos from a folder. |

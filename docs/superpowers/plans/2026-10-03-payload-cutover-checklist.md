@@ -145,7 +145,7 @@ unset BLOB_READ_WRITE_TOKEN
 export PROD_STORE=<production Blob store id>   # as recorded at the top of this checklist
 ```
 
-(`createdb`/`dropdb` work too where the Postgres client tools are installed.) Then, against the fresh `langlang_rehearsal` with **no Blob token** (no `--preview-rehearsal`: without a token there is no second store):
+(Run it from the clone root, where `pg` resolves. `WITH (FORCE)` needs Postgres ≥ 13; `createdb`/`dropdb` work too where the client tools are installed.) Then, against the fresh `langlang_rehearsal` with **no Blob token** (no `--preview-rehearsal`: without a token there is no second store):
 
 - [ ] `pnpm payload migrate`
 - [ ] `pnpm etl --target 127.0.0.1/langlang_rehearsal --dry-run --blob-store-id $PROD_STORE`, then the same with `--confirm`
@@ -210,7 +210,7 @@ echo "$TARGET"
 
 Here the token's store is the legacy store, so `--blob-store-id` is not needed; the scripts refuse one that differs from the token's store (and refuse `--preview-rehearsal`).
 
-Reports go to `../cutover-reports/`, outside the clone: step 8 deploys from the clone with the Vercel CLI, which applies `.vercelignore` (the repo has none), not `.gitignore`, so a report under `tmp/` could ship legacy data in the deployment source.
+Reports go to `../cutover-reports/`, outside the clone: step 8 deploys from the clone with the Vercel CLI, which (as far as we know) honours `.vercelignore`, not `.gitignore`, and the repo has no `.vercelignore`: a report under `tmp/` could ship legacy data in the deployment source.
 
 | # | Step | Time (UTC) | By |
 |---|---|---|---|

@@ -287,8 +287,15 @@ export async function importFile(
     claim('fallback-reupload', c.filename)
     if (dryRun) return { id: null, action: 'fallback-reupload' }
     const res = await fetch(legacyUrl)
+    // Nothing was uploaded after all: take the row back out of the fallback-reupload count
+    // (writes() sums it), and out of the actions verify reads.
+    const unclaim = (action: string) => {
+      report.media['fallback-reupload'] -= 1
+      report.files.set(claimKey(legacyUrl), action)
+    }
     if (!res.ok) {
       note('media-download-failed', `HTTP ${res.status}; relation left empty`)
+      unclaim('download-failed')
       return fileless('download-failed')
     }
     const bytes = Buffer.from(await res.arrayBuffer())
@@ -309,7 +316,7 @@ export async function importFile(
       // report it and leave the relation empty; verify then fails that row for the operator.
       if (!(err instanceof APIError)) throw err // ValidationError and FileUploadError are APIErrors; a DB failure is not
       note('media-fallback-failed', `re-upload rejected (${(err as Error).message}); relation left empty`)
-      report.files.set(claimKey(legacyUrl), 'fallback-failed')
+      unclaim('fallback-failed')
       return fileless('fallback-failed')
     }
   }
