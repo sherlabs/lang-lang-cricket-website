@@ -128,6 +128,17 @@ describe('submitRsvp', () => {
     expect(inserted()).toBeNull()
   })
 
+  it('rejects an email the collection would refuse (e.g. sam@localhost) with a message, not a throw', async () => {
+    const { submitRsvp } = await import('@/app/(frontend)/events/actions')
+    for (const email of ['sam@localhost', 'a@b']) {
+      expect(await submitRsvp(formData({ eventId: '1', occurrenceDate: ONE_TIME_ISO, response: 'yes', name: 'Sam', email }))).toEqual({
+        error: 'Enter a valid email address, or leave it empty.',
+      })
+    }
+    expect(inserted()).toBeNull()
+    expect(setCookie).toBeNull()
+  })
+
   it('rejects an RSVP for an event that does not exist', async () => {
     events = []
     setup()

@@ -51,9 +51,16 @@ export const EventRsvps: CollectionConfig = {
       type: 'date',
       required: true,
       index: true,
+      // Read-only in the admin: the stock picker works in the browser's timezone and would save
+      // a shifted instant that matches no occurrence. RSVPs are made from the public form.
       admin: {
+        readOnly: true,
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Which session this answer is for (club wall-clock time).',
+        description: 'Which session this answer is for (club wall-clock time). Set by the RSVP form.',
+        components: {
+          Field: '/payload/components/OccurrenceDate#OccurrenceDateField',
+          Cell: '/payload/components/OccurrenceDate#OccurrenceDateCell',
+        },
       },
     },
     { name: 'name', type: 'text', required: true, validate: maxChars(100, { required: true }) },
@@ -62,6 +69,7 @@ export const EventRsvps: CollectionConfig = {
     {
       name: 'response',
       type: 'select',
+      required: true,
       defaultValue: 'yes',
       index: true,
       options: RSVP_RESPONSE_OPTIONS,

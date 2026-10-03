@@ -2,17 +2,7 @@
 
 import { Button, toast, useConfig, useDocumentInfo, useFormFields } from '@payloadcms/ui'
 import { useEffect, useState } from 'react'
-import { formatLongDate } from '../../lib/events-format'
-import { formatLocalTime } from '../../lib/playhq/format'
-import { groupByOccurrence, type OccurrenceGroup, type SummaryRsvp } from './rsvpSummary'
-
-/** `Saturday 12 September 2026 · 6:30 PM` (wall-clock-as-UTC, read in UTC like the public pages). */
-function occurrenceLabel(iso: string): string {
-  const d = new Date(iso)
-  const hhmm = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
-  const time = formatLocalTime(hhmm)
-  return [formatLongDate(d, true), time].filter(Boolean).join(' · ')
-}
+import { groupByOccurrence, occurrenceLabel, type OccurrenceGroup, type SummaryRsvp } from './rsvpSummary'
 
 function TallyBar({ tally }: { tally: { yes: number; no: number } }) {
   const total = tally.yes + tally.no

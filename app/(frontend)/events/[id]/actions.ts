@@ -47,7 +47,9 @@ export async function submitEventPhoto(formData: FormData): Promise<{ error: str
   // under events/pending/ (so a crafted submission cannot claim another entity's blob, which
   // rejecting would then delete), with a safe basename.
   const token = blobToken()
-  if (!url || !isOwnBlobUrl(url, { storeId: blobStoreId(token), prefix: PENDING_PREFIX })) return { error: 'A photo is required.' }
+  const storeId = blobStoreId(token)
+  if (!storeId) return { error: 'Uploads are unavailable.' }
+  if (!url || !isOwnBlobUrl(url, { storeId, prefix: PENDING_PREFIX })) return { error: 'A photo is required.' }
 
   let meta: { contentType?: string; size: number }
   try {

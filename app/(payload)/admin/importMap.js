@@ -3,6 +3,8 @@ import { PendingPhotosField as PendingPhotosField_93497b3a0a16fa2c2dbecfecbb4cbd
 import { RecapPhotosField as RecapPhotosField_1f1ab61c67929f22ec15625b01fd4274 } from '../../../payload/components/RecapPhotosField'
 import { RsvpCountCell as RsvpCountCell_a88d5af1936b5d044ab02ced7c877d6a } from '../../../payload/components/EventCountCells'
 import { PendingCountCell as PendingCountCell_a88d5af1936b5d044ab02ced7c877d6a } from '../../../payload/components/EventCountCells'
+import { OccurrenceDateCell as OccurrenceDateCell_25abc8dee57b7932d6f41e230975ea4b } from '../../../payload/components/OccurrenceDate'
+import { OccurrenceDateField as OccurrenceDateField_25abc8dee57b7932d6f41e230975ea4b } from '../../../payload/components/OccurrenceDate'
 import { PendingQueueBanner as PendingQueueBanner_05b2da68609e100fcf1286a3abdf4e9f } from '../../../payload/components/PendingQueueBanner'
 import { Icon as Icon_25a5cf3faf5e08eebe54818d469bcd19 } from '../../../payload/components/Icon'
 import { Logo as Logo_c7b97bbbec2f12a09b3a4e5bba180831 } from '../../../payload/components/Logo'
@@ -17,6 +19,8 @@ export const importMap = {
   "/payload/components/RecapPhotosField#RecapPhotosField": RecapPhotosField_1f1ab61c67929f22ec15625b01fd4274,
   "/payload/components/EventCountCells#RsvpCountCell": RsvpCountCell_a88d5af1936b5d044ab02ced7c877d6a,
   "/payload/components/EventCountCells#PendingCountCell": PendingCountCell_a88d5af1936b5d044ab02ced7c877d6a,
+  "/payload/components/OccurrenceDate#OccurrenceDateCell": OccurrenceDateCell_25abc8dee57b7932d6f41e230975ea4b,
+  "/payload/components/OccurrenceDate#OccurrenceDateField": OccurrenceDateField_25abc8dee57b7932d6f41e230975ea4b,
   "/payload/components/PendingQueueBanner#PendingQueueBanner": PendingQueueBanner_05b2da68609e100fcf1286a3abdf4e9f,
   "/payload/components/Icon#Icon": Icon_25a5cf3faf5e08eebe54818d469bcd19,
   "/payload/components/Logo#Logo": Logo_c7b97bbbec2f12a09b3a4e5bba180831,

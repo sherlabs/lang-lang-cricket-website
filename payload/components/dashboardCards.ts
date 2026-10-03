@@ -33,7 +33,7 @@ dashboardCards.push(
   {
     collection: 'events',
     label: 'Upcoming events',
-    note: 'One-time events from today, and recurring series still running',
+    note: 'One-time events dated today or later (including any that started earlier today), and recurring series still running',
     where: (): Where => ({
       or: [
         { and: [{ type: { equals: 'one_time' } }, { eventDate: { greater_than_equal: eventToday() } }] },

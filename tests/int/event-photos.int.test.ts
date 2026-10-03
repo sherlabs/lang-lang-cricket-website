@@ -154,11 +154,13 @@ describe('blob delete guards (spec §7.5)', () => {
 describe('admin uploads', () => {
   it('sortFirst: a new photo without sortOrder lands in front of the event photos', async () => {
     await clearCollection(payload, 'event-photos')
-    const a = await payload.create({ collection: 'event-photos', data: { event: pastEvent, sortOrder: 3 }, context: ctx })
-    const b = await payload.create({ collection: 'event-photos', data: { event: pastEvent }, context: ctx })
-    const c = await payload.create({ collection: 'event-photos', data: { event: pastEvent }, context: ctx })
+    const a = await payload.create({ collection: 'event-photos', data: { status: 'approved', event: pastEvent, sortOrder: 3 }, context: ctx })
+    const b = await payload.create({ collection: 'event-photos', data: { status: 'approved', event: pastEvent }, context: ctx })
+    const c = await payload.create({ collection: 'event-photos', data: { status: 'approved', event: pastEvent }, context: ctx })
     expect([a.sortOrder, b.sortOrder, c.sortOrder]).toEqual([3, 2, 1])
-    const etl = await payload.create({ collection: 'event-photos', data: { event: pastEvent }, context: { etl: true, ...ctx } })
+    // status is required (NOT NULL): it cannot be cleared.
+    await expect(payload.update({ collection: 'event-photos', id: a.id, data: { status: null as never }, context: ctx })).rejects.toThrow()
+    const etl = await payload.create({ collection: 'event-photos', data: { status: 'approved', event: pastEvent }, context: { etl: true, ...ctx } })
     expect(etl.sortOrder ?? null).toBeNull()
   })
 

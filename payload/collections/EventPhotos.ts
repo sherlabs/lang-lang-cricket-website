@@ -59,6 +59,7 @@ export const EventPhotos: CollectionConfig = {
     {
       name: 'status',
       type: 'select',
+      required: true,
       defaultValue: 'approved',
       index: true,
       options: [

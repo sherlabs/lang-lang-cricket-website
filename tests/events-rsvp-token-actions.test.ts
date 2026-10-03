@@ -127,6 +127,12 @@ describe('updateRsvpByToken', () => {
     expect(await updateRsvpByToken(TOK, formData({ name: 'P', email: 'x'.repeat(201) }))).toEqual({ error: 'Email must be 200 characters or fewer.' })
     expect(updated()).toBeNull()
   })
+
+  it('rejects an email the collection would refuse (e.g. sam@localhost) with a message, not a throw', async () => {
+    const { updateRsvpByToken } = await import('@/app/(frontend)/events/rsvp/[token]/actions')
+    expect(await updateRsvpByToken(TOK, formData({ name: 'Sam', email: 'sam@localhost' }))).toEqual({ error: 'Enter a valid email address, or leave it empty.' })
+    expect(updated()).toBeNull()
+  })
 })
 
 describe('cancelRsvpByToken', () => {

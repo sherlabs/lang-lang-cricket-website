@@ -153,27 +153,29 @@ describe('event-rsvps', () => {
     const patched = await rest('PATCH', `/event-rsvps/${res.json.doc.id}`, { token: editor, body: { editToken: 'stolen', name: 'Pat S' } })
     expect(patched.json.doc).toMatchObject({ name: 'Pat S', editToken: token })
     // Local API with overrideAccess (server actions): a supplied token is kept on create, reset on update.
-    const local = await payload.create({ collection: 'event-rsvps', data: { event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'Lee', editToken: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }, context: ctx })
+    const local = await payload.create({ collection: 'event-rsvps', data: { response: 'yes', event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'Lee', editToken: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }, context: ctx })
     expect(local.editToken).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
     const upd = await payload.update({ collection: 'event-rsvps', id: local.id, data: { editToken: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }, context: ctx })
     expect(upd.editToken).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
   })
 
   it('stores occurrenceDate verbatim to the millisecond', async () => {
-    const doc = await payload.create({ collection: 'event-rsvps', data: { event: eventId, occurrenceDate: '2026-11-15T19:00:00.123Z', name: 'Ms' }, context: ctx })
+    const doc = await payload.create({ collection: 'event-rsvps', data: { response: 'yes', event: eventId, occurrenceDate: '2026-11-15T19:00:00.123Z', name: 'Ms' }, context: ctx })
     expect(doc.occurrenceDate).toBe('2026-11-15T19:00:00.123Z')
   })
 
   it('clears the meal on a "no" (admin-side meal rule)', async () => {
     const doc = await payload.create({ collection: 'event-rsvps', data: { event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'No', response: 'no', meal: 'Beef' }, context: ctx })
     expect(doc.meal).toBe('')
-    const yes = await payload.create({ collection: 'event-rsvps', data: { event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'Yes', meal: 'Beef' }, context: ctx })
+    const yes = await payload.create({ collection: 'event-rsvps', data: { response: 'yes', event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'Yes', meal: 'Beef' }, context: ctx })
     const flipped = await payload.update({ collection: 'event-rsvps', id: yes.id, data: { response: 'no' }, context: ctx })
     expect(flipped.meal).toBe('')
+    // response is required (NOT NULL): it cannot be cleared.
+    await expect(payload.update({ collection: 'event-rsvps', id: yes.id, data: { response: null as never }, context: ctx })).rejects.toThrow()
   })
 
   it('caps text lengths and validates email; the ETL bypasses both', async () => {
-    const base = { event: eventId, occurrenceDate: '2026-11-15T19:00:00.000Z' }
+    const base = { event: eventId, response: 'yes' as const, occurrenceDate: '2026-11-15T19:00:00.000Z' }
     expect((await rest('POST', '/event-rsvps', { token: editor, body: { ...base, name: 'x'.repeat(101) } })).status).toBe(400)
     expect((await rest('POST', '/event-rsvps', { token: editor, body: { ...base, name: 'A', note: 'x'.repeat(1001) } })).status).toBe(400)
     expect((await rest('POST', '/event-rsvps', { token: editor, body: { ...base, name: 'A', email: 'nope' } })).status).toBe(400)
@@ -192,7 +194,7 @@ describe('cascade delete', () => {
     const keep = await payload.create({ collection: 'events', data: oneTime({ title: 'Keep' }) as never, context: ctx })
     const gone = await payload.create({ collection: 'events', data: oneTime({ title: 'Gone' }) as never, context: ctx })
     for (const ev of [keep, gone]) {
-      await payload.create({ collection: 'event-rsvps', data: { event: ev.id, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'R' }, context: ctx })
+      await payload.create({ collection: 'event-rsvps', data: { response: 'yes', event: ev.id, occurrenceDate: '2026-11-15T19:00:00.000Z', name: 'R' }, context: ctx })
       await payload.create({ collection: 'event-photos', data: { event: ev.id, caption: 'p', status: 'pending' }, context: ctx })
     }
     const res = await rest('DELETE', `/events/${gone.id}`, { token: editor })
@@ -258,7 +260,7 @@ describe('public query layer against Postgres (lib/events-queries)', () => {
   })
 
   it('getRsvpByToken finds a row by token and never exposes the token in the domain shape', async () => {
-    const row = await payload.create({ collection: 'event-rsvps', data: { event: one, occurrenceDate: '2026-11-05T18:00:00.000Z', name: 'Tok' }, context: ctx })
+    const row = await payload.create({ collection: 'event-rsvps', data: { response: 'yes', event: one, occurrenceDate: '2026-11-05T18:00:00.000Z', name: 'Tok' }, context: ctx })
     const { getRsvpByToken } = await import('@/lib/events-queries')
     const found = await getRsvpByToken(row.editToken as string)
     expect(found).toMatchObject({ id: row.id, eventId: one, name: 'Tok' })

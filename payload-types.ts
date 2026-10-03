@@ -384,7 +384,7 @@ export interface EventPhoto {
    * Lower numbers show first. Leave empty to put the photo at the front.
    */
   sortOrder?: number | null;
-  status?: ('approved' | 'pending') | null;
+  status: 'approved' | 'pending';
   /**
    * Who sent it in from the event page (admin context only).
    */
@@ -412,13 +412,13 @@ export interface EventRsvp {
   id: number;
   event: number | Event;
   /**
-   * Which session this answer is for (club wall-clock time).
+   * Which session this answer is for (club wall-clock time). Set by the RSVP form.
    */
   occurrenceDate: string;
   name: string;
   email?: string | null;
   note?: string | null;
-  response?: ('yes' | 'no') | null;
+  response: 'yes' | 'no';
   /**
    * The dinner option chosen when the RSVP was made; empty means no dinner.
    */

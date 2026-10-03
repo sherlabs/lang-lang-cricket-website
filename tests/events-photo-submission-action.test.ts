@@ -142,7 +142,7 @@ describe('submitEventPhoto', () => {
     process.env.PAYLOAD_BLOB_FAKE = ''
     try {
       const { submitEventPhoto } = await import('@/app/(frontend)/events/[id]/actions')
-      expect(await submitEventPhoto(formData({ eventId: '1', url: `${STORE}/events/pending/a.jpg` }))).toEqual({ error: 'A photo is required.' })
+      expect(await submitEventPhoto(formData({ eventId: '1', url: `${STORE}/events/pending/a.jpg` }))).toEqual({ error: 'Uploads are unavailable.' })
     } finally {
       process.env.PAYLOAD_BLOB_FAKE = '1'
     }

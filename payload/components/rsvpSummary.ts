@@ -1,8 +1,19 @@
+import { formatLongDate } from '../../lib/events-format'
+import { formatLocalTime } from '../../lib/playhq/format'
+
 /**
  * Pure grouping for `RsvpSummaryField` (spec §9), ported from the old admin event page:
  * one group per occurrence (in date order), going / not going lists, the yes/no tally,
  * dinner counts by meal (first-appearance order) and a "no dinner" count among the going.
  */
+/** `Saturday 12 September 2026 · 6:30 PM` (wall-clock-as-UTC, read in UTC like the public pages). */
+export function occurrenceLabel(iso: string): string {
+  const d = new Date(iso)
+  const hhmm = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
+  const time = formatLocalTime(hhmm)
+  return [formatLongDate(d, true), time].filter(Boolean).join(' · ')
+}
+
 export type SummaryRsvp = {
   id: number
   occurrenceDate: string

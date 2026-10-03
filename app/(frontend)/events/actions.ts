@@ -16,6 +16,7 @@ import {
 } from '@/lib/rsvp-cookie'
 import { isRsvpResponse } from '@/lib/rsvp-response'
 import { eventMealOptions, resolveMeal } from '@/lib/events-meal'
+import { isEmailOrEmpty } from '@/payload/fields/validators'
 
 /** Length caps (spec §3.9); the collection validators enforce the same limits. */
 const RSVP_CAPS = { name: 100, email: 200, note: 1000 } as const
@@ -24,6 +25,9 @@ function textCapError(fields: { name: string; email: string; note: string }): st
   if (fields.name.length > RSVP_CAPS.name) return `Name must be ${RSVP_CAPS.name} characters or fewer.`
   if (fields.email.length > RSVP_CAPS.email) return `Email must be ${RSVP_CAPS.email} characters or fewer.`
   if (fields.note.length > RSVP_CAPS.note) return `Note must be ${RSVP_CAPS.note} characters or fewer.`
+  // Same rule as the collection's email validator, checked first so a value the browser's
+  // type="email" accepts (e.g. `sam@localhost`) returns a message instead of throwing.
+  if (!isEmailOrEmpty(fields.email)) return 'Enter a valid email address, or leave it empty.'
   return null
 }
 

@@ -207,7 +207,7 @@ describe('access: events (WP3)', () => {
     rsvpId = (
       await payload.create({
         collection: 'event-rsvps',
-        data: { event: eventId, occurrenceDate: '2026-09-12T18:30:00.000Z', name: 'Pat Private', email: 'pat@example.com', note: 'secret', editToken: TOKEN },
+        data: { event: eventId, response: 'yes', occurrenceDate: '2026-09-12T18:30:00.000Z', name: 'Pat Private', email: 'pat@example.com', note: 'secret', editToken: TOKEN },
         context: ctx,
       })
     ).id
