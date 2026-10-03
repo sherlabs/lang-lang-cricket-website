@@ -1,7 +1,4 @@
 import type { MetadataRoute } from 'next'
-import { eq } from 'drizzle-orm'
-import { db } from '@/db'
-import { players } from '@/db/schema'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 
@@ -35,7 +32,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const payload = await getPayloadClient()
     const [playerRows, storyRows, eventRows] = await Promise.all([
-      db.select({ slug: players.slug, updatedAt: players.updatedAt }).from(players).where(eq(players.hidden, false)),
+      // Public filter stated here (the Local API runs with overrideAccess): not hidden.
+      payload
+        .find({
+          collection: 'players',
+          where: { hidden: { equals: false } },
+          pagination: false,
+          depth: 0,
+          joins: false,
+          select: { slug: true, updatedAt: true },
+          sort: 'id',
+        })
+        .then((r) => r.docs.map((d) => ({ slug: d.slug, updatedAt: new Date(d.updatedAt) }))),
       // Public filter stated here (the Local API runs with overrideAccess): published only.
       payload
         .find({

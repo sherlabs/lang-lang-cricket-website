@@ -3,44 +3,19 @@ import { createPayloadFake, type PayloadFake } from './helpers/payload-fake'
 
 /**
  * Spec §14 / A8: the sitemap states its own public filters (the Local API runs with
- * overrideAccess), and the events query passes `joins: false` so RSVPs and pending photos
+ * overrideAccess), and the events and players queries pass `joins: false` so RSVPs and pending photos
  * are never loaded.
  */
 let fake: PayloadFake
 vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => fake }))
 vi.mock('@/lib/club', () => ({ getClub: async () => ({ siteUrl: 'https://club.test' }) }))
 
-// drizzle `eq` → a plain record, so the where clauses can be asserted without SQL objects.
-vi.mock('drizzle-orm', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('drizzle-orm')>()),
-  eq: (col: { name: string }, val: unknown) => ({ col: col.name, val }),
-}))
-
-type Select = { table: string; where: unknown }
-const selects: Select[] = []
-const ROWS: Record<string, unknown[]> = {
-  players: [{ slug: 'pat', updatedAt: new Date('2026-02-01T00:00:00.000Z') }],
-}
-vi.mock('@/db', async () => {
-  const { getTableName } = await import('drizzle-orm')
-  return {
-    db: {
-      select: () => ({
-        from: (table: Parameters<typeof getTableName>[0]) => ({
-          where: (where: unknown) => {
-            const name = getTableName(table)
-            selects.push({ table: name, where })
-            return Promise.resolve(ROWS[name] ?? [])
-          },
-        }),
-      }),
-    },
-  }
-})
-
 beforeEach(() => {
-  selects.length = 0
   fake = createPayloadFake({
+    players: [
+      { id: 1, slug: 'pat', hidden: false, updatedAt: '2026-02-01T00:00:00.000Z' },
+      { id: 2, slug: 'secret', hidden: true, updatedAt: '2026-02-02T00:00:00.000Z' },
+    ],
     events: [{ id: 7, createdAt: '2025-12-01T00:00:00.000Z' }],
     stories: [
       { id: 1, slug: 'first-win', status: 'published', updatedAt: '2026-03-01T00:00:00.000Z' },
@@ -50,11 +25,16 @@ beforeEach(() => {
 })
 
 describe('sitemap', () => {
-  it('keeps the players filter and lists their pages', async () => {
+  it('lists only players that are not hidden (its own where, joins:false), with lastModified = updatedAt', async () => {
     const { default: sitemap } = await import('@/app/sitemap')
     const entries = await sitemap()
-    expect(selects).toEqual([{ table: 'players', where: { col: 'hidden', val: false } }])
-    expect(entries.map((e) => e.url)).toContain('https://club.test/players/pat')
+    const calls = fake.callsTo('find', 'players')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args).toMatchObject({ where: { hidden: { equals: false } }, joins: false, depth: 0, pagination: false, select: { slug: true, updatedAt: true } })
+    const urls = entries.map((e) => e.url)
+    expect(urls).toContain('https://club.test/players/pat')
+    expect(urls).not.toContain('https://club.test/players/secret')
+    expect(entries.find((e) => e.url === 'https://club.test/players/pat')?.lastModified).toEqual(new Date('2026-02-01T00:00:00.000Z'))
   })
 
   it('lists only published stories (its own where), with lastModified = updatedAt', async () => {

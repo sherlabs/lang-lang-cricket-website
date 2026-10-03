@@ -15,6 +15,10 @@ import { Events } from './payload/collections/Events'
 import { GalleryPhotos } from './payload/collections/GalleryPhotos'
 import { Media } from './payload/collections/Media'
 import { People } from './payload/collections/People'
+import { PlayerAliases } from './payload/collections/PlayerAliases'
+import { Players } from './payload/collections/Players'
+import { PlayerSeasons } from './payload/collections/PlayerSeasons'
+import { PlayerSyncRuns } from './payload/collections/PlayerSyncRuns'
 import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
 import { Users } from './payload/collections/Users'
@@ -47,7 +51,7 @@ export default buildConfig({
     },
   },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns],
   globals: [Club, SiteSettings],
   editor: lexicalEditor(),
   db: postgresAdapter({

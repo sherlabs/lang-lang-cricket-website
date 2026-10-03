@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { battingView, bowlingView, careerTotals, isActive, seasonYears, splitPlayers, teamLabel, yearsLabel, initials } from '@/lib/players/view'
 import { EMPTY_COUNTS } from '@/lib/players/season-math'
-import type { Player } from '@/db/schema'
+import type { Player } from '@/lib/domain'
 
 const base: Player = {
   id: 1, slug: 'jo-smith', firstName: 'Jo', lastName: 'Smith', photoUrl: '', bio: '', source: 'playhq', manualYears: '',

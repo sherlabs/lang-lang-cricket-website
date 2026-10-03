@@ -10,11 +10,12 @@ import { makeUniqueSlug } from '../../lib/slugify'
  * - `context.etl`: keep the supplied slug verbatim.
  */
 export const uniqueSlug =
-  (collection: CollectionSlug, titleField = 'title'): FieldHook =>
+  (collection: CollectionSlug, titleField: string | ((data: Record<string, unknown>) => string) = 'title'): FieldHook =>
   async ({ value, operation, originalDoc, data, req }) => {
     if (req.context?.etl) return value
     if (operation === 'create') {
-      const title = String((data as Record<string, unknown> | undefined)?.[titleField] ?? '')
+      const d = (data ?? {}) as Record<string, unknown>
+      const title = typeof titleField === 'function' ? titleField(d) : String(d[titleField] ?? '')
       return makeUniqueSlug(title, async (slug) => {
         const { totalDocs } = await req.payload.count({ collection, where: { slug: { equals: slug } }, overrideAccess: true, req })
         return totalDocs > 0

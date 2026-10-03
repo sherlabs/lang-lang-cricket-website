@@ -1,7 +1,7 @@
 /**
  * Payload doc → domain type (spec §14). Pure; no Payload runtime import.
  */
-import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, Person, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
+import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, Person, Player, PlayerSeason, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
 import type {
   Announcement as AnnouncementDoc,
   Document as DocumentDoc,
@@ -10,6 +10,8 @@ import type {
   GalleryPhoto as GalleryPhotoDoc,
   Media,
   Person as PersonDoc,
+  Player as PlayerDoc,
+  PlayerSeason as PlayerSeasonDoc,
   Sponsor as SponsorDoc,
   Story as StoryDoc,
 } from '@/payload-types'
@@ -121,4 +123,48 @@ export const toStory = (d: StoryDoc): Story => ({
   reviewedAt: dateOrNull(d.reviewedAt),
   createdAt: date(d.createdAt),
   updatedAt: date(d.updatedAt),
+})
+
+const num = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+
+export const toPlayer = (d: PlayerDoc): Player => ({
+  id: d.id,
+  slug: d.slug ?? '',
+  firstName: d.firstName,
+  lastName: d.lastName,
+  photoUrl: mediaUrl(d.photo),
+  bio: d.bio ?? '',
+  source: d.source === 'playhq' ? 'playhq' : 'manual',
+  manualYears: d.manualYears ?? '',
+  activeOverride: d.activeOverride === 'active' || d.activeOverride === 'past' ? d.activeOverride : null,
+  isActiveDerived: Boolean(d.isActiveDerived),
+  hidden: Boolean(d.hidden),
+  createdAt: date(d.createdAt),
+  updatedAt: date(d.updatedAt),
+})
+
+export const toPlayerSeason = (d: PlayerSeasonDoc): PlayerSeason => ({
+  id: d.id,
+  playerId: relId(d.player),
+  seasonName: d.seasonName,
+  seasonOrder: num(d.seasonOrder),
+  teamId: d.teamId,
+  teamName: d.teamName,
+  gradeName: d.gradeName ?? null,
+  games: num(d.games),
+  batInnings: num(d.batInnings),
+  batNotOuts: num(d.batNotOuts),
+  batRuns: num(d.batRuns),
+  batHighScore: num(d.batHighScore),
+  batHighScoreNotOut: Boolean(d.batHighScoreNotOut),
+  batBalls: num(d.batBalls),
+  batFours: num(d.batFours),
+  batSixes: num(d.batSixes),
+  bowlBalls: num(d.bowlBalls),
+  bowlMaidens: num(d.bowlMaidens),
+  bowlRuns: num(d.bowlRuns),
+  bowlWickets: num(d.bowlWickets),
+  bowlBestWickets: num(d.bowlBestWickets),
+  bowlBestRuns: num(d.bowlBestRuns),
+  catches: num(d.catches),
 })

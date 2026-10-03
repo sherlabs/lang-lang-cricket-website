@@ -78,6 +78,10 @@ export interface Config {
     'event-rsvps': EventRsvp;
     'event-photos': EventPhoto;
     stories: Story;
+    players: Player;
+    'player-aliases': PlayerAlias;
+    'player-seasons': PlayerSeason;
+    'player-sync-runs': PlayerSyncRun;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -87,6 +91,10 @@ export interface Config {
     events: {
       photos: 'event-photos';
       rsvps: 'event-rsvps';
+    };
+    players: {
+      seasons: 'player-seasons';
+      aliases: 'player-aliases';
     };
   };
   collectionsSelect: {
@@ -101,6 +109,10 @@ export interface Config {
     'event-rsvps': EventRsvpsSelect<false> | EventRsvpsSelect<true>;
     'event-photos': EventPhotosSelect<false> | EventPhotosSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
+    players: PlayersSelect<false> | PlayersSelect<true>;
+    'player-aliases': PlayerAliasesSelect<false> | PlayerAliasesSelect<true>;
+    'player-seasons': PlayerSeasonsSelect<false> | PlayerSeasonsSelect<true>;
+    'player-sync-runs': PlayerSyncRunsSelect<false> | PlayerSyncRunsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -481,6 +493,142 @@ export interface Story {
   createdAt: string;
 }
 /**
+ * Senior players are synced from PlayHQ every night. Add photos, bios and honours here; they're never overwritten by the sync. Create a player to add someone from before PlayHQ.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "players".
+ */
+export interface Player {
+  id: number;
+  firstName: string;
+  lastName: string;
+  displayName?: string | null;
+  /**
+   * Set from the name when the player is created; never changes.
+   */
+  slug?: string | null;
+  /**
+   * PlayHQ players come from the nightly sync and cannot be deleted.
+   */
+  source?: ('playhq' | 'manual') | null;
+  /**
+   * Shown square on the players page; use the crop tool to frame the face.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * Plain text. Leave a blank line between paragraphs.
+   */
+  bio?: string | null;
+  /**
+   * Years played, e.g. 1978–1992. Shown when the player has no synced seasons.
+   */
+  manualYears?: string | null;
+  /**
+   * Leave empty to decide from the synced seasons (played this season or last = active).
+   */
+  activeOverride?: ('active' | 'past') | null;
+  /**
+   * Set by the sync: played in the latest two seasons.
+   */
+  isActiveDerived?: boolean | null;
+  /**
+   * Hidden players are left off the public site.
+   */
+  hidden?: boolean | null;
+  /**
+   * Drag to reorder. Shown on the player page in this order.
+   */
+  honours?:
+    | {
+        years: string;
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Written by the PlayHQ sync.
+   */
+  seasons?: {
+    docs?: (number | PlayerSeason)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * PlayHQ names that map to this player. Merging moves them.
+   */
+  aliases?: {
+    docs?: (number | PlayerAlias)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Written by the PlayHQ sync; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-seasons".
+ */
+export interface PlayerSeason {
+  id: number;
+  player: number | Player;
+  seasonName: string;
+  /**
+   * 0 = newest senior season group.
+   */
+  seasonOrder: number;
+  teamId: string;
+  teamName: string;
+  gradeName?: string | null;
+  games: number;
+  batInnings: number;
+  batNotOuts: number;
+  batRuns: number;
+  batHighScore: number;
+  batBalls: number;
+  batFours: number;
+  batSixes: number;
+  bowlBalls: number;
+  bowlMaidens: number;
+  bowlRuns: number;
+  bowlWickets: number;
+  bowlBestWickets: number;
+  bowlBestRuns: number;
+  catches: number;
+  batHighScoreNotOut?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * PlayHQ name keys (first|last, lower case) and the player each one belongs to. Normally managed by sync and merge.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-aliases".
+ */
+export interface PlayerAlias {
+  id: number;
+  nameKey: string;
+  player: number | Player;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-sync-runs".
+ */
+export interface PlayerSyncRun {
+  id: number;
+  startedAt: string;
+  finishedAt?: string | null;
+  status?: ('running' | 'ok' | 'error') | null;
+  playersCreated?: number | null;
+  seasonRows?: number | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -547,6 +695,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stories';
         value: number | Story;
+      } | null)
+    | ({
+        relationTo: 'players';
+        value: number | Player;
+      } | null)
+    | ({
+        relationTo: 'player-aliases';
+        value: number | PlayerAlias;
+      } | null)
+    | ({
+        relationTo: 'player-seasons';
+        value: number | PlayerSeason;
+      } | null)
+    | ({
+        relationTo: 'player-sync-runs';
+        value: number | PlayerSyncRun;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -806,6 +970,88 @@ export interface StoriesSelect<T extends boolean = true> {
   reviewedAt?: T;
   editToken?: T;
   viewToken?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "players_select".
+ */
+export interface PlayersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  displayName?: T;
+  slug?: T;
+  source?: T;
+  photo?: T;
+  bio?: T;
+  manualYears?: T;
+  activeOverride?: T;
+  isActiveDerived?: T;
+  hidden?: T;
+  honours?:
+    | T
+    | {
+        years?: T;
+        title?: T;
+        id?: T;
+      };
+  seasons?: T;
+  aliases?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-aliases_select".
+ */
+export interface PlayerAliasesSelect<T extends boolean = true> {
+  nameKey?: T;
+  player?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-seasons_select".
+ */
+export interface PlayerSeasonsSelect<T extends boolean = true> {
+  player?: T;
+  seasonName?: T;
+  seasonOrder?: T;
+  teamId?: T;
+  teamName?: T;
+  gradeName?: T;
+  games?: T;
+  batInnings?: T;
+  batNotOuts?: T;
+  batRuns?: T;
+  batHighScore?: T;
+  batBalls?: T;
+  batFours?: T;
+  batSixes?: T;
+  bowlBalls?: T;
+  bowlMaidens?: T;
+  bowlRuns?: T;
+  bowlWickets?: T;
+  bowlBestWickets?: T;
+  bowlBestRuns?: T;
+  catches?: T;
+  batHighScoreNotOut?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-sync-runs_select".
+ */
+export interface PlayerSyncRunsSelect<T extends boolean = true> {
+  startedAt?: T;
+  finishedAt?: T;
+  status?: T;
+  playersCreated?: T;
+  seasonRows?: T;
+  error?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -1,4 +1,4 @@
-import type { PlayerSeason } from '@/db/schema'
+import type { PlayerSeason } from '@/lib/domain'
 import { pickCounts, type SeasonCounts } from '@/lib/players/season-math'
 import { battingView, bowlingView, seasonYears, teamLabel } from '@/lib/players/view'
 import { Panel } from '@/components/playhq/player-stats-tables'

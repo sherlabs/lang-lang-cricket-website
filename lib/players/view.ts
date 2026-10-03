@@ -1,4 +1,4 @@
-import type { Player, PlayerSeason } from '@/db/schema'
+import type { Player, PlayerSeason } from '@/lib/domain'
 import { battingAverages, bowlingAverages } from '@/lib/playhq/players'
 import { EMPTY_COUNTS, combineCounts, pickCounts, type SeasonCounts } from './season-math'
 

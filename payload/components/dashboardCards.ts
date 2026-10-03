@@ -5,7 +5,7 @@ import { nowAsEventClock } from '../../lib/event-occurrences'
  * Dashboard count cards (spec §9). Each WP appends the cards for its own collections;
  * no card may reference a collection that is not registered yet.
  * WP2: documents, gallery photos, sponsors, people. WP3: upcoming events, pending event photos.
- * WP4: published stories, pending stories.
+ * WP4: published stories, pending stories. WP5: players.
  */
 export type DashboardCard = {
   collection: CollectionSlug
@@ -67,3 +67,9 @@ dashboardCards.push(
     listQuery: 'where[status][equals]=pending',
   },
 )
+
+dashboardCards.push({
+  collection: 'players',
+  label: 'Players',
+  note: 'Synced from PlayHQ every night, plus past players added here',
+})

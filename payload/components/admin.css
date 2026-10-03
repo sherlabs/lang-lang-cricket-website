@@ -361,3 +361,66 @@
   margin: 0;
   justify-self: start;
 }
+
+/* Players (PlayerSyncPanel, MergePlayerField) */
+.club-sync-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base);
+  margin-bottom: var(--base);
+  padding: var(--base);
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: var(--style-radius-m, 8px);
+}
+.club-sync-panel .club-field__title {
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+.club-sync-panel p {
+  margin: 0;
+}
+.club-pill {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--theme-elevation-100);
+  color: var(--theme-elevation-800);
+}
+.club-pill--ok {
+  background: var(--club-gold);
+  color: var(--club-black);
+}
+.club-pill--error {
+  background: var(--theme-error-100);
+  color: var(--theme-error-750, var(--theme-error-500));
+}
+.club-spinner {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.375rem;
+  vertical-align: -0.125rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: club-spin 0.8s linear infinite;
+}
+@keyframes club-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.club-merge-player__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.club-merge-player__select {
+  flex: 1 1 18rem;
+  max-width: 28rem;
+}

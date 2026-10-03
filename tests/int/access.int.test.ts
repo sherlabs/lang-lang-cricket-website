@@ -412,3 +412,102 @@ describe('access: stories (WP4)', () => {
     expect(res.status).toBe(503)
   })
 })
+
+describe('access: players (WP5)', () => {
+  let payload: Payload
+  let editor: string
+  let admin: string
+  let shownId: number
+  let hiddenId: number
+  let playhqId: number
+
+  beforeAll(async () => {
+    payload = await getTestPayload()
+    const { resetPlayers } = await import('./players-helpers')
+    await resetPlayers(payload)
+    editor = await tokenFor(payload, 'editor', 'wp5-editor@example.com')
+    admin = await tokenFor(payload, 'admin', 'wp5-admin@example.com')
+    const { playerTables } = await import('@/lib/players/db')
+    const t = playerTables(payload)
+    const now = new Date().toISOString()
+    const insert = async (slug: string, hidden: boolean) => {
+      const [row] = await payload.db.drizzle
+        .insert(t.players)
+        .values({ slug, firstName: slug, lastName: 'X', displayName: `${slug} X`, source: 'playhq', hidden, createdAt: now, updatedAt: now })
+        .returning({ id: t.players.id })
+      await payload.db.drizzle.insert(t.player_aliases).values({ nameKey: `${slug}|x`, player: row.id, createdAt: now, updatedAt: now })
+      await payload.db.drizzle
+        .insert(t.player_seasons)
+        .values({ player: row.id, seasonName: 'Summer 2025/26', seasonOrder: 0, teamId: 'T', teamName: 'Lang Lang T', createdAt: now, updatedAt: now })
+      return row.id as number
+    }
+    shownId = await insert('shown', false)
+    hiddenId = await insert('hidden', true)
+    playhqId = shownId
+    await payload.db.drizzle
+      .insert(t.player_sync_runs)
+      .values({ status: 'ok', startedAt: now, finishedAt: now, createdAt: now, updatedAt: now })
+  })
+
+  afterAll(async () => {
+    await destroyTestPayload(payload)
+  })
+
+  it('anonymous REST cannot create, update or delete players', async () => {
+    expect((await rest('POST', '/players', { body: { firstName: 'A', lastName: 'B' } })).status).toBe(403)
+    expect((await rest('PATCH', `/players/${shownId}`, { body: { bio: 'x' } })).status).toBe(403)
+    expect((await rest('DELETE', `/players/${shownId}`)).status).toBe(403)
+  })
+
+  it('anonymous REST reads only players that are not hidden', async () => {
+    const list = await rest('GET', '/players?depth=0')
+    expect(list.json.docs.map((d: { id: number }) => d.id)).toEqual([shownId])
+    expect((await rest('GET', `/players/${hiddenId}`)).status).toBe(404)
+  })
+
+  it('GET /api/player-seasons?where[player][equals]=<hidden player id> → no docs', async () => {
+    const hidden = await rest('GET', `/player-seasons?where[player][equals]=${hiddenId}&depth=0`)
+    expect(hidden.status).toBe(200)
+    expect(hidden.json.docs).toEqual([])
+    const shown = await rest('GET', `/player-seasons?where[player][equals]=${shownId}&depth=0`)
+    expect(shown.json.docs).toHaveLength(1)
+    const all = await rest('GET', '/player-seasons?depth=0')
+    expect(all.json.docs.map((d: { player: number }) => d.player)).toEqual([shownId])
+    // Staff see both.
+    expect((await rest('GET', '/player-seasons?depth=0', { token: editor })).json.docs).toHaveLength(2)
+  })
+
+  it('anonymous REST cannot read aliases or sync runs; staff can', async () => {
+    for (const c of ['player-aliases', 'player-sync-runs']) {
+      expect((await rest('GET', `/${c}`)).status, c).toBe(403)
+      expect((await rest('GET', `/${c}`, { token: editor })).json.docs.length, c).toBeGreaterThan(0)
+    }
+  })
+
+  it('nobody writes seasons or sync runs over REST, not even an admin; aliases are admin-only', async () => {
+    const season = { player: shownId, seasonName: 's', seasonOrder: 0, teamId: 'Z', teamName: 'z' }
+    expect((await rest('POST', '/player-seasons', { token: admin, body: season })).status).toBe(403)
+    expect((await rest('POST', '/player-sync-runs', { token: admin, body: { startedAt: new Date().toISOString() } })).status).toBe(403)
+    expect((await rest('POST', '/player-aliases', { token: editor, body: { nameKey: 'a|b', player: shownId } })).status).toBe(403)
+    expect((await rest('POST', '/player-aliases', { token: admin, body: { nameKey: 'a|b', player: shownId } })).status).toBe(201)
+  })
+
+  it('an editor PATCHing players.source=manual leaves it playhq, so the DELETE is still refused', async () => {
+    const patch = await rest('PATCH', `/players/${playhqId}`, { token: editor, body: { source: 'manual', slug: 'renamed', isActiveDerived: true } })
+    expect(patch.status).toBe(200)
+    const after = await payload.findByID({ collection: 'players', id: playhqId, depth: 0, joins: false })
+    expect(after).toMatchObject({ source: 'playhq', slug: 'shown', isActiveDerived: false })
+    expect((await rest('DELETE', `/players/${playhqId}`, { token: editor })).status).toBe(403)
+  })
+
+  it('the merge endpoint and the admin sync route need a staff session', async () => {
+    expect((await rest('POST', `/players/${shownId}/merge`, { body: { targetId: hiddenId } })).status).toBe(401)
+    const { POST } = await import('@/app/api/admin/players-sync/route')
+    const res = await POST(new Request('http://localhost:3000/api/admin/players-sync', { method: 'POST', headers: { origin: 'http://localhost:3000' } }))
+    expect(res.status).toBe(401)
+    const foreign = await POST(
+      new Request('http://localhost:3000/api/admin/players-sync', { method: 'POST', headers: { origin: 'https://evil.example', Authorization: `JWT ${editor}` } }),
+    )
+    expect(foreign.status).toBe(403)
+  })
+})

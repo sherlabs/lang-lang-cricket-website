@@ -1,10 +1,12 @@
-import type { Player, PlayerSeason } from '@/db/schema'
+import type { PlayerSeason } from '@/lib/domain'
 import { combineCounts, pickCounts, type SeasonCounts } from './season-math'
 
-type P = Pick<Player, 'photoUrl' | 'bio' | 'isActiveDerived'>
+/** The merge-relevant fields of a Payload player doc (`photo` = media id at depth 0). */
+type P = { photo: number | null; bio: string; isActiveDerived: boolean }
+type Row = Pick<PlayerSeason, 'id' | 'teamId'> & SeasonCounts
 
 export type MergePlan = {
-  targetPatch: { photoUrl?: string; bio?: string; isActiveDerived: boolean }
+  targetPatch: { photo?: number; bio?: string; isActiveDerived: boolean }
   /** Source rows for teams the target never played in — reassigned to the target. */
   moveSeasonIds: number[]
   /** Same teamId on both sides: update the target row with the combined counts, delete the source row. */
@@ -15,14 +17,14 @@ export type MergePlan = {
  * How to fold `source` into `target`. Season rows are unique per (player, team), so a team both
  * played for is combined into one row. Photo and bio only fill gaps; derived activity is OR-ed.
  */
-export function planMerge(source: P, target: P, sourceSeasons: PlayerSeason[], targetSeasons: PlayerSeason[]): MergePlan {
+export function planMerge(source: P, target: P, sourceSeasons: Row[], targetSeasons: Row[]): MergePlan {
   const targetByTeam = new Map(targetSeasons.map((r) => [r.teamId, r]))
   const plan: MergePlan = {
     targetPatch: { isActiveDerived: source.isActiveDerived || target.isActiveDerived },
     moveSeasonIds: [],
     combine: [],
   }
-  if (!target.photoUrl && source.photoUrl) plan.targetPatch.photoUrl = source.photoUrl
+  if (!target.photo && source.photo) plan.targetPatch.photo = source.photo
   if (!target.bio && source.bio) plan.targetPatch.bio = source.bio
   for (const r of sourceSeasons) {
     const t = targetByTeam.get(r.teamId)

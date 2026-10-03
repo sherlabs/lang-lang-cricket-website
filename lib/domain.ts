@@ -4,7 +4,7 @@
  * are resolved to URL strings so presentational components are unchanged.
  * Domain types never carry secrets (tokens, private emails).
  *
- * WP2: content types. WP3: events. WP4: stories. Players move here in WP5.
+ * WP2: content types. WP3: events. WP4: stories. WP5: players.
  */
 
 export type Sponsor = {
@@ -127,4 +127,56 @@ export type Story = {
   reviewedAt: Date | null
   createdAt: Date
   updatedAt: Date
+}
+
+export type PlayerSource = 'playhq' | 'manual'
+
+export type PlayerHonour = {
+  /** Payload array row id (a string); only used as a React key. */
+  id: string
+  years: string
+  title: string
+}
+
+export type Player = {
+  id: number
+  slug: string
+  firstName: string
+  lastName: string
+  /** '' when there is no photo (initials are shown). */
+  photoUrl: string
+  bio: string
+  source: PlayerSource
+  manualYears: string
+  activeOverride: 'active' | 'past' | null
+  isActiveDerived: boolean
+  hidden: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type PlayerSeason = {
+  id: number
+  playerId: number
+  seasonName: string
+  seasonOrder: number
+  teamId: string
+  teamName: string
+  gradeName: string | null
+  games: number
+  batInnings: number
+  batNotOuts: number
+  batRuns: number
+  batHighScore: number
+  batHighScoreNotOut: boolean
+  batBalls: number
+  batFours: number
+  batSixes: number
+  bowlBalls: number
+  bowlMaidens: number
+  bowlRuns: number
+  bowlWickets: number
+  bowlBestWickets: number
+  bowlBestRuns: number
+  catches: number
 }

@@ -1,3 +1,4 @@
+import { getPayloadClient } from '@/lib/payload/client'
 import { syncPlayers } from '@/lib/players/sync'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,6 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
-  const result = await syncPlayers()
+  const result = await syncPlayers(await getPayloadClient())
   return Response.json(result, { status: result.status === 'error' ? 500 : 200 })
 }
