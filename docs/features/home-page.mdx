@@ -1,0 +1,45 @@
+---
+title: Home page
+status: shipped
+routes: ["/"]
+collections: [announcements, sponsors, people, gallery-photos, club, club-apparel, site-settings]
+admin: "Nothing is edited on the home page itself; each section is edited where its data lives"
+owner: "Committee as a whole; visitors are first-time families, fans and sponsors"
+related: [announcements, club-apparel-link, sponsors, gallery, committee-and-contacts, club-and-site-settings]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A family new to the area** deciding whether to bring their child to Lang Lang.
+- **A regular member** checking for the latest notice and the upcoming dinner.
+- **A sponsor** checking their logo is visible.
+
+## Why it was built
+
+The redesign spec (`2026-09-04-langlang-cricket-club-redesign-design.md`) asked for a modern, fast home page with a hero, a mission blurb, a sponsor strip, committee cards and a call to action to join. The page was rebuilt to read everything from the CMS so the committee never edits the page layout itself.
+
+## What it does
+
+Sections, in order (`app/(frontend)/page.tsx`):
+1. The newest published [announcement](./announcements.mdx) as a dismissible banner.
+2. Hero (headline, eyebrow and buttons come from the club page copy defaults).
+3. The [club apparel](./club-apparel-link.mdx) strip, only when a shop link is set.
+4. The [sponsor](./sponsors.mdx) logo carousel (tiers chosen in Site settings).
+5. About / facilities text (club page copy defaults).
+6. Gallery teaser: the six newest [gallery](./gallery.mdx) photos.
+7. Committee cards from the one [people](./committee-and-contacts.mdx) query.
+8. Sponsor logo strip.
+9. Call to action to join or get in touch.
+
+Headings and page wording live in `payload/seed/club-defaults.ts` (the `club` global merges its saved values over those defaults). The Club details form in the admin edits identity, contact, socials, SEO and the history text only; home page copy, page copy and navigation are changed in code in this version. The page is rendered per request, so changes made in the admin show on the next load; saving the relevant collection also revalidates `/`.
+
+## How to use it
+
+- Change the home headline, about text or menu: ask the developer; these are in `payload/seed/club-defaults.ts`, not the admin form.
+- Everything else: edit the thing itself (announcement, sponsor, gallery photo, person, apparel link). There is no separate "home page editor".
+
+## Not included / deferred
+
+- No drag-and-drop page builder or generic block-based pages ([#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22)).
+- No "next fixture" or "upcoming event" widget on the home page. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,0 +1,39 @@
+---
+title: StatLab and CSV export
+status: shipped
+routes: ["/statlab", "/statlab/export"]
+collections: [player-seasons, players, site-settings]
+admin: "None; qualification and category rules are in Site settings"
+owner: "Visitors who like numbers (selectors, coaches, statisticians); the treasurer or secretary for exports"
+related: [stats-leaderboards, club-records, players-directory-and-profiles]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A coach** who wants "all-rounders with at least 200 runs and 15 wickets, sorted by wickets" and to paste it into a spreadsheet.
+- **A selector** building a shortlist of economical bowlers.
+
+## Why it was built
+
+Leaderboards answer fixed questions. StatLab-lite (BetterStats feature A11) lets people choose columns, filters, sorting and minimum thresholds, and download the result, without a database of saved reports.
+
+## What it does
+
+- `/statlab` is a report builder driven entirely by the URL: `scope` (career since 2023/24, one row per player per season, or one row per player-season-team row), season, grade, categories, columns (`cols`, at most 12 from the 26 metrics), sort (`sort=runs.desc`), per-metric minimums (`min.runs=100`), name search and an "active players only" option.
+- 12 presets (each just a query string): Top run scorers, Best batting averages, Hard hitters, Strike bowlers, Economical bowlers, Maiden makers, Best seasons, All-rounders, Catching machines, Most capped, Rising stars, Active squad snapshot.
+- "Save report" is the URL; there is no stored report. Unknown parameters are dropped and values clamped.
+- The page shows up to 500 rows. `/statlab/export?...` with the same parameters downloads a CSV of up to 5,000 rows (a first-line `# truncated to 5000 of N rows` and `X-Export-Truncated: 1` if cut). Non-canonical query strings get a 308 redirect to the canonical form so each report is one cache entry.
+- CSV safety: text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading apostrophe; overs and best bowling are written as text so spreadsheets do not turn them into dates. The filename uses only the whitelisted scope.
+- Caching and privacy: export is `Cache-Control: public, s-maxage=60` (short, because hiding a player is a privacy action), `X-Robots-Tag: noindex`; robots.txt disallows the export, the sitemap lists `/statlab` only. Hidden players are excluded from both.
+- Known quirks: the overs minimum is in true decimal overs (balls divided by 6); minimums are rounded to 0.1.
+
+## How to use it
+
+1. Open **StatLab** from the stats sub-navigation, pick a preset or choose columns and thresholds, press apply.
+2. Press the export button for a CSV, or copy the page address to share the report.
+
+## Not included / deferred
+
+- No saved or named reports, filters by opponent, format or decade, or a preset library beyond the 12 ([#8](https://github.com/sherlabs/lang-lang-cricket-website/issues/8)). Opponent filters need per-match data ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)).
+- No in-app rate limiter; CDN caching and row/column caps bound the cost (a firewall rule is a deployment setting). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

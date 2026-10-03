@@ -1,0 +1,34 @@
+---
+title: Multi-club template groundwork
+status: shipped
+routes: []
+collections: [club, site-settings]
+admin: "None; developer groundwork"
+owner: "Developers; future beneficiaries are other community sports clubs"
+related: [club-and-site-settings, legacy-etl-and-cutover, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A developer** asked to stand up the same site for a different club, who wants to change a small, known set of files.
+- **A neighbouring club** that would want its own site without a rewrite.
+
+## Why it was built
+
+The Payload migration spec (section 16) records the intent to keep the code reusable. This is groundwork only: it keeps club-specific content in a few places so a later extraction ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)) is practical.
+
+## What it does
+
+- Club-specific content is confined to `payload/seed/club-defaults.ts`, `config/site.ts`, `public/assets/branding`, the environment (`CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_*`) and the brand colours in `tailwind.config.ts`.
+- Sport-specific vocabulary (sponsor tiers, people sections, document categories) sits in `lib/` constants. The cookie prefix `llcc_` is in `config/site.ts`.
+- The `club` global merges its saved values over the defaults, so a new club sees a working site before anything is saved.
+- A new club forks those files, runs `payload migrate`, `seed:admin` and `seed:club` (or `seed:demo`), and never runs the ETL. The README "Template notes" section lists the steps.
+
+## How to use it
+
+Treat the README "Template notes" section as the checklist. Do not copy this repository's production data.
+
+## Not included / deferred
+
+- No club-selection at runtime, no multi-tenancy, no theme editor ([#14](https://github.com/sherlabs/lang-lang-cricket-website/issues/14)), no feature flags for clubs without PlayHQ, and no extraction into a separate template repository ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

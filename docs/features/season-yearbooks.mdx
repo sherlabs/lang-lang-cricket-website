@@ -1,0 +1,39 @@
+---
+title: Season yearbooks
+status: shipped
+routes: ["/yearbooks", "/yearbooks/[slug]"]
+collections: [yearbooks, player-seasons, gallery-photos, sponsors]
+admin: "Season yearbooks (everyday menu)"
+owner: "Committee (president, secretary); readers are members, sponsors and families"
+related: [honour-board, stats-leaderboards, sponsors, gallery, match-archive]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The president** who writes an end-of-season message and wants a printable wrap-up for presentation night.
+- **A sponsor or parent** who wants to flip through the season.
+
+## Why it was built
+
+BetterStats feature A9. The club wanted a yearbook per season that mixes the committee's own words and photos with statistics that fill themselves in, so the committee writes only what a computer cannot.
+
+## What it does
+
+- Collection `yearbooks`: title, season name (unique, for example "Summer 2025/26"), slug (from the season, never changes), status (draft or published), cover, optional premiership headline, three plain-text messages (president, coach, sponsors; blank line between paragraphs), photos picked from the gallery and featured sponsors.
+- `/yearbooks` lists published yearbooks, newest first. `/yearbooks/[slug]` renders one; drafts return 404. Every query states `status: published` itself because the Local API ignores access rules; the sitemap does too.
+- Auto-filled, computed at request time and never stored: results overview (games, wins, losses, draws, win rate; abandoned games are not counted as played) and results by grade from PlayHQ (omitted with a note if PlayHQ is unavailable or the season is older than PlayHQ), top batters, bowlers and fielders for the season, most games, a neutral "Top all-rounders" ranking (runs plus 20 times wickets, minimum 100 runs and 8 wickets, formula printed on the page and not presented as an award), and the honours whose years mention the season.
+- A print stylesheet hides the menu and forces a light page; a "Print / save as PDF" button calls the browser print dialog.
+- Structured data is `CreativeWork`; the page is in the sitemap. Saving revalidates `/yearbooks` and the page.
+- Draft assets are not private: gallery photos and media are readable by direct URL, so do not upload unreleased pictures until the day you publish.
+
+## How to use it
+
+1. Admin: **Season yearbooks**, **Add new**. Enter the season name exactly as PlayHQ names it (for example Summer 2025/26).
+2. Add the cover, messages, photos and sponsors. Leave it as Draft while working.
+3. Switch status to Published when ready.
+
+## Not included / deferred
+
+- Sections that need match data: results by grade with progression chart, partnerships, all-rounder honours ([#13](https://github.com/sherlabs/lang-lang-cricket-website/issues/13)). AI-written narrative ([#12](https://github.com/sherlabs/lang-lang-cricket-website/issues/12)).
+- Seasons before PlayHQ have editorial content only. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

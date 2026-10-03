@@ -1,0 +1,42 @@
+---
+title: Committee and contacts (one place for people)
+status: shipped
+routes: ["/", "/contact", "/people", "/players", "/players/[slug]"]
+collections: [people, players]
+admin: "Committee & contacts (everyday menu, 'Update a contact' tile)"
+owner: "Committee (secretary); visitors are families who need to know whom to call"
+related: [players-directory-and-profiles, player-sponsors, home-page, uploads-and-media]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary** who changes the treasurer's phone number or adds a photo of the new president once and expects it to be right everywhere.
+- **A parent** looking for the junior coordinator's email, or the child safety officer.
+- **A committee member who also plays** (for example the president is also a senior player) and has one picture to keep up to date.
+
+## Why it was built
+
+The user asked that individuals are referenced from one place: "if I add a picture to a committee member, it should be reflected everywhere, or update any of the details." The audit in `2026-10-04-people-sponsors-apparel-design.md` found people already came from the `people` collection but through two query paths and duplicated avatar code, and that a person who also plays had two unrelated photos to maintain.
+
+## What it does
+
+- One collection, `people` (shown as "Committee & contacts"): full name, role, section (Senior Leadership Team, Committee or Junior Coaches), phone, email, photo, order number and an optional link to a player.
+- One query module (`lib/people-queries.ts`) and one card component (`components/person-card.tsx` with the shared `Avatar`) feed the home page committee strip, `/contact` (Committee and Senior Leadership Team; junior coaches are listed only on `/people`) and `/people` (every section). Initials are the fallback when there is no photo. A test (`tests/people-single-source.test.ts`) fails if another file reads the `people` collection, builds its own initials helper or draws a person photo with a raw image tag.
+- Identity rule (`lib/identity.ts`): when a person is linked to a player, the person's photo wins on the player tile, profile hero, share image and structured data; the player's own photo is only a fallback. The player's **name** is never overridden because it is the PlayHQ stat identity (aliases, merge and sync depend on it).
+- The person card shows a "Player profile" link; the player page shows the club role (for example "President") linking to `/people`; the player admin form shows a read-only "Also on the committee".
+- Names, roles, phones and emails are never typed into the club global or the page copy. Story author names are free text typed by visitors and are deliberately left alone.
+- Saving or deleting a person revalidates `/`, `/contact`, `/people` and the linked player pages. Deleting a player clears the link but keeps the person.
+- `payload/scripts/link-people-players.ts` proposes links by exact normalised name (case, accents, punctuation, spacing folded). It is a dry run unless `--apply --confirm`, never guesses on ambiguous names and uses the standard database guard.
+
+## How to use it
+
+1. Admin: **Committee & contacts**. Open a person (or **Add new**).
+2. Edit the role, phone, email, or drop in a square-ish photo. Save. It changes on Home, Contact and People.
+3. If the person plays, pick them in **Also a player**. Their picture now also shows on the Players pages whenever the player has none of their own, so update it only here.
+4. Use "Order on the page" (smaller first) only if the default alphabetical order is wrong.
+
+## Not included / deferred
+
+- No member directory for parents, life members or volunteers ([#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24)); this list is the public committee and coaches only.
+- Links to players are made by hand or the dry-run script; there is no automatic fuzzy matching. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

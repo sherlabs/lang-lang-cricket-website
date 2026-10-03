@@ -1,0 +1,37 @@
+---
+title: Documents and policies
+status: shipped
+routes: ["/documents"]
+collections: [documents]
+admin: "Documents (everyday menu, 'Upload a document' tile)"
+owner: "Committee (secretary, child safety officer); readers are parents, coaches, umpires"
+related: [uploads-and-media, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The child safety officer** who needs to publish the updated Code of Conduct the day it is approved.
+- **A parent or new coach** looking for the junior registration form, the game day checklist or the CCCA directory.
+
+## Why it was built
+
+The club had 16 policy and safety PDFs scattered across the Wix site. The redesign spec required them re-hosted under the club's control and editable by the committee.
+
+## What it does
+
+- `/documents` lists PDFs grouped by category in a fixed order: Codes of Conduct, Policies, Child Safety, Game Day, CCCA Directory (`lib/documents.ts`). Unknown categories are appended. Each item is a download link.
+- A document has a name (what people see), a category and the PDF. PDFs only, up to 25 MB; files go straight to Vercel Blob in production.
+- Public read; staff create, update and delete. Rows imported from the old site keep their old file URL (`legacyUrl`); replacing the file of such a row is refused until decommission, so upload a new document instead (see [uploads and media](./uploads-and-media.mdx)).
+- Saving revalidates `/documents`.
+
+## How to use it
+
+1. Admin: **Documents**, **Add new**.
+2. Type a clear name (for example "Junior registration form 2026"), pick the category, drop the PDF in, save.
+3. To retire an old one, open it and delete.
+
+## Not included / deferred
+
+- No versioning or "last updated" history; no non-PDF files; no per-document access control (everything listed is public).
+- Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

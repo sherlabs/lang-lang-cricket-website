@@ -1,0 +1,37 @@
+---
+title: Club records
+status: shipped
+routes: ["/records"]
+collections: [player-seasons, players]
+admin: "None; computed from synced player seasons (qualification rules in Site settings)"
+owner: "Visitors (players, families, historians)"
+related: [stats-leaderboards, honour-board, season-yearbooks]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player chasing a record**, who wants to know the current best and who holds it.
+- **The club historian** writing the season wrap-up.
+
+## Why it was built
+
+Leaderboards rank everyone; records show the very best in two views. This is feature A3 of the BetterStats design: records derived honestly from season aggregates with the coverage period stated.
+
+## What it does
+
+- Two lists of records with the top 5 holders each (ties are kept together, with a hard cap so a pile of equal values cannot flood the page).
+- "Since 2023/24": most runs, highest score (with * for not out), best batting average, most sixes, most fours, most games, most seasons played, most wickets, best bowling figures, most maidens, best economy, most catches.
+- "In a season": most runs, highest score, best batting average, most wickets, best bowling figures, best economy, most catches.
+- Averages and economy honour the same qualification minimums as the leaderboards. A 0 not out is never ranked as a high score.
+- Each entry shows holder (linked to the profile), value, season and grade. A NEW badge shows when the top record was set in the current season (the newest season in the data).
+- Hidden players are excluded. The coverage window is stated on the page. The records are cached under the `player-stats` tag.
+
+## How to use it
+
+Visit `/records`. Nothing to maintain; it updates after each nightly sync.
+
+## Not included / deferred
+
+- No innings-level records (best innings figures beyond a personal best, 100s count) or partnership records ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7)); no team records such as highest total ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34)).
+- Records before PlayHQ cannot be entered ([#9](https://github.com/sherlabs/lang-lang-cricket-website/issues/9)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

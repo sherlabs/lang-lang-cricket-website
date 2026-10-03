@@ -1,0 +1,53 @@
+---
+title: Events and RSVPs
+status: shipped
+routes: ["/events", "/events/[id]", "/events/[id]/rsvp", "/events/rsvp/[token]"]
+collections: [events, event-rsvps]
+admin: "Events (everyday menu); RSVPs collection is admin-only, committee sees 'Who is coming' on each event"
+owner: "Committee (event organiser); public users are parents and members"
+related: [event-photos, committee-admin, seo, home-page]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A parent or member** who sees "Presentation night, Saturday 15 Nov" and wants to say "yes, 3 of us" or "can't make it", and pick a dinner, without creating an account.
+- **The social secretary** who needs to know how many are coming, who wants beef or veg, and who has paid via the ticket link.
+- **A coach** running a weekly "Thursday training, 6pm until March" series that people RSVP to one week at a time.
+
+## Why it was built
+
+The old site had no way to count attendance for dinners and working bees; organisers used Facebook comments and text messages. The events spec (`docs/superpowers/specs/2026-09-24-events-design.md`) asked for one-time and recurring events with a no-login RSVP and a private link to change it later. Dinner choices and a payment link were added after the spec (the spec first ruled them out), and the Payload migration moved everything into the `events` and `event-rsvps` collections.
+
+## What it does
+
+**Public**
+- `/events` lists upcoming items and past one-time events. Upcoming means every future one-time event plus the occurrences of each running recurring series in the next 6 weeks (`UPCOMING_WEEKS_AHEAD` in `lib/events-queries.ts`). A recurring series never appears under "past".
+- `/events/[id]` shows the event, a public tally (going / not going counts only, never names, emails or notes) and the RSVP panel. `/events/[id]/rsvp` is the form for one occurrence.
+- The form takes name (required), email and note (optional), and a Going / Not going answer. If the event has dinner choices, a going guest must say yes/no to dinner and pick one of the listed options (`resolveMeal` in `lib/events-meal.ts`); a "not going" answer never carries a meal. Text limits: name 100, email 200, note 1000 characters.
+- Occurrences are computed, not stored (`lib/event-occurrences.ts`). A recurring event is one weekday, one start time, a first week and a last week. The server only accepts a date that is a real, future occurrence of that event.
+- After submitting, a private link `/events/rsvp/[token]` lets the person change their answer, name, email, note and meal, or cancel. The token is an unguessable UUID. The same browser also remembers its RSVPs in an httpOnly cookie (`llcc_rsvps`, one year, newest 30 kept), so returning to the form edits the same row instead of making a second one. Lost links are not recoverable by the visitor; a committee member can edit or delete any RSVP in the admin.
+- Edit-by-link also works for past events (so people can see what they sent), but new RSVPs are only offered for future occurrences.
+- Event pages emit `Event` structured data (see [SEO](./seo.mdx)). `/events/rsvp/*` and `/events/*/rsvp` are disallowed in `robots.txt`.
+
+**Admin**
+- Committee fills in a plain form: type (one-time or weekly), date or weekday/first/last week, start time (24-hour), where, description, picture. A closed "Dinner and tickets (optional)" section holds the dinner choices and the payment button wording and link (http/https only).
+- The event form shows a read-only "Who is coming" summary and the going count appears in the list. The RSVPs collection itself is hidden from editors (admins can see and edit it).
+- Saving or deleting revalidates `/events`, `/events/[id]` and `/`. Deleting an event also deletes its RSVPs and photos. Editing an RSVP through its public link revalidates the event pages; cancelling skips revalidation (the pages are dynamic).
+
+**Data**: reads `events`, `event-rsvps`, `event-photos`; writes `event-rsvps` through the Local API with an allowlist of fields. Token writes find the row by token with `limit: 1` and write by id, never by `where`.
+
+## How to use it
+
+1. Admin sidebar: **Events**, then **Add new** (or the "Add an event" tile on Home).
+2. Choose "One time" or "Every week", fill in the date or the weekday and the first and last week, the time and where.
+3. Optional: open "Dinner and tickets", type the dinner choices (for example Beef, Chicken, Veg) and a payment link.
+4. Save. Open the event again later to see **Who is coming**.
+5. To cancel someone who phoned in, open the event's RSVPs (admin) and delete their row.
+
+## Not included / deferred
+
+- No email of the edit link or "resend my link" flow; no email notifications at all.
+- No ticket quantities or payment tracking (the payment link just opens an external page). Fee ledgers are tracked in [#25](https://github.com/sherlabs/lang-lang-cricket-website/issues/25).
+- Recurring events are one weekday per series; no skipped dates or arbitrary patterns.
+- A member directory that could pre-fill names is [#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

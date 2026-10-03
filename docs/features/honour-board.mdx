@@ -1,0 +1,37 @@
+---
+title: Honour board
+status: shipped
+routes: ["/honours"]
+collections: [players, site-settings]
+admin: "Honours are typed on each player (Players); category keywords in Site settings, Stats tab"
+owner: "Committee (secretary who records honours); visitors are players and families"
+related: [players-directory-and-profiles, season-yearbooks, club-records]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary** who records "Club champion 2024/25" against the winner after presentation night.
+- **A life member** or visitor who wants to see every premiership and award in one place.
+
+## Why it was built
+
+Honours were already stored per player (title and years). The honour board (BetterStats feature A7) aggregates them into one club-wide page instead of a separate list that would have to be kept in step.
+
+## What it does
+
+- Aggregates `players.honours` by normalised title (trimmed, spaces collapsed, case-insensitive) and lists the recipients with their years.
+- Two views: by honour (default) and by year (`?view=`), with category chips (`?cat=`). Default categories are keyword-based: Life Member, Hall of Fame, Premiership, Best and Fairest / Club Champion, Captain, Leadership / Role, Association honours and Other. An admin can replace them in Site settings, Stats tab ("Honour categories": a label and keywords).
+- Years are parsed for sorting (4-digit years and `2024/25` style ranges); anything unparsable sorts last and still displays as typed.
+- Hidden players are excluded. Empty state when no honours exist. Filtered views are `noindex`.
+- Season yearbooks reuse the same honours to show the ones whose years mention that season.
+
+## How to use it
+
+1. Admin: **Players**, open the player, add an entry under Honours (title, years), save.
+2. Use the same wording each time so people group together (for example always "Club champion").
+
+## Not included / deferred
+
+- Honours are free text, so classification is imperfect; fix by editing the keywords or the text.
+- Honours are not linked to a specific award event or photo; honours for people who were never players cannot be recorded here. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

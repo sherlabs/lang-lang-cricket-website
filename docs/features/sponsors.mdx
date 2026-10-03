@@ -1,0 +1,39 @@
+---
+title: Sponsors and home carousel
+status: shipped
+routes: ["/sponsors", "/"]
+collections: [sponsors, site-settings]
+admin: "Sponsors (everyday menu); carousel tiers under Site settings (admin only)"
+owner: "Committee (treasurer or sponsorship lead); visitors are fans and local businesses"
+related: [player-sponsors, home-page, club-and-site-settings, season-yearbooks]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The treasurer** who signs up "Lang Lang Hardware" as a Gold sponsor and needs the logo live the same day.
+- **A local business owner** checking that the club shows their logo at the level they paid for and links to their website.
+
+## Why it was built
+
+The Wix site showed Platinum, Gold and Silver logos as a static image grid. The redesign spec required sponsor logos grouped by tier and editable by the committee, with logo clicks going to the sponsor's own site. The home page carousel was added so top-tier sponsors are always visible.
+
+## What it does
+
+- Tiers, in display order: Platinum, Gold, Silver, Bronze, Player (`lib/sponsors.ts`). A new sponsor defaults to Bronze.
+- `/sponsors` groups sponsors by tier, higher tiers bigger and first. Within a tier the order is the optional "Show before others" number (smaller first), then id. A sponsor without a logo shows its name as text. The logo links to the sponsor website (http/https only; empty means no link).
+- The Player tier is the home of player sponsors: under a Player sponsor the page lists "Sponsor X backs Player Y" with links to the player profiles and a pointer to the Players page (see [player sponsors](./player-sponsors.mdx)).
+- The home page has a scrolling logo carousel under the hero. Which tiers scroll is chosen in Site settings (default Platinum and Gold). Only sponsors with a logo are included, each business once at its highest selected tier; an empty selection hides the carousel (`selectCarouselSponsors`). The home page also shows a sponsor logo strip lower down.
+- Deleting a sponsor first deletes the player sponsorships that reference it. Saving revalidates `/sponsors` and `/`.
+- Season yearbooks can feature a chosen set of sponsors.
+
+## How to use it
+
+1. Admin: **Sponsors**, **Add new** (or "Add a sponsor" on Home).
+2. Type the name, pick the level, drop the logo in, paste the website address (starting `https://`), save.
+3. To change which levels scroll on the home page, an admin opens **Site settings**, Site tab, "Sponsor carousel tiers".
+
+## Not included / deferred
+
+- No sponsorship amounts, contract dates, renewals or invoices; no sponsor contact directory ([#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24)).
+- No per-sponsor expiry; remove a sponsor manually when the deal ends. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

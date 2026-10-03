@@ -1,0 +1,66 @@
+---
+title: Feature documentation index
+---
+
+Every user-facing feature of the Lang Lang Cricket Club site has one file in this folder. Each file says who it is for, why it was built, what it does, how the committee uses it and what is deliberately left out. Deferred work is tracked in GitHub issues #2 to #37 and summarised in issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## For families, members and visitors
+
+| Feature | What it is |
+| --- | --- |
+| [Home page](./home-page.mdx) | The front door: announcement banner, hero, apparel strip, sponsor carousel, gallery, committee, sponsors. |
+| [Events and RSVPs](./events-and-rsvps.mdx) | One-time and weekly events, no-login RSVPs with dinner choices and private edit links. |
+| [Event photos](./event-photos.mdx) | Recap photos on past events, with public submission and approval. |
+| [Club history stories](./club-history-stories.mdx) | Rich-text stories, public submissions held for review, private draft links. |
+| [Announcements](./announcements.mdx) | Dismissible home banner and an announcements list. |
+| [Photo gallery](./gallery.mdx) | Grid with lightbox; newest six on the home page. |
+| [Documents and policies](./documents.mdx) | Grouped PDF downloads for policies, child safety and game day. |
+| [Sponsors and home carousel](./sponsors.mdx) | Sponsors by tier, and the scrolling logo carousel. |
+| [Player sponsors](./player-sponsors.mdx) | A business backing a player, shown on Players, the profile and Sponsors. |
+| [Committee and contacts](./committee-and-contacts.mdx) | One place for people: home, contact, people and player pages read the same record. |
+| [Club apparel link](./club-apparel-link.mdx) | Prominent link to the external club shop. |
+
+## Players, fixtures and statistics
+
+| Feature | What it is |
+| --- | --- |
+| [Players directory and profiles](./players-directory-and-profiles.mdx) | Active and past players, search, profiles with charts and honours. |
+| [Fixtures, ladders and scorecards](./fixtures-and-scorecards.mdx) | Live PlayHQ fixtures, results, ladders and scorecards. |
+| [Match archive](./match-archive.mdx) | Browse finished games across seasons by grade, opponent and result. |
+| [Stats leaderboards](./stats-leaderboards.mdx) | 26 metrics, filters and qualification minimums. |
+| [Club records](./club-records.mdx) | All-time and single-season bests. |
+| [Honour board](./honour-board.mdx) | Every honour by title or year. |
+| [Player comparison](./player-comparison.mdx) | Head-to-head from stored season totals, with a shareable link. |
+| [StatLab and CSV export](./statlab-and-csv-export.mdx) | Build a custom stats table and download it as CSV. |
+| [Season yearbooks](./season-yearbooks.mdx) | Editorial plus auto-filled season wrap-up, printable. |
+| [Shareable stat cards](./stat-cards.mdx) | Player share images and link previews. |
+| [Milestones](./milestones.mdx) | Players approaching or reaching 100 games, 1000 runs and so on. |
+| [SEO](./seo.mdx) | Sitemap, robots, structured data and canonical hosts. |
+
+## For the committee and site admin
+
+| Feature | What it is |
+| --- | --- |
+| [Simple committee admin](./committee-admin.mdx) | The plain-English admin: roles, flat menu, Home tiles, Help. |
+| [Waiting for approval inbox](./approvals-inbox.mdx) | One list of member-submitted stories and photos to approve. |
+| [PlayHQ player sync and merge](./playhq-player-sync.mdx) | Nightly sync, run now, merge duplicates, refresh PlayHQ data. |
+| [Club details and site settings](./club-and-site-settings.mdx) | Identity, SEO, carousel tiers and stats rules. |
+| [Users and authentication](./users-and-authentication.mdx) | Admin and editor accounts, lockout, closed registration. |
+| [Uploads and media](./uploads-and-media.mdx) | Direct-to-Blob uploads, public upload routes and legacy file protection. |
+
+## For developers and the operator
+
+| Feature | What it is |
+| --- | --- |
+| [Safety guards](./safety-guards.mdx) | Env, script, build and migration checks that keep production safe. |
+| [Legacy data ETL and cutover tooling](./legacy-etl-and-cutover.mdx) | Copy, verify and roll back the old site's data. |
+| [Multi-club template groundwork](./multi-club-template.mdx) | Where club-specific content lives, for a future second club. |
+
+## How to add a feature doc
+
+1. Copy any existing file and change the slug (kebab-case, `docs/features/<slug>.mdx`).
+2. Fill in the frontmatter: `title`, `status: shipped`, `routes`, `collections`, `admin`, `owner`, `related`, `added`.
+3. Keep the five headings exactly: Persona, Why it was built, What it does, How to use it, Not included / deferred.
+4. Describe only what is built, checked against the code. Link deferred work to its GitHub issue.
+5. Add a row to the right table above. `tests/feature-docs.test.ts` fails if a file is missing a key or heading, if the index does not link every file, or if a `related` slug does not exist.
+6. Update the doc in the same pull request whenever the feature's behaviour changes.

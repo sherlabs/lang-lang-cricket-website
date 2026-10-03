@@ -1,0 +1,40 @@
+---
+title: SEO (sitemap, robots, structured data, canonical hosts)
+status: shipped
+routes: ["/sitemap.xml", "/robots.txt", "(every public page)"]
+collections: [club, players, stories, events, yearbooks]
+admin: "Club details, SEO tab (admin only): default title and description, share image, per-page titles and descriptions"
+owner: "Site admin; beneficiaries are people searching for the club and anyone sharing a link"
+related: [club-and-site-settings, stat-cards, events-and-rsvps, club-history-stories, season-yearbooks]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A family new to the district** who searches "Lang Lang cricket club" and expects the club first, with the right address and a sensible description.
+- **A member sharing a link** in a group chat and expecting a good preview image and title.
+- **The site admin** who needs search engines to see one domain and not the staging aliases.
+
+## Why it was built
+
+Commits `feat(seo)` add a sitemap, robots rules, canonical URLs and structured data, and 308 redirects of the `www` and `vercel.app` hosts to the apex domain. Without these, duplicate hosts and parameterised stat pages would compete in search results and private token links could be indexed.
+
+## What it does
+
+- **Canonical hosts**: `next.config.ts` redirects `www.langlangcricketclub.com` and the production `vercel.app` alias to `CANONICAL_HOST` with a 308. `/api/*` is excluded (cron and upload callbacks may use the alias). Hosts are set by `CANONICAL_HOST` and `REDIRECT_HOSTS`. Preview hosts are untouched.
+- **Sitemap** (`/sitemap.xml`, built per request): the static public pages with change frequency and priority, every non-hidden player, every published story, every event page and every published yearbook. Draft or hidden content is never listed. `/players/compare`, `/statlab/export` and RSVP and draft links are excluded.
+- **robots.txt**: allows `/` and `/api/public/players/` (so stat cards can be fetched), and disallows `/admin`, `/api`, `/history/drafts/`, `/events/rsvp/`, `/events/*/rsvp`, `/players/compare` and `/statlab/export`. It points at the sitemap.
+- **Metadata**: every page sets a title and description from the club SEO tab (with built-in defaults), a canonical URL, and Open Graph tags. Filtered or parameterised views (stats, honours, matches, compare) are `noindex`. Private token pages are `noindex`.
+- **Structured data (JSON-LD)**: `SportsOrganization` (home), `Event` (event pages, with the payment link as an offer), `Person` (player profiles), `Article` (stories), `CreativeWork` (yearbooks), `ItemList` (leaderboards and player lists) and `BreadcrumbList` on inner pages (`lib/structured-data.ts`). Dates use the Melbourne offset.
+- `X-Powered-By` is switched off.
+
+## How to use it
+
+1. An admin opens **Club details**, SEO tab.
+2. Edit the default title and description, upload a 1200x630 share image, and adjust per-page titles and descriptions.
+3. Submit `/sitemap.xml` in Google Search Console (a verification file is committed under `public/`).
+
+## Not included / deferred
+
+- No per-story or per-event custom SEO fields; they use their own titles and excerpts.
+- No analytics or search-console reporting inside the admin. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

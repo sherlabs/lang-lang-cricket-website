@@ -1,0 +1,36 @@
+---
+title: Match archive
+status: shipped
+routes: ["/matches"]
+collections: []
+admin: "None; data comes from PlayHQ"
+owner: "Visitors (players, families, former players); no committee upkeep"
+related: [fixtures-and-scorecards, season-yearbooks, seo]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player's grandparent** who wants every result of last season for one grade.
+- **A club historian** looking for "all games against Pakenham" and the scorecard for each.
+
+## Why it was built
+
+`/fixtures` shows the current season. The BetterStats feature set (`2026-10-03-betterstats-features-design.md`, A10) added a browsable archive of finished games across the seasons PlayHQ lists, linking each game to its existing scorecard.
+
+## What it does
+
+- Finished games only, newest first, grouped by round, for any season PlayHQ lists (Summer 2023/24 onwards; the page says older history does not exist).
+- Filters (GET form, so they work without scripts): season, grade, opponent text (`q`) and result (all, won, lost, drawn or other). Each row links to `/fixtures/[gameId]`.
+- Paged by rounds (6 rounds per page, `?page=`). If no grade is chosen and the season has more than 200 finished games, only the first page is shown with a "narrow by grade" hint.
+- It reuses the PlayHQ loaders and their cache, so it fans out to each team's fixture list and relies on the 30 minute cache; failures show the "PlayHQ unavailable" panel.
+- Includes junior grades, as `/fixtures` does. Filtered views are marked `noindex`; the unfiltered page has a canonical URL.
+
+## How to use it
+
+Visit `/matches`, choose a season, then narrow by grade, opponent or result. No admin steps.
+
+## Not included / deferred
+
+- No pre-2023 history and no import of it ([#9](https://github.com/sherlabs/lang-lang-cricket-website/issues/9)).
+- No stored per-match data, so no player-by-opponent or head-to-head tables ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

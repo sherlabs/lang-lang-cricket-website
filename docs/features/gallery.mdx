@@ -1,0 +1,39 @@
+---
+title: Photo gallery
+status: shipped
+routes: ["/gallery", "/"]
+collections: [gallery-photos, media]
+admin: "Photo gallery (everyday menu, 'Add photos to the gallery' tile)"
+owner: "Committee (anyone who looks after photos); visitors are fans and prospective families"
+related: [home-page, uploads-and-media, seo]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The club photographer or secretary** who drops in a folder of match-day photos and wants them live in a minute.
+- **A prospective family** browsing the club before joining.
+
+## Why it was built
+
+The Wix site had a fixed handful of photos edited through the Wix editor. The redesign spec required a gallery that non-technical committee members can update without a developer.
+
+## What it does
+
+- `/gallery` shows a responsive photo grid with a count and a lightbox dialog on click. The newest upload is also the Open Graph share image for the page.
+- The first six photos (newest first) also appear on the home page teaser.
+- New photos go to the front: if no position is given the upload is placed before the current lowest position. Captions are optional (a few words). Position is an admin-only field.
+- Uploads: Payload's native bulk upload on the gallery list ("Bulk Upload") or a single upload. In production files go straight from the browser to Vercel Blob (images up to 15 MB); locally they go to `./gallery-photos`.
+- Read access is public; create, update and delete need a signed-in committee member. Saving revalidates `/gallery` and `/`.
+- `payload/scripts/add-gallery-photos.ts` bulk-adds a folder of images from the command line (guarded, idempotent, local by default).
+
+## How to use it
+
+1. Admin: **Photo gallery**, then **Bulk Upload** (or "Add photos to the gallery" on Home).
+2. Drag the pictures in and save. Add captions if you like.
+3. To remove one, open it and delete.
+
+## Not included / deferred
+
+- No albums, tags or per-event galleries (event recap photos live on events, see [event photos](./event-photos.mdx)).
+- No server-side resizing of originals; the browser optimises only on the public forms. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
