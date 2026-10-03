@@ -32,6 +32,8 @@ export async function generateMetadata(props: Props) {
   const club = await getClub()
   const profile = await getPlayerProfile(params.slug, club.teamNamePrefix)
   if (!profile) return { title: titleWithSuffix(club, 'Player') }
+  // The stat card counts non-junior rows only, so a junior-only player has nothing to show on it.
+  const hasCardStats = splitJuniorSeasons(profile.seasons, (await getStatsSettings()).gradeRules, false).seasons.length > 0
   const filtered = (await props.searchParams).juniors !== undefined
   const summary = [profile.active ? 'Active player' : 'Past player', profile.yearsLabel, profile.grades.join(' · ')]
     .filter(Boolean)
@@ -44,7 +46,9 @@ export async function generateMetadata(props: Props) {
     // Share previews show the player's own photo when the club has added one, else their stat card.
     openGraph: profile.player.photoUrl
       ? { ...baseOpenGraph(club), images: [{ url: profile.player.photoUrl, alt: profile.name }] }
-      : {
+      : !hasCardStats
+        ? baseOpenGraph(club)
+        : {
           ...baseOpenGraph(club),
           images: [{ url: `/api/public/players/${profile.player.slug}/card`, width: 1200, height: 630, alt: `${profile.name}: ${club.name} stat card` }],
         },
@@ -59,7 +63,10 @@ export default async function PlayerPage(props: Props) {
   if (!profile) notFound()
   const { player } = profile
   // Junior rows are left off unless asked for; every figure below follows the seasons shown.
-  const split = splitJuniorSeasons(profile.seasons, settings.gradeRules, includeJuniors)
+  // A player with only junior seasons would otherwise see an empty page, so their juniors are always shown.
+  const seniorOnly = splitJuniorSeasons(profile.seasons, settings.gradeRules, false)
+  const juniorOnly = seniorOnly.hasJuniorRows && seniorOnly.seasons.length === 0
+  const split = splitJuniorSeasons(profile.seasons, settings.gradeRules, includeJuniors || juniorOnly)
   const shownSeasons = split.seasons
   const career = shownSeasons.length ? careerTotals(shownSeasons) : null
   const extras = buildProfileExtras({
@@ -134,7 +141,7 @@ export default async function PlayerPage(props: Props) {
                 Stat card
                 <span className="sr-only"> (image to save or share)</span>
               </a>
-              {career && (
+              {career && !juniorOnly && (
                 <Link
                   href={`/players/compare?a=${player.slug}`}
                   className="inline-flex min-h-11 items-center rounded-full bg-brand-gold px-4 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
@@ -239,15 +246,20 @@ export default async function PlayerPage(props: Props) {
               <p className="mb-4 text-sm text-brand-grey">★ marks a best season and ▽ a lowest one in the tables. Averages and rates only compare seasons that meet the season minimums.</p>
             )}
             <PlayerSeasonTables seasons={shownSeasons} career={career} teamNamePrefix={club.teamNamePrefix} bestWorst={bw} />
-            {split.hasJuniorRows && (
-              <p className="mt-4 text-sm text-brand-grey">
-                {includeJuniors ? 'Junior seasons are included.' : 'Junior seasons are hidden.'}{' '}
-                <Link href={includeJuniors ? `/players/${player.slug}` : `/players/${player.slug}?juniors=1`} className="font-semibold text-brand-gold-deep underline underline-offset-2">
-                  {includeJuniors ? 'Hide junior seasons' : 'Show junior seasons'}
-                </Link>
-              </p>
-            )}
           </div>
+        )}
+
+        {split.hasJuniorRows && (
+          <p className="text-sm text-brand-grey">
+            {juniorOnly
+              ? 'All of this player\u2019s recorded seasons are junior seasons.'
+              : <>
+                  {includeJuniors ? 'Junior seasons are included.' : 'Junior seasons are hidden.'}{' '}
+                  <Link href={includeJuniors ? `/players/${player.slug}` : `/players/${player.slug}?juniors=1`} className="font-semibold text-brand-gold-deep underline underline-offset-2">
+                    {includeJuniors ? 'Hide junior seasons' : 'Show junior seasons'}
+                  </Link>
+                </>}
+          </p>
         )}
       </div>
     </main>

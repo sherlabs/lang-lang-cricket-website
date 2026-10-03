@@ -1,3 +1,4 @@
+import { qualifies, type QualScope } from '@/lib/stats/qualify'
 import { bowlingAverages, battingAverages } from '@/lib/playhq/players'
 import type { SeasonCounts } from '@/lib/players/season-math'
 
@@ -29,12 +30,13 @@ export function cardRole(c: SeasonCounts): CardRole {
 
 export type CardStat = { label: string; value: string }
 
-export function cardStats(c: SeasonCounts, role: CardRole): CardStat[] {
+/** Rates (average, economy) show a dash until they meet the qualification minimums for the scope. */
+export function cardStats(c: SeasonCounts, role: CardRole, scope: QualScope): CardStat[] {
   const bat = battingAverages({ runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, balls: c.batBalls })
   const bowl = bowlingAverages({ balls: c.bowlBalls, runs: c.bowlRuns, wickets: c.bowlWickets })
   const hs = c.batInnings > 0 ? `${c.batHighScore}${c.batHighScoreNotOut ? '*' : ''}` : '–'
-  const avg = bat.average == null ? '–' : bat.average.toFixed(2)
-  const econ = bowl.economy == null ? '–' : bowl.economy.toFixed(2)
+  const avg = bat.average == null || !qualifies('batAvg', c, scope) ? '–' : bat.average.toFixed(2)
+  const econ = bowl.economy == null || !qualifies('econ', c, scope) ? '–' : bowl.economy.toFixed(2)
   const best = c.bowlBalls > 0 && c.bowlBestWickets > 0 ? `${c.bowlBestWickets}/${c.bowlBestRuns}` : '–'
   switch (role) {
     case 'batter': return [{ label: 'Runs', value: String(c.batRuns) }, { label: 'Average', value: avg }, { label: 'High score', value: hs }, { label: 'Games', value: String(c.games) }]

@@ -72,8 +72,11 @@ export function buildProfileExtras(o: {
 }): ProfileExtras {
   const seasonRows = mergeBySeason(o.seasons.map(toStatRow))
   // Milestones and ranks follow the /stats and /players defaults: junior rows never count toward them.
+  // The same default-category filter as /players, the admin widget and rankBadgesFor; juniors are excluded explicitly.
   const senior = o.seasons.filter((s) => classifyGrade(s.gradeName, s.teamName, o.settings.gradeRules) !== 'junior')
-  const milestoneRows = mergeBySeason(senior.map(toStatRow))
+  const milestoneRows = mergeBySeason(
+    filterRows(senior.map(toStatRow), { cats: o.settings.defaultIncludedCategories, rules: o.settings.gradeRules }),
+  )
   const windowStart = o.leagueRows.length
     ? [...o.leagueRows].sort((a, b) => b.seasonOrder - a.seasonOrder)[0].seasonName
     : null

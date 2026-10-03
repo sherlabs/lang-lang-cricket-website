@@ -12,7 +12,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         // `/api/public/players/` is allowed explicitly (longest match beats `/api`) so share-card
         // fetchers and crawlers can load the player stat cards.
         allow: ['/', '/api/public/players/'],
-        disallow: ['/admin', '/api', '/history/drafts/', '/events/rsvp/', '/events/*/rsvp', '/players/compare'],
+        disallow: ['/admin', '/api', '/history/drafts/', '/events/rsvp/', '/events/*/rsvp', '/players/compare$', '/players/compare?'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

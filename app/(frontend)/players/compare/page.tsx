@@ -46,7 +46,6 @@ export default async function ComparePage({ searchParams }: Props) {
 
   // Hidden players are not in `data.players`, so a hidden slug is simply unknown.
   const bySlug = new Map([...data.players.values()].map((p) => [p.slug, p]))
-  const options = [...data.players.values()].sort((x, y) => x.name.localeCompare(y.name))
   const pa = slugA ? bySlug.get(slugA) : undefined
   const pb = slugB ? bySlug.get(slugB) : undefined
   const unknown = [slugA && !pa ? 'first' : '', slugB && !pb ? 'second' : ''].filter(Boolean)
@@ -54,6 +53,9 @@ export default async function ComparePage({ searchParams }: Props) {
 
   const rows = filterRows(data.rows, { cats: settings.defaultIncludedCategories, rules: settings.gradeRules })
   const seasonsOf = (id: number | undefined) => (id === undefined ? [] : mergeBySeason(rows.filter((r) => r.playerId === id)))
+  // Players with no rows in the default categories (e.g. junior-only) would give an empty table, so they are not offered.
+  const withStats = new Set(rows.map((r) => r.playerId))
+  const options = [...data.players.values()].filter((p) => withStats.has(p.id) || p.slug === slugA || p.slug === slugB).sort((x, y) => x.name.localeCompare(y.name))
   const sa = seasonsOf(pa?.id), sb = seasonsOf(pb?.id)
   const shared = commonSeasonNames(sa, sb)
   const only = common ? shared : undefined
@@ -100,6 +102,12 @@ export default async function ComparePage({ searchParams }: Props) {
         )}
         {same && (
           <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">{copy.sameLabel}</p>
+        )}
+
+        {ready && (sa.length === 0 || sb.length === 0) && (
+          <p role="status" className="rounded-lg bg-brand-gold-pale px-4 py-3 text-sm text-brand-charcoal ring-1 ring-brand-gold/30">
+            {[sa.length === 0 ? pa!.name : '', sb.length === 0 ? pb!.name : ''].filter(Boolean).join(' and ')} has no senior stats to compare (junior seasons are not included).
+          </p>
         )}
 
         {!ready ? (

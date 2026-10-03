@@ -40,7 +40,7 @@ export function ProgressionChart({ series, idPrefix }: { series: Series; idPrefi
             )
           : (
             <>
-              <polyline points={line} fill="none" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="stroke-brand-gold-dark" />
+              <polyline points={line} fill="none" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="stroke-brand-gold-deep" />
               {points.map((p, i) =>
                 p.value === null ? null : (
                   <g key={p.seasonName}>

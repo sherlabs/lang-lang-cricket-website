@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cardRole, cardStats, isDrawableImageType, parseCardSeason, parseFormat, CARD_SIZES } from '@/lib/stats/card'
+import { DEFAULT_QUALIFICATION } from '@/lib/stats/qualify'
 import { counts } from './stats-helpers'
 
 describe('cardRole', () => {
@@ -11,15 +12,23 @@ describe('cardRole', () => {
   })
 })
 
+const Q = DEFAULT_QUALIFICATION.career
+
 describe('cardStats', () => {
+  it('dashes rates that miss the qualification minimums', () => {
+    const c = counts({ games: 1, batRuns: 5, batInnings: 1, batBalls: 10, bowlBalls: 12, bowlRuns: 6, bowlWickets: 1 })
+    expect(cardStats(c, 'batter', Q)[1].value).toBe('–')
+    expect(cardStats(c, 'bowler', Q)[1].value).toBe('–')
+  })
+
   it('gives four stats per role, with dashes for undefined values', () => {
     const c = counts({ games: 10, batRuns: 300, batInnings: 10, batNotOuts: 0, batBalls: 400, batHighScore: 88, batHighScoreNotOut: true })
-    const s = cardStats(c, 'batter')
+    const s = cardStats(c, 'batter', Q)
     expect(s.map((x) => x.label)).toEqual(['Runs', 'Average', 'High score', 'Games'])
     expect(s[1].value).toBe('30.00')
     expect(s[2].value).toBe('88*')
-    expect(cardStats(counts(), 'bowler').map((x) => x.value)).toEqual(['0', '–', '–', '0'])
-    expect(cardStats(c, 'allrounder')).toHaveLength(4)
+    expect(cardStats(counts(), 'bowler', Q).map((x) => x.value)).toEqual(['0', '–', '–', '0'])
+    expect(cardStats(c, 'allrounder', Q)).toHaveLength(4)
   })
 })
 

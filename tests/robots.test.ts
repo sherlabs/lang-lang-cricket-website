@@ -9,7 +9,8 @@ describe('robots', () => {
     const rule = (Array.isArray(r.rules) ? r.rules[0] : r.rules) as { allow: string[]; disallow: string[] }
     expect(rule.allow).toContain('/api/public/players/')
     expect(rule.disallow).toContain('/api')
-    expect(rule.disallow).toContain('/players/compare')
+    expect(rule.disallow).toContain('/players/compare$')
+    expect(rule.disallow).toContain('/players/compare?')
     expect(r.sitemap).toBe('https://club.test/sitemap.xml')
   })
 })

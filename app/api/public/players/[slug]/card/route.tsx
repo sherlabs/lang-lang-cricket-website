@@ -17,7 +17,9 @@ import { coverage, shortSeason, sinceLabel } from '@/lib/stats/season-window'
 // files in outputFileTracingIncludes for this route.
 export const runtime = 'nodejs'
 
-const OK_CACHE = 'public, s-maxage=3600, stale-while-revalidate=600'
+// Short on purpose: a route-handler response is not purged by revalidatePath, so a player hidden by an
+// admin must age out of the CDN quickly.
+const OK_CACHE = 'public, s-maxage=300'
 // A hidden or unknown player is cached briefly, so un-hiding recovers quickly.
 const MISSING_CACHE = 'public, s-maxage=60'
 const BUNDLED_CREST = path.join(process.cwd(), 'public', 'assets', 'branding', 'logo.png')
@@ -65,7 +67,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const rows = season ? scoped.filter((r) => r.seasonName === season) : scoped
   const counts = (season ? mergeBySeason(rows)[0]?.counts : careerOf(rows)[0]?.counts) ?? EMPTY_COUNTS
   const role = cardRole(counts)
-  const stats = cardStats(counts, role)
+  const stats = cardStats(counts, role, season ? settings.qualification.season : settings.qualification.career)
   const best = season ? null : rankBadgesFor(player.id, data.rows, settings).sort((a, b) => a.rank - b.rank)[0] ?? null
   const names = [...new Set(rows.map((r) => r.seasonName))]
   const span = season ? shortSeason(season) : (() => { const w = coverage(rows); return w ? (w.from === w.to ? shortSeason(w.from) : `${shortSeason(w.from)} to ${shortSeason(w.to)}`) : '' })()
