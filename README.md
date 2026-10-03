@@ -56,14 +56,13 @@ All on `127.0.0.1:54329`:
 
 ```bash
 pnpm install
-cp .env.example .env.local      # then fill in PAYLOAD_SECRET, CRON_SECRET, PLAYHQ_CLIENT_ID,
-                                # and set PAYLOAD_PUSH=false (see below)
+cp .env.example .env.local      # then fill in PAYLOAD_SECRET, CRON_SECRET, PLAYHQ_CLIENT_ID
 # create the databases above (CREATE DATABASE langlang_dev; …)
 ```
 
 Push and migrate are never mixed on one database. Both ways of filling
 `langlang_dev` below migrate it, so keep `PAYLOAD_PUSH=false` in `.env.local`
-from then on: a Payload boot with push on (`pnpm dev`, any script) writes a
+(the `.env.example` default): a Payload boot with push on (`pnpm dev`, any script) writes a
 dev-mode marker into `payload_migrations`, after which `payload migrate`
 prompts and hangs in a non-interactive shell. Schema changes go through
 `pnpm payload migrate:create <name>` and `pnpm payload migrate`.
@@ -94,9 +93,26 @@ with push on and `payload migrate` now hangs, reset the schema
 (`pnpm reset:payload-schema --target 127.0.0.1/langlang_dev --confirm`) and
 migrate again.
 
-First-register is closed: `/admin/create-first-user` refuses to create a
-user. The first admin always comes from `seed:admin`, and admins invite
-everyone else from the admin UI.
+## Admin
+
+The Payload admin is at `/admin` (REST API at `/api`; GraphQL is off).
+
+- **Users.** Two roles: `admin` (everything, including users) and `editor`
+  (all content; can only read and update their own user record). The first
+  admin always comes from `seed:admin`; first-register is closed
+  (`/admin/create-first-user` renders but refuses to create a user). Admins
+  create everyone else under Users.
+- **Passwords.** There is no email adapter, so forgot-password is disabled.
+  An admin sets a new password for the user instead. Repeated failed logins
+  lock the account; an admin can unlock it.
+- **Moderation.** Pending event photos and stories show on the dashboard and
+  as a banner on their lists. Approve or reject photos from the event's edit
+  view; stories have Approve/Reject/Unpublish/Restore controls.
+- **PlayHQ.** "Run sync now" on the players list, and **Refresh PlayHQ
+  data** on the dashboard (see [PlayHQ](#playhq)).
+- **Uploads.** Images and PDFs upload from the browser straight to Blob in
+  production (15 MB cap). Replacing the file of a row imported from the old
+  app is refused until decommission; upload a new image instead.
 
 ## Environment
 
@@ -106,13 +122,21 @@ See `.env.example` for the full list with comments. In short:
 |---|---|
 | `DATABASE_URI` | Everywhere. Local DB in `.env.local`. On Vercel, the pooled Neon URL, Production only (Preview gets a Neon *branch*). |
 | `DATABASE_URI_UNPOOLED` | Vercel only: the direct URL `payload migrate` uses during the build. |
+| `DATABASE_POOL_MAX` | Optional pool size (default 5). |
 | `PAYLOAD_SECRET`, `NEXT_PUBLIC_SERVER_URL` | Everywhere (previews derive the server URL from `VERCEL_BRANCH_URL`). |
-| `BLOB_READ_WRITE_TOKEN` | Vercel only (Production store; Preview has its own store and `BLOB_DELETE_DISABLED=1`). |
+| `PAYLOAD_PUSH` | Local only: `false` for a migrated DB (the default), `true` only for a scratch DB. Refused for non-local hosts. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel only (Production store; Preview has its own store). Never local. |
+| `BLOB_DELETE_DISABLED` | Preview: `1` (required by the preview build). Every plugin blob delete becomes a logged no-op. |
+| `LEGACY_BLOBS_RELEASED` | Unset until the decommission PR sets it to `yes` (blob deletes for imported rows resume). |
 | `CRON_SECRET`, `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | App + cron. |
 | `CANONICAL_HOST`, `REDIRECT_HOSTS` | Host redirects and canonical URLs. |
-| `PROD_DATABASE_HOST` | Vercel, all environments: the preview build refuses to run against this host. |
-| `LEGACY_DATABASE_URL`, `PAYLOAD_ETL` | ETL only (operator shell or `.env.local` pointing at `langlang_legacy`). Never on Vercel. |
-| `DATABASE_URI_TEST` | Integration tests. |
+| `PROD_DATABASE_HOST` | Vercel, all environments: the preview build refuses to run against this host, and every build refuses when it is empty. |
+| `ENABLE_EXPERIMENTAL_COREPACK` | Vercel: `1`, so the build uses the pnpm pinned in `package.json`. |
+| `ALLOW_REMOTE_DB`, `ALLOW_REMOTE_BLOB` | Operator shell only (cutover): `yes` lets the guards accept a remote DB / a Blob token. Never in a file. |
+| `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_PASSWORD` | `seed:admin` only, in the shell. |
+| `LEGACY_DATABASE_URL`, `PAYLOAD_ETL` | ETL only (operator shell, or `.env.local` pointing at `langlang_legacy`). Never on Vercel. |
+| `GUARD_NO_DELAY` | Local only: `1` skips the scripts' 5 s pause before writing to a local DB. |
+| `DATABASE_URI_TEST`, `PAYLOAD_BLOB_FAKE` | Integration tests (`PAYLOAD_BLOB_FAKE=1` enables the storage plugin with a fake token and a mocked `@vercel/blob`). |
 
 ## Migrations
 
@@ -171,7 +195,10 @@ pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
 
 - Locally there is no Blob token, so pass the store id of the legacy Blob
   URLs (`<id>.public.blob.vercel-storage.com`; the fixture uses `fakestore`)
-  so they are recognised as own-store.
+  so they are recognised as own-store. An explicit `--blob-store-id` also
+  wins over the token's store: the preview rehearsal runs with the preview
+  store's token and `--blob-store-id <production store>`, so legacy blobs
+  are registered in place and only new uploads go to the preview store.
 - Re-running writes nothing (each step skips rows that exist). `--update`
   updates them in place instead. `--only events,event-rsvps` limits the
   steps, and `--update --reconcile-deletes` also deletes target rows that
@@ -189,9 +216,26 @@ pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
   and re-imported, and reported. `--reconcile-deletes` runs before the import
   steps.
 
-The production cutover runbook (spec §13) is run by a human operator from a
-one-off shell. Agents never run it and never merge `feat/payload-cms` to
-`main`.
+## Deploying and the cutover
+
+- `vercel.json` sets the build command to `pnpm vercel-build`
+  (`scripts/vercel-build.mjs`): production migrates over
+  `DATABASE_URI_UNPOOLED` and builds; a preview refuses the production
+  database host and a missing `BLOB_DELETE_DISABLED=1`, then migrates its
+  Neon branch and builds; anything else only builds.
+- Previews run behind Vercel Deployment Protection, against a manually
+  created Neon branch and a separate preview Blob store. On a preview the
+  `legacyUrl` read rule accepts the production store, so imported images
+  render from their original URLs.
+- **Until the cutover, `feat/payload-cms` is not merged to `main`.** A merge
+  would build production, run `payload migrate` against the production
+  database and take the apex domain with no ETL.
+- The cutover is run by a human operator from a one-off shell, following
+  **`docs/superpowers/plans/2026-10-03-payload-cutover-checklist.md`** (the
+  operator copy of spec §13: Vercel and Neon setup, the preview rehearsal,
+  the local rehearsal, the window steps, the smoke list, rollback and
+  decommission). Agents prepare it; they never run it and never merge to
+  `main`.
 
 ## PlayHQ
 
