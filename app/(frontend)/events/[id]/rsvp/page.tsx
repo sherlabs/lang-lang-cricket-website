@@ -118,7 +118,7 @@ function NoDate({ event }: { event: Event }) {
 export default async function RsvpPage(props: Props) {
   const searchParams = await props.searchParams;
   const params = await props.params;
-  const event = await loadEvent(params.id)
+  const [club, event] = await Promise.all([getClub(), loadEvent(params.id)])
   if (!event) notFound()
 
   const rawDate = searchParams.date
@@ -140,13 +140,9 @@ export default async function RsvpPage(props: Props) {
   return (
     <main>
       <PageHeader
-        eyebrow="RSVP"
+        eyebrow={club.pageCopy.rsvp.eyebrow}
         title={event.title}
-        intro={
-          mode === 'no'
-            ? "Sorry you can't make it — let us know so we can plan the numbers."
-            : 'Let us know you’re coming so we can plan the numbers. It only takes a moment.'
-        }
+        intro={mode === 'no' ? club.pageCopy.rsvp.introNo : club.pageCopy.rsvp.introYes}
       />
 
       <section className="bg-brand-stone/60">

@@ -15,7 +15,8 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata(props: Props) {
   const params = await props.params;
-  const [club, profile] = await Promise.all([getClub(), getPlayerProfile(params.slug)])
+  const club = await getClub()
+  const profile = await getPlayerProfile(params.slug, club.teamNamePrefix)
   if (!profile) return { title: titleWithSuffix(club, 'Player') }
   const summary = [profile.active ? 'Active player' : 'Past player', profile.yearsLabel, profile.grades.join(' · ')]
     .filter(Boolean)
@@ -33,7 +34,8 @@ export async function generateMetadata(props: Props) {
 
 export default async function PlayerPage(props: Props) {
   const params = await props.params;
-  const [club, profile] = await Promise.all([getClub(), getPlayerProfile(params.slug)])
+  const club = await getClub()
+  const profile = await getPlayerProfile(params.slug, club.teamNamePrefix)
   if (!profile) notFound()
   const { player, career } = profile
   const bat = career ? battingView(career) : null
@@ -128,7 +130,7 @@ export default async function PlayerPage(props: Props) {
         {career && (
           <div>
             <h2 className="display mb-6 text-2xl text-brand-black">Season by season</h2>
-            <PlayerSeasonTables seasons={profile.seasons} career={career} />
+            <PlayerSeasonTables seasons={profile.seasons} career={career} teamNamePrefix={club.teamNamePrefix} />
           </div>
         )}
       </div>

@@ -23,6 +23,9 @@ describe('labels', () => {
     expect(seasonYears('Winter 2026')).toBe('2026')
     expect(teamLabel('Lang Lang B Grade')).toBe('B Grade')
     expect(teamLabel('One Day')).toBe('One Day')
+    expect(teamLabel('Smithtown A Grade', 'Smithtown')).toBe('A Grade')
+    expect(teamLabel('Lang Lang B Grade', 'Smithtown')).toBe('Lang Lang B Grade')
+    expect(teamLabel('Lang Lang B Grade', '')).toBe('Lang Lang B Grade')
   })
   it('years label spans oldest to newest season; manual uses manualYears', () => {
     expect(yearsLabel(base, [s(0), s(3), s(1)])).toBe('2022/23 – 2025/26')
@@ -49,6 +52,10 @@ describe('splitPlayers', () => {
     expect(active.map((c) => c.name)).toEqual(['Amy Smith', 'Zed Smith'])
     expect(past.map((c) => c.name)).toEqual(['Mid Smith', 'Old Smith', 'Legend Smith'])
     expect(active[0].grades).toEqual(['B Grade'])
+  })
+  it('threads a club-specific team-name prefix to the grade labels', () => {
+    const { active } = splitPlayers([{ player: { ...base, id: 1, isActiveDerived: true }, seasons: [{ ...s(0), teamName: 'Smithtown A Grade' }] }], 'Smithtown')
+    expect(active[0].grades).toEqual(['A Grade'])
   })
 })
 

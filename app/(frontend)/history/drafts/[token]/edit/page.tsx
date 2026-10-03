@@ -16,13 +16,17 @@ export async function generateMetadata() {
 
 export default async function DraftEditPage(props: { params: Promise<{ token: string }> }) {
   const params = await props.params;
-  const found = await getStoryForEdit(params.token)
+  const [found, club] = await Promise.all([getStoryForEdit(params.token), getClub()])
   if (!found) notFound()
   const { story, authorEmail, contentHtml } = found
 
   return (
     <main>
-      <PageHeader eyebrow="Your story" title="Edit your story" intro="Changes save straight back to your submission." />
+      <PageHeader
+        eyebrow={club.pageCopy.storyDraftEdit.header.eyebrow}
+        title={club.pageCopy.storyDraftEdit.header.title}
+        intro={club.pageCopy.storyDraftEdit.header.intro}
+      />
       <section className="container-site py-12 lg:py-16">
         <DraftEditForm
           editToken={params.token}

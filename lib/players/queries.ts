@@ -11,7 +11,7 @@ import { careerTotals, isActive, playerName, splitPlayers, toCard, yearsLabel, t
  * query states its own `hidden: false` filter, and player reads pass `joins: false` (the
  * seasons/aliases joins are admin-only data).
  */
-export async function listPublicPlayers() {
+export async function listPublicPlayers(teamNamePrefix?: string) {
   const payload = await getPayloadClient()
   const [players, seasons] = await Promise.all([
     payload.find({ collection: 'players', where: { hidden: { equals: false } }, depth: 1, joins: false, pagination: false, sort: 'id' }),
@@ -28,7 +28,7 @@ export async function listPublicPlayers() {
     const playerId = typeof d.player === 'number' ? d.player : d.player.id
     byPlayer.set(playerId, [...(byPlayer.get(playerId) ?? []), { seasonName: d.seasonName, seasonOrder: d.seasonOrder, teamName: d.teamName }])
   }
-  return splitPlayers(players.docs.map((d) => ({ player: toPlayer(d), seasons: byPlayer.get(d.id) ?? [] })))
+  return splitPlayers(players.docs.map((d) => ({ player: toPlayer(d), seasons: byPlayer.get(d.id) ?? [] })), teamNamePrefix)
 }
 
 export type PlayerProfile = {
@@ -37,7 +37,7 @@ export type PlayerProfile = {
 }
 
 /** Shared by `generateMetadata` and the page through React `cache()` (one fetch per request). */
-export const getPlayerProfile = cache(async (slug: string): Promise<PlayerProfile | null> => {
+export const getPlayerProfile = cache(async (slug: string, teamNamePrefix?: string): Promise<PlayerProfile | null> => {
   if (!slug) return null
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
@@ -60,7 +60,7 @@ export const getPlayerProfile = cache(async (slug: string): Promise<PlayerProfil
   })
   const seasons = seasonDocs.map(toPlayerSeason)
   const honours: PlayerHonour[] = (doc.honours ?? []).map((h, i) => ({ id: h.id ?? String(i), years: h.years ?? '', title: h.title ?? '' }))
-  const card = toCard(player, seasons)
+  const card = toCard(player, seasons, teamNamePrefix)
   return {
     player, active: isActive(player), name: playerName(player), yearsLabel: yearsLabel(player, seasons), grades: card.grades,
     honours, seasons, career: seasons.length ? careerTotals(seasons) : null,

@@ -92,7 +92,7 @@ function OccurrenceCard({ event, rsvp }: { event: Event | null; rsvp: EventRsvp 
 
 export default async function RsvpEditPage(props: { params: Promise<{ token: string }> }) {
   const params = await props.params;
-  const rsvp = await getRsvpByToken(params.token)
+  const [club, rsvp] = await Promise.all([getClub(), getRsvpByToken(params.token)])
   if (!rsvp) notFound()
 
   const event = await getEventById(rsvp.eventId)
@@ -100,9 +100,9 @@ export default async function RsvpEditPage(props: { params: Promise<{ token: str
   return (
     <main>
       <PageHeader
-        eyebrow="Your RSVP"
-        title="Manage your RSVP"
-        intro="Plans changed? Switch your answer, update your details, or take yourself off the list. Changes save straight away."
+        eyebrow={club.pageCopy.rsvpEdit.header.eyebrow}
+        title={club.pageCopy.rsvpEdit.header.title}
+        intro={club.pageCopy.rsvpEdit.header.intro}
       />
 
       <section className="bg-brand-stone/60">

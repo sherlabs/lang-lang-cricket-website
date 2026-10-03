@@ -11,18 +11,16 @@ export async function generateMetadata() {
 }
 
 export default async function PlayersPage() {
-  const { active, past } = await listPublicPlayers()
+  const club = await getClub()
+  const { active, past } = await listPublicPlayers(club.teamNamePrefix)
+  const copy = club.pageCopy.players
 
   return (
     <main>
-      <PageHeader
-        eyebrow="The club"
-        title="Players"
-        intro="Everyone who has pulled on the colours for our senior teams — current squads and the players who came before them."
-      />
+      <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
       <section className="container-site py-16 lg:py-20">
         {active.length + past.length === 0 ? (
-          <p className="text-brand-grey">Player records are on their way.</p>
+          <p className="text-brand-grey">{copy.empty}</p>
         ) : (
           <PlayersDirectory active={active} past={past} />
         )}

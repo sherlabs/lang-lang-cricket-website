@@ -183,18 +183,20 @@ function PastCard({ event, photos }: { event: Event; photos: { url: string }[] }
 }
 
 export default async function EventsPage() {
-  const [upcoming, past, going] = await Promise.all([listUpcomingItems(), listPastOneTimeEvents(), listGoingCounts()])
+  const [upcoming, past, going, club] = await Promise.all([
+    listUpcomingItems(),
+    listPastOneTimeEvents(),
+    listGoingCounts(),
+    getClub(),
+  ])
+  const copy = club.pageCopy.events
   const pastWithPhotos = await Promise.all(
     past.map(async (event) => ({ event, photos: await getEventPhotosPublic(event.id) }))
   )
 
   return (
     <main>
-      <PageHeader
-        eyebrow="Events"
-        title="What's on at the club"
-        intro="Training nights, presentation dinners, fundraisers and family days. Let us know you're coming so we can plan the numbers."
-      />
+      <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
 
       <section className="container-site py-16 lg:py-20">
         <SectionRule title="Upcoming" count={upcoming.length} />

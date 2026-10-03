@@ -13,6 +13,8 @@
  * Pure data: no Payload, React or Next imports (the frontend and the admin both import it).
  */
 
+import { PLAYHQ_DEFAULTS } from '../../config/site'
+
 export const SOCIAL_PLATFORMS = ['facebook', 'instagram', 'x', 'youtube', 'tiktok'] as const
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number]
 
@@ -94,6 +96,8 @@ export type ClubDefaults = ClubGlobalDefaults & {
   }
   /** How the club refers to itself in running copy ("Life at Lang Lang"). */
   familiarName: string
+  /** Stripped from PlayHQ team names for display ("Lang Lang B Grade" → "B Grade"). */
+  teamNamePrefix: string
   home: {
     hero: {
       imageAlt: string
@@ -136,6 +140,16 @@ export type ClubDefaults = ClubGlobalDefaults & {
     announcements: { header: HeaderCopy }
     history: { header: HeaderCopy; image: string; imageAlt: string }
     fixtures: { intro: string; noTeams: string }
+    events: { header: HeaderCopy }
+    rsvp: {
+      /** Header intro on /events/[id]/rsvp; the title is the event's. */
+      eyebrow: string
+      introYes: string
+      introNo: string
+    }
+    rsvpEdit: { header: HeaderCopy }
+    players: { header: HeaderCopy; empty: string }
+    storyDraftEdit: { header: HeaderCopy }
     emptyStates: { sponsors: string; documents: string; announcements: string }
   }
   navigation: {
@@ -254,6 +268,7 @@ export const clubDefaults: ClubDefaults = {
     heroImage: '/assets/branding/hero.jpg',
   },
   familiarName: 'Lang Lang',
+  teamNamePrefix: PLAYHQ_DEFAULTS.teamNamePrefix,
 
   home: {
     hero: {
@@ -466,6 +481,43 @@ export const clubDefaults: ClubDefaults = {
     fixtures: {
       intro: 'The next round, the latest results and every Lang Lang side — straight from PlayHQ.',
       noTeams: 'No Lang Lang sides have been entered for this season yet.',
+    },
+    events: {
+      header: {
+        eyebrow: 'Events',
+        title: "What's on at the club",
+        intro:
+          "Training nights, presentation dinners, fundraisers and family days. Let us know you're coming so we can plan the numbers.",
+      },
+    },
+    rsvp: {
+      eyebrow: 'RSVP',
+      introYes: 'Let us know you’re coming so we can plan the numbers. It only takes a moment.',
+      introNo: "Sorry you can't make it — let us know so we can plan the numbers.",
+    },
+    rsvpEdit: {
+      header: {
+        eyebrow: 'Your RSVP',
+        title: 'Manage your RSVP',
+        intro:
+          'Plans changed? Switch your answer, update your details, or take yourself off the list. Changes save straight away.',
+      },
+    },
+    players: {
+      header: {
+        eyebrow: 'The club',
+        title: 'Players',
+        intro:
+          'Everyone who has pulled on the colours for our senior teams — current squads and the players who came before them.',
+      },
+      empty: 'Player records are on their way.',
+    },
+    storyDraftEdit: {
+      header: {
+        eyebrow: 'Your story',
+        title: 'Edit your story',
+        intro: 'Changes save straight back to your submission.',
+      },
     },
     emptyStates: {
       sponsors: 'Sponsor details will be published soon.',
