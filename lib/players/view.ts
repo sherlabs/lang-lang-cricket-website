@@ -16,7 +16,7 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  */
 export const teamLabel = (teamName: string, prefix: string = PLAYHQ_DEFAULTS.teamNamePrefix) =>
   prefix ? teamName.replace(new RegExp(`^${escapeRegExp(prefix)}\\s+`, 'i'), '') : teamName
-export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).slice(0, 2).join('')
+export { initials } from '../identity'
 
 export type SeasonLite = Pick<PlayerSeason, 'seasonName' | 'seasonOrder' | 'teamName'>
 

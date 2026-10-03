@@ -10,6 +10,7 @@ import * as migration_20261003_101141_dup_shared_legacy_url from './20261003_101
 import * as migration_20261003_113720_stats_settings from './20261003_113720_stats_settings';
 import * as migration_20261003_120047_profile_extras from './20261003_120047_profile_extras';
 import * as migration_20261003_123438_yearbooks from './20261003_123438_yearbooks';
+import * as migration_20261003_214142_people_sponsors_apparel from './20261003_214142_people_sponsors_apparel';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20261003_123438_yearbooks.up,
     down: migration_20261003_123438_yearbooks.down,
-    name: '20261003_123438_yearbooks'
+    name: '20261003_123438_yearbooks',
+  },
+  {
+    up: migration_20261003_214142_people_sponsors_apparel.up,
+    down: migration_20261003_214142_people_sponsors_apparel.down,
+    name: '20261003_214142_people_sponsors_apparel'
   },
 ];

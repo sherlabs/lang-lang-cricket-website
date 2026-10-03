@@ -18,6 +18,7 @@ import { Media } from './payload/collections/Media'
 import { People } from './payload/collections/People'
 import { PlayerAliases } from './payload/collections/PlayerAliases'
 import { Players } from './payload/collections/Players'
+import { PlayerSponsors } from './payload/collections/PlayerSponsors'
 import { PlayerSeasons } from './payload/collections/PlayerSeasons'
 import { PlayerSyncRuns } from './payload/collections/PlayerSyncRuns'
 import { Sponsors } from './payload/collections/Sponsors'
@@ -25,6 +26,7 @@ import { Stories } from './payload/collections/Stories'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
 import { Club } from './payload/globals/Club'
+import { ClubApparel } from './payload/globals/ClubApparel'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
 
@@ -65,8 +67,8 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, Yearbooks],
-  globals: [Club, SiteSettings],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks],
+  globals: [Club, ClubApparel, SiteSettings],
   editor: lexicalEditor(),
   db: postgresAdapter({
     pool: {

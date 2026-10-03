@@ -1,13 +1,15 @@
 import { JsonLd } from '@/components/json-ld'
 import { playerJsonLd } from '@/lib/structured-data'
-/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { getPlayerProfile as loadPlayerProfile } from '@/lib/players/queries'
 import { baseOpenGraph, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
-import { battingView, bowlingView, initials } from '@/lib/players/view'
+import { battingView, bowlingView } from '@/lib/players/view'
+import { Avatar } from '@/components/avatar'
+import { SponsoredBy } from '@/components/players/player-sponsors'
+import { listSponsorsOfPlayer } from '@/lib/player-sponsors-queries'
 import { PlayerSeasonTables } from '@/components/players/player-season-tables'
 import { ProgressionChart } from '@/components/stats/progression-chart'
 import { RankBadge } from '@/components/stats/rank-badge'
@@ -67,6 +69,7 @@ export default async function PlayerPage(props: Props) {
   const profile = await getPlayerProfile(params.slug, club.teamNamePrefix)
   if (!profile) notFound()
   const { player } = profile
+  const sponsors = await listSponsorsOfPlayer(player.id)
   // Junior rows are left off unless asked for; every figure below follows the seasons shown.
   // A player with only junior seasons would otherwise see an empty page, so their juniors are always shown.
   const seniorOnly = splitJuniorSeasons(profile.seasons, settings.gradeRules, false)
@@ -120,13 +123,7 @@ export default async function PlayerPage(props: Props) {
         />
         <div className="container-site relative flex flex-col gap-8 py-12 sm:flex-row sm:items-end lg:py-16">
           <div className="h-40 w-40 shrink-0 overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/10 sm:h-48 sm:w-48">
-            {player.photoUrl ? (
-              <img src={player.photoUrl} alt={profile.name} className="h-full w-full object-cover" />
-            ) : (
-              <span aria-hidden className="display flex h-full w-full items-center justify-center text-6xl text-white/40">
-                {initials(profile.name)}
-              </span>
-            )}
+            <Avatar name={profile.name} photoUrl={player.photoUrl} alt={profile.name} initialsClassName="text-6xl text-white/40" />
           </div>
           <div className="min-w-0">
             <Link href="/players" className="text-sm text-white/60 hover:text-white">
@@ -134,6 +131,11 @@ export default async function PlayerPage(props: Props) {
             </Link>
             <p className="eyebrow mt-4 text-brand-gold">{profile.active ? 'Active player' : 'Past player'}</p>
             <h1 className="display mt-2 break-words text-4xl sm:text-5xl">{profile.name}</h1>
+            {profile.clubRole && (
+              <p className="mt-3 text-sm font-semibold text-brand-gold-light">
+                <Link href="/people" className="underline decoration-brand-gold decoration-2 underline-offset-4">Club {profile.clubRole}</Link>
+              </p>
+            )}
             {profile.yearsLabel && <p className="mt-3 text-white/75">{profile.yearsLabel}</p>}
             {profile.grades.length > 0 && <p className="mt-1 text-sm text-white/60">{profile.grades.join(' · ')}</p>}
             <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -170,6 +172,8 @@ export default async function PlayerPage(props: Props) {
             ))}
           </dl>
         )}
+
+        <SponsoredBy tiles={sponsors} />
 
         {hasBadges && (
           <section aria-labelledby="badges-heading">

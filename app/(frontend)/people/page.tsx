@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { getClub } from '@/lib/club'
-import { listPeople } from '@/lib/content-queries'
+import { listPeople } from '@/lib/people-queries'
 import { groupPeople } from '@/lib/people'
 import { PageHeader } from '@/components/page-header'
-import { CommitteeCards } from '@/components/committee-cards'
+import { PeopleGrid } from '@/components/person-card'
 import { SectionHeading } from '@/components/section-heading'
 import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
@@ -41,7 +41,7 @@ export default async function PeoplePage() {
             return (
             <section key={g.key} className="py-16 lg:py-20" aria-label={label}>
               <SectionHeading eyebrow={label} title={copy?.heading ?? label} intro={copy?.intro} />
-              <CommitteeCards contacts={g.people} className="mt-12" />
+              <PeopleGrid people={g.people} className="mt-12" />
             </section>
             )
           })}

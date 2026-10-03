@@ -23,6 +23,9 @@ export function mediaUrl(value: number | Media | null | undefined): string {
 
 const date = (v: string | null | undefined) => new Date(v ?? 0)
 
+/** Relationship value at any depth → id (0 when missing). */
+const relId = (v: number | { id: number } | null | undefined) => (typeof v === 'number' ? v : (v?.id ?? 0))
+
 export const toSponsor = (d: SponsorDoc): Sponsor => ({
   id: d.id,
   tier: d.tier,
@@ -41,6 +44,9 @@ export const toPerson = (d: PersonDoc): Person => ({
   email: d.email ?? '',
   photoUrl: mediaUrl(d.photo),
   sortOrder: d.sortOrder ?? 0,
+  playerSlug: d.player && typeof d.player === 'object' && !d.player.hidden ? (d.player.slug ?? '') : '',
+  playerId: relId(d.player),
+  playerPhotoUrl: d.player && typeof d.player === 'object' ? mediaUrl(d.player.photo) : '',
 })
 
 export const toGalleryPhoto = (d: GalleryPhotoDoc): GalleryPhoto => ({
@@ -72,8 +78,6 @@ const dateOrNull = (v: string | null | undefined) => (v ? new Date(v) : null)
 /** `[{ label }]` rows → strings (verbatim: ETL'd legacy lists keep their duplicates). */
 const labels = (rows: EventDoc['mealOptions']) => (rows ?? []).map((r) => r.label).filter((l): l is string => typeof l === 'string' && l !== '')
 
-/** Relationship value at any depth → id (0 when missing). */
-const relId = (v: number | { id: number } | null | undefined) => (typeof v === 'number' ? v : (v?.id ?? 0))
 
 export const toEvent = (d: EventDoc): Event => ({
   id: d.id,

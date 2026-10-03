@@ -14,3 +14,14 @@ export async function revalidatePlayerPages(): Promise<void> {
     // outside a Next request (tests, `payload run`): nothing to revalidate
   }
 }
+
+/** `/players` and every `/players/[slug]` page, without the stats pages (a photo or sponsor change does not move stats). */
+export async function revalidatePlayerProfiles(): Promise<void> {
+  await revalidatePaths(['/players'])
+  try {
+    const { revalidatePath } = await import('next/cache')
+    revalidatePath('/players/[slug]', 'page')
+  } catch {
+    // outside a Next request (tests, `payload run`): nothing to revalidate
+  }
+}

@@ -32,6 +32,7 @@ export async function FrontendShell({ children }: { children: React.ReactNode })
           clubLinks={nav.clubhouseNav}
           clubLabel={nav.clubhouseLabel}
           cta={nav.navCta}
+          apparel={club.apparel}
         />
         <div className="flex-1">{children}</div>
         <SiteFooter club={club} />

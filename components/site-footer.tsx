@@ -4,12 +4,13 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 import { agencyCreditHref, AGENCY_CREDIT } from '@/config/site'
+import { ApparelLink } from '@/components/apparel-link'
 import type { Club } from '@/lib/club'
 
 // Desktop column template for the main footer grid.
 const columns = 'lg:grid-cols-[1.5fr_1fr_1fr]'
 
-type FooterClub = Pick<Club, 'name' | 'tagline' | 'logoUrl' | 'email' | 'address' | 'socials' | 'siteUrl' | 'navigation'>
+type FooterClub = Pick<Club, 'name' | 'tagline' | 'logoUrl' | 'email' | 'address' | 'socials' | 'siteUrl' | 'navigation'> & Partial<Pick<Club, 'apparel'>>
 
 export function SiteFooter({ club }: { club: FooterClub }) {
   const nav = club.navigation
@@ -66,6 +67,11 @@ export function SiteFooter({ club }: { club: FooterClub }) {
         <div>
           <p className="display mb-4 text-lg text-brand-gold">{nav.findUsHeading}</p>
           <ul className="space-y-1 text-sm">
+            {club.apparel && (
+              <li>
+                <ApparelLink apparel={club.apparel} variant="footer" className="justify-start font-bold" />
+              </li>
+            )}
             <li className="flex min-h-9 items-center gap-2.5 text-white/80">
               <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
               {club.address.locality}, {club.address.regionName}, {club.address.countryName}

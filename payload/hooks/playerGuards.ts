@@ -34,3 +34,19 @@ export const refusePlayhqDelete: CollectionBeforeDeleteHook = async ({ id, req }
     throw new APIError('Only manually added players can be deleted. PlayHQ players come back on the next sync — hide them instead, or merge them into another player.', 403, undefined, true)
   }
 }
+
+/**
+ * `beforeDelete`: a committee member who is also this player keeps their entry; only the link
+ * is cleared (`people.player` has no cascade, and a dangling link would fail validation).
+ */
+export const unlinkPeople: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  await req.payload.update({
+    collection: 'people',
+    where: { player: { equals: id } },
+    data: { player: null },
+    overrideAccess: true,
+    depth: 0,
+    req,
+    context: { ...req.context, disableRevalidate: true },
+  })
+}

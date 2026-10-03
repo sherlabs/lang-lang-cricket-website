@@ -15,6 +15,9 @@
 
 import { PLAYHQ_DEFAULTS } from '../../config/site'
 
+/** Default wording of the merchandise button (the link itself has no default: the committee supplies it). */
+export const DEFAULT_APPAREL_LABEL = 'Club apparel'
+
 export const SOCIAL_PLATFORMS = ['facebook', 'instagram', 'x', 'youtube', 'tiktok'] as const
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number]
 

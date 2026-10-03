@@ -87,6 +87,9 @@ export const mergePlayersEndpoint: Endpoint = {
           .set({ player: tId, updatedAt: stamp })
           .where(and(eq(t.player_seasons.player, sId), inArray(t.player_seasons.id, plan.moveSeasonIds)))
       }
+      // 6b. A committee entry and player sponsorships follow the identity.
+      await tx.update(t.people).set({ player: tId, updatedAt: stamp }).where(eq(t.people.player, sId))
+      await tx.update(t.player_sponsors).set({ player: tId, updatedAt: stamp }).where(eq(t.player_sponsors.player, sId))
       // 7. The source player and anything still pointing at it.
       await tx.delete(t.player_aliases).where(eq(t.player_aliases.player, sId))
       await tx.delete(t.player_seasons).where(eq(t.player_seasons.player, sId))

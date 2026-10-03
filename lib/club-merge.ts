@@ -2,11 +2,29 @@
  * Pure merge of the saved `club` global over the defaults module (spec §4.1). Kept free of
  * Payload/Next imports so it is unit-testable; `getClub()` (lib/club.ts) fetches and calls it.
  */
-import { clubDefaults, type ClubDefaults } from '@/payload/seed/club-defaults'
+import { isHttpUrlOrEmpty } from '@/payload/fields/validators'
+import { clubDefaults, DEFAULT_APPAREL_LABEL, type ClubDefaults } from '@/payload/seed/club-defaults'
 
 type MediaLike = { url?: string | null; width?: number | null; height?: number | null } | number | null | undefined
 
+/** The club's merchandise shop link (global `club-apparel`). */
+export type Apparel = { url: string; label: string; blurb: string }
+
+/**
+ * `findGlobal('club-apparel')` -> the link to show, or null. Null (so NOTHING renders: no dead
+ * button) when the URL is empty or is not http(s), even if something odd was stored.
+ */
+export function resolveApparel(doc: Record<string, unknown> | null | undefined): Apparel | null {
+  const url = typeof doc?.apparelUrl === 'string' ? doc.apparelUrl.trim() : ''
+  if (!url || !isHttpUrlOrEmpty(url)) return null
+  const label = typeof doc?.apparelLabel === 'string' ? doc.apparelLabel.trim() : ''
+  const blurb = typeof doc?.apparelBlurb === 'string' ? doc.apparelBlurb.trim() : ''
+  return { url, label: label || DEFAULT_APPAREL_LABEL, blurb }
+}
+
 export type ResolvedClub = ClubDefaults & {
+  /** Merchandise shop link, or null when none is set. */
+  apparel: Apparel | null
   /** `club.logo` URL, or the static crest. */
   logoUrl: string
   /** `club.ogImage`, or the static 1200×630 image. */
@@ -46,7 +64,11 @@ const mediaUrl = (m: MediaLike): string | null => (m && typeof m === 'object' &&
  * `doc` is the `findGlobal('club', depth 1)` result. A never-saved global (no `updatedAt`)
  * yields the defaults verbatim, so an unseeded site renders exactly as before.
  */
-export function resolveClub(doc: Record<string, unknown> | null | undefined, defaults: ClubDefaults = clubDefaults): ResolvedClub {
+export function resolveClub(
+  doc: Record<string, unknown> | null | undefined,
+  defaults: ClubDefaults = clubDefaults,
+  apparelDoc: Record<string, unknown> | null | undefined = null,
+): ResolvedClub {
   const saved = Boolean(doc && doc.updatedAt)
   const merged = saved ? mergeOver(defaults, doc) : defaults
   const logo = saved ? (doc!.logo as MediaLike) : null
@@ -54,6 +76,7 @@ export function resolveClub(doc: Record<string, unknown> | null | undefined, def
   const ogUrl = mediaUrl(og)
   return {
     ...merged,
+    apparel: resolveApparel(apparelDoc),
     siteUrl: merged.siteUrl.replace(/\/+$/, ''),
     logoUrl: mediaUrl(logo) ?? defaults.assets.logo,
     ogImage:

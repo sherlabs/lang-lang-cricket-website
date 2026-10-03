@@ -1,7 +1,9 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon } from '@hugeicons/core-free-icons'
 import { getClub } from '@/lib/club'
+import Link from 'next/link'
 import { listSponsors } from '@/lib/content-queries'
+import { listPlayerSponsorTiles, playersBySponsor } from '@/lib/player-sponsors-queries'
 import { PageHeader } from '@/components/page-header'
 import { SponsorCard, TIER_STYLES, groupByTier } from '@/components/sponsor-logos'
 import { cn } from '@/lib/utils'
@@ -14,7 +16,13 @@ export async function generateMetadata() {
 }
 
 export default async function SponsorsPage() {
-  const [club, rows] = await Promise.all([getClub(), listSponsors()])
+  const [club, rows, playerTiles] = await Promise.all([
+    getClub(),
+    listSponsors(),
+    // A bonus: if the player links cannot be read the sponsor logos still render.
+    listPlayerSponsorTiles().catch(() => []),
+  ])
+  const backing = playersBySponsor(playerTiles)
   const groups = groupByTier(rows)
   const copy = club.pageCopy.sponsors
   const blurbs = new Map(club.pageCopy.tierBlurbs.map((t) => [t.tier, t.blurb]))
@@ -54,6 +62,34 @@ export default async function SponsorsPage() {
                   <SponsorCard key={s.id} sponsor={s} tier={tier} />
                 ))}
               </div>
+              {tier === 'Player' && backing.size > 0 && (
+                <div className="mt-6 rounded-2xl bg-brand-gold-pale p-5 text-sm text-brand-charcoal ring-1 ring-brand-gold/30">
+                  <ul className="space-y-1">
+                    {items
+                      .filter((s) => backing.has(s.id))
+                      .map((s) => (
+                        <li key={s.id}>
+                          <span className="font-semibold">{s.name}</span> backs{' '}
+                          {backing.get(s.id)!.map((p, i, all) => (
+                            <span key={p.slug}>
+                              <Link href={`/players/${p.slug}`} className="font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 hover:text-brand-gold-deep">
+                                {p.name}
+                              </Link>
+                              {i < all.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </li>
+                      ))}
+                  </ul>
+                  <p className="mt-3">
+                    See every pairing on the{' '}
+                    <Link href="/players" className="font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 hover:text-brand-gold-deep">
+                      Players page
+                    </Link>
+                    .
+                  </p>
+                </div>
+              )}
             </section>
           )
         })}

@@ -15,8 +15,12 @@ let warned = false
 export const getClub = cache(async (): Promise<ResolvedClub> => {
   try {
     const payload = await getPayloadClient()
-    const doc = await payload.findGlobal({ slug: 'club', depth: 1 })
-    return resolveClub(doc as unknown as Record<string, unknown>)
+    const [doc, apparel] = await Promise.all([
+      payload.findGlobal({ slug: 'club', depth: 1 }),
+      // A bonus: an unreadable apparel link must not take the club details down with it.
+      payload.findGlobal({ slug: 'club-apparel', depth: 0 }).catch(() => null),
+    ])
+    return resolveClub(doc as unknown as Record<string, unknown>, undefined, apparel as unknown as Record<string, unknown> | null)
   } catch (err) {
     if (!warned) {
       warned = true

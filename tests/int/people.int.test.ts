@@ -49,7 +49,7 @@ describe('people', () => {
   })
 
   it('listPeople groups as the public pages expect', async () => {
-    const { listPeople } = await import('@/lib/content-queries')
+    const { listPeople } = await import('@/lib/people-queries')
     const leadership = await listPeople('leadership')
     expect(leadership.map((p) => p.name)).toEqual(['  Legacy Name '])
     expect(leadership[0].photoUrl).toBe('')

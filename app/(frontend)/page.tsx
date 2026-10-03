@@ -7,13 +7,15 @@ import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
 import { cookies } from 'next/headers'
+import { ApparelBanner } from '@/components/apparel-link'
 import { SectionHeading } from '@/components/section-heading'
-import { CommitteeCards } from '@/components/committee-cards'
+import { PeopleGrid } from '@/components/person-card'
 import { SponsorStrip } from '@/components/sponsor-logos'
 import { SponsorCarousel, selectCarouselSponsors } from '@/components/sponsor-carousel'
 import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
-import { listGalleryPhotos, listPeople, listSponsors } from '@/lib/content-queries'
+import { listGalleryPhotos, listSponsors } from '@/lib/content-queries'
+import { listPeople } from '@/lib/people-queries'
 import { getClub } from '@/lib/club'
 import { clubIcon } from '@/lib/club-icons'
 import { getLatestAnnouncement } from '@/lib/announcements-queries'
@@ -97,6 +99,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Club apparel call-to-action (nothing when no shop link is set) */}
+      <ApparelBanner apparel={club.apparel} />
 
       {/* Sponsor logo carousel (tiers chosen in admin) */}
       <SponsorCarousel sponsors={carouselSponsors} />
@@ -198,7 +203,7 @@ export default async function HomePage() {
               <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
             </Link>
           </div>
-          <CommitteeCards contacts={contacts} className="mt-12" />
+          <PeopleGrid people={contacts} className="mt-12" />
         </div>
       </section>
 

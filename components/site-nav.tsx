@@ -6,6 +6,8 @@ import { ClubLogo } from '@/components/club-logo'
 import { usePathname } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon, Cancel01Icon, Mail01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { ApparelLink } from '@/components/apparel-link'
+import type { Apparel } from '@/lib/club-merge'
 import { cn } from '@/lib/utils'
 
 // Pages that live under the Stats item without sharing its URL prefix.
@@ -35,9 +37,11 @@ type SiteNavProps = {
   clubLinks: NavLink[]
   clubLabel: string
   cta: NavLink
+  /** Merchandise shop link; null renders no button. */
+  apparel?: Apparel | null
 }
 
-export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta }: SiteNavProps) {
+export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta, apparel = null }: SiteNavProps) {
   // Home is reachable from the crest on desktop; the mobile menu spells it out.
   const mobilePrimaryLinks = [{ href: '/', label: 'Home' }, ...primaryLinks]
   const [open, setOpen] = useState(false)
@@ -178,6 +182,8 @@ export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta }: SiteN
             )}
           </div>
 
+          <ApparelLink apparel={apparel} variant="nav" />
+
           <Link
             href={cta.href}
             aria-current={isActive(cta.href) ? 'page' : undefined}
@@ -252,6 +258,8 @@ export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta }: SiteN
               )
             })}
           </div>
+
+          <ApparelLink apparel={apparel} variant="mobile" onClick={() => setOpen(false)} />
 
           <Link
             href={cta.href}

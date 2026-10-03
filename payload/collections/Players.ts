@@ -5,7 +5,7 @@ import { mergePlayersEndpoint } from '../endpoints/mergePlayers'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
 import { displayName, fullName } from '../hooks/displayName'
-import { keepStored, playerSource, refusePlayhqDelete } from '../hooks/playerGuards'
+import { keepStored, playerSource, refusePlayhqDelete, unlinkPeople } from '../hooks/playerGuards'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { uniqueSlug } from '../hooks/slug'
 import { trimHonours, trimStrings } from '../hooks/trimStrings'
@@ -63,7 +63,9 @@ export const Players: CollectionConfig = {
       cascadeDelete([
         { collection: 'player-aliases', field: 'player' },
         { collection: 'player-seasons', field: 'player' },
+        { collection: 'player-sponsors', field: 'player' },
       ]),
+      unlinkPeople,
     ],
     afterChange: [revalidateAfterChange(paths, STATS_TAGS)],
     afterDelete: [revalidateAfterDelete(paths, STATS_TAGS)],
@@ -112,7 +114,22 @@ export const Players: CollectionConfig = {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.' },
+      admin: {
+        description:
+          'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, you can leave this empty: the picture on that entry is used instead.',
+      },
+    },
+    {
+      name: 'committeeRoles',
+      label: 'Also on the committee',
+      type: 'join',
+      collection: 'people',
+      on: 'player',
+      admin: {
+        allowCreate: false,
+        defaultColumns: ['name', 'role'],
+        description: 'Shown if someone under Committee & contacts is linked to this player. To change their picture, edit it there.',
+      },
     },
     {
       name: 'bio',

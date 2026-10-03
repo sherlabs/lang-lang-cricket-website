@@ -82,6 +82,7 @@ export interface Config {
     'player-aliases': PlayerAlias;
     'player-seasons': PlayerSeason;
     'player-sync-runs': PlayerSyncRun;
+    'player-sponsors': PlayerSponsor;
     yearbooks: Yearbook;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -94,6 +95,7 @@ export interface Config {
       rsvps: 'event-rsvps';
     };
     players: {
+      committeeRoles: 'people';
       seasons: 'player-seasons';
       aliases: 'player-aliases';
     };
@@ -114,6 +116,7 @@ export interface Config {
     'player-aliases': PlayerAliasesSelect<false> | PlayerAliasesSelect<true>;
     'player-seasons': PlayerSeasonsSelect<false> | PlayerSeasonsSelect<true>;
     'player-sync-runs': PlayerSyncRunsSelect<false> | PlayerSyncRunsSelect<true>;
+    'player-sponsors': PlayerSponsorsSelect<false> | PlayerSponsorsSelect<true>;
     yearbooks: YearbooksSelect<false> | YearbooksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -126,10 +129,12 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     club: Club;
+    'club-apparel': ClubApparel;
     'site-settings': SiteSetting;
   };
   globalsSelect: {
     club: ClubSelect<false> | ClubSelect<true>;
+    'club-apparel': ClubApparelSelect<false> | ClubApparelSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
@@ -333,13 +338,150 @@ export interface Person {
   phone?: string | null;
   email?: string | null;
   /**
-   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.
+   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. This is the one place to change their picture: it shows on the home page, Contact, Our People and, if they are also a player, on the Players pages.
    */
   photo?: (number | null) | Media;
+  /**
+   * Optional. Pick the player if this person also plays. Their picture added here is then used on the Players pages whenever the player has no picture of their own, so you only ever update it in one place.
+   */
+  player?: (number | null) | Player;
   /**
    * Leave as 0 unless the order matters. Smaller numbers show first (1 is at the top).
    */
   sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "players".
+ */
+export interface Player {
+  id: number;
+  firstName: string;
+  lastName?: string | null;
+  displayName?: string | null;
+  /**
+   * Set from the name when the player is created; never changes.
+   */
+  slug?: string | null;
+  /**
+   * PlayHQ players come in automatically and cannot be deleted.
+   */
+  source?: ('playhq' | 'manual') | null;
+  /**
+   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, you can leave this empty: the picture on that entry is used instead.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * Shown if someone under Committee & contacts is linked to this player. To change their picture, edit it there.
+   */
+  committeeRoles?: {
+    docs?: (number | Person)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Leave a blank line between paragraphs.
+   */
+  bio?: string | null;
+  /**
+   * For example 1978–1992. Shown when the player has no seasons recorded automatically.
+   */
+  manualYears?: string | null;
+  /**
+   * Leave empty and the site decides (played this season or last = current player).
+   */
+  activeOverride?: ('active' | 'past') | null;
+  /**
+   * Set by the sync: played in the latest two seasons.
+   */
+  isActiveDerived?: boolean | null;
+  /**
+   * Tick to keep this player off the public website.
+   */
+  hidden?: boolean | null;
+  /**
+   * Awards and roles, e.g. "Club champion". Drag to change the order.
+   */
+  honours?:
+    | {
+        years?: string | null;
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  baselineGames?: number | null;
+  baselineRuns?: number | null;
+  baselineWickets?: number | null;
+  baselineCatches?: number | null;
+  /**
+   * Written by the PlayHQ sync.
+   */
+  seasons?: {
+    docs?: (number | PlayerSeason)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * PlayHQ names that map to this player. Merging moves them.
+   */
+  aliases?: {
+    docs?: (number | PlayerAlias)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Written by the PlayHQ sync; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-seasons".
+ */
+export interface PlayerSeason {
+  id: number;
+  player: number | Player;
+  seasonName: string;
+  /**
+   * 0 = newest senior season group.
+   */
+  seasonOrder: number;
+  teamId: string;
+  teamName: string;
+  gradeName?: string | null;
+  games: number;
+  batInnings: number;
+  batNotOuts: number;
+  batRuns: number;
+  batHighScore: number;
+  batBalls: number;
+  batFours: number;
+  batSixes: number;
+  bowlBalls: number;
+  bowlMaidens: number;
+  bowlRuns: number;
+  bowlWickets: number;
+  bowlBestWickets: number;
+  bowlBestRuns: number;
+  catches: number;
+  batHighScoreNotOut?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * PlayHQ name keys (first|last, lower case) and the player each one belongs to. Normally managed by sync and merge.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-aliases".
+ */
+export interface PlayerAlias {
+  id: number;
+  nameKey: string;
+  player: number | Player;
   updatedAt: string;
   createdAt: string;
 }
@@ -541,131 +683,6 @@ export interface Story {
   createdAt: string;
 }
 /**
- * Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "players".
- */
-export interface Player {
-  id: number;
-  firstName: string;
-  lastName?: string | null;
-  displayName?: string | null;
-  /**
-   * Set from the name when the player is created; never changes.
-   */
-  slug?: string | null;
-  /**
-   * PlayHQ players come in automatically and cannot be deleted.
-   */
-  source?: ('playhq' | 'manual') | null;
-  /**
-   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.
-   */
-  photo?: (number | null) | Media;
-  /**
-   * Leave a blank line between paragraphs.
-   */
-  bio?: string | null;
-  /**
-   * For example 1978–1992. Shown when the player has no seasons recorded automatically.
-   */
-  manualYears?: string | null;
-  /**
-   * Leave empty and the site decides (played this season or last = current player).
-   */
-  activeOverride?: ('active' | 'past') | null;
-  /**
-   * Set by the sync: played in the latest two seasons.
-   */
-  isActiveDerived?: boolean | null;
-  /**
-   * Tick to keep this player off the public website.
-   */
-  hidden?: boolean | null;
-  /**
-   * Awards and roles, e.g. "Club champion". Drag to change the order.
-   */
-  honours?:
-    | {
-        years?: string | null;
-        title: string;
-        id?: string | null;
-      }[]
-    | null;
-  baselineGames?: number | null;
-  baselineRuns?: number | null;
-  baselineWickets?: number | null;
-  baselineCatches?: number | null;
-  /**
-   * Written by the PlayHQ sync.
-   */
-  seasons?: {
-    docs?: (number | PlayerSeason)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * PlayHQ names that map to this player. Merging moves them.
-   */
-  aliases?: {
-    docs?: (number | PlayerAlias)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Written by the PlayHQ sync; read only.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "player-seasons".
- */
-export interface PlayerSeason {
-  id: number;
-  player: number | Player;
-  seasonName: string;
-  /**
-   * 0 = newest senior season group.
-   */
-  seasonOrder: number;
-  teamId: string;
-  teamName: string;
-  gradeName?: string | null;
-  games: number;
-  batInnings: number;
-  batNotOuts: number;
-  batRuns: number;
-  batHighScore: number;
-  batBalls: number;
-  batFours: number;
-  batSixes: number;
-  bowlBalls: number;
-  bowlMaidens: number;
-  bowlRuns: number;
-  bowlWickets: number;
-  bowlBestWickets: number;
-  bowlBestRuns: number;
-  catches: number;
-  batHighScoreNotOut?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * PlayHQ name keys (first|last, lower case) and the player each one belongs to. Normally managed by sync and merge.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "player-aliases".
- */
-export interface PlayerAlias {
-  id: number;
-  nameKey: string;
-  player: number | Player;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "player-sync-runs".
  */
@@ -677,6 +694,42 @@ export interface PlayerSyncRun {
   playersCreated?: number | null;
   seasonRows?: number | null;
   error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A business that sponsors a particular player. They are shown on the Players page and on that player’s own page. Add the business under Sponsors first (level "Player"), then link it here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-sponsors".
+ */
+export interface PlayerSponsor {
+  id: number;
+  /**
+   * The player being sponsored. Their picture and name are shown automatically.
+   */
+  player: number | Player;
+  /**
+   * The business. Its logo and website come from the Sponsors list, so change those there.
+   */
+  sponsor: number | Sponsor;
+  season?: string | null;
+  /**
+   * A line or two, up to 280 characters. For example "Proudly backing Sam since 2019".
+   */
+  message?: string | null;
+  /**
+   * Tick to show this one at the front of the Player sponsors band.
+   */
+  featured?: boolean | null;
+  /**
+   * Leave as 0. A smaller number shows earlier.
+   */
+  sortOrder?: number | null;
+  /**
+   * Switch off to hide this sponsorship without deleting it.
+   */
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -807,6 +860,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'player-sync-runs';
         value: number | PlayerSyncRun;
+      } | null)
+    | ({
+        relationTo: 'player-sponsors';
+        value: number | PlayerSponsor;
       } | null)
     | ({
         relationTo: 'yearbooks';
@@ -968,6 +1025,7 @@ export interface PeopleSelect<T extends boolean = true> {
   phone?: T;
   email?: T;
   photo?: T;
+  player?: T;
   sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1084,6 +1142,7 @@ export interface PlayersSelect<T extends boolean = true> {
   slug?: T;
   source?: T;
   photo?: T;
+  committeeRoles?: T;
   bio?: T;
   manualYears?: T;
   activeOverride?: T;
@@ -1156,6 +1215,21 @@ export interface PlayerSyncRunsSelect<T extends boolean = true> {
   playersCreated?: T;
   seasonRows?: T;
   error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-sponsors_select".
+ */
+export interface PlayerSponsorsSelect<T extends boolean = true> {
+  player?: T;
+  sponsor?: T;
+  season?: T;
+  message?: T;
+  featured?: T;
+  sortOrder?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1370,6 +1444,29 @@ export interface Club {
     };
   };
   storySubmitIntro?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The link to buy club clothing. Shown as a gold button in the menu, on the home page and in the footer.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "club-apparel".
+ */
+export interface ClubApparel {
+  id: number;
+  /**
+   * Paste the full web address of the shop, starting with https://. Leave empty to hide the apparel button everywhere on the website.
+   */
+  apparelUrl?: string | null;
+  /**
+   * The words on the button. If you leave it empty it says "Club apparel".
+   */
+  apparelLabel?: string | null;
+  /**
+   * A sentence to sit beside the button on the home page, for example "Order your playing shirt and club hoodie online."
+   */
+  apparelBlurb?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1617,6 +1714,18 @@ export interface ClubSelect<T extends boolean = true> {
             };
       };
   storySubmitIntro?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "club-apparel_select".
+ */
+export interface ClubApparelSelect<T extends boolean = true> {
+  apparelUrl?: T;
+  apparelLabel?: T;
+  apparelBlurb?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

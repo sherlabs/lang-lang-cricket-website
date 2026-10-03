@@ -27,6 +27,12 @@ export type Person = {
   /** '' when there is no photo (initials are shown). */
   photoUrl: string
   sortOrder: number
+  /** Slug of the linked public player profile; '' when not a player, or the player is hidden. */
+  playerSlug: string
+  /** Id of the linked player (0 when none), hidden or not. */
+  playerId: number
+  /** The linked player's own photo ('' when none); only a fallback, see lib/identity.ts. */
+  playerPhotoUrl: string
 }
 
 export type GalleryPhoto = {

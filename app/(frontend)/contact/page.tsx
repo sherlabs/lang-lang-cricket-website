@@ -3,9 +3,9 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon, ShieldCheckIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
 import { getClub } from '@/lib/club'
-import { listPeople } from '@/lib/content-queries'
+import { listPeople } from '@/lib/people-queries'
 import { PageHeader } from '@/components/page-header'
-import { CommitteeCards } from '@/components/committee-cards'
+import { PeopleGrid } from '@/components/person-card'
 import { SectionHeading } from '@/components/section-heading'
 import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
@@ -68,12 +68,12 @@ export default async function ContactPage() {
           </Link>{' '}
           page.
         </p>
-        <CommitteeCards contacts={contacts} className="mt-12" />
+        <PeopleGrid people={contacts} className="mt-12" />
 
         {leadership.length > 0 && (
           <div className="mt-20">
             <SectionHeading eyebrow={copy.leadership.eyebrow} title={copy.leadership.title} intro={copy.leadership.intro} />
-            <CommitteeCards contacts={leadership} className="mt-12" />
+            <PeopleGrid people={leadership} className="mt-12" />
           </div>
         )}
 

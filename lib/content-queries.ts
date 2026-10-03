@@ -1,7 +1,7 @@
 import 'server-only'
-import type { DocumentItem, GalleryPhoto, Person, Sponsor } from '@/lib/domain'
+import type { DocumentItem, GalleryPhoto, Sponsor } from '@/lib/domain'
 import { getPayloadClient } from '@/lib/payload/client'
-import { toDocumentItem, toGalleryPhoto, toPerson, toSponsor } from '@/lib/payload/mappers'
+import { toDocumentItem, toGalleryPhoto, toSponsor } from '@/lib/payload/mappers'
 
 /**
  * Public reads for the simple content collections (spec §14). Every query states its own
@@ -40,17 +40,4 @@ export async function listDocuments(): Promise<DocumentItem[]> {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({ collection: 'documents', sort: ['title', 'id'], pagination: false, depth: 0 })
   return docs.map(toDocumentItem)
-}
-
-/** People by `sortOrder`, optionally one section. */
-export async function listPeople(section?: string): Promise<Person[]> {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: 'people',
-    ...(section ? { where: { section: { equals: section } } } : {}),
-    sort: ['sortOrder', 'id'],
-    pagination: false,
-    depth: 1,
-  })
-  return docs.map(toPerson)
 }

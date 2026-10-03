@@ -58,7 +58,7 @@ describe('content-queries (spec §14)', () => {
   })
 
   it('listPeople orders by sortOrder and filters by section when asked', async () => {
-    const { listPeople } = await import('@/lib/content-queries')
+    const { listPeople } = await import('@/lib/people-queries')
     expect((await listPeople()).map((p) => p.name)).toEqual(['Alex', 'Chris', 'Jamie'])
     const committee = await listPeople('committee')
     expect(committee.map((p) => p.name)).toEqual(['Alex', 'Jamie'])
