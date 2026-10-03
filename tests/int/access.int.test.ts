@@ -361,6 +361,16 @@ describe('access: stories (WP4)', () => {
     expect((await rest('GET', `/stories/${pendingId}`)).status).toBe(404)
   })
 
+  it('moderation fields (reviewedAt, submittedByAdmin) are staff-only over REST', async () => {
+    const anon = (await rest('GET', `/stories/${publishedId}`)).json
+    expect(anon).not.toHaveProperty('reviewedAt')
+    expect(anon).not.toHaveProperty('submittedByAdmin')
+    expect(anon).toHaveProperty('publishedAt')
+    const staff = (await rest('GET', `/stories/${publishedId}`, { token: editor })).json
+    expect(staff).toHaveProperty('reviewedAt')
+    expect(staff).toHaveProperty('submittedByAdmin')
+  })
+
   it('anonymous cannot filter or sort on a token (field read access governs where/sort)', async () => {
     expect((await rest('GET', '/stories?where[editToken][like]=a')).status).toBe(400)
     expect((await rest('GET', '/stories?sort=editToken')).status).toBe(400)

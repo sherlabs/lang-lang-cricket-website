@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { getPayloadClient } from '@/lib/payload/client'
 import { DRAFT_COOKIE } from '@/lib/story-tokens'
-import { parseStoryForm, validationMessage } from '@/lib/stories-form'
+import { inStoryTransaction, parseStoryForm, validationMessage } from '@/lib/stories-form'
 
 /**
  * Public, no-login story submission (spec §5, §6). The honeypot, the required fields and the
@@ -21,24 +21,28 @@ export async function submitStory(formData: FormData): Promise<{ error: string }
   }
 
   const payload = await getPayloadClient()
-  const parsed = await parseStoryForm(payload, formData)
-  if ('error' in parsed) return parsed
-
-  let created: { title: string; editToken?: string | null; viewToken?: string | null }
-  try {
-    created = await payload.create({
-      collection: 'stories',
-      // `status` is forced to pending by storyLifecycle under publicSubmission anyway.
-      data: { ...parsed.data, status: 'pending' },
-      overrideAccess: true,
-      depth: 0,
-      context: { publicSubmission: true },
-    })
-  } catch (err) {
-    const message = validationMessage(err)
-    if (message) return { error: message }
-    throw err
-  }
+  const result = await inStoryTransaction(payload, async (req) => {
+    const parsed = await parseStoryForm(payload, formData, req)
+    if ('error' in parsed) return parsed
+    try {
+      const created = await payload.create({
+        collection: 'stories',
+        // `status` is forced to pending by storyLifecycle under publicSubmission anyway.
+        data: { ...parsed.data, status: 'pending' },
+        overrideAccess: true,
+        depth: 0,
+        context: { publicSubmission: true },
+        req,
+      })
+      return { created }
+    } catch (err) {
+      const message = validationMessage(err)
+      if (message) return { error: message }
+      throw err
+    }
+  })
+  if ('error' in result) return result
+  const { created } = result
 
   // Not put in the URL: query params linger in browser history and can leak
   // via the Referer header to any outbound link on the confirmation page.

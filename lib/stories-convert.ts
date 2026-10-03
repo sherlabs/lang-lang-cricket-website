@@ -15,15 +15,16 @@ import { convertHTMLToLexical, editorConfigFactory } from '@payloadcms/richtext-
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import type { JSONContent } from '@tiptap/core'
 import { JSDOM } from 'jsdom'
-import type { Payload, SanitizedConfig, Where } from 'payload'
+import type { Payload, PayloadRequest, SanitizedConfig, Where } from 'payload'
 import type { Story as StoryDoc } from '@/payload-types'
 import { storyFeatures } from '@/payload/editor/storyLexical'
 import { blobToken } from '@/payload/env'
 import { blobPathParts, blobStoreId, isOwnBlobUrl } from './blob-url'
 import { renderStoryHtml } from './stories-content'
 import { isSafeHref } from './story-href'
+import { listStart } from './story-list-start'
 
-export { isSafeHref }
+export { isSafeHref, listStart }
 
 /** Serialized Lexical editor state as stored in `stories.content`. */
 export type StoryContent = StoryDoc['content']
@@ -98,14 +99,19 @@ const KEEP_ATTRS = new Set(['href', 'src', 'alt'])
  * - `pre` → `p` containing a `code` element;
  * - drops `img`s whose `src` is not an allowed story image (returned in `droppedImages`, so
  *   a public save can refuse and the ETL can report);
- * - unwraps links whose `href` is not http(s)/mailto (the text stays);
- * - strips every attribute except `href`, `src` and `alt`.
+ * - unwraps links whose `href` is not http(s)/mailto (the text stays; the hrefs are returned in
+ *   `unwrappedLinks` so the ETL can report them);
+ * - strips every attribute except `href`, `src`, `alt` and a valid `start` on `ol`.
  */
-export function normaliseStoryHtml(html: string, opts: { storeId: string | null }): { html: string; droppedImages: string[] } {
+export function normaliseStoryHtml(
+  html: string,
+  opts: { storeId: string | null },
+): { html: string; droppedImages: string[]; unwrappedLinks: string[] } {
   const dom = new JSDOM(`<!DOCTYPE html><body>${html}</body>`)
   const doc = dom.window.document
   const body = doc.body
   const droppedImages: string[] = []
+  const unwrappedLinks: string[] = []
 
   const rename = (el: Element, tag: string) => {
     const next = doc.createElement(tag)
@@ -130,14 +136,20 @@ export function normaliseStoryHtml(html: string, opts: { storeId: string | null 
     }
   }
   for (const a of Array.from(body.querySelectorAll('a'))) {
-    if (!isSafeHref(a.getAttribute('href'))) a.replaceWith(...Array.from(a.childNodes))
+    const href = a.getAttribute('href')
+    if (!isSafeHref(href)) {
+      unwrappedLinks.push(href ?? '')
+      a.replaceWith(...Array.from(a.childNodes))
+    }
   }
   for (const el of Array.from(body.querySelectorAll('*'))) {
+    const start = el.tagName === 'OL' ? listStart(el.getAttribute('start')) : null
     for (const attr of Array.from(el.attributes)) if (!KEEP_ATTRS.has(attr.name)) el.removeAttribute(attr.name)
+    if (start !== null) el.setAttribute('start', String(start))
   }
   const out = body.innerHTML
   dom.window.close()
-  return { html: out, droppedImages }
+  return { html: out, droppedImages, unwrappedLinks }
 }
 
 /** `src → alt` of every image in (normalised) HTML: the Lexical import keeps only the src. */
@@ -214,8 +226,8 @@ export function mediaRefOf(src: string): { prefix: string | null; filename: stri
  * BEFORE any `isOwnBlobUrl` check (spec §6), so a token edit of a legacy story resolves its
  * images.
  */
-export async function findMediaBySrc(payload: Payload, src: string): Promise<number | null> {
-  const byLegacy = await payload.find({ collection: 'media', where: { legacyUrl: { equals: src } }, limit: 1, depth: 0, overrideAccess: true })
+export async function findMediaBySrc(payload: Payload, src: string, req?: Partial<PayloadRequest>): Promise<number | null> {
+  const byLegacy = await payload.find({ collection: 'media', where: { legacyUrl: { equals: src } }, limit: 1, depth: 0, overrideAccess: true, req })
   if (byLegacy.docs[0]) return byLegacy.docs[0].id
   const ref = mediaRefOf(src)
   if (!ref) return null
@@ -223,7 +235,7 @@ export async function findMediaBySrc(payload: Payload, src: string): Promise<num
     ref.prefix === null
       ? { filename: { equals: ref.filename } }
       : { and: [{ filename: { equals: ref.filename } }, ref.prefix === '' ? { or: [{ prefix: { equals: '' } }, { prefix: { exists: false } }] } : { prefix: { equals: ref.prefix } }] }
-  const found = await payload.find({ collection: 'media', where, limit: 1, depth: 0, overrideAccess: true })
+  const found = await payload.find({ collection: 'media', where, limit: 1, depth: 0, overrideAccess: true, req })
   return found.docs[0]?.id ?? null
 }
 
@@ -238,6 +250,8 @@ export type ResolveUploadsOptions = {
   mode: 'public' | 'etl'
   alts?: Map<string, string>
   onDrop?: (src: string) => void
+  /** The public save's transaction, so lookups see media registered earlier in it. */
+  req?: Partial<PayloadRequest>
 }
 
 /**
@@ -254,7 +268,7 @@ export async function resolveUploadNodes(state: StoryContent, opts: ResolveUploa
     const src = (node.pending?.src ?? '').trim()
     let id = cache.get(src)
     if (id === undefined) {
-      id = src ? await findMediaBySrc(opts.payload, src) : null
+      id = src ? await findMediaBySrc(opts.payload, src, opts.req) : null
       if (id === null && src) id = await opts.register(src, opts.alts?.get(src) ?? '')
       cache.set(src, id)
     }
@@ -279,7 +293,7 @@ export async function resolveUploadNodes(state: StoryContent, opts: ResolveUploa
  * `stories/pending/` with a safe basename, which `head()` confirms is an image. Registered as
  * a `media` doc without moving bytes (no `url`, focal point 50/50). Returns null otherwise.
  */
-export async function registerPendingStoryImage(payload: Payload, src: string, alt = ''): Promise<number | null> {
+export async function registerPendingStoryImage(payload: Payload, src: string, alt = '', req?: Partial<PayloadRequest>): Promise<number | null> {
   const token = blobToken()
   const storeId = blobStoreId(token)
   if (!token || !storeId || !isOwnBlobUrl(src, { storeId, prefix: STORY_PENDING_PREFIX })) return null
@@ -296,6 +310,7 @@ export async function registerPendingStoryImage(payload: Payload, src: string, a
     data: { filename, prefix, mimeType: meta.contentType, filesize: meta.size, focalX: 50, focalY: 50, alt },
     overrideAccess: true,
     depth: 0,
+    req,
   })
   return doc.id
 }
@@ -310,7 +325,9 @@ type UploadValue = { url?: string | null; alt?: string | null } | number | null 
 /**
  * Story content (fetched at `depth: 1`, so upload nodes are populated) → the HTML Tiptap loads
  * as `content`. Images become `<img src alt>`; links keep only a safe `href`. Tiptap's schema
- * parses (and sanitises) it again.
+ * parses (and sanitises) it again. An empty paragraph is `<p></p>` (the default `<p><br /></p>`
+ * would come back as a hard break), and an ordered list carries its `start` (Tiptap reads
+ * `<ol start>`, not `<li value>`).
  */
 export function lexicalToTiptapHtml(content: StoryContent | null | undefined): string {
   if (!content || typeof content !== 'object' || !('root' in content)) return ''
@@ -325,6 +342,15 @@ export function lexicalToTiptapHtml(content: StoryContent | null | undefined): s
         const value = (node as { value?: UploadValue }).value
         if (!value || typeof value !== 'object' || !value.url) return ''
         return `<img src="${escapeAttr(value.url)}" alt="${escapeAttr(value.alt ?? '')}">`
+      },
+      paragraph: (args) => {
+        const children = args.nodesToHTML({ nodes: args.node.children })
+        return `<p${args.providedStyleTag}>${children.join('')}</p>`
+      },
+      list: (args) => {
+        const html = (defaultConverters.list as Extract<typeof defaultConverters.list, (...a: never[]) => unknown>)(args) as string
+        const start = args.node.listType === 'number' ? listStart((args.node as { start?: unknown }).start) : null
+        return start === null ? html : html.replace(/^<ol\b/, `<ol start="${start}"`)
       },
     }),
   })

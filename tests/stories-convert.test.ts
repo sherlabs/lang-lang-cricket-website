@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { StoryBody } from '@/components/stories/story-body'
 import type { SanitizedConfig } from 'payload'
 import { renderStoryHtml } from '@/lib/stories-content'
 import { htmlToExcerpt } from '@/lib/story-excerpt'
@@ -102,6 +104,17 @@ describe('normaliseStoryHtml', () => {
     )
     expect(html).toBe('<p>a <a href="https://ok.example">ok</a> bad none <a href="mailto:a@b.co">mail</a></p>')
   })
+
+  it('reports every unwrapped link (relative, tel:, missing href) for the ETL', () => {
+    const { html, unwrappedLinks } = normaliseStoryHtml('<p><a href="/events">ev</a> <a href="tel:+61400000000">call</a> <a>x</a> <a href="https://ok.example">ok</a></p>', opts)
+    expect(unwrappedLinks).toEqual(['/events', 'tel:+61400000000', ''])
+    expect(html).toBe('<p>ev call x <a href="https://ok.example">ok</a></p>')
+  })
+
+  it('keeps a valid start on ol only', () => {
+    const { html } = normaliseStoryHtml('<ol start="3" class="x"><li>a</li></ol><ol start="abc"><li>b</li></ol><ol start="1"><li>c</li></ol><ul start="4"><li>d</li></ul>', opts)
+    expect(html).toBe('<ol start="3"><li>a</li></ol><ol><li>b</li></ol><ol><li>c</li></ol><ul><li>d</li></ul>')
+  })
 })
 
 describe('htmlToLexical + resolveUploadNodes', () => {
@@ -189,6 +202,36 @@ describe('round trip: Tiptap → Lexical → HTML', () => {
     expect(back).toContain(`<img src="${STORE}/stories/pending/a.jpg" alt="A">`)
     expect(back).toMatch(/<ul[^>]*><li[^>]*>one<\/li><\/ul>/)
     expect(storyPlainText(state)).toBe('Title It was hot, see here one')
+  })
+})
+
+describe('empty paragraphs and ordered-list start (legacy parity)', () => {
+  const p = (text?: string) => ({ type: 'paragraph', ...(text ? { content: [{ type: 'text', text }] } : {}) })
+  const toState = async (json: unknown) => {
+    const r = tiptapJsonToSafeHtml(JSON.stringify(json))
+    if (!('html' in r)) throw new Error(r.error)
+    return { legacy: r.html, state: await htmlToLexical(normaliseStoryHtml(r.html, opts).html, config) }
+  }
+
+  it('renders an empty paragraph as a bare <p></p>, on the page and back into Tiptap', async () => {
+    const { legacy, state } = await toState({ type: 'doc', content: [p('a'), p(), p(), p('b')] })
+    expect(legacy).toBe('<p>a</p><p></p><p></p><p>b</p>')
+    expect(lexicalToTiptapHtml(state)).toBe(legacy)
+    expect(renderToStaticMarkup(StoryBody({ content: state }))).toBe(`<div class="story-content">${legacy}</div>`)
+  })
+
+  it('keeps an ordered list start through import, the page and the Tiptap round trip', async () => {
+    const li = (text: string) => ({ type: 'listItem', content: [p(text)] })
+    const { legacy, state } = await toState({ type: 'doc', content: [{ type: 'orderedList', attrs: { start: 3 }, content: [li('three'), li('four')] }] })
+    expect(legacy).toContain('<ol start="3">')
+    const list = nodes(state).find((n) => n.type === 'list')
+    expect(list).toMatchObject({ listType: 'number', start: 3 })
+    expect(lexicalToTiptapHtml(state)).toMatch(/^<ol start="3" class="list-number"><li[^>]*value="3"[^>]*>three<\/li>/)
+    const page = renderToStaticMarkup(StoryBody({ content: state }))
+    expect(page).toMatch(/<ol class="list-number" start="3"><li[^>]*value="3"[^>]*>three<\/li>/)
+    // A list from 1 carries no start attribute.
+    const plain = await toState({ type: 'doc', content: [{ type: 'orderedList', content: [li('one')] }] })
+    expect(lexicalToTiptapHtml(plain.state)).toMatch(/^<ol class="list-number">/)
   })
 })
 

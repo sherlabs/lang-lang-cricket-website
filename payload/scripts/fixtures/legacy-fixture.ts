@@ -203,8 +203,16 @@ const storyRejected = {
   html: '<p>Spam <a>click here</a></p>',
 }
 const storyAdmin = {
-  json: doc(h(2, 'Ground history'), p(t('The ground opened in 1952.')), { type: 'codeBlock', content: [t('scorebook page 4')] }, { type: 'horizontalRule' }, p(t('Updated 2026.'))),
-  html: '<h2>Ground history</h2><p>The ground opened in 1952.</p><pre><code>scorebook page 4</code></pre><hr><p>Updated 2026.</p>',
+  // Blank lines (empty paragraphs) and a list typed as "3. " (orderedList start 3): both must render as before.
+  json: doc(
+    h(2, 'Ground history'), p(t('The ground opened in 1952.')), p(), p(),
+    { type: 'orderedList', attrs: { start: 3 }, content: [{ type: 'listItem', content: [p(t('Third pitch laid 1990'))] }, { type: 'listItem', content: [p(t('Fourth pitch laid 2004'))] }] },
+    { type: 'codeBlock', content: [t('scorebook page 4')] }, { type: 'horizontalRule' }, p(t('Updated 2026.')),
+  ),
+  html:
+    '<h2>Ground history</h2><p>The ground opened in 1952.</p><p></p><p></p>' +
+    '<ol start="3"><li><p>Third pitch laid 1990</p></li><li><p>Fourth pitch laid 2004</p></li></ol>' +
+    '<pre><code>scorebook page 4</code></pre><hr><p>Updated 2026.</p>',
 }
 
 const stories: Row[] = [

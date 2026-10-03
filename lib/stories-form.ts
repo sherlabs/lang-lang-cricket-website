@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest } from 'payload'
 import { ValidationError } from 'payload'
 import {
   FOREIGN_IMAGE_ERROR,
@@ -41,14 +41,41 @@ export type StoryFormData = {
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim()
 
 /** Cover: existing media first (a token edit keeps a legacy cover), else a pending upload. Anything else is ignored, as before. */
-async function resolveCover(payload: Payload, url: string): Promise<number | null> {
+async function resolveCover(payload: Payload, url: string, req?: Partial<PayloadRequest>): Promise<number | null> {
   if (!url) return null
-  const existing = await findMediaBySrc(payload, url)
+  const existing = await findMediaBySrc(payload, url, req)
   if (existing) return existing
-  return registerPendingStoryImage(payload, url)
+  return registerPendingStoryImage(payload, url, '', req)
 }
 
-export async function parseStoryForm(payload: Payload, formData: FormData): Promise<{ data: StoryFormData } | { error: string }> {
+/**
+ * Runs a public story save in one transaction, so the `media` docs `parseStoryForm` registers
+ * are rolled back when the save is refused (`{ error }`) or throws. Rolling back rather than
+ * deleting the docs keeps the visitor's pending blob for a retry (deleting a media doc deletes
+ * its blob, spec §7.5). Every Local API call inside must pass `req`.
+ */
+export async function inStoryTransaction<T extends object>(payload: Payload, fn: (req: Partial<PayloadRequest>) => Promise<T>): Promise<T> {
+  const transactionID = (await payload.db?.beginTransaction?.()) ?? null
+  const req: Partial<PayloadRequest> = transactionID !== null ? { transactionID } : {}
+  let result: T
+  try {
+    result = await fn(req)
+  } catch (err) {
+    if (transactionID !== null) await payload.db.rollbackTransaction(transactionID)
+    throw err
+  }
+  if (transactionID !== null) {
+    if ('error' in result) await payload.db.rollbackTransaction(transactionID)
+    else await payload.db.commitTransaction(transactionID)
+  }
+  return result
+}
+
+export async function parseStoryForm(
+  payload: Payload,
+  formData: FormData,
+  req?: Partial<PayloadRequest>,
+): Promise<{ data: StoryFormData } | { error: string }> {
   const title = text(formData, 'title')
   const authorName = text(formData, 'authorName')
   const authorEmail = text(formData, 'authorEmail')
@@ -73,14 +100,15 @@ export async function parseStoryForm(payload: Payload, formData: FormData): Prom
       payload,
       mode: 'public',
       alts: imageAlts(normalised.html),
-      register: (src, alt) => registerPendingStoryImage(payload, src, alt),
+      req,
+      register: (src, alt) => registerPendingStoryImage(payload, src, alt, req),
     })
   } catch (err) {
     if (err instanceof StoryImageError) return { error: FOREIGN_IMAGE_ERROR }
     throw err
   }
 
-  const coverImage = await resolveCover(payload, text(formData, 'coverImageUrl'))
+  const coverImage = await resolveCover(payload, text(formData, 'coverImageUrl'), req)
   return { data: { title, authorName, authorEmail, excerpt, content, coverImage } }
 }
 

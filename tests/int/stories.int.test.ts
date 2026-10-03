@@ -234,6 +234,29 @@ describe('stories: public submit → approve → render, and the token edit', ()
     expect((await payload.count({ collection: 'stories', where: { title: { equals: 'Foreign' } } })).totalDocs).toBe(0)
   })
 
+  it('a refused save rolls back the media it registered (no stray pending media)', async () => {
+    const { submitStory } = await import('@/app/(frontend)/history/submit/actions')
+    const filename = `rollback-${Date.now()}.jpg`
+    const para = { type: 'paragraph', content: [{ type: 'text', text: 'x' }] }
+    const pendingImg = { type: 'image', attrs: { src: `${BASE}/stories/pending/${filename}` } }
+    const fd = new FormData()
+    fd.set('title', 'Rolled back')
+    fd.set('authorName', 'X')
+    fd.set('coverImageUrl', `${BASE}/stories/pending/cover-${filename}`)
+    // The first image registers; the second (own store, not under stories/pending, unknown) is refused.
+    fd.set('contentJson', JSON.stringify({ type: 'doc', content: [para, pendingImg, { type: 'image', attrs: { src: `${BASE}/stories/not-pending-${filename}` } }] }))
+    expect(await submitStory(fd)).toEqual({ error: 'Images must be uploaded through the form.' })
+    expect((await payload.count({ collection: 'media', where: { filename: { equals: filename } } })).totalDocs).toBe(0)
+
+    // Without the refused image, the story, its cover and the inline image commit together.
+    fd.set('contentJson', JSON.stringify({ type: 'doc', content: [para, pendingImg] }))
+    await expect(submitStory(fd)).rejects.toThrow('NEXT_REDIRECT')
+    expect((await payload.count({ collection: 'media', where: { filename: { equals: filename } } })).totalDocs).toBe(1)
+    expect((await payload.count({ collection: 'media', where: { filename: { equals: `cover-${filename}` } } })).totalDocs).toBe(1)
+    const { docs } = await payload.find({ collection: 'stories', where: { title: { equals: 'Rolled back' } }, depth: 0 })
+    expect(docs[0]?.coverImage).toBeTruthy()
+  })
+
   it('the token edit loads the stored story as HTML, saves it back (legacy image resolved) and sends a published story to pending', async () => {
     // A legacy-style story: an own-store image with an old-style name, registered by the ETL.
     const legacyUrl = `${BASE}/stories/Old Photo (1).jpg`.replace(/ /g, '%20').replace('(', '%28').replace(')', '%29')

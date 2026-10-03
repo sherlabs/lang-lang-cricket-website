@@ -44,7 +44,8 @@ function legacyHtml(r: Row): string {
  * every story hook is skipped under `context.etl`. Content: `content_html` (fallback:
  * `renderStoryHtml(content_json)`) → `normaliseStoryHtml` → `htmlToLexical` →
  * `resolveUploadNodes` in ETL mode: own-store blobs (any prefix) are registered as media,
- * `/assets/` images uploaded from `public/`, and anything else is dropped and reported.
+ * `/assets/` images uploaded from `public/`, and anything else is dropped and reported. Links
+ * whose href is not http(s)/mailto are unwrapped (text kept) and reported as `story-link-unwrapped`.
  * `coverImageUrl` → media.
  *
  * Timestamps: `created_at` is restored. Legacy stories have no `updated_at`; it is set to
@@ -71,9 +72,12 @@ export const storiesStep: EtlStep = {
         continue
       }
 
-      const { html, droppedImages } = normaliseStoryHtml(legacyHtml(r), { storeId: ctx.storeId })
+      const { html, droppedImages, unwrappedLinks } = normaliseStoryHtml(legacyHtml(r), { storeId: ctx.storeId })
       for (const src of droppedImages) {
         report.add({ ...where, field: 'content_html', url: src, kind: 'story-image-dropped', detail: 'not an own-store Blob URL or /assets/ path; image removed from the body' })
+      }
+      for (const href of unwrappedLinks) {
+        report.add({ ...where, field: 'content_html', url: href, kind: 'story-link-unwrapped', detail: 'href is not http(s)/mailto (relative, tel:, missing…); link removed, text kept' })
       }
 
       if (dryRun) {

@@ -98,7 +98,8 @@ export const Stories: CollectionConfig = {
       name: 'submittedByAdmin',
       type: 'checkbox',
       defaultValue: false,
-      access: hookOwned,
+      // Moderation field: staff-only over REST/GraphQL (spec §2); public pages read via the Local API.
+      access: { ...hookOwned, read: isStaffField },
       admin: { position: 'sidebar', readOnly: true, description: 'Written in the admin rather than sent in by the public.' },
     },
     {
@@ -110,7 +111,7 @@ export const Stories: CollectionConfig = {
     {
       name: 'reviewedAt',
       type: 'date',
-      access: hookOwned,
+      access: { ...hookOwned, read: isStaffField },
       admin: { position: 'sidebar', readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
     },
     tokenField('editToken'),

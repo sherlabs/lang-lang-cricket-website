@@ -36,6 +36,8 @@ export function DraftEditForm({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  // A public save always sends the story back to review (storyLifecycle), whatever it was.
+  const [currentStatus, setCurrentStatus] = useState(status)
 
   async function onSubmit(formData: FormData) {
     setBusy(true)
@@ -47,13 +49,14 @@ export function DraftEditForm({
       setError(result.error)
     } else {
       setSaved(true)
+      setCurrentStatus('pending')
     }
   }
 
   return (
     <form onSubmit={submitKeepingInput(onSubmit)} className="mx-auto flex max-w-2xl flex-col">
       <p className="mb-8 rounded-xl bg-brand-gold-pale px-4 py-3 text-sm text-brand-gold-deep ring-1 ring-brand-gold/30">
-        {STATUS_NOTE[status] ?? null}
+        {STATUS_NOTE[currentStatus] ?? null}
       </p>
 
       <StoryFields

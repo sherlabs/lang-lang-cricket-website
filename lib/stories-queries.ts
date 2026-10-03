@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Story } from '@/lib/domain'
+import type { Story as StoryDoc } from '@/payload-types'
 import { getPayloadClient } from '@/lib/payload/client'
 import { toStory } from '@/lib/payload/mappers'
 import { lexicalToTiptapHtml, type StoryContent } from '@/lib/stories-convert'
@@ -20,8 +21,21 @@ export async function listPublishedStories(): Promise<Story[]> {
     sort: '-publishedAt',
     pagination: false,
     depth: 1,
+    // Card fields only: no body (and so none of its media docs) for the list page.
+    select: {
+      slug: true,
+      title: true,
+      excerpt: true,
+      coverImage: true,
+      authorName: true,
+      status: true,
+      publishedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   })
-  return docs.map(toStory)
+  // `content` and the moderation fields are absent; toStory maps them to null/false.
+  return docs.map((d) => toStory(d as StoryDoc))
 }
 
 export async function getPublishedStoryBySlug(slug: string): Promise<Story | null> {

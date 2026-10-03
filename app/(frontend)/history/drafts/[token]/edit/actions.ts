@@ -2,7 +2,7 @@
 
 import { getPayloadClient } from '@/lib/payload/client'
 import { isTokenShaped } from '@/lib/story-tokens'
-import { parseStoryForm, validationMessage } from '@/lib/stories-form'
+import { inStoryTransaction, parseStoryForm, validationMessage } from '@/lib/stories-form'
 
 const INVALID_LINK = { error: 'This edit link is no longer valid.' }
 
@@ -26,21 +26,25 @@ export async function updateDraftByToken(editToken: string, formData: FormData):
   const story = docs[0]
   if (!story) return INVALID_LINK
 
-  const parsed = await parseStoryForm(payload, formData)
-  if ('error' in parsed) return parsed
-
-  try {
-    await payload.update({
-      collection: 'stories',
-      id: story.id,
-      data: parsed.data,
-      overrideAccess: true,
-      depth: 0,
-      context: { publicSubmission: true },
-    })
-  } catch (err) {
-    const message = validationMessage(err)
-    if (message) return { error: message }
-    throw err
-  }
+  const result = await inStoryTransaction(payload, async (req) => {
+    const parsed = await parseStoryForm(payload, formData, req)
+    if ('error' in parsed) return parsed
+    try {
+      await payload.update({
+        collection: 'stories',
+        id: story.id,
+        data: parsed.data,
+        overrideAccess: true,
+        depth: 0,
+        context: { publicSubmission: true },
+        req,
+      })
+      return { ok: true as const }
+    } catch (err) {
+      const message = validationMessage(err)
+      if (message) return { error: message }
+      throw err
+    }
+  })
+  if ('error' in result) return result
 }

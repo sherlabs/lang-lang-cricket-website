@@ -2,13 +2,17 @@ import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { StoryContent } from '@/lib/domain'
 import { isSafeHref } from '@/lib/story-href'
+import { listStart } from '@/lib/story-list-start'
 
 type UploadValue = { url?: string | null; alt?: string | null } | number | null | undefined
 
 /**
  * Story body converters (spec §5): images are a plain `<img src alt loading="lazy">` (no
  * width/height, matching the old HTML so `.story-content img` sizes them the same); links keep
- * only http(s)/mailto hrefs and render anything else as plain text.
+ * only http(s)/mailto hrefs and render anything else as plain text. An empty paragraph is a bare
+ * `<p></p>` as before (zero height, its margin collapses) — not the default `<p><br/></p>`, which
+ * would turn every blank line into a visible gap. An ordered list keeps its `start`, as the
+ * Tiptap HTML had it.
  */
 const storyJsxConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
@@ -17,6 +21,17 @@ const storyJsxConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
     if (!value || typeof value !== 'object' || !value.url) return null
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={value.url} alt={value.alt ?? ''} loading="lazy" />
+  },
+  paragraph: ({ node, nodesToJSX }) => <p>{nodesToJSX({ nodes: node.children })}</p>,
+  list: ({ node, nodesToJSX }) => {
+    const children = nodesToJSX({ nodes: node.children })
+    const className = `list-${node.listType}`
+    if (node.tag !== 'ol') return <ul className={className}>{children}</ul>
+    return (
+      <ol className={className} start={listStart((node as { start?: unknown }).start) ?? undefined}>
+        {children}
+      </ol>
+    )
   },
   link: ({ node, nodesToJSX }) => {
     const children = nodesToJSX({ nodes: node.children })
