@@ -1,7 +1,7 @@
 /**
  * Standalone cutover verification (spec §12.2 step 18, §13.2 step 7). Read-only on both sides.
  *
- *   pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <id> [--only stories,players]
+ *   pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <id> [--preview-rehearsal] [--only stories,players]
  *                       [--source-schema public] [--report tmp/verify.json]
  *
  * Compares LEGACY_DATABASE_URL (read-only, unpooled) with the Payload database: ids and counts,
@@ -14,7 +14,7 @@ import path from 'node:path'
 import { getPayload } from 'payload'
 import { blobToken } from '../env'
 import { argValue, guard } from './_guard'
-import { legacyStoreId, storeIdFromToken } from './etl/media'
+import { resolveLegacyStore } from './etl/media'
 import { openLegacySource } from './etl/source'
 import { formatVerify, verifyCutover } from './etl/verify'
 
@@ -24,8 +24,7 @@ async function main(): Promise<boolean> {
   const only = argValue(argv, '--only')?.split(',').map((s) => s.trim()).filter(Boolean)
   const reportFile = argValue(argv, '--report')
   const token = blobToken()
-  const storeId = legacyStoreId(token, argValue(argv, '--blob-store-id'))
-  const writeStoreId = storeIdFromToken(token)
+  const { storeId, writeStoreId } = resolveLegacyStore(token, argValue(argv, '--blob-store-id'), argv.includes('--preview-rehearsal'))
   if (storeId && writeStoreId && storeId !== writeStoreId) {
     console.warn(`[verify] legacy store "${storeId}" differs from the token's store "${writeStoreId}": legacy URLs are registered in place, new files go to the token's store (preview rehearsal)`)
   }

@@ -164,4 +164,27 @@ describe('updateDraftByToken', () => {
     expect(update.args.context).toMatchObject({ publicSubmission: true })
     expect(Object.keys(update.args.data).sort()).toEqual(['authorEmail', 'authorName', 'content', 'coverImage', 'excerpt', 'title'])
   })
+
+  // Cutover checklist B.4: on a preview the token is the preview store's, while a legacy
+  // story's inline images live in the production store (`fakestore` here).
+  it("on a preview keeps a legacy story's production-store image; in production that store is foreign", async () => {
+    const { updateDraftByToken } = await import('@/app/(frontend)/history/drafts/[token]/edit/actions')
+    const legacy = `${STORE}/stories/old-cover.jpg`
+    const form = () => formData({ authorName: 'Pat', title: 'Edited', contentJson: doc(p('Text'), img(legacy)) })
+    vi.stubEnv('VERCEL', '1')
+    vi.stubEnv('BLOB_READ_WRITE_TOKEN', 'vercel_blob_rw_previewstore_x')
+    try {
+      vi.stubEnv('VERCEL_ENV', 'production')
+      expect(await updateDraftByToken(EDIT, form())).toEqual({ error: 'Images must be uploaded through the form.' })
+      expect(fake.callsTo('update')).toHaveLength(0)
+
+      vi.stubEnv('VERCEL_ENV', 'preview')
+      expect(await updateDraftByToken(EDIT, form())).toBeUndefined()
+      const [update] = fake.callsTo('update', 'stories') as unknown as { args: { data: Record<string, unknown> } }[]
+      expect(uploadValues(update.args.data.content)).toEqual([50])
+      expect(fake.callsTo('create', 'media')).toHaveLength(0)
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
 })

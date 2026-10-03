@@ -3,7 +3,7 @@
  *
  *   pnpm etl --target 127.0.0.1/langlang_dev [--dry-run] [--confirm] [--only documents,people]
  *            [--update [--reconcile-deletes]] [--report tmp/etl-report.json]
- *            [--blob-store-id <id>] [--source-schema public] [--no-verify]
+ *            [--blob-store-id <id> [--preview-rehearsal]] [--source-schema public] [--no-verify]
  *
  * etl/run: `--reconcile-deletes` (only with --update) first removes target rows that no longer
  * exist in legacy (etl/reconcile); then the steps run in the §12.2 foreign-key order (etl/steps).
@@ -19,7 +19,7 @@ import path from 'node:path'
 import { getPayload } from 'payload'
 import { blobToken } from '../env'
 import { argValue, guard } from './_guard'
-import { legacyStoreId, storeIdFromToken, type EtlContext } from './etl/media'
+import { resolveLegacyStore, type EtlContext } from './etl/media'
 import { EtlReport } from './etl/report'
 import { runEtl } from './etl/run'
 import { openLegacySource } from './etl/source'
@@ -45,8 +45,7 @@ async function main() {
   if (unknown?.length) throw new Error(`[etl] unknown step(s) in --only: ${unknown.join(', ')} (known: ${ETL_STEPS.map((s) => s.name).join(', ')})`)
 
   const token = blobToken()
-  const storeId = legacyStoreId(token, argValue(argv, '--blob-store-id'))
-  const writeStoreId = storeIdFromToken(token)
+  const { storeId, writeStoreId } = resolveLegacyStore(token, argValue(argv, '--blob-store-id'), argv.includes('--preview-rehearsal'))
   if (storeId && writeStoreId && storeId !== writeStoreId) {
     console.warn(`[etl] legacy store "${storeId}" differs from the token's store "${writeStoreId}": legacy URLs are registered in place, new files go to the token's store (preview rehearsal)`)
   }

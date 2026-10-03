@@ -23,14 +23,16 @@ Sections A–D happen before the window. E is the window. F is the smoke list, G
 ### A.1 Vercel project settings
 
 - [ ] **Build command.** `vercel.json` on `feat/payload-cms` sets `"buildCommand": "pnpm vercel-build"`, and `vercel.json` takes precedence over the dashboard. Confirm that the first preview build log shows `node scripts/vercel-build.mjs` and a `payload migrate` run. `main`'s `vercel.json` has no `buildCommand`, so legacy deploys are unaffected. `vercel.json` is not changed for the cutover; the cron (`/api/cron/players-sync`, 17:00 UTC) is the same.
-- [ ] **pnpm 11.** `package.json` pins `"packageManager": "pnpm@11.18.0"`, and the build-script approvals live in `pnpm-workspace.yaml` (`allowBuilds`). Set `ENABLE_EXPERIMENTAL_COREPACK=1` (all environments) so Vercel uses that exact pnpm. Confirm the install step of the first preview log prints pnpm 11 and that `sharp` was built.
-- [ ] **Node.js** 20.x or 22.x (the app needs ≥ 20.9). Setting: ________
-- [ ] **Production domain auto-assignment: OFF** (Settings → Domains / Git → "Auto-assign custom production domains"). It stays off until the decommission (H). Done on ________ by ________.
+- [ ] **pnpm 11.** `package.json` pins `"packageManager": "pnpm@11.18.0"`, and the build-script approvals live in `pnpm-workspace.yaml` (`allowBuilds`). Set `ENABLE_EXPERIMENTAL_COREPACK=1` for **Preview only** here, so Vercel uses that exact pnpm; the Production scope is added in D (legacy `main` has no `packageManager`, so leave its production builds untouched until then). Confirm the install step of the first preview log prints pnpm 11 and that `sharp` was built.
+- [ ] **Node.js 22.x** (≥ 22.13: pnpm 11 refuses to run on anything older; `engines.node` is `>=22.13`). The project's Node.js setting applies to every build, legacy `main` included, while `engines.node` in `package.json` overrides it per build. So leave the project setting as it is until the cutover (changing it would also rebuild the legacy app on a new Node) and let `engines.node` select 22.x for the new app; confirm the first preview build log shows Node 22. Project setting: ________ Preview build Node version: ________
+- Production domain auto-assignment is switched off in **D**, not here: from that moment a push to `main` (a legacy hotfix) builds but never goes live.
 - [ ] **Deployment Protection** (Vercel Authentication) is on for Preview deployments, and for production deployment URLs (Standard Protection). The apex stays public.
 
 ### A.2 Environment variables
 
 `DATABASE_URI`, `DATABASE_URI_UNPOOLED` and `BLOB_READ_WRITE_TOKEN` are never given the Development scope, so `vercel env pull` cannot bring production credentials to a laptop. Do not use the Neon Vercel integration: it injects `DATABASE_URL*` and production URLs into previews.
+
+- [ ] **Audit the scopes of what is already there.** Connecting a Blob store defaults to all three environments, and the legacy README had the production token and `DATABASE_URL` copied into `.env.local`, so the production values are probably in Development and Preview today. Run `vercel env ls` (and check the dashboard for integration-managed variables). For the production `BLOB_READ_WRITE_TOKEN`, `DATABASE_URL*`, `POSTGRES_*`/`PG*` and any other Neon-integration variable, remove the **Development** and **Preview** scopes (`vercel env rm <name> development`, `vercel env rm <name> preview`), keeping Production. Then `vercel env ls` again: no production credential is left in Development or Preview. Done on ________ by ________. Afterwards, any laptop that ran `vercel env pull` before this should delete its `.env.local` copy of those values.
 
 | Variable | Production | Preview (scope it to the `feat/payload-cms` branch) | Set? |
 |---|---|---|---|
@@ -44,7 +46,7 @@ Sections A–D happen before the window. E is the window. F is the smoke list, G
 | `BLOB_DELETE_DISABLED` | unset | `1` (the build refuses a preview without it) | [ ] |
 | `CRON_SECRET`, `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | unchanged | same values | [ ] / [ ] |
 | `PROD_DATABASE_HOST` | the production Neon hostname (not a secret) | same; set it for **all** environments: the build refuses when it is empty | [ ] |
-| `ENABLE_EXPERIMENTAL_COREPACK` | `1` | `1` | [ ] / [ ] |
+| `ENABLE_EXPERIMENTAL_COREPACK` | `1`, added in D (not before: it also applies to legacy builds of `main`) | `1` | [ ] / [ ] |
 
 Never on Vercel: `LEGACY_DATABASE_URL`, `PAYLOAD_ETL`, `ALLOW_REMOTE_DB`, `ALLOW_REMOTE_BLOB`, `INITIAL_ADMIN_*`, `PAYLOAD_PUSH`, `LEGACY_BLOBS_RELEASED` (until H).
 
@@ -89,26 +91,27 @@ read -rs PAYLOAD_SECRET && export PAYLOAD_SECRET           # the Preview PAYLOAD
 export NEXT_PUBLIC_SERVER_URL=https://<preview branch URL>
 export TARGET=$(node -e 'const u=new URL(process.env.DATABASE_URI);console.log(u.hostname+u.pathname)')
 export PROD_STORE=<production Blob store id>
+mkdir -p ../cutover-reports   # ETL reports live OUTSIDE the clone (see E.8)
 echo "$TARGET"   # must be the branch host, not PROD_DATABASE_HOST
 ```
 
-`--blob-store-id $PROD_STORE` is what makes this a faithful rehearsal: the legacy rows point at the production store, and an explicit `--blob-store-id` wins over the token's store. Legacy blobs are registered in place (no bytes move, nothing is written to the production store); files the ETL uploads from `/assets/` go to the preview store. On a preview the `legacyUrl` read rule accepts the production store, so legacy images render.
+`--blob-store-id $PROD_STORE --preview-rehearsal` is what makes this a faithful rehearsal: the legacy rows point at the production store, and the explicit `--blob-store-id` wins over the token's store. The scripts refuse a `--blob-store-id` that differs from the token's store unless `--preview-rehearsal` is also given, and refuse `--preview-rehearsal` when the two stores are the same (so it cannot be carried into the window by accident). Legacy blobs are registered in place (no bytes move, nothing is written to the production store); files the ETL uploads from `/assets/` go to the preview store. On a preview the `legacyUrl` read rule accepts the production store, so legacy images render.
 
 ### B.3 Run it
 
 - [ ] `pnpm payload migrate` (a no-op after the preview build; it must not prompt).
 - [ ] `INITIAL_ADMIN_EMAIL=… INITIAL_ADMIN_PASSWORD=… pnpm seed:admin --target $TARGET --confirm` (type them with `read -rs` as above).
-- [ ] `pnpm etl --target $TARGET --dry-run --blob-store-id $PROD_STORE --report tmp/etl-dry.json`. Review: orphans, flagged media (`other`), collisions and prefix fallbacks. Notes: ________
-- [ ] `pnpm etl --target $TARGET --confirm --blob-store-id $PROD_STORE --report tmp/etl.json`. It ends with `VERIFY PASSED`. Rows written: ________
+- [ ] `pnpm etl --target $TARGET --dry-run --blob-store-id $PROD_STORE --preview-rehearsal --report ../cutover-reports/b-etl-dry.json`. Review: orphans, flagged media (`other`), collisions and prefix fallbacks. Notes: ________
+- [ ] `pnpm etl --target $TARGET --confirm --blob-store-id $PROD_STORE --preview-rehearsal --report ../cutover-reports/b-etl.json`. It ends with `VERIFY PASSED`. Any `media-fallback-failed` item (a re-upload Payload rejected; the run continues and verify fails that row) must be resolved before the window. Rows written: ________
 - [ ] Run it again: **0 rows written**.
-- [ ] `pnpm verify:cutover --target $TARGET --blob-store-id $PROD_STORE` passes, including "registered rows: generateURL(prefix, filename) = legacyUrl" and the HEAD sample.
+- [ ] `pnpm verify:cutover --target $TARGET --blob-store-id $PROD_STORE --preview-rehearsal` passes, including "registered rows: generateURL(prefix, filename) = legacyUrl" and the HEAD sample.
 
-These runs are the first real exercise of the two-store path (the local fixture uses one store for both). If "upload reachability" fails here, look at the failing row's stored `prefix`/`filename` and which host was HEADed (rows registered in place: the production store; files the ETL uploaded: the preview store) before concluding the data is wrong. The operator shell has no `VERCEL_ENV`, so the `legacyUrl` read rule is not active there; the ETL and verify build URLs from `prefix`/`filename` and do not depend on it.
+These runs are the first real exercise of the two-store path (the local fixture uses one store for both). If "upload reachability" fails here, look at the failing row's stored `prefix`/`filename` and which host was HEADed (rows registered in place: the production store; files the ETL uploaded: the preview store) before concluding the data is wrong. The operator shell has no `VERCEL_ENV`, so the `legacyUrl` read rule is not active there; the ETL and verify build URLs from `prefix`/`filename` and do not depend on it. On this two-store run the ETL cannot `head()` legacy blobs (wrong token), so a fallback re-upload takes its type from the download's `Content-Type`; in production it comes from `head()`.
 
 ### B.4 Check it
 
 - [ ] The smoke list (F) on the preview branch URL, signed into Deployment Protection. Admin login works on the branch URL (`serverURL` and `csrf` are derived from `VERCEL_BRANCH_URL`/`VERCEL_URL`).
-- [ ] **Legacy pending photo survives a reject.** In the admin, open an event with an ETL'd pending photo (Event photos, status Pending, from the legacy data). Its URL (`https://<production store>…/events/pending/…`): ________. Reject it. Then `curl -sI <that URL>` still returns **200**. The function log shows the blob delete skipped (legacy row and `BLOB_DELETE_DISABLED=1`).
+- [ ] **Legacy pending photo survives a reject.** In the admin, open an event with an ETL'd pending photo (Event photos, status Pending, from the legacy data). Its URL (`https://<production store>…/events/pending/…`): ________. Reject it. Then `curl -sI <that URL>` still returns **200**, and the function log shows `[blob] legacy blob kept (shared with rollback target): <that URL>`. This cannot fail on a preview: the plugin's delete would target the *preview* store (preview base URL, preview token), never the production blob, and `BLOB_DELETE_DISABLED=1` skips every delete anyway. It only shows the guard's `legacyUrl` branch is reached. The guard itself is proven by the int tests (`event-photos.int`, `wp1-verification.int`) and, after promotion, by production.
 - [ ] **Story token edit** of a legacy story with inline images on the preview saves without "foreign image" errors, and the images stay.
 
 Preview rehearsal passed on ________ (UTC) by ________.
@@ -120,13 +123,29 @@ Preview rehearsal passed on ________ (UTC) by ________.
 On the operator's machine against local Postgres only, from a dump taken that week.
 
 ```bash
-# dump: read-only production URL, operator shell only
-pg_dump "<production direct URL>" --schema=public --no-owner --no-privileges -Fc -f legacy-YYYYMMDD.dump
-# restore into the local langlang_legacy (drop and recreate it first)
-pg_restore --no-owner -d postgres://postgres:postgres@127.0.0.1:54329/langlang_legacy legacy-YYYYMMDD.dump
+# dump: read-only production URL, operator shell only; keep the dump outside the clone
+pg_dump "<production direct URL>" --schema=public --no-owner --no-privileges -Fc -f ../legacy-YYYYMMDD.dump
+# fresh local databases: drop and recreate langlang_legacy and langlang_rehearsal
+node -e '
+const { Client } = require("pg");
+(async () => {
+  const c = new Client({ connectionString: "postgres://postgres:postgres@127.0.0.1:54329/postgres" });
+  await c.connect();
+  for (const db of ["langlang_legacy", "langlang_rehearsal"]) {
+    await c.query(`DROP DATABASE IF EXISTS ${db} WITH (FORCE)`);
+    await c.query(`CREATE DATABASE ${db}`);
+  }
+  await c.end();
+})()'
+pg_restore --no-owner -d postgres://postgres:postgres@127.0.0.1:54329/langlang_legacy ../legacy-YYYYMMDD.dump
+export DATABASE_URI=postgres://postgres:postgres@127.0.0.1:54329/langlang_rehearsal
+export LEGACY_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:54329/langlang_legacy
+export PAYLOAD_PUSH=false
+unset BLOB_READ_WRITE_TOKEN
+export PROD_STORE=<production Blob store id>   # as recorded at the top of this checklist
 ```
 
-Then, with `DATABASE_URI=postgres://postgres:postgres@127.0.0.1:54329/langlang_rehearsal` (a fresh database), `LEGACY_DATABASE_URL=…/langlang_legacy`, `PAYLOAD_PUSH=false` and **no Blob token**:
+(`createdb`/`dropdb` work too where the Postgres client tools are installed.) Then, against the fresh `langlang_rehearsal` with **no Blob token** (no `--preview-rehearsal`: without a token there is no second store):
 
 - [ ] `pnpm payload migrate`
 - [ ] `pnpm etl --target 127.0.0.1/langlang_rehearsal --dry-run --blob-store-id $PROD_STORE`, then the same with `--confirm`
@@ -141,7 +160,9 @@ Dump taken (UTC): ________ Rehearsal passed (UTC): ________ Delete the dump afte
 ## D. Before the window
 
 - [ ] B passed, and C passed within the last 48 h.
-- [ ] `feat/payload-cms` is **not merged** to `main`, and auto-assignment is off (A.1).
+- [ ] **Production domain auto-assignment: OFF** (Settings → Domains / Git → "Auto-assign custom production domains"), as late as possible before the window. From now on a push to `main` (a legacy hotfix) builds but does not go live: promote such a deployment by hand (`vercel promote`) if one is needed before E. It stays off until the decommission (H). Done on ________ by ________.
+- [ ] Add the **Production** scope to `ENABLE_EXPERIMENTAL_COREPACK=1` (A.2). It only affects production builds, which no longer take the domain.
+- [ ] `feat/payload-cms` is **not merged** to `main`.
 - [ ] `main` is an ancestor of the cutover commit (`git merge-base --is-ancestor origin/main <cutover commit>`). If `main` moved, merge it into `feat/payload-cms` first and repeat B.
 - [ ] Every Production env var in A.2 is set.
 - [ ] Firewall: login rate limit live; "deny POST" prepared and disabled (A.4).
@@ -183,10 +204,13 @@ read -rs BLOB_READ_WRITE_TOKEN && export BLOB_READ_WRITE_TOKEN   # PRODUCTION st
 read -rs PAYLOAD_SECRET && export PAYLOAD_SECRET           # the Production PAYLOAD_SECRET
 export NEXT_PUBLIC_SERVER_URL=https://langlangcricketclub.com
 export TARGET=$(node -e 'const u=new URL(process.env.DATABASE_URI);console.log(u.hostname+u.pathname)')
+mkdir -p ../cutover-reports
 echo "$TARGET"
 ```
 
-Here the token's store is the legacy store, so `--blob-store-id` is not needed (if passed, it must equal the production store id).
+Here the token's store is the legacy store, so `--blob-store-id` is not needed; the scripts refuse one that differs from the token's store (and refuse `--preview-rehearsal`).
+
+Reports go to `../cutover-reports/`, outside the clone: step 8 deploys from the clone with the Vercel CLI, which applies `.vercelignore` (the repo has none), not `.gitignore`, so a report under `tmp/` could ship legacy data in the deployment source.
 
 | # | Step | Time (UTC) | By |
 |---|---|---|---|
@@ -195,9 +219,9 @@ Here the token's store is the legacy store, so `--blob-store-id` is not needed (
 | 3 | Record the Neon restore point (timestamp) of the production branch: ________ | | |
 | 4 | `pnpm payload migrate` — creates schema `payload` and its tables; `public.*` is untouched. | | |
 | 5 | `INITIAL_ADMIN_EMAIL=… INITIAL_ADMIN_PASSWORD=… pnpm seed:admin --target $TARGET --confirm` | | |
-| 6 | `pnpm etl --target $TARGET --dry-run --report tmp/etl-dry.json`. Review orphans, flagged media, collisions and prefix fallbacks against the B/C reports. Anything new: ________ | | |
-| 7 | `pnpm etl --target $TARGET --confirm --report tmp/etl.json` → `VERIFY PASSED`. Then `pnpm verify:cutover --target $TARGET` passes (per-row URL equality included). Rows written: ________ | | |
-| 8 | **Production deployment without the domain**, from the clean clone (`vercel link` to the project first): `vercel deploy --prod --skip-domain`. Its build runs `payload migrate` (a no-op now). Deployment URL: `https://____________________`. On it: `/admin` login, the dashboard and a collection list load, and two public pages render. (Saving in the admin is checked after promotion: `csrf` trusts only the apex origin.) | | |
+| 6 | `pnpm etl --target $TARGET --dry-run --report ../cutover-reports/e-etl-dry.json`. Review orphans, flagged media, collisions and prefix fallbacks against the B/C reports. Anything new: ________ | | |
+| 7 | `pnpm etl --target $TARGET --confirm --report ../cutover-reports/e-etl.json` → `VERIFY PASSED`. Then `pnpm verify:cutover --target $TARGET` passes (per-row URL equality included). Rows written: ________ | | |
+| 8 | **Production deployment without the domain**, from the clean clone (`vercel link` to the project first; there is no `tmp/` and no report or dump file inside the clone): `vercel deploy --prod --skip-domain`. Its build runs `payload migrate` (a no-op now). Deployment URL: `https://____________________`. On it: `/admin` login, the dashboard and a collection list load, and two public pages render. (Saving in the admin is checked after promotion: `csrf` trusts only the apex origin.) | | |
 | 9 | **Promote that deployment:** `vercel promote <deployment URL>`. The apex now serves Payload; the next 17:00 UTC cron runs on it. **Step-9 time** (for `export:since`): ________ | | |
 | 10 | Disable the Firewall "deny POST" rule. | | |
 | 11 | Run the smoke list (F) on the apex. | | |
@@ -223,7 +247,7 @@ Here the token's store is the legacy store, so `--blob-store-id` is not needed (
 | Admin: trigger player sync (Players → "Run sync now") | [ ] | [ ] |
 | Admin: Refresh PlayHQ data (dashboard) | [ ] | [ ] |
 | `sitemap.xml` lists events, stories and players with their original `lastModified` dates | [ ] | [ ] |
-| (Preview only) rejecting a legacy pending photo leaves its production blob intact (B.4) | [ ] | — |
+| (Preview only) rejecting a legacy pending photo logs "legacy blob kept" and its production URL still returns 200 (B.4; cannot reach the production store from a preview) | [ ] | — |
 
 ---
 
@@ -234,7 +258,7 @@ Here the token's store is the legacy store, so `--blob-store-id` is not needed (
 1. [ ] Vercel → Deployments → the previous production deployment (the legacy app) → **Instant Rollback**. It reads `public.*`, which the new app never wrote; its images are intact because the new app never deletes a blob that has a `legacyUrl`.
 2. [ ] If `main` was already fast-forwarded (E.12): `git push origin <legacy commit>:main --force-with-lease` (the only force push in this runbook), so the next push cannot redeploy Payload. Legacy commit: `____________________`
 3. [ ] If the "deny POST" rule is still on, disable it.
-4. [ ] Export what was written in Payload after step 9 (it is lost on rollback): `pnpm export:since --target $TARGET --since <step-9 time>` → `tmp/export-since.csv`. Hand it to the committee for re-entry by hand.
+4. [ ] Export what was written in Payload after step 9 (it is lost on rollback): `pnpm export:since --target $TARGET --since <step-9 time>` → `tmp/export-since.csv` (move it out of the clone before any further `vercel deploy` from it). Hand it to the committee for re-entry by hand.
 5. [ ] **Before a second attempt**, reset the `payload` schema — it is not reusable (skip-if-exists would keep stale rows): `pnpm reset:payload-schema --target $TARGET --confirm` (drops schema `payload` only). Then repeat E from step 1. Fallback when the schema must be kept: `pnpm etl --target $TARGET --confirm --update --reconcile-deletes`.
 
 Blobs uploaded natively during a failed window stay in the store as orphans; that is accepted.

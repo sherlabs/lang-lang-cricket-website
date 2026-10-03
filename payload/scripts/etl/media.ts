@@ -18,7 +18,7 @@
 import { head } from '@vercel/blob'
 import { existsSync, statSync } from 'node:fs'
 import path from 'node:path'
-import type { CollectionSlug, Payload } from 'payload'
+import { APIError, type CollectionSlug, type Payload } from 'payload'
 import type { EtlReport } from './report'
 import type { LegacySource } from './source'
 
@@ -85,6 +85,34 @@ export function storeIdFromToken(token: string | undefined): string | null {
  */
 export function legacyStoreId(token: string | undefined, explicit: string | undefined): string | null {
   return explicit?.trim().toLowerCase() || storeIdFromToken(token)
+}
+
+/**
+ * The CLI form of `legacyStoreId` for the ETL and verify scripts. A `--blob-store-id` that
+ * differs from the token's store is refused unless `--preview-rehearsal` is given: in the
+ * production window the token's store is the legacy store, and a mistyped id would flag every
+ * legacy blob. `--preview-rehearsal` in turn requires a token and a differing explicit store
+ * id, so it cannot be left on by accident against production.
+ */
+export function resolveLegacyStore(
+  token: string | undefined,
+  explicit: string | undefined,
+  previewRehearsal: boolean,
+): { storeId: string | null; writeStoreId: string | null } {
+  const storeId = legacyStoreId(token, explicit)
+  const writeStoreId = storeIdFromToken(token)
+  const differs = Boolean(storeId && writeStoreId && storeId !== writeStoreId)
+  if (differs && !previewRehearsal) {
+    throw new Error(
+      `--blob-store-id "${storeId}" differs from the token's store "${writeStoreId}". In production omit the flag (or pass the token's store); a preview rehearsal must also pass --preview-rehearsal.`,
+    )
+  }
+  if (previewRehearsal && !differs) {
+    throw new Error(
+      '--preview-rehearsal needs a Blob token (the preview store) and a different --blob-store-id (the production store)',
+    )
+  }
+  return { storeId, writeStoreId }
 }
 
 export function classify(url: unknown, storeId: string | null): Classified {
@@ -264,11 +292,26 @@ export async function importFile(
       return fileless('download-failed')
     }
     const bytes = Buffer.from(await res.arrayBuffer())
-    const id = await create({
-      data: { ...data, legacyUrl },
-      file: { data: bytes, mimetype: mimeType, name: c.filename, size: bytes.length },
-    })
-    return { id, action: 'fallback-reupload' }
+    // On a two-store run head() was skipped, so mimeType is only the extension's guess; the
+    // download's Content-Type is the stored blob's, as head() reports it in production.
+    if (storeIdFromToken(ctx.token) !== ctx.storeId) {
+      const served = res.headers?.get?.('content-type')?.split(';')[0].trim()
+      if (served) mimeType = served
+    }
+    try {
+      const id = await create({
+        data: { ...data, legacyUrl },
+        file: { data: bytes, mimetype: mimeType, name: c.filename, size: bytes.length },
+      })
+      return { id, action: 'fallback-reupload' }
+    } catch (err) {
+      // One unacceptable file (Payload's upload restrictions) must not abort the whole run:
+      // report it and leave the relation empty; verify then fails that row for the operator.
+      if (!(err instanceof APIError)) throw err // ValidationError and FileUploadError are APIErrors; a DB failure is not
+      note('media-fallback-failed', `re-upload rejected (${(err as Error).message}); relation left empty`)
+      report.files.set(claimKey(legacyUrl), 'fallback-failed')
+      return fileless('fallback-failed')
+    }
   }
 
   // No token (local rehearsal): nothing can be downloaded. Store the row the way the re-upload

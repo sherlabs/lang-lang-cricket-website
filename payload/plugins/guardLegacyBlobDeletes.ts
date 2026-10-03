@@ -5,7 +5,7 @@ import type { CollectionAfterDeleteHook, Config, Plugin } from 'payload'
  * `hooks.afterDelete` before/after and wraps only the hooks the plugin added:
  * - skip (and log) when `doc.legacyUrl` is set and LEGACY_BLOBS_RELEASED !== 'yes'
  *   (legacy blobs are shared with the rollback target until decommission);
- * - skip every delete when BLOB_DELETE_DISABLED === '1' (Preview).
+ * - otherwise skip every delete when BLOB_DELETE_DISABLED === '1' (Preview).
  * The plugin's own afterDelete ignores `skipCloudStorage`, and the adapter is not
  * exported, so wrapping the hook is the only seam.
  */
@@ -30,12 +30,13 @@ export function guardLegacyBlobDeletes(storagePlugin: Plugin): Plugin {
 function guardHook(hook: CollectionAfterDeleteHook): CollectionAfterDeleteHook {
   return async (args) => {
     const { doc, req } = args
-    if (process.env.BLOB_DELETE_DISABLED === '1') {
-      req.payload.logger.info(`[blob] delete disabled (BLOB_DELETE_DISABLED=1): kept ${doc?.prefix ?? ''}/${doc?.filename ?? ''}`)
-      return doc
-    }
+    // legacyUrl first, so a preview logs the branch production relies on (cutover checklist B.4).
     if (doc?.legacyUrl && process.env.LEGACY_BLOBS_RELEASED !== 'yes') {
       req.payload.logger.info(`[blob] legacy blob kept (shared with rollback target): ${doc.legacyUrl}`)
+      return doc
+    }
+    if (process.env.BLOB_DELETE_DISABLED === '1') {
+      req.payload.logger.info(`[blob] delete disabled (BLOB_DELETE_DISABLED=1): kept ${doc?.prefix ?? ''}/${doc?.filename ?? ''}`)
       return doc
     }
     return hook(args)

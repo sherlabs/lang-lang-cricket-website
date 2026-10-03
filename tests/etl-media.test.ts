@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classify, isUnderPrefix, legacyStoreId, mimeFromName, storeIdFromToken } from '@/payload/scripts/etl/media'
+import { classify, isUnderPrefix, legacyStoreId, mimeFromName, resolveLegacyStore, storeIdFromToken } from '@/payload/scripts/etl/media'
 import { parseLegacyTimestamp } from '@/payload/scripts/etl/source'
 
 const BASE = 'https://fakestore.public.blob.vercel-storage.com'
@@ -57,5 +57,27 @@ describe('legacyStoreId (preview rehearsal)', () => {
     expect(legacyStoreId(token, undefined)).toBe('previewstore')
     expect(legacyStoreId(token, '  ')).toBe('previewstore')
     expect(legacyStoreId(undefined, undefined)).toBeNull()
+  })
+})
+
+describe('resolveLegacyStore (--blob-store-id / --preview-rehearsal)', () => {
+  const token = 'vercel_blob_rw_PreviewStore_secret'
+  it('refuses a store id that differs from the token store without --preview-rehearsal', () => {
+    expect(() => resolveLegacyStore(token, 'prodstore', false)).toThrow(/--preview-rehearsal/)
+  })
+  it('accepts it with --preview-rehearsal', () => {
+    expect(resolveLegacyStore(token, 'prodstore', true)).toEqual({ storeId: 'prodstore', writeStoreId: 'previewstore' })
+  })
+  it('production: no flag, or the token store itself', () => {
+    expect(resolveLegacyStore(token, undefined, false)).toEqual({ storeId: 'previewstore', writeStoreId: 'previewstore' })
+    expect(resolveLegacyStore(token, 'PreviewStore', false).storeId).toBe('previewstore')
+  })
+  it('local (no token): the explicit id, no flag needed', () => {
+    expect(resolveLegacyStore(undefined, 'fakestore', false)).toEqual({ storeId: 'fakestore', writeStoreId: null })
+  })
+  it('--preview-rehearsal without a token or with the same store is refused', () => {
+    expect(() => resolveLegacyStore(undefined, 'prodstore', true)).toThrow(/--preview-rehearsal needs/)
+    expect(() => resolveLegacyStore(token, undefined, true)).toThrow(/--preview-rehearsal needs/)
+    expect(() => resolveLegacyStore(token, 'previewstore', true)).toThrow(/--preview-rehearsal needs/)
   })
 })

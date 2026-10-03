@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { FAKE_BLOB_STORE_ID, assertLocalDb, legacyBlobStoreId, assertSafeEnv, blobToken, csrfOrigins, isLocalDbUrl, resolveServerURL } from '@/payload/env'
 import { checkGuard } from '@/payload/scripts/_guard'
 
@@ -122,5 +122,21 @@ describe('legacyBlobStoreId / legacyUrl read rule on previews', () => {
     expect(isOwnStoreLegacyUrl(prodUrl, 'previewstore')).toBe(false)
     expect(isOwnStoreLegacyUrl(prodUrl, null)).toBe(true)
     expect(isOwnStoreLegacyUrl('/assets/x.png', null)).toBe(false)
+  }, 60_000)
+  it('the default store comes from process.env: a preview accepts the production store', async () => {
+    const { isOwnStoreLegacyUrl } = await import('@/payload/hooks/legacyUrl')
+    const prodUrl = 'https://prodstore.public.blob.vercel-storage.com/sponsors/a.png'
+    vi.stubEnv('VERCEL', '1')
+    vi.stubEnv('BLOB_READ_WRITE_TOKEN', token)
+    try {
+      vi.stubEnv('VERCEL_ENV', 'production')
+      expect(legacyBlobStoreId()).toBe('previewstore')
+      expect(isOwnStoreLegacyUrl(prodUrl)).toBe(false)
+      vi.stubEnv('VERCEL_ENV', 'preview')
+      expect(legacyBlobStoreId()).toBeNull()
+      expect(isOwnStoreLegacyUrl(prodUrl)).toBe(true)
+    } finally {
+      vi.unstubAllEnvs()
+    }
   }, 60_000)
 })

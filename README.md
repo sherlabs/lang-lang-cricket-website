@@ -15,7 +15,7 @@ to below as "the spec").
 
 ## Prerequisites
 
-- Node.js **20.9 or later**
+- Node.js **22.13 or later** (pnpm 11 requires it)
 - pnpm 11 (`corepack enable`; the version is pinned in `package.json`)
 - A local Postgres on `127.0.0.1:54329` (Docker or embedded), user and
   password `postgres`/`postgres`
@@ -111,7 +111,7 @@ The Payload admin is at `/admin` (REST API at `/api`; GraphQL is off).
 - **PlayHQ.** "Run sync now" on the players list, and **Refresh PlayHQ
   data** on the dashboard (see [PlayHQ](#playhq)).
 - **Uploads.** Images and PDFs upload from the browser straight to Blob in
-  production (15 MB cap). Replacing the file of a row imported from the old
+  production (15 MB images, 25 MB PDFs). Replacing the file of a row imported from the old
   app is refused until decommission; upload a new image instead.
 
 ## Environment
@@ -195,10 +195,14 @@ pnpm verify:cutover --target 127.0.0.1/langlang_dev --blob-store-id <store id>
 
 - Locally there is no Blob token, so pass the store id of the legacy Blob
   URLs (`<id>.public.blob.vercel-storage.com`; the fixture uses `fakestore`)
-  so they are recognised as own-store. An explicit `--blob-store-id` also
-  wins over the token's store: the preview rehearsal runs with the preview
-  store's token and `--blob-store-id <production store>`, so legacy blobs
-  are registered in place and only new uploads go to the preview store.
+  so they are recognised as own-store. With a token, a `--blob-store-id`
+  that differs from the token's store is refused unless
+  `--preview-rehearsal` is also given: the preview rehearsal runs with the
+  preview store's token and `--blob-store-id <production store>
+  --preview-rehearsal`, so legacy blobs are registered in place and only new
+  uploads go to the preview store. In production omit the flag. A fallback
+  re-upload that Payload rejects is reported as `media-fallback-failed`
+  (relation left empty, verify fails the row) instead of aborting the run.
 - Re-running writes nothing (each step skips rows that exist). `--update`
   updates them in place instead. `--only events,event-rsvps` limits the
   steps, and `--update --reconcile-deletes` also deletes target rows that

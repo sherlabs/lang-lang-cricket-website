@@ -11,6 +11,7 @@
  * `fakestore` (the fixture's Blob host).
  */
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
@@ -402,5 +403,62 @@ describe('legacy ETL (fixture)', () => {
       await runEtl({ update: true }, ['stories'], true)
     }
     expect((await verify()).ok).toBe(true)
+  })
+})
+
+// Cutover checklist B.3: the preview rehearsal writes with the preview store's token while the
+// legacy rows point at the production store (`fakestore` here; the storage plugin's fake store).
+describe('legacy ETL, two stores (preview rehearsal)', () => {
+  const PREVIEW_TOKEN = 'vercel_blob_rw_previewstore_x'
+  const PROD = 'https://fakestore.public.blob.vercel-storage.com/'
+  const pdf = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\nxref\n0 1\n0000000000 65535 f \ntrailer<</Root 1 0 R>>\nstartxref\n9\n%%EOF\n', 'latin1')
+  const png = readFileSync(path.resolve('public/apple-touch-icon.png'))
+  const jpg = readFileSync(path.resolve('public/og-image.jpg'))
+  const BY_EXT: Record<string, [Buffer, string]> = { pdf: [pdf, 'application/pdf'], png: [png, 'image/png'], jpg: [jpg, 'image/jpeg'] }
+  const SPECIAL: Record<string, [Buffer, string]> = {
+    // A mis-named file is accepted and stored with its real type (head() is skipped on a two-store run).
+    [`${PROD}gallery/photo-01.jpg`]: [png, 'image/png'],
+    // Bytes Payload's upload restrictions reject: reported, not fatal.
+    [`${PROD}players/headshot.jpg`]: [Buffer.from('not an image'), 'image/jpeg'],
+  }
+
+  it('registers legacy blobs in place, re-uploads fallbacks from GETs, reports a rejected file, and is idempotent', async () => {
+    await wipeTarget()
+    blob.head.mockClear()
+    fetchSpy.mockReset()
+    fetchSpy.mockImplementation(async (input: unknown, init?: { method?: string }) => {
+      const url = String(input)
+      if (init?.method === 'HEAD') return new Response(null, { status: 200 })
+      const [body, type] = SPECIAL[url] ?? BY_EXT[url.split('.').pop()!] ?? [Buffer.from(''), 'application/octet-stream']
+      return new Response(new Uint8Array(body), { status: 200, headers: { 'content-type': type } })
+    })
+    try {
+      const ctx = await runEtl({ token: PREVIEW_TOKEN, storeId: 'fakestore' })
+      expect(blob.head).not.toHaveBeenCalled()
+      const gets = fetchSpy.mock.calls.filter(([, init]) => (init as { method?: string } | undefined)?.method !== 'HEAD').map(([u]) => String(u))
+      expect(gets.length).toBeGreaterThan(0)
+      expect(gets.every((u) => u.startsWith(PROD))).toBe(true)
+      expect(ctx.report.media.register).toBeGreaterThan(0)
+      expect(ctx.report.media['fallback-reupload']).toBeGreaterThan(0)
+      expect(ctx.report.media['fallback-local'] ?? 0).toBe(0)
+      const kinds = ctx.report.items.map((i) => `${i.kind} ${i.table}#${i.id}`)
+      expect(kinds).toContain('media-fallback-failed players#6')
+      expect(ctx.report.counts('players').created).toBe(6)
+      const { docs: [photo] } = await payload.find({ collection: 'gallery-photos', where: { legacyUrl: { equals: `${PROD}gallery/photo-01.jpg` } }, overrideAccess: true })
+      expect(photo.mimeType).toBe('image/png')
+
+      const result = await verify(undefined, { token: PREVIEW_TOKEN, headSample: 1000 })
+      const failures = failuresOf(result)
+      expect(failures.split('\n').filter((f) => f && !f.includes('players#6'))).toEqual([])
+      const heads = fetchSpy.mock.calls.filter(([, init]) => (init as { method?: string } | undefined)?.method === 'HEAD').map(([u]) => String(u))
+      expect(heads.length).toBeGreaterThan(0)
+
+      const before = await snapshot()
+      const again = await runEtl({ token: PREVIEW_TOKEN, storeId: 'fakestore' })
+      expect(again.report.writes()).toBe(0)
+      expect(await snapshot()).toEqual(before)
+    } finally {
+      fetchSpy.mockReset()
+    }
   })
 })
