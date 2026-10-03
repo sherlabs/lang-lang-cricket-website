@@ -6,7 +6,12 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, RequestConte
  * - `revalidatePath`/`revalidateTag` throw outside a Next request (e.g. `payload run`),
  *   so every call is wrapped and failures are swallowed.
  */
-export async function revalidatePaths(paths: readonly string[], context?: RequestContext, tags: readonly string[] = []): Promise<void> {
+export async function revalidatePaths(
+  paths: readonly string[],
+  context?: RequestContext,
+  tags: readonly string[] = [],
+  opts: { layout?: boolean } = {},
+): Promise<void> {
   if (context?.disableRevalidate) return
   let cache: typeof import('next/cache')
   try {
@@ -16,7 +21,8 @@ export async function revalidatePaths(paths: readonly string[], context?: Reques
   }
   for (const p of paths) {
     try {
-      cache.revalidatePath(p)
+      if (opts.layout) cache.revalidatePath(p, 'layout')
+      else cache.revalidatePath(p)
     } catch {
       // outside a request / static generation store: nothing to revalidate
     }

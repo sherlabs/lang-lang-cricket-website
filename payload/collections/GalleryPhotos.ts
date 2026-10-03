@@ -34,5 +34,5 @@ export const GalleryPhotos: CollectionConfig = {
     afterDelete: [revalidateAfterDelete(PATHS)],
   },
   timestamps: true,
-  fields: [{ name: 'caption', type: 'text', defaultValue: '' }, sortOrderField(), legacyUrlField],
+  fields: [{ name: 'caption', type: 'text', defaultValue: '' }, sortOrderField('Lower numbers show first. Leave empty on upload to put the photo at the front.', { withDefault: false }), legacyUrlField],
 }

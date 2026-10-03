@@ -4,6 +4,7 @@ import { anyone, isStaff } from '../access'
 import { sortOrderField } from '../fields/sortOrderField'
 import { httpUrlOrEmpty } from '../fields/validators'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
+import { trimStrings } from '../hooks/trimStrings'
 
 const PATHS = ['/sponsors', '/']
 
@@ -18,6 +19,7 @@ export const Sponsors: CollectionConfig = {
   defaultSort: 'tier',
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
+    beforeValidate: [trimStrings(['name', 'linkUrl'])],
     afterChange: [revalidateAfterChange(PATHS)],
     afterDelete: [revalidateAfterDelete(PATHS)],
   },

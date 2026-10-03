@@ -21,8 +21,6 @@ const nextConfig: NextConfig = {
   // Next writes AGENTS.md/CLAUDE.md on dev start otherwise.
   agentRules: false,
   experimental: { globalNotFound: true },
-  // The club logo (club global) may be a Blob URL; next/image needs the host allowed.
-  images: { remotePatterns: [{ protocol: 'https', hostname: '*.public.blob.vercel-storage.com' }] },
   async redirects() {
     return [
       // One canonical host for search engines: www and the production vercel.app

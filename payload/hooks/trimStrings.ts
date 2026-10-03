@@ -1,12 +1,16 @@
-import type { CollectionBeforeChangeHook } from 'payload'
+import type { CollectionBeforeValidateHook } from 'payload'
 
-/** beforeChange: trim the named string fields (people, ports the old `fromForm`). Skipped under `context.etl`. */
+/**
+ * beforeValidate: trim the named string fields (ports the old `fromForm`/`clean()`), so a
+ * whitespace-only required value fails `required` instead of being saved as ''. Skipped
+ * under `context.etl` (legacy values are copied verbatim).
+ */
 export const trimStrings =
-  (fields: readonly string[]): CollectionBeforeChangeHook =>
+  (fields: readonly string[]): CollectionBeforeValidateHook =>
   ({ data, req }) => {
-    if (req.context?.etl) return data
+    if (!data || req.context?.etl) return data
     for (const f of fields) {
-      if (typeof data?.[f] === 'string') data[f] = data[f].trim()
+      if (typeof data[f] === 'string') data[f] = data[f].trim()
     }
     return data
   }

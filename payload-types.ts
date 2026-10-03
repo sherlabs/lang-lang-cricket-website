@@ -219,7 +219,7 @@ export interface GalleryPhoto {
   id: number;
   caption?: string | null;
   /**
-   * Lower numbers show first.
+   * Lower numbers show first. Leave empty on upload to put the photo at the front.
    */
   sortOrder?: number | null;
   legacyUrl?: string | null;

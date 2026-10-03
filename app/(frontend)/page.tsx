@@ -2,6 +2,7 @@ import { JsonLd } from '@/components/json-ld'
 import { organizationJsonLd } from '@/lib/structured-data'
 import { canonicalFor } from '@/lib/site-metadata'
 import Image from 'next/image'
+import { ClubLogo } from '@/components/club-logo'
 import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, Mail01Icon } from '@hugeicons/core-free-icons'
@@ -70,7 +71,7 @@ export default async function HomePage() {
         <div className="container-site relative flex min-h-[560px] flex-col justify-end pb-16 pt-24 sm:min-h-[640px] sm:pb-24 lg:min-h-[700px]">
           <div className="mb-6 inline-flex w-fit items-center gap-3 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-xs font-medium backdrop-blur">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white p-0.5">
-              <Image src={club.logoUrl} alt="" width={20} height={25} className="h-5 w-auto" />
+              <ClubLogo src={club.logoUrl} alt="" width={20} height={25} className="h-5 w-auto" />
             </span>
             {hero.eyebrow}
           </div>

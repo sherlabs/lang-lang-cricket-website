@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, staffOr } from '../access'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
+import { trimStrings } from '../hooks/trimStrings'
 
 const PATHS = ['/', '/announcements']
 
@@ -23,6 +24,7 @@ export const Announcements: CollectionConfig = {
     delete: isStaff,
   },
   hooks: {
+    beforeValidate: [trimStrings(['title', 'body'])],
     afterChange: [revalidateAfterChange(PATHS)],
     afterDelete: [revalidateAfterDelete(PATHS)],
   },

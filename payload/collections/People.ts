@@ -32,7 +32,7 @@ export const People: CollectionConfig = {
   defaultSort: 'sortOrder',
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
-    beforeChange: [trimStrings(['name', 'role', 'phone', 'email'])],
+    beforeValidate: [trimStrings(['name', 'role', 'phone', 'email'])],
     afterChange: [revalidateAfterChange(PATHS)],
     afterDelete: [revalidateAfterDelete(PATHS)],
   },

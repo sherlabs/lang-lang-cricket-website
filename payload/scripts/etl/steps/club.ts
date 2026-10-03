@@ -1,12 +1,19 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { clubDefaults } from '../../../seed/club-defaults'
 import { seedClubGlobal } from '../../../seed/seed-club-global'
 import { ETL_CONTEXT, type EtlContext } from '../media'
 import type { EtlStep } from './types'
 
-/** Upload a file from public/ into `media` once (deduped on legacyUrl = its site path). */
-async function uploadPublicFile(ctx: EtlContext, sitePath: string, alt: string): Promise<number | null> {
+const MIME: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' }
+
+/**
+ * Upload a file from public/ into `media` once (deduped on legacyUrl = its site path), under
+ * `name` rather than its basename: media filenames are unique per collection, and a generic
+ * `logo.png` would push own-store blobs with the same basename (sponsors/logo.png, …) off the
+ * registration path.
+ */
+async function uploadPublicFile(ctx: EtlContext, sitePath: string, name: string, alt: string): Promise<number | null> {
   const { payload, report } = ctx
   const existing = await payload.find({ collection: 'media', where: { legacyUrl: { equals: sitePath } }, limit: 1, depth: 0, overrideAccess: true })
   if (existing.docs[0]) return existing.docs[0].id
@@ -16,14 +23,25 @@ async function uploadPublicFile(ctx: EtlContext, sitePath: string, alt: string):
     return null
   }
   report.mediaAction('upload-local-asset')
-  const doc = await payload.create({ collection: 'media', data: { alt, legacyUrl: sitePath }, filePath, overrideAccess: true, depth: 0, context: { ...ETL_CONTEXT } })
+  const data = readFileSync(filePath)
+  const mimetype = MIME[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream'
+  const doc = await payload.create({
+    collection: 'media',
+    data: { alt, legacyUrl: sitePath },
+    file: { data, mimetype, name, size: data.length },
+    overrideAccess: true,
+    depth: 0,
+    context: { ...ETL_CONTEXT },
+  })
   return doc.id
 }
 
 /**
- * Step 2: the `club` global, seeded from the defaults unless it already exists; then the
- * branding files (logo, OG image) are uploaded from public/ into `media` and set on the
- * global. The home hero is defaults-module only in v1 (no global field), so it stays static.
+ * Step 2: the `club` global, seeded from the defaults unless it already exists (never
+ * force-seeded, so an `--update` re-run after cutover keeps admin edits). Then, whatever the
+ * seed did, the branding files (logo, OG image) are uploaded from public/ into `media` and set
+ * on the global, but only where those fields are still empty. The home hero is defaults-module
+ * only in v1 (no global field), so it stays static.
  */
 export const clubStep: EtlStep = {
   name: 'club',
@@ -35,17 +53,25 @@ export const clubStep: EtlStep = {
       counts.planned++
       return
     }
-    const result = await seedClubGlobal(payload, { force: ctx.update })
-    counts[result]++
-    if (result === 'skipped') return
+    let result = await seedClubGlobal(payload)
 
-    const logo = await uploadPublicFile(ctx, clubDefaults.assets.logo, `${clubDefaults.name} crest`)
-    const ogImage = await uploadPublicFile(ctx, clubDefaults.assets.ogImage.url, clubDefaults.ogImageAlt)
-    await payload.updateGlobal({
-      slug: 'club',
-      data: { ...(logo ? { logo } : {}), ...(ogImage ? { ogImage } : {}) },
-      overrideAccess: true,
-      context: { ...ETL_CONTEXT },
-    })
+    const current = await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })
+    const ext = (p: string) => path.extname(p).toLowerCase()
+    const logo = current.logo
+      ? null
+      : await uploadPublicFile(ctx, clubDefaults.assets.logo, `club-logo${ext(clubDefaults.assets.logo)}`, `${clubDefaults.name} crest`)
+    const ogImage = current.ogImage
+      ? null
+      : await uploadPublicFile(ctx, clubDefaults.assets.ogImage.url, `club-og-image${ext(clubDefaults.assets.ogImage.url)}`, clubDefaults.ogImageAlt)
+    if (logo || ogImage) {
+      await payload.updateGlobal({
+        slug: 'club',
+        data: { ...(logo ? { logo } : {}), ...(ogImage ? { ogImage } : {}) },
+        overrideAccess: true,
+        context: { ...ETL_CONTEXT },
+      })
+      if (result === 'skipped') result = 'updated'
+    }
+    counts[result]++
   },
 }

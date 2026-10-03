@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import { ClubLogo } from '@/components/club-logo'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
@@ -22,7 +22,7 @@ export function SiteFooter({ club }: { club: FooterClub }) {
         <div className="sm:col-span-2 lg:col-span-1">
           <Link href="/" className="group inline-flex items-center gap-3 rounded-md">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white p-1 ring-1 ring-white/20 transition group-hover:ring-brand-gold">
-              <Image
+              <ClubLogo
                 src={club.logoUrl}
                 alt={`${club.name} crest`}
                 width={36}

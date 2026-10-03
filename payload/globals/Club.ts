@@ -42,8 +42,9 @@ export const Club: GlobalConfig = {
   hooks: {
     afterChange: [
       async ({ doc, req }) => {
-        // Every public page reads club values (nav, footer, metadata).
-        await revalidatePaths(['/', '/sponsors', '/gallery', '/documents', '/contact', '/people', '/announcements', '/history'], req.context)
+        // Every public page reads club values (nav, footer, metadata), including ISR routes
+        // (/fixtures…) and the static global-not-found: revalidate the whole root layout.
+        await revalidatePaths(['/'], req.context, [], { layout: true })
         return doc
       },
     ],

@@ -7,8 +7,10 @@
  *
  * Files go through Payload (Blob in production, ./gallery-photos locally). New photos go to the
  * front in file-name order (below the current lowest sortOrder, without renumbering existing
- * rows); --append puts them after the current highest. Idempotent: a file whose site path
- * (`/assets/gallery/<name>`, for the default folder) or file name is already known is skipped.
+ * rows); --append puts them after the current highest. Idempotent: a file whose name is
+ * already a gallery filename, or whose site path (`/assets/gallery/<name>`, for the default
+ * folder) is an ETL'd row's legacyUrl, is skipped. New rows get no `legacyUrl` (spec §3: it is
+ * null for new uploads, so they are not treated as old-site files).
  */
 import config from '@payload-config'
 import { readdirSync } from 'node:fs'
@@ -46,7 +48,7 @@ async function main() {
     for (const [i, f] of fresh.entries()) {
       await payload.create({
         collection: 'gallery-photos',
-        data: { caption: '', sortOrder: start + i, ...(sitePath(f) ? { legacyUrl: sitePath(f) } : {}) },
+        data: { caption: '', sortOrder: start + i },
         filePath: path.join(dir, f),
         overrideAccess: true,
         context: { disableRevalidate: true },

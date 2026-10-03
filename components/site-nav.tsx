@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { ClubLogo } from '@/components/club-logo'
 import { usePathname } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon, Cancel01Icon, Mail01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
@@ -89,7 +89,7 @@ export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta }: SiteN
           aria-label={`${club.name} home`}
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white p-1 shadow-sm ring-1 ring-white/20 transition group-hover:ring-brand-gold">
-            <Image
+            <ClubLogo
               src={club.logoUrl}
               alt={`${club.name} crest`}
               width={36}
