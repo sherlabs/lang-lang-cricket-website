@@ -103,6 +103,8 @@ echo "$TARGET"   # must be the branch host, not PROD_DATABASE_HOST
 - [ ] Run it again: **0 rows written**.
 - [ ] `pnpm verify:cutover --target $TARGET --blob-store-id $PROD_STORE` passes, including "registered rows: generateURL(prefix, filename) = legacyUrl" and the HEAD sample.
 
+These runs are the first real exercise of the two-store path (the local fixture uses one store for both). If "upload reachability" fails here, look at the failing row's stored `prefix`/`filename` and which host was HEADed (rows registered in place: the production store; files the ETL uploaded: the preview store) before concluding the data is wrong. The operator shell has no `VERCEL_ENV`, so the `legacyUrl` read rule is not active there; the ETL and verify build URLs from `prefix`/`filename` and do not depend on it.
+
 ### B.4 Check it
 
 - [ ] The smoke list (F) on the preview branch URL, signed into Deployment Protection. Admin login works on the branch URL (`serverURL` and `csrf` are derived from `VERCEL_BRANCH_URL`/`VERCEL_URL`).
