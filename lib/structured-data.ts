@@ -153,3 +153,24 @@ export function playerListJsonLd(name: string, players: { name: string; slug: st
     })),
   }
 }
+
+/** A season yearbook as a CreativeWork: title, season and the date it was published; never the stats. */
+export function yearbookJsonLd(
+  book: { slug: string; title: string; seasonName: string; coverUrl: string; publishedAt: Date | null; updatedAt: Date },
+  club: JsonLdClub,
+): JsonLd {
+  const published = book.publishedAt ?? book.updatedAt
+  const modified = book.updatedAt > published ? book.updatedAt : published
+  return {
+    '@context': CONTEXT,
+    '@type': 'CreativeWork',
+    name: book.title,
+    headline: book.title,
+    about: book.seasonName,
+    image: [absoluteUrl(book.coverUrl || club.ogImage.url, club.siteUrl)],
+    datePublished: published.toISOString(),
+    dateModified: modified.toISOString(),
+    publisher: { '@type': 'SportsOrganization', name: club.name, url: club.siteUrl, logo: { '@type': 'ImageObject', url: absoluteUrl(club.logoUrl, club.siteUrl) } },
+    mainEntityOfPage: absoluteUrl(`/yearbooks/${book.slug}`, club.siteUrl),
+  }
+}

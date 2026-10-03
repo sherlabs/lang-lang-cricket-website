@@ -275,3 +275,37 @@
     @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-1 text-brand-black placeholder:text-brand-grey-light focus:border-brand-gold focus:outline-none focus:ring-0;
   }
 }
+/* Yearbook print (BetterStats A9). Everything is scoped under `.yearbook-print`, so no other
+   page changes. Paper: no site chrome, light surfaces, dark text, sections kept whole. */
+@media print {
+  body:has(.yearbook-print) header,
+  body:has(.yearbook-print) footer,
+  .yearbook-print .print-hide {
+    display: none !important;
+  }
+  body:has(.yearbook-print) {
+    background: #fff !important;
+  }
+  .yearbook-print .print-banner section {
+    background: none !important;
+    color: #000 !important;
+  }
+  .yearbook-print .print-banner section * {
+    color: #000 !important;
+    background: none !important;
+  }
+  .yearbook-print .print-banner section [aria-hidden='true'] {
+    display: none !important;
+  }
+  .yearbook-print .print-section {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  .yearbook-print details > summary {
+    list-style: none;
+  }
+  .yearbook-print a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

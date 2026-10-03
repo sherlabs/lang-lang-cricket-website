@@ -16,6 +16,10 @@ beforeEach(() => {
       { id: 1, slug: 'pat', hidden: false, updatedAt: '2026-02-01T00:00:00.000Z' },
       { id: 2, slug: 'secret', hidden: true, updatedAt: '2026-02-02T00:00:00.000Z' },
     ],
+    yearbooks: [
+      { id: 1, slug: 'summer-2025-26', status: 'published', updatedAt: '2026-04-01T00:00:00.000Z' },
+      { id: 2, slug: 'summer-2024-25-draft', status: 'draft', updatedAt: '2026-04-02T00:00:00.000Z' },
+    ],
     events: [{ id: 7, createdAt: '2025-12-01T00:00:00.000Z' }],
     stories: [
       { id: 1, slug: 'first-win', status: 'published', updatedAt: '2026-03-01T00:00:00.000Z' },
@@ -30,6 +34,25 @@ describe('sitemap', () => {
     const urls = (await sitemap()).map((e) => e.url)
     expect(urls).toContain('https://club.test/honours')
     expect(urls.some((u) => u.includes('/players/compare'))).toBe(false)
+  })
+
+  it('lists the new stats routes and leaves the export out', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const urls = (await sitemap()).map((e) => e.url)
+    for (const p of ['/stats', '/records', '/honours', '/yearbooks', '/matches', '/statlab']) expect(urls).toContain(`https://club.test${p}`)
+    expect(urls.some((u) => u.includes('/statlab/export'))).toBe(false)
+  })
+
+  it('lists only published yearbooks (its own where), with lastModified = updatedAt', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const entries = await sitemap()
+    const calls = fake.callsTo('find', 'yearbooks')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args).toMatchObject({ where: { status: { equals: 'published' } }, depth: 0, pagination: false })
+    const urls = entries.map((e) => e.url)
+    expect(urls).toContain('https://club.test/yearbooks/summer-2025-26')
+    expect(urls).not.toContain('https://club.test/yearbooks/summer-2024-25-draft')
+    expect(entries.find((e) => e.url === 'https://club.test/yearbooks/summer-2025-26')?.lastModified).toEqual(new Date('2026-04-01T00:00:00.000Z'))
   })
 
   it('lists only players that are not hidden (its own where, joins:false), with lastModified = updatedAt', async () => {

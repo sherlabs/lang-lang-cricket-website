@@ -673,6 +673,7 @@ export const clubDefaults: ClubDefaults = {
           { href: '/stats', label: 'Stats' },
           { href: '/records', label: 'Records' },
           { href: '/honours', label: 'Honours' },
+          { href: '/yearbooks', label: 'Yearbooks' },
           { href: '/history', label: 'History' },
           { href: '/contact', label: 'Contact' },
         ],

@@ -1,7 +1,8 @@
+import { bowlingAverages } from '@/lib/playhq/players'
 import type { SeasonCounts } from '@/lib/players/season-math'
 import { careerOf, mergeBySeason, type StatRow } from './aggregate'
 import { classifyGrade, GRADE_CATEGORIES, type GradeCategory, type GradeRule } from './categories'
-import { getMetric } from './metrics'
+import { getMetric, type Metric } from './metrics'
 import type { QualConfig } from './qualify'
 import { rankBy, type RankResult } from './rank'
 import { ALL, type StatsParams } from './query-string'
@@ -52,4 +53,11 @@ export function buildLeaderboard(
   const items: BoardItem[] = (scope === 'career' ? careerOf(filtered) : mergeBySeason(filtered)).map((x) => ({ playerId: x.playerId, counts: x.counts }))
   const metric = getMetric(params.metric)!
   return { scope, metricKey: metric.key, result: rankBy(items, metric, settings.qualification[scope]) }
+}
+
+/** The extra column beside a leaderboard value: overs for bowling, innings for batting, games otherwise. */
+export function boardContext(metric: Metric): { label: string; text: (c: SeasonCounts) => string } {
+  if (metric.group === 'bowling') return { label: 'Overs', text: (c) => bowlingAverages({ balls: c.bowlBalls, runs: c.bowlRuns, wickets: c.bowlWickets }).overs }
+  if (metric.group === 'batting') return { label: 'Inns', text: (c) => String(c.batInnings) }
+  return { label: 'Games', text: (c) => String(c.games) }
 }

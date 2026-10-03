@@ -6,11 +6,9 @@ import { LeaderboardTable, type LeaderboardRow } from '@/components/stats/leader
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { getClub } from '@/lib/club'
-import { bowlingAverages } from '@/lib/playhq/players'
-import type { SeasonCounts } from '@/lib/players/season-math'
 import { getStatsSettings } from '@/lib/site-settings'
-import { availableCategories, buildLeaderboard, filterRows, gradeNames } from '@/lib/stats/leaderboard'
-import { GROUP_LABELS, getMetric, leaderboardMetrics, type Metric } from '@/lib/stats/metrics'
+import { availableCategories, boardContext, buildLeaderboard, filterRows, gradeNames } from '@/lib/stats/leaderboard'
+import { GROUP_LABELS, getMetric, leaderboardMetrics } from '@/lib/stats/metrics'
 import { ALL, effectiveCategories, parseStatsParams, statsHref } from '@/lib/stats/query-string'
 import { qualifierText } from '@/lib/stats/qualify'
 import { getLastSyncAt, getVisibleStatData, type PlayerLite } from '@/lib/stats/queries'
@@ -41,12 +39,6 @@ export async function generateMetadata({ searchParams }: Props) {
 const TOP_HUB = 10
 const TOP_FULL = 50
 
-function contextFor(metric: Metric): { label: string; text: (c: SeasonCounts) => string } {
-  if (metric.group === 'bowling') return { label: 'Overs', text: (c) => bowlingAverages({ balls: c.bowlBalls, runs: c.bowlRuns, wickets: c.bowlWickets }).overs }
-  if (metric.group === 'batting') return { label: 'Inns', text: (c) => String(c.batInnings) }
-  return { label: 'Games', text: (c) => String(c.games) }
-}
-
 const formatAsOf = (d: Date) => new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium', timeZone: 'Australia/Melbourne' }).format(d)
 
 export default async function StatsPage({ searchParams }: Props) {
@@ -74,7 +66,7 @@ export default async function StatsPage({ searchParams }: Props) {
 
   const boards = metrics.map((metric) => {
     const lb = buildLeaderboard(data.rows, { season: params.season, grade: params.grade, metric: metric.key }, cats, settings)
-    const ctx = contextFor(metric)
+    const ctx = boardContext(metric)
     const scope = settings.qualification[lb.scope]
     const note = qualifierText(metric.qualifier, scope)
     const ranked = lb.result.ranked.slice(0, limit)

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Event } from '@/lib/domain'
 import { resolveClub } from '@/lib/club-merge'
-import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd } from '@/lib/structured-data'
+import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd, yearbookJsonLd } from '@/lib/structured-data'
 
 // The unseeded club (defaults module) — the values pages pass in before `seed:club`.
 const club = resolveClub(null)
@@ -110,5 +110,27 @@ describe('json-ld builders', () => {
     expect(l['@type']).toBe('ItemList')
     expect(l.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, item: { '@type': 'Person', name: 'Pat Lee', url: 'https://langlangcricketclub.com/players/pat-lee' } })
     expect(playerListJsonLd('x', [], club)).toBeNull()
+  })
+})
+
+describe('yearbookJsonLd', () => {
+  const pub = new Date('2026-04-01T00:00:00Z')
+  const book = { slug: 'summer-2025-26', title: '2025/26 Yearbook', seasonName: 'Summer 2025/26', coverUrl: '', publishedAt: pub, updatedAt: pub }
+  it('is a CreativeWork with absolute urls, the publication date and the club as publisher', () => {
+    const j = yearbookJsonLd(book, club) as any
+    expect(j['@type']).toBe('CreativeWork')
+    expect(j.datePublished).toBe(pub.toISOString())
+    expect(j.mainEntityOfPage).toBe(`${club.siteUrl}/yearbooks/summer-2025-26`)
+    expect(j.image[0]).toBe(club.ogImage.url.startsWith('http') ? club.ogImage.url : `${club.siteUrl}${club.ogImage.url}`)
+    expect(j.publisher.name).toBe(club.name)
+  })
+  it('falls back to updatedAt when never stamped, and dateModified is never earlier than datePublished', () => {
+    const later = new Date('2026-05-01T00:00:00Z')
+    const j = yearbookJsonLd({ ...book, publishedAt: null, updatedAt: later }, club) as any
+    expect(j.datePublished).toBe(later.toISOString())
+    expect((yearbookJsonLd({ ...book, updatedAt: new Date('2026-03-01T00:00:00Z') }, club) as any).dateModified).toBe(pub.toISOString())
+  })
+  it('carries no statistics', () => {
+    expect(JSON.stringify(yearbookJsonLd(book, club))).not.toMatch(/runs|wickets|catches/i)
   })
 })

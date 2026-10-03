@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
+import { listPublishedYearbookSlugs } from '@/lib/yearbooks-queries'
 
 export const dynamic = 'force-dynamic' // DB-backed (Payload Local API): revalidate=3600 would bake a static-only sitemap at build
 
@@ -14,6 +15,9 @@ const STATIC: { path: string; changeFrequency: Entry['changeFrequency']; priorit
   { path: '/stats', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/records', changeFrequency: 'weekly', priority: 0.6 },
   { path: '/honours', changeFrequency: 'monthly', priority: 0.5 },
+  { path: '/yearbooks', changeFrequency: 'monthly', priority: 0.5 },
+  { path: '/matches', changeFrequency: 'weekly', priority: 0.5 },
+  { path: '/statlab', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/history', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/history/submit', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/people', changeFrequency: 'monthly', priority: 0.6 },
@@ -34,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const payload = await getPayloadClient()
-    const [playerRows, storyRows, eventRows] = await Promise.all([
+    const [playerRows, storyRows, eventRows, yearbookRows] = await Promise.all([
       // Public filter stated here (the Local API runs with overrideAccess): not hidden.
       payload
         .find({
@@ -63,6 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       payload
         .find({ collection: 'events', pagination: false, depth: 0, joins: false, select: { createdAt: true }, sort: 'id' })
         .then((r) => r.docs.map((d) => ({ id: d.id, createdAt: new Date(d.createdAt) }))),
+      // Published yearbooks only (the query states its own status filter).
+      listPublishedYearbookSlugs(),
     ])
     for (const p of playerRows) {
       entries.push({ url: `${SITE_URL}/players/${p.slug}`, lastModified: p.updatedAt, changeFrequency: 'monthly', priority: 0.5 })
@@ -74,6 +80,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'yearly',
         priority: 0.5,
       })
+    }
+    for (const y of yearbookRows) {
+      entries.push({ url: `${SITE_URL}/yearbooks/${y.slug}`, lastModified: y.updatedAt, changeFrequency: 'yearly', priority: 0.5 })
     }
     for (const e of eventRows) {
       entries.push({ url: `${SITE_URL}/events/${e.id}`, lastModified: e.createdAt, changeFrequency: 'weekly', priority: 0.6 })
