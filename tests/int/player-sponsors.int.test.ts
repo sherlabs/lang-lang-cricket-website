@@ -150,3 +150,15 @@ describe('player lifecycle', () => {
     await expect(payload.findByID({ collection: 'player-sponsors', id: sp.id })).rejects.toThrow()
   })
 })
+
+describe('deleting a sponsor', () => {
+  it('removes its player sponsorships instead of failing on the NOT NULL link', async () => {
+    const doomed = await payload.create({ collection: 'sponsors', data: { name: 'Doomed Plumbing', tier: 'Player' }, context: ctx })
+    const player = await payload.create({ collection: 'players', data: { firstName: 'Del', lastName: 'Ete' }, context: ctx })
+    await payload.create({ collection: 'player-sponsors', data: { player: player.id, sponsor: doomed.id }, context: ctx })
+    await payload.delete({ collection: 'sponsors', id: doomed.id, context: ctx })
+    const left = await payload.find({ collection: 'player-sponsors', where: { sponsor: { equals: doomed.id } }, depth: 0, overrideAccess: true })
+    expect(left.totalDocs).toBe(0)
+    await payload.delete({ collection: 'players', id: player.id, context: ctx })
+  })
+})

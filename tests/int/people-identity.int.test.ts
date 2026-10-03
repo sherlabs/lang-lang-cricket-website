@@ -104,13 +104,13 @@ describe('one edit changes every page', () => {
     expect(after.profile.player.photoUrl).toBe(urlB)
   }, 120_000)
 
-  it("the player's own photo wins on the player pages; a person without a photo borrows the player's", async () => {
+  it("the person's photo wins everywhere; a person without a photo borrows the player's", async () => {
     const { getPlayerProfile } = await import('@/lib/players/queries')
     const { listPeople } = await import('@/lib/people-queries')
     const urlA = (await payload.findByID({ collection: 'media', id: mediaA.id })).url!
     const urlB = (await payload.findByID({ collection: 'media', id: mediaB.id })).url!
     await payload.update({ collection: 'players', id: playerId, data: { photo: mediaA.id }, context: ctx })
-    expect((await getPlayerProfile(playerSlug))!.player.photoUrl).toBe(urlA) // person has B, player has A: player wins
+    expect((await getPlayerProfile(playerSlug))!.player.photoUrl).toBe(urlB) // person has B, player has A: person wins
     await payload.update({ collection: 'people', id: personId, data: { photo: null }, context: ctx })
     expect((await listPeople()).find((p) => p.id === personId)!.photoUrl).toBe(urlA) // person borrows the player's
     await payload.update({ collection: 'players', id: playerId, data: { photo: null }, context: ctx })

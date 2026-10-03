@@ -372,7 +372,7 @@ export interface Player {
    */
   source?: ('playhq' | 'manual') | null;
   /**
-   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, you can leave this empty: the picture on that entry is used instead.
+   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, the picture on that entry always wins, so change it there. This one is only used when the player has no entry there.
    */
   photo?: (number | null) | Media;
   /**

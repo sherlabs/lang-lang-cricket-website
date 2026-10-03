@@ -30,7 +30,7 @@ and the sitemap for any person's name, role, phone, email or photo.
 - **Photo**: `player.photo`, else `person.photo`, else initials. Resolved by `resolvePhotoUrl()` in
   `lib/identity.ts`. To maintain the picture in ONE place, add it on the person (Committee & contacts)
   and leave the player's photo empty: it then appears on `/players`, the profile and share image.
-  A player's own photo still wins if someone did set one (no surprise overrides).
+  The linked person's photo wins everywhere; the player's own photo is only a fallback when the person has none.
 - **Name**: never overridden. The player name is the PlayHQ stat identity (aliases, merge and sync
   depend on it). The person keeps their own committee name.
 - **Reverse link**: the person card shows a "Player profile" link; the player page shows the club

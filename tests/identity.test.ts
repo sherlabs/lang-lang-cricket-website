@@ -11,10 +11,11 @@ describe('photo and identity resolver', () => {
     expect(resolvePhotoUrl()).toBe('')
   })
 
-  it("keeps the player's name and photo, borrows the person's photo when the player has none, exposes the role", () => {
+  it("keeps the player's name, person photo wins, falls back to the player's photo, exposes the role", () => {
     const person = { id: 1, name: 'Russ S', role: ' President ', section: 'leadership', photoUrl: '/russ.jpg' }
     expect(resolvePlayerIdentity({ name: 'Russell Savige', photoUrl: '' }, person)).toEqual({ name: 'Russell Savige', photoUrl: '/russ.jpg', clubRole: 'President' })
-    expect(resolvePlayerIdentity({ name: 'Russell Savige', photoUrl: '/own.jpg' }, person).photoUrl).toBe('/own.jpg')
+    expect(resolvePlayerIdentity({ name: 'Russell Savige', photoUrl: '/own.jpg' }, person).photoUrl).toBe('/russ.jpg')
+    expect(resolvePlayerIdentity({ name: 'Russell Savige', photoUrl: '/own.jpg' }, { ...person, photoUrl: '' }).photoUrl).toBe('/own.jpg')
     expect(resolvePlayerIdentity({ name: 'Sam', photoUrl: '' }, null)).toEqual({ name: 'Sam', photoUrl: '', clubRole: null })
     expect(resolvePlayerIdentity({ name: 'Sam', photoUrl: '' }, { ...person, photoUrl: '', role: '  ' })).toEqual({ name: 'Sam', photoUrl: '', clubRole: null })
   })

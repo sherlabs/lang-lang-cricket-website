@@ -4,8 +4,9 @@
  * A person (committee, leadership, coach) may also be a player (`people.player`). Pure helpers,
  * no Payload or React imports, shared by the query layer, the components and the link script.
  *
- * - Photo: the player's own photo wins; otherwise the linked person's photo; otherwise initials.
- *   So the picture can be kept in ONE place (on the person) by leaving the player's empty.
+ * - Photo: the linked person's photo wins everywhere (the person is the identity); otherwise the
+ *   player's own photo; otherwise initials. Editing the person's picture therefore always shows
+ *   on every page; a player's own photo is only a fallback for someone with no person entry.
  * - Name: never overridden. The player name is the PlayHQ stat identity (sync, aliases, merge).
  */
 
@@ -38,7 +39,7 @@ export function resolvePlayerIdentity(
 ): { name: string; photoUrl: string; clubRole: string | null } {
   return {
     name: player.name,
-    photoUrl: resolvePhotoUrl(player.photoUrl, person?.photoUrl),
+    photoUrl: resolvePhotoUrl(person?.photoUrl, player.photoUrl),
     clubRole: person?.role?.trim() ? person.role.trim() : null,
   }
 }

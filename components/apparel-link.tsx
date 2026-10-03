@@ -29,14 +29,15 @@ export function ApparelLink({ apparel, variant, className, onClick }: { apparel:
       target="_blank"
       rel="noopener noreferrer"
       data-apparel={variant}
+      title={apparel.label}
       onClick={onClick}
       className={cn(base, variants[variant], className)}
     >
       <HugeiconsIcon icon={ShirtIcon} className="h-4 w-4 shrink-0" aria-hidden />
-      {/* In the tight desktop nav the label only shows once there is room (xl); the link keeps its name. */}
-      <span className={variant === 'nav' ? 'sr-only xl:not-sr-only' : undefined}>{apparel.label}</span>
+      {/* In the tight desktop nav the label only shows once there is room (lg); the link keeps its name. */}
+      <span className={variant === 'nav' ? 'sr-only lg:not-sr-only' : undefined}>{apparel.label}</span>
       <span className="sr-only"> (opens the shop in a new tab)</span>
-      <HugeiconsIcon icon={ArrowUpRight01Icon} className={cn('h-4 w-4 shrink-0', variant === 'nav' && 'hidden xl:block')} aria-hidden />
+      <HugeiconsIcon icon={ArrowUpRight01Icon} className={cn('h-4 w-4 shrink-0', variant === 'nav' && 'hidden lg:block')} aria-hidden />
     </a>
   )
 }

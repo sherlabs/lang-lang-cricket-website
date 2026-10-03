@@ -3,6 +3,7 @@ import { DEFAULT_TIER, TIER_ORDER } from '../../lib/sponsors'
 import { anyone, isStaff } from '../access'
 import { sortOrderField } from '../fields/sortOrderField'
 import { httpUrlOrEmpty } from '../fields/validators'
+import { cascadeDelete } from '../hooks/cascadeDelete'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { trimStrings } from '../hooks/trimStrings'
 
@@ -26,6 +27,8 @@ export const Sponsors: CollectionConfig = {
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
     beforeValidate: [trimStrings(['name', 'linkUrl'])],
+    // A sponsor who backs players: remove those sponsorships first (their FK is NOT NULL).
+    beforeDelete: [cascadeDelete([{ collection: 'player-sponsors', field: 'sponsor' }])],
     afterChange: [revalidateAfterChange(PATHS)],
     afterDelete: [revalidateAfterDelete(PATHS)],
   },
