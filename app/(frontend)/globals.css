@@ -193,6 +193,15 @@
   .story-content li {
     @apply mb-2;
   }
+  /* Rendered stories (Lexical via RichText): list text sits straight in the <li>
+     (`<ul class="list-bullet"><li value="1">…`), where Tiptap wraps it in a <p>
+     whose mb-6 set the rhythm — same 24px gap. Child combinator, so the
+     editor's own lists (inside .ProseMirror) are untouched. A nested list's
+     <li class="nestedListItem"> carries list-style none inline. */
+  .story-content > ul li,
+  .story-content > ol li {
+    @apply mb-6;
+  }
   .story-content blockquote {
     @apply my-8 border-l-2 border-brand-black/15 pl-6 text-brand-grey;
   }

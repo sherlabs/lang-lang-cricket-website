@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { players, stories } from '@/db/schema'
+import { players } from '@/db/schema'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 
@@ -36,10 +36,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const payload = await getPayloadClient()
     const [playerRows, storyRows, eventRows] = await Promise.all([
       db.select({ slug: players.slug, updatedAt: players.updatedAt }).from(players).where(eq(players.hidden, false)),
-      db
-        .select({ slug: stories.slug, publishedAt: stories.publishedAt, reviewedAt: stories.reviewedAt, createdAt: stories.createdAt })
-        .from(stories)
-        .where(eq(stories.status, 'published')),
+      // Public filter stated here (the Local API runs with overrideAccess): published only.
+      payload
+        .find({
+          collection: 'stories',
+          where: { status: { equals: 'published' } },
+          pagination: false,
+          depth: 0,
+          select: { slug: true, updatedAt: true },
+          sort: 'id',
+        })
+        .then((r) => r.docs.map((d) => ({ slug: d.slug, updatedAt: new Date(d.updatedAt) }))),
       // Events have no draft/visible flag: every row is public. joins:false — the Local API
       // runs with overrideAccess and the rsvps/photos joins would otherwise be loaded.
       payload
@@ -52,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const s of storyRows) {
       entries.push({
         url: `${SITE_URL}/history/${s.slug}`,
-        lastModified: s.reviewedAt ?? s.publishedAt ?? s.createdAt,
+        lastModified: s.updatedAt,
         changeFrequency: 'yearly',
         priority: 0.5,
       })

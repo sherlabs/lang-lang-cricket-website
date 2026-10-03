@@ -4,7 +4,7 @@
  * are resolved to URL strings so presentational components are unchanged.
  * Domain types never carry secrets (tokens, private emails).
  *
- * WP2: content types. WP3: events. Stories and players move here in WP4–WP5.
+ * WP2: content types. WP3: events. WP4: stories. Players move here in WP5.
  */
 
 export type Sponsor = {
@@ -98,3 +98,33 @@ export type EventRsvp = {
 
 /** A public (approved) recap photo. */
 export type EventPhoto = { url: string }
+
+/** Serialized Lexical state of a story body (`stories.content`, spec §5). */
+export type StoryContent = {
+  root: { type: string; children: unknown[]; [k: string]: unknown }
+  [k: string]: unknown
+}
+
+export type StoryStatus = 'pending' | 'published' | 'rejected'
+
+/**
+ * A story as the public pages see it. Never carries `editToken`, `viewToken` or `authorEmail`
+ * (spec §2): token pages get the one token they need from the route param.
+ */
+export type Story = {
+  id: number
+  slug: string
+  title: string
+  excerpt: string
+  /** Lexical, with upload nodes populated (fetched at depth 1). */
+  content: StoryContent | null
+  /** '' when there is no cover. */
+  coverImageUrl: string
+  authorName: string
+  status: StoryStatus
+  submittedByAdmin: boolean
+  publishedAt: Date | null
+  reviewedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}

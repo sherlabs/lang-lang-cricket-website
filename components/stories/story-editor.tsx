@@ -25,7 +25,8 @@ const EMPTY_DOC: JSONContent = { type: 'doc', content: [{ type: 'paragraph' }] }
 type Props = {
   /** Name of the hidden form field this editor serialises its Tiptap JSON into. */
   name: string
-  initialContent?: JSONContent
+  /** Tiptap JSON, or HTML (the token edit page loads a stored story as HTML, spec §5). */
+  initialContent?: JSONContent | string
   /** Uploads an image file and returns its public URL. Differs between the admin editor (authenticated route) and the public submission form (unauthenticated route). */
   uploadImage: (file: File) => Promise<string>
 }
@@ -40,7 +41,11 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
   // onUpdate can end up pointing at a hidden input that's no longer the one
   // React keeps mounted (e.g. after a dev-mode double-render), silently
   // submitting the empty default doc. State re-renders the real DOM node.
-  const [contentJson, setContentJson] = useState(() => JSON.stringify(initialContent ?? EMPTY_DOC))
+  // Seeded from the editor itself (onCreate), not from `initialContent`: that may be HTML, and
+  // the field must always carry Tiptap JSON — even when the form is saved without an edit.
+  const [contentJson, setContentJson] = useState(() =>
+    typeof initialContent === 'object' && initialContent ? JSON.stringify(initialContent) : '',
+  )
 
   const editor = useEditor({
     extensions: [
@@ -49,6 +54,9 @@ export function StoryEditor({ name, initialContent, uploadImage }: Props) {
     ],
     content: initialContent ?? EMPTY_DOC,
     immediatelyRender: false,
+    onCreate: ({ editor }) => {
+      setContentJson(JSON.stringify(editor.getJSON()))
+    },
     onUpdate: ({ editor }) => {
       setContentJson(JSON.stringify(editor.getJSON()))
     },

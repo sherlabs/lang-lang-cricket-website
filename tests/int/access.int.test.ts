@@ -289,3 +289,116 @@ describe('access: events (WP3)', () => {
     expect(res.status).toBe(503)
   })
 })
+
+/** A minimal valid Lexical story body. */
+const lex = (text: string): never => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: null,
+    children: [
+      { type: 'paragraph', format: '', indent: 0, version: 1, direction: null, textFormat: 0, textStyle: '', children: [{ type: 'text', text, format: 0, mode: 'normal', style: '', detail: 0, version: 1 }] },
+    ],
+  },
+}) as never
+
+describe('access: stories (WP4)', () => {
+  let payload: Payload
+  let editor: string
+  const ctx = { disableRevalidate: true }
+  let publishedId: number
+  let pendingId: number
+  let pendingMediaId: number
+  const EDIT = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  const VIEW = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+
+  beforeAll(async () => {
+    payload = await getTestPayload()
+    await clearCollection(payload, 'stories')
+    editor = await tokenFor(payload, 'editor', 'wp4-editor@example.com')
+    publishedId = (
+      await payload.create({
+        collection: 'stories',
+        data: { title: 'Public story', content: lex('Hello'), authorName: 'Ann', authorEmail: 'ann@example.com', status: 'published', editToken: EDIT, viewToken: VIEW },
+        context: ctx,
+      })
+    ).id
+    pendingId = (
+      await payload.create({ collection: 'stories', data: { title: 'Pending story', content: lex('Wait'), authorName: 'Bob', status: 'pending' }, context: ctx })
+    ).id
+    pendingMediaId = (
+      await payload.create({
+        collection: 'media',
+        data: { filename: `wp4-pending-${Date.now()}.jpg`, prefix: 'stories/pending', mimeType: 'image/jpeg', filesize: 10, focalX: 50, focalY: 50 },
+        context: ctx,
+      })
+    ).id
+  })
+
+  afterAll(async () => {
+    await destroyTestPayload(payload)
+  })
+
+  it('anonymous REST cannot create, update or delete stories; an editor can', async () => {
+    expect((await rest('POST', '/stories', { body: { title: 'x', content: lex('x'), authorName: 'x' } })).status).toBe(403)
+    expect((await rest('PATCH', `/stories/${publishedId}`, { body: { title: 'x' } })).status).toBe(403)
+    expect((await rest('DELETE', `/stories/${publishedId}`)).status).toBe(403)
+    const created = await rest('POST', '/stories', { token: editor, body: { title: 'By staff', content: lex('x'), authorName: 'Staff' } })
+    expect(created.status).toBe(201)
+    expect(created.json.doc).toMatchObject({ status: 'published', submittedByAdmin: true })
+    expect((await rest('DELETE', `/stories/${created.json.doc.id}`, { token: editor })).status).toBe(200)
+  })
+
+  it('anonymous sees only published stories, never tokens or authorEmail', async () => {
+    const list = await rest('GET', '/stories')
+    expect(list.json.docs.map((d: { id: number }) => d.id)).toEqual([publishedId])
+    const body = JSON.stringify(list.json)
+    for (const secret of [EDIT, VIEW, 'ann@example.com']) expect(body).not.toContain(secret)
+    expect(list.json.docs[0]).not.toHaveProperty('authorEmail')
+    expect(list.json.docs[0]).not.toHaveProperty('editToken')
+    expect((await rest('GET', `/stories/${pendingId}`)).status).toBe(404)
+  })
+
+  it('anonymous cannot filter or sort on a token (field read access governs where/sort)', async () => {
+    expect((await rest('GET', '/stories?where[editToken][like]=a')).status).toBe(400)
+    expect((await rest('GET', '/stories?sort=editToken')).status).toBe(400)
+    expect((await rest('GET', '/stories?where[authorEmail][like]=ann')).status).toBe(400)
+  })
+
+  it('pending story images are not listable anonymously', async () => {
+    const res = await rest('GET', '/media?where[prefix][equals]=stories/pending')
+    expect(res.json.totalDocs ?? 0).toBe(0)
+    expect((await rest('GET', `/media/${pendingMediaId}`)).status).toBe(404)
+  })
+
+  it('an editor PATCHing slug, submittedByAdmin, publishedAt or tokens leaves the stored values unchanged', async () => {
+    const before = await payload.findByID({ collection: 'stories', id: publishedId, depth: 0 })
+    const res = await rest('PATCH', `/stories/${publishedId}`, {
+      token: editor,
+      body: { slug: 'hijacked', submittedByAdmin: true, publishedAt: '2000-01-01T00:00:00.000Z', reviewedAt: '2000-01-01T00:00:00.000Z', editToken: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' },
+    })
+    expect(res.status).toBe(200)
+    const after = await payload.findByID({ collection: 'stories', id: publishedId, depth: 0 })
+    expect(after).toMatchObject({ slug: before.slug, submittedByAdmin: before.submittedByAdmin, publishedAt: before.publishedAt, reviewedAt: before.reviewedAt, editToken: EDIT, viewToken: VIEW })
+  })
+
+  it('a public token update (context.publicSubmission) carrying status: published and new tokens stays pending with its tokens', async () => {
+    const doc = await payload.update({
+      collection: 'stories',
+      id: publishedId,
+      data: { title: 'Edited by submitter', status: 'published', editToken: 'x'.repeat(36), viewToken: 'y'.repeat(36), slug: 'other', publishedAt: '2000-01-01T00:00:00.000Z' },
+      overrideAccess: true,
+      context: { ...ctx, publicSubmission: true },
+    })
+    expect(doc).toMatchObject({ title: 'Edited by submitter', status: 'pending', editToken: EDIT, viewToken: VIEW, slug: 'public-story' })
+    expect(doc.publishedAt).not.toBe('2000-01-01T00:00:00.000Z')
+  })
+
+  it('the public stories upload route answers 503 without a Blob store', async () => {
+    const { POST } = await import('@/app/api/public/stories/upload/route')
+    const res = await POST(new Request('http://localhost:3000/api/public/stories/upload', { method: 'POST', body: '{}' }))
+    expect(res.status).toBe(503)
+  })
+})

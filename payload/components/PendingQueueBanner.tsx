@@ -1,7 +1,7 @@
 import type { BeforeListServerProps, CollectionSlug } from 'payload'
 
 /**
- * `beforeList` on moderated collections (event photos now, stories in WP4; spec §9): when
+ * `beforeList` on moderated collections (event photos and stories; spec §9): when
  * anything is waiting for review, "N awaiting review — Show pending" linking to the list
  * filtered to `status = pending`.
  */

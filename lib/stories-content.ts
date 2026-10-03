@@ -2,7 +2,11 @@ import { generateHTML, type JSONContent } from '@tiptap/core'
 import { JSDOM } from 'jsdom'
 import { STORY_EXTENSIONS } from './stories-extensions'
 
-/** Render a Tiptap document to HTML on the server, for storage and public rendering. */
+/**
+ * Render a Tiptap document to HTML on the server. Since WP4 this is only the first step of
+ * the story conversion pipeline (`lib/stories-convert.ts`): nothing stores or renders this
+ * HTML directly any more.
+ */
 export function renderStoryHtml(doc: JSONContent): string {
   // Tiptap's generateHTML() needs a DOM even on the server (it throws
   // "window is not defined" without one). Set it up for just the duration of
@@ -32,12 +36,6 @@ export function renderStoryHtml(doc: JSONContent): string {
   }
 }
 
-/** Strip tags and collapse whitespace for a list-view excerpt. */
-export function htmlToExcerpt(html: string, maxLen = 160): string {
-  const text = html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (text.length <= maxLen) return text
-  return text.slice(0, maxLen).replace(/\s+\S*$/, '') + '…'
-}
+// The excerpt helper is pure and lives in ./story-excerpt (the Payload hook imports it
+// without pulling in jsdom/Tiptap); re-exported for existing callers.
+export { htmlToExcerpt } from './story-excerpt'

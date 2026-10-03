@@ -5,6 +5,7 @@ import { nowAsEventClock } from '../../lib/event-occurrences'
  * Dashboard count cards (spec §9). Each WP appends the cards for its own collections;
  * no card may reference a collection that is not registered yet.
  * WP2: documents, gallery photos, sponsors, people. WP3: upcoming events, pending event photos.
+ * WP4: published stories, pending stories.
  */
 export type DashboardCard = {
   collection: CollectionSlug
@@ -45,6 +46,23 @@ dashboardCards.push(
     collection: 'event-photos',
     label: 'Pending event photos',
     note: 'Sent in from event pages, awaiting review',
+    where: { status: { equals: 'pending' } },
+    listQuery: 'where[status][equals]=pending',
+  },
+)
+
+dashboardCards.push(
+  {
+    collection: 'stories',
+    label: 'Published stories',
+    note: 'Live on the history page',
+    where: { status: { equals: 'published' } },
+    listQuery: 'where[status][equals]=published',
+  },
+  {
+    collection: 'stories',
+    label: 'Pending stories',
+    note: 'Sent in from the history page, awaiting review',
     where: { status: { equals: 'pending' } },
     listQuery: 'where[status][equals]=pending',
   },

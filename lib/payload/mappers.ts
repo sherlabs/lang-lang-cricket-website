@@ -1,7 +1,7 @@
 /**
  * Payload doc → domain type (spec §14). Pure; no Payload runtime import.
  */
-import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, Person, Sponsor } from '@/lib/domain'
+import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, Person, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
 import type {
   Announcement as AnnouncementDoc,
   Document as DocumentDoc,
@@ -11,6 +11,7 @@ import type {
   Media,
   Person as PersonDoc,
   Sponsor as SponsorDoc,
+  Story as StoryDoc,
 } from '@/payload-types'
 
 /** URL of a populated upload relation; '' for an unpopulated id, null or a file-less doc. */
@@ -101,4 +102,23 @@ export const toEventRsvp = (d: EventRsvpDoc): EventRsvp => ({
   response: d.response === 'no' ? 'no' : 'yes',
   meal: d.meal ?? '',
   createdAt: date(d.createdAt),
+})
+
+const STORY_STATUSES: readonly StoryStatus[] = ['pending', 'published', 'rejected']
+
+/** Never copies `editToken`, `viewToken` or `authorEmail` (spec §2). */
+export const toStory = (d: StoryDoc): Story => ({
+  id: d.id,
+  slug: d.slug ?? '',
+  title: d.title,
+  excerpt: d.excerpt ?? '',
+  content: (d.content as unknown as StoryContent | null) ?? null,
+  coverImageUrl: mediaUrl(d.coverImage),
+  authorName: d.authorName,
+  status: STORY_STATUSES.includes(d.status as StoryStatus) ? (d.status as StoryStatus) : 'pending',
+  submittedByAdmin: Boolean(d.submittedByAdmin),
+  publishedAt: dateOrNull(d.publishedAt),
+  reviewedAt: dateOrNull(d.reviewedAt),
+  createdAt: date(d.createdAt),
+  updatedAt: date(d.updatedAt),
 })

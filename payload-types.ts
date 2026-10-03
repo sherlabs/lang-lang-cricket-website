@@ -77,6 +77,7 @@ export interface Config {
     events: Event;
     'event-rsvps': EventRsvp;
     'event-photos': EventPhoto;
+    stories: Story;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -99,6 +100,7 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     'event-rsvps': EventRsvpsSelect<false> | EventRsvpsSelect<true>;
     'event-photos': EventPhotosSelect<false> | EventPhotosSelect<true>;
+    stories: StoriesSelect<false> | StoriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -429,6 +431,57 @@ export interface EventRsvp {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories".
+ */
+export interface Story {
+  id: number;
+  title: string;
+  /**
+   * Set from the title when the story is created; never changes.
+   */
+  slug?: string | null;
+  /**
+   * Shown on the history page cards. Leave empty to use the start of the story.
+   */
+  excerpt?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  coverImage?: (number | null) | Media;
+  /**
+   * Shown as "By …". Defaults to the club name for stories written here.
+   */
+  authorName: string;
+  /**
+   * Given by the submitter; never published.
+   */
+  authorEmail?: string | null;
+  status: 'pending' | 'published' | 'rejected';
+  /**
+   * Written in the admin rather than sent in by the public.
+   */
+  submittedByAdmin?: boolean | null;
+  publishedAt?: string | null;
+  reviewedAt?: string | null;
+  editToken?: string | null;
+  viewToken?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -490,6 +543,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'event-photos';
         value: number | EventPhoto;
+      } | null)
+    | ({
+        relationTo: 'stories';
+        value: number | Story;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -730,6 +787,27 @@ export interface EventPhotosSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories_select".
+ */
+export interface StoriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  content?: T;
+  coverImage?: T;
+  authorName?: T;
+  authorEmail?: T;
+  status?: T;
+  submittedByAdmin?: T;
+  publishedAt?: T;
+  reviewedAt?: T;
+  editToken?: T;
+  viewToken?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

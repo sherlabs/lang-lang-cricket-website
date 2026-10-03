@@ -2,6 +2,7 @@ import { JsonLd } from '@/components/json-ld'
 import { storyJsonLd } from '@/lib/structured-data'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { StoryBody } from '@/components/stories/story-body'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { getPublishedStoryBySlug } from '@/lib/stories-queries'
@@ -61,8 +62,7 @@ export default async function StoryDetailPage(props: { params: Promise<{ slug: s
           />
         )}
 
-        {/* eslint-disable-next-line react/no-danger -- content only ever comes from this app's own Tiptap editor, see lib/stories-content.ts */}
-        <div className="story-content mt-10" dangerouslySetInnerHTML={{ __html: story.contentHtml }} />
+        <StoryBody content={story.content} className="story-content mt-10" />
       </article>
     </main>
   )

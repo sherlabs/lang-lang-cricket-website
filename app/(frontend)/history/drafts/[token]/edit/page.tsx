@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getStoryByEditToken } from '@/lib/stories-queries'
+import { getStoryForEdit } from '@/lib/stories-queries'
 import { PageHeader } from '@/components/page-header'
 import { DraftEditForm } from './draft-edit-form'
 import { getClub } from '@/lib/club'
@@ -16,21 +16,22 @@ export async function generateMetadata() {
 
 export default async function DraftEditPage(props: { params: Promise<{ token: string }> }) {
   const params = await props.params;
-  const story = await getStoryByEditToken(params.token)
-  if (!story) notFound()
+  const found = await getStoryForEdit(params.token)
+  if (!found) notFound()
+  const { story, authorEmail, contentHtml } = found
 
   return (
     <main>
       <PageHeader eyebrow="Your story" title="Edit your story" intro="Changes save straight back to your submission." />
       <section className="container-site py-12 lg:py-16">
         <DraftEditForm
-          editToken={story.editToken}
+          editToken={params.token}
           status={story.status}
           initialTitle={story.title}
           initialAuthorName={story.authorName}
-          initialAuthorEmail={story.authorEmail}
+          initialAuthorEmail={authorEmail}
           initialCoverUrl={story.coverImageUrl}
-          initialContent={story.contentJson as never}
+          initialContent={contentHtml}
         />
       </section>
     </main>

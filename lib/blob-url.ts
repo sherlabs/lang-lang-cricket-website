@@ -1,17 +1,6 @@
 // No 'use client' directive and no server imports on purpose: this module is pure, so it can be
 // imported from server actions AND re-exported by the 'use client' `lib/blob-client.ts`.
 // Callers resolve the store id themselves (server side: `blobStoreId(blobToken())`).
-const BLOB_HOST = '.blob.vercel-storage.com'
-
-/** Any Vercel Blob URL (stories still use this until WP4 moves them to `isOwnBlobUrl`). */
-export function isBlobUrl(url: string) {
-  try {
-    return new URL(url).hostname.endsWith(BLOB_HOST)
-  } catch {
-    return false
-  }
-}
-
 /**
  * The store id inside a Blob token (`vercel_blob_rw_<storeId>_<secret>`), lower-cased:
  * `URL#hostname` is always lower-case, while the token's store id segment is mixed-case.

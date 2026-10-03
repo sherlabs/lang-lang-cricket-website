@@ -12,7 +12,8 @@ type Props = {
   initialAuthorName?: string
   initialAuthorEmail?: string
   initialCoverUrl?: string
-  initialContent?: JSONContent
+  /** Tiptap JSON, or HTML from a stored story (token edit page). */
+  initialContent?: JSONContent | string
   uploadCover: (file: File) => Promise<string>
   uploadEditorImage: (file: File) => Promise<string>
   /** Only the fresh public submission form needs the honeypot — an edit reached via a secret link isn't the same spam surface. */

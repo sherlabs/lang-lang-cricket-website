@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { StoryBody } from '@/components/stories/story-body'
 import type { Metadata } from 'next'
 import { getStoryByViewToken } from '@/lib/stories-queries'
 import { getClub } from '@/lib/club'
@@ -44,8 +45,7 @@ export default async function DraftViewPage(props: { params: Promise<{ token: st
           />
         )}
 
-        {/* eslint-disable-next-line react/no-danger -- content only ever comes from this app's own Tiptap editor, see lib/stories-content.ts */}
-        <div className="story-content mt-10" dangerouslySetInnerHTML={{ __html: story.contentHtml }} />
+        <StoryBody content={story.content} className="story-content mt-10" />
       </article>
     </main>
   )

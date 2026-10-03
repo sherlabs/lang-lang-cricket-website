@@ -1,52 +1,46 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
-import type { JSONContent } from '@tiptap/core'
-import { db } from '@/db'
-import { stories } from '@/db/schema'
-import { renderStoryHtml, htmlToExcerpt } from '@/lib/stories-content'
-import { isBlobUrl } from '@/lib/blob-url'
-import { getStoryByEditToken } from '@/lib/stories-queries'
+import { getPayloadClient } from '@/lib/payload/client'
+import { isTokenShaped } from '@/lib/story-tokens'
+import { parseStoryForm, validationMessage } from '@/lib/stories-form'
 
-/** Anyone holding the edit token may update the story, regardless of its current status. */
+const INVALID_LINK = { error: 'This edit link is no longer valid.' }
+
+/**
+ * Anyone holding the edit token may update the story, in any status (spec §5, §6):
+ * - token-keyed write: UUID-shaped token → `limit: 1` lookup → update by `id`, never by `where`;
+ * - `data` is the allowlisted form fields only, through the conversion pipeline;
+ * - `context.publicSubmission` makes `storyLifecycle` strip status/slug/tokens/timestamps and
+ *   set `pending`: an edit to a published story takes it offline until it is re-approved.
+ * The collection hook revalidates /history and the story page.
+ */
 export async function updateDraftByToken(editToken: string, formData: FormData): Promise<{ error: string } | void> {
-  const story = await getStoryByEditToken(editToken)
-  if (!story) {
-    return { error: 'This edit link is no longer valid.' }
-  }
+  if (!isTokenShaped(editToken)) return INVALID_LINK
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'stories',
+    where: { editToken: { equals: editToken } },
+    limit: 1,
+    depth: 0,
+  })
+  const story = docs[0]
+  if (!story) return INVALID_LINK
 
-  const title = String(formData.get('title') ?? '').trim()
-  const authorName = String(formData.get('authorName') ?? '').trim()
-  const rawContent = formData.get('contentJson')
-  if (!title || !authorName || !rawContent) {
-    return { error: 'Name, title and story body are required.' }
-  }
+  const parsed = await parseStoryForm(payload, formData)
+  if ('error' in parsed) return parsed
 
-  const contentJson = JSON.parse(String(rawContent)) as JSONContent
-  const contentHtml = renderStoryHtml(contentJson)
-  const excerpt = htmlToExcerpt(contentHtml)
-  if (!excerpt) {
-    return { error: 'Story body cannot be empty.' }
-  }
-
-  const coverImageUrl = String(formData.get('coverImageUrl') ?? '')
-  const safeCoverImageUrl = coverImageUrl && isBlobUrl(coverImageUrl) ? coverImageUrl : ''
-
-  await db
-    .update(stories)
-    .set({
-      title,
-      excerpt,
-      contentJson,
-      contentHtml,
-      coverImageUrl: safeCoverImageUrl,
-      authorName,
-      authorEmail: String(formData.get('authorEmail') ?? '').trim(),
+  try {
+    await payload.update({
+      collection: 'stories',
+      id: story.id,
+      data: parsed.data,
+      overrideAccess: true,
+      depth: 0,
+      context: { publicSubmission: true },
     })
-    .where(eq(stories.editToken, editToken))
-
-  revalidatePath('/admin/stories')
-  revalidatePath('/history')
-  if (story.status === 'published') revalidatePath(`/history/${story.slug}`)
+  } catch (err) {
+    const message = validationMessage(err)
+    if (message) return { error: message }
+    throw err
+  }
 }

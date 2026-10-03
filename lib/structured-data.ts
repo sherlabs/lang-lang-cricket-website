@@ -1,5 +1,4 @@
-import type { Story } from '@/db/schema'
-import type { Event } from '@/lib/domain'
+import type { Event, Story } from '@/lib/domain'
 import { CLUB_TIMEZONE } from '@/config/site'
 import { clubDefaults } from '@/payload/seed/club-defaults'
 import { absoluteUrl } from './site-metadata'
@@ -110,11 +109,12 @@ export function playerJsonLd(p: { slug: string; name: string; photoUrl?: string 
 }
 
 export function storyJsonLd(
-  story: Pick<Story, 'slug' | 'title' | 'coverImageUrl' | 'authorName' | 'publishedAt' | 'reviewedAt' | 'createdAt'>,
+  story: Pick<Story, 'slug' | 'title' | 'coverImageUrl' | 'authorName' | 'publishedAt' | 'createdAt' | 'updatedAt'>,
   club: JsonLdClub,
 ): JsonLd {
   const published = story.publishedAt ?? story.createdAt
-  const modified = story.reviewedAt ?? published
+  // updatedAt (spec §14); never earlier than the publication date.
+  const modified = story.updatedAt > published ? story.updatedAt : published
   return {
     '@context': CONTEXT,
     '@type': 'Article',

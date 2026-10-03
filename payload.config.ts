@@ -16,6 +16,7 @@ import { GalleryPhotos } from './payload/collections/GalleryPhotos'
 import { Media } from './payload/collections/Media'
 import { People } from './payload/collections/People'
 import { Sponsors } from './payload/collections/Sponsors'
+import { Stories } from './payload/collections/Stories'
 import { Users } from './payload/collections/Users'
 import { Club } from './payload/globals/Club'
 import { SiteSettings } from './payload/globals/SiteSettings'
@@ -46,7 +47,7 @@ export default buildConfig({
     },
   },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories],
   globals: [Club, SiteSettings],
   editor: lexicalEditor(),
   db: postgresAdapter({

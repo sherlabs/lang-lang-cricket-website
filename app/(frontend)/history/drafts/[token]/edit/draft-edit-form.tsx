@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import type { JSONContent } from '@tiptap/core'
 import { updateDraftByToken } from './actions'
 import { StoryFields } from '@/components/stories/story-fields'
 import { uploadPublicStoryImage } from '@/lib/blob-client'
@@ -15,13 +14,14 @@ type Props = {
   initialAuthorName: string
   initialAuthorEmail: string
   initialCoverUrl: string
-  initialContent: JSONContent
+  /** The stored story as HTML for Tiptap (spec §5). */
+  initialContent: string
 }
 
 const STATUS_NOTE: Record<string, string> = {
   pending: 'Still waiting on a committee member to review this.',
-  published: 'This story is already live — changes here update it immediately.',
-  rejected: "This story wasn't approved. You can revise it, but it stays as-is until the club adds it back for review.",
+  published: 'This story is live. Saving changes sends it back to the committee for review, and it comes off the history page until it is approved again.',
+  rejected: "This story wasn't approved. Saving changes sends it back to the committee for another look.",
 }
 
 export function DraftEditForm({

@@ -324,3 +324,40 @@
   font-weight: 600;
   color: inherit;
 }
+
+/* Stories (StoryModerationControls, StoryLinksField) */
+.club-moderation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.club-moderation .btn {
+  margin: 0;
+}
+.club-story-links .club-field__title {
+  font-size: 1rem;
+}
+.club-link-row {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+.club-link-row__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.club-link-row__input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s, 4px);
+  background: var(--theme-elevation-50);
+  color: var(--theme-elevation-800);
+  font-size: 0.8125rem;
+}
+.club-link-row .btn {
+  margin: 0;
+  justify-self: start;
+}

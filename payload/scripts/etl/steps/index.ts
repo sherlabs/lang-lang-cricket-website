@@ -8,9 +8,10 @@ import { galleryPhotosStep } from './gallery-photos'
 import { peopleStep } from './people'
 import { siteSettingsStep } from './site-settings'
 import { sponsorsStep } from './sponsors'
+import { storiesStep } from './stories'
 import type { EtlStep } from './types'
 
-/** Spec §12.2 order (foreign keys). WP4–WP5 append stories and players steps. */
+/** Spec §12.2 order (foreign keys). WP4 adds stories; WP5 appends the players steps. */
 export const ETL_STEPS: EtlStep[] = [
   siteSettingsStep,
   clubStep,
@@ -22,4 +23,5 @@ export const ETL_STEPS: EtlStep[] = [
   eventsStep,
   eventRsvpsStep,
   eventPhotosStep,
+  storiesStep,
 ]

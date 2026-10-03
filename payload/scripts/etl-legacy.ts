@@ -6,8 +6,8 @@
  *
  * WP2 ships the orchestration skeleton and the steps for its own collections (site-settings,
  * club, documents, gallery-photos, sponsors, people, announcements); each step restores the
- * legacy timestamps of the rows it writes and bumps its id sequence. WP3–WP5 append their
- * steps; WP6 adds --reconcile-deletes and verify.
+ * legacy timestamps of the rows it writes and bumps its id sequence. WP3 (events) and WP4
+ * (stories) appended their steps, WP5 appends players; WP6 adds --reconcile-deletes and verify.
  *
  * Source: LEGACY_DATABASE_URL (unpooled, read-only). Target: DATABASE_URI via Payload, with
  * PAYLOAD_ETL=true (allowIDOnCreate). Writes use overrideAccess and context { etl, disableRevalidate }.

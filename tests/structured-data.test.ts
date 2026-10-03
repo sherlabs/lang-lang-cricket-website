@@ -77,12 +77,19 @@ describe('json-ld builders', () => {
   })
   it('story: Article with ISO dates and publisher', () => {
     const d = new Date('2026-03-01T00:00:00Z')
-    const s = storyJsonLd({ slug: 'x', title: 'T', coverImageUrl: '', authorName: 'Ann', publishedAt: d, reviewedAt: null, createdAt: d }, club) as any
+    const s = storyJsonLd({ slug: 'x', title: 'T', coverImageUrl: '', authorName: 'Ann', publishedAt: d, createdAt: d, updatedAt: d }, club) as any
     expect(s['@type']).toBe('Article')
     expect(s.datePublished).toBe(d.toISOString())
     expect(s.author).toEqual({ '@type': 'Person', name: 'Ann' })
     expect(s.publisher.name).toBe('Lang Lang Cricket Club')
     expect(s.mainEntityOfPage).toBe('https://langlangcricketclub.com/history/x')
+  })
+  it('story: dateModified comes from updatedAt, never before datePublished', () => {
+    const pub = new Date('2026-03-03T04:00:00Z')
+    const later = new Date('2026-05-01T00:00:00Z')
+    const base = { slug: 'x', title: 'T', coverImageUrl: '', authorName: 'Ann', publishedAt: pub, createdAt: new Date('2026-03-01T00:00:00Z') }
+    expect((storyJsonLd({ ...base, updatedAt: later }, club) as any).dateModified).toBe(later.toISOString())
+    expect((storyJsonLd({ ...base, updatedAt: new Date('2026-03-01T00:00:00Z') }, club) as any).dateModified).toBe(pub.toISOString())
   })
   it('serializeJsonLd escapes < and round-trips', () => {
     const out = serializeJsonLd({ a: '</script><b>' })

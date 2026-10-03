@@ -2,10 +2,6 @@
 
 import { upload } from '@vercel/blob/client'
 
-// Re-exported from a directive-free module so server code (server actions)
-// can also import isBlobUrl without pulling in this 'use client' module.
-export { isBlobUrl } from './blob-url'
-
 /**
  * Downscale an image in the browser so uploads stay small. Photos become JPEG;
  * logos (`keepAlpha`) become WebP/PNG so transparency survives. Anything the
@@ -60,11 +56,14 @@ export function publicUploadName(name: string): string {
   return ext ? `${slug}.${ext}` : slug
 }
 
-/** Upload a story image with no admin session required (public submission form). */
+/**
+ * Upload a story image (cover or inline) with no admin session required (public submission
+ * and token edit forms). The route answers 503 when the site has no Blob store (local dev).
+ */
 export async function uploadPublicStoryImage(file: File): Promise<string> {
   const blob = await upload(`stories/pending/${publicUploadName(file.name)}`, file, {
     access: 'public',
-    handleUploadUrl: '/api/stories/upload',
+    handleUploadUrl: '/api/public/stories/upload',
   })
   return blob.url
 }
