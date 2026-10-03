@@ -43,7 +43,17 @@ export const People: CollectionConfig = {
   disableDuplicate: true,
   access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
-    beforeValidate: [trimStrings(['name', 'role', 'phone', 'email'])],
+    beforeValidate: [
+      trimStrings(['name', 'role', 'phone', 'email']),
+      // Trim each extra job's label so a blank one fails `required` instead of saving as ''.
+      ({ data, req }) => {
+        if (!data || req.context?.etl || !Array.isArray(data.moreRoles)) return data
+        data.moreRoles = data.moreRoles.map((r: unknown) =>
+          r && typeof r === 'object' && typeof (r as { role?: unknown }).role === 'string' ? { ...r, role: (r as { role: string }).role.trim() } : r,
+        )
+        return data
+      },
+    ],
     // A linked person also feeds the player tiles/profile (photo, club role).
     afterChange: [revalidateAfterChange(PATHS), async ({ doc, req }) => (await revalidateLinkedPlayer(req.context), doc)],
     afterDelete: [revalidateAfterDelete(PATHS), async ({ doc, req }) => (await revalidateLinkedPlayer(req.context), doc)],
@@ -65,6 +75,27 @@ export const People: CollectionConfig = {
       defaultValue: DEFAULT_SECTION,
       options: PEOPLE_SECTIONS.map((s) => ({ label: s.label, value: s.key })),
       admin: { description: 'Which group of people this person is shown with on the website.' },
+    },
+    {
+      name: 'moreRoles',
+      label: 'Other jobs',
+      type: 'array',
+      labels: { singular: 'Other job', plural: 'Other jobs' },
+      admin: {
+        initCollapsed: true,
+        description:
+          'Does this person hold another job? Add it here instead of adding them twice. They are then shown under each group with the same picture, phone and email.',
+      },
+      fields: [
+        { name: 'role', label: 'Job or role', type: 'text', required: true, admin: { placeholder: 'e.g. First Aid Officer' } },
+        {
+          name: 'section',
+          label: 'Listed under',
+          type: 'select',
+          defaultValue: DEFAULT_SECTION,
+          options: PEOPLE_SECTIONS.map((s) => ({ label: s.label, value: s.key })),
+        },
+      ],
     },
     { name: 'phone', label: 'Phone number', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. 0400 000 000' } },
     { name: 'email', label: 'Email address', type: 'text', defaultValue: '', validate: emailOrEmpty, admin: { placeholder: 'name@example.com' } },

@@ -22,6 +22,7 @@
     "seed:admin": "payload run payload/scripts/seed-admin.ts --",
     "seed:club": "payload run payload/scripts/seed-club.ts --",
     "etl": "PAYLOAD_ETL=true payload run payload/scripts/etl-legacy.ts --",
+    "dedupe:people": "payload run payload/scripts/dedupe-people.ts --",
     "verify:cutover": "payload run payload/scripts/verify-cutover.ts --",
     "seed:demo": "payload run payload/scripts/seed-demo.ts --",
     "export:since": "payload run payload/scripts/export-since.ts --",

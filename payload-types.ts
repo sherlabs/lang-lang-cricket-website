@@ -335,6 +335,16 @@ export interface Person {
    * Which group of people this person is shown with on the website.
    */
   section?: ('leadership' | 'committee' | 'coach') | null;
+  /**
+   * Does this person hold another job? Add it here instead of adding them twice. They are then shown under each group with the same picture, phone and email.
+   */
+  moreRoles?:
+    | {
+        role: string;
+        section?: ('leadership' | 'committee' | 'coach') | null;
+        id?: string | null;
+      }[]
+    | null;
   phone?: string | null;
   email?: string | null;
   /**
@@ -1022,6 +1032,13 @@ export interface PeopleSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   section?: T;
+  moreRoles?:
+    | T
+    | {
+        role?: T;
+        section?: T;
+        id?: T;
+      };
   phone?: T;
   email?: T;
   photo?: T;

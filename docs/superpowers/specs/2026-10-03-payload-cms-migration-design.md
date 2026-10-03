@@ -929,6 +929,7 @@ pnpm etl --target 127.0.0.1/langlang_rehearsal [--dry-run] [--confirm] [--only e
 - **Code layout.** `etl/{source,media,report}.ts` and the per-collection `etl/steps/<collection>.ts` are written in the WP that introduces each collection (WP2–WP5), so each WP's parity checks run against ETL'd `langlang_legacy` data. WP6 adds the orchestrator, sequences, the timestamp post-pass and verify.
 - **Dry run** reads, classifies and plans, then writes a report. It makes no DB or Blob writes.
 - **Real runs** without `--confirm` are refused.
+- **People duplicates.** The ETL keeps ids and copies `committee_contacts` verbatim, so a person the club entered twice (one row per job) is re-created twice after every run. After the ETL run `pnpm dedupe:people` (merges them into one `people` record with `moreRoles`; dry run by default) and then `link-people-players` (see the cutover checklist, B.3 and E.7a). The ETL's id-preserving behaviour is unchanged.
 
 ### 12.2 Order
 

@@ -59,7 +59,7 @@ export function PeopleGrid({ people, className }: { people: Person[]; className?
   return (
     <div className={cn('grid gap-5 sm:grid-cols-2 lg:grid-cols-4', className)}>
       {people.map((p) => (
-        <PersonCard key={p.id} person={p} />
+        <PersonCard key={`${p.id}-${p.section}`} person={p} />
       ))}
     </div>
   )

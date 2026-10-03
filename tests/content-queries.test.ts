@@ -63,7 +63,8 @@ describe('content-queries (spec §14)', () => {
     const committee = await listPeople('committee')
     expect(committee.map((p) => p.name)).toEqual(['Alex', 'Jamie'])
     expect(committee[0].photoUrl).toBe('/p.jpg')
-    expect(fake.callsTo('find', 'people').at(-1)!.args.where).toEqual({ section: { equals: 'committee' } })
+    // The section filter is applied after expanding each person's roles (a person can be in several sections).
+    expect(fake.callsTo('find', 'people').at(-1)!.args.where).toBeUndefined()
   })
 })
 

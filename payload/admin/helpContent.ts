@@ -57,6 +57,7 @@ export const helpSections: HelpSection[] = [
       'To remove someone, open them and use the three dots at the top, then Delete.',
       'A person\u2019s picture, phone and email are changed in this one place. The home page, Contact, Our People and (if they also play) the Players pages all update by themselves.',
       'If a committee member also plays, pick them under "Also a player". Then you only need to add their picture once.',
+      'Does someone hold two jobs, such as President and First Aid Officer? Add them once, then use "Other jobs" to add the second job. Please do not add the same person twice: they will show under each group with the same picture.',
     ],
   },
   {

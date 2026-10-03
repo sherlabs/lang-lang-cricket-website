@@ -40,6 +40,7 @@ export const toPerson = (d: PersonDoc): Person => ({
   name: d.name,
   role: d.role,
   section: d.section ?? 'committee',
+  moreRoles: (d.moreRoles ?? []).map((r) => ({ role: r.role, section: r.section ?? 'committee' })),
   phone: d.phone ?? '',
   email: d.email ?? '',
   photoUrl: mediaUrl(d.photo),

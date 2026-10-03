@@ -144,3 +144,44 @@ describe('REST rules for the new people.player field', () => {
     expect((await rest('PATCH', `/people/${personId}`, { token: editor, body: { player: playerId } })).status).toBe(200)
   })
 })
+
+describe('one person with two roles', () => {
+  it('shows under both sections with one photo, and one edit changes both', async () => {
+    await clearCollection(payload, 'people')
+    const urlA = (await payload.findByID({ collection: 'media', id: mediaA.id })).url!
+    const urlB = (await payload.findByID({ collection: 'media', id: mediaB.id })).url!
+    const two = await payload.create({
+      collection: 'people',
+      data: {
+        name: 'Russell Savige',
+        role: 'Senior Leadership Team',
+        section: 'leadership',
+        moreRoles: [{ role: 'First Aid Officer', section: 'committee' }, { role: 'Second committee job', section: 'committee' }],
+        photo: mediaA.id,
+        player: playerId,
+      },
+      context: ctx,
+    })
+    const { listPeople } = await import('@/lib/people-queries')
+    const cards = await listPeople()
+    expect(cards.map((c) => [c.id, c.section, c.role])).toEqual([
+      [two.id, 'leadership', 'Senior Leadership Team'],
+      [two.id, 'committee', 'First Aid Officer'],
+    ])
+    expect((await listPeople('committee')).map((c) => c.role)).toEqual(['First Aid Officer'])
+    const { default: People } = await import('@/app/(frontend)/people/page')
+    const { default: Contact } = await import('@/app/(frontend)/contact/page')
+    for (const page of [await html(() => People()), await html(() => Contact())]) {
+      expect(page.split(urlA).length - 1).toBe(2)
+      expect(page).toContain('First Aid Officer')
+      expect(page).toContain('Senior Leadership Team')
+    }
+    const { getPlayerProfile } = await import('@/lib/players/queries')
+    expect((await getPlayerProfile(playerSlug))!.clubRole).toBe('Senior Leadership Team, First Aid Officer')
+
+    await payload.update({ collection: 'people', id: two.id, data: { photo: mediaB.id }, context: ctx })
+    const after = await html(() => People())
+    expect(after.split(urlB).length - 1).toBe(2)
+    expect(after).not.toContain(urlA)
+  })
+})

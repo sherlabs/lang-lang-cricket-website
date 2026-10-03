@@ -22,6 +22,8 @@ export type Person = {
   name: string
   role: string
   section: string
+  /** Other jobs this one person holds (the main role/section above is the first). */
+  moreRoles: { role: string; section: string }[]
   phone: string
   email: string
   /** '' when there is no photo (initials are shown). */
