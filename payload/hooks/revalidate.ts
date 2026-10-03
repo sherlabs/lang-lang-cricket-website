@@ -29,7 +29,8 @@ export async function revalidatePaths(
   }
   for (const t of tags) {
     try {
-      cache.revalidateTag(t, 'max')
+      // expire immediately: stale-while-revalidate would serve a hidden player once more
+      cache.revalidateTag(t, { expire: 0 })
     } catch {
       // ditto
     }

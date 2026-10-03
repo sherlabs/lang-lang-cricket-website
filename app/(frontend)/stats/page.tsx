@@ -25,12 +25,15 @@ export const revalidate = 900
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
+const FILTER_KEYS = ['season', 'grade', 'metric', 'group', 'cat', 'juniors'] as const
+
 export async function generateMetadata({ searchParams }: Props) {
-  const filtered = Object.keys(await searchParams).length > 0
+  const sp = await searchParams
+  const filtered = FILTER_KEYS.some((k) => sp[k] !== undefined)
   return {
-    alternates: canonicalFor('/stats'),
+    // Filtered views are near-duplicates of the base page: noindex and no canonical (noindex pages carry none).
+    ...(filtered ? {} : { alternates: canonicalFor('/stats') }),
     ...pageSeo(await getClub(), 'stats'),
-    // Filtered views are near-duplicates of the base page: keep them out of the index, canonical to /stats.
     ...(filtered ? { robots: { index: false, follow: true } } : {}),
   }
 }
@@ -55,13 +58,14 @@ export default async function StatsPage({ searchParams }: Props) {
   ])
   const copy = club.pageCopy.stats
   const rules = settings.gradeRules
-  const params = parseStatsParams(await searchParams, {
-    seasons: data.seasons.map((s) => s.seasonName),
-    grades: gradeNames(data.rows),
-  })
-  const cats = effectiveCategories(params, settings.defaultIncludedCategories)
-  const hasJuniors = availableCategories(data.rows, rules).includes('junior')
+  const rawParams = await searchParams
+  const seasonNames = data.seasons.map((s) => s.seasonName)
+  const parsed = parseStatsParams(rawParams, { seasons: seasonNames, grades: gradeNames(data.rows) })
+  const cats = effectiveCategories(parsed, settings.defaultIncludedCategories)
+  // A grade outside the chosen categories is not selectable, so treat it as "All grades" rather than show nothing.
   const gradeOptions = gradeNames(filterRows(data.rows, { cats, rules }))
+  const params = parsed.grade !== ALL && !gradeOptions.includes(parsed.grade) ? { ...parsed, grade: ALL } : parsed
+  const hasJuniors = availableCategories(data.rows, rules).includes('junior')
   const scopeLabel = params.season === ALL ? sinceLabel(data.rows) : params.season
   const scopeText = `${scopeLabel}${params.grade !== ALL ? `, ${params.grade}` : ''}`
 
@@ -130,6 +134,9 @@ export default async function StatsPage({ searchParams }: Props) {
                       <Link href={statsHref('/stats', { ...params, metric: b.metric.key })} className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black">
                         View the full list<span className="sr-only"> for {b.metric.label}</span>
                       </Link>
+                    )}
+                    {params.metricGiven && b.total > b.rows.length && (
+                      <p className="text-brand-grey">Showing the top {b.rows.length} of {b.total} ranked players.</p>
                     )}
                     {b.rows.length === 0 && <p className="text-brand-grey-light">Nobody has qualified yet.</p>}
                     {b.unqualified.length > 0 && (

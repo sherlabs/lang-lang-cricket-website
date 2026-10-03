@@ -9,7 +9,7 @@
  */
 
 /** Alternation (no anchors) of the junior words that appear in a grade or team name. */
-export const JUNIOR_GRADE_WORDS = String.raw`u\s?-?\d{1,2}|under\s?-?\d{1,2}|juniors?|girls|boys|youth`
+export const JUNIOR_GRADE_WORDS = String.raw`u[\s/-]?\d{1,2}s?|under[\s/-]?\d{1,2}s?|juniors?|girls|boys|youth`
 
 /** Whole-word junior match for a grade or team name. */
 export const JUNIOR_GRADE_RE = new RegExp(String.raw`\b(?:${JUNIOR_GRADE_WORDS})\b`, 'i')

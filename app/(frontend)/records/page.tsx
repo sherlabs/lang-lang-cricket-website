@@ -54,6 +54,7 @@ function RecordCard({ record, players }: { record: RecordList; players: Map<numb
           })}
         </ol>
       )}
+      {record.moreTied > 0 && <p className="px-3 pb-3 text-sm text-brand-grey">+{record.moreTied} more tied</p>}
     </Panel>
   )
 }

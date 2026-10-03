@@ -21,7 +21,7 @@ describe('revalidate hook helpers', () => {
   it('never throw outside a request', async () => {
     await expect(revalidatePaths(['/', '/sponsors'], {}, ['playhq'])).resolves.toBeUndefined()
     expect(cache.revalidatePath).toHaveBeenCalledTimes(2)
-    expect(cache.revalidateTag).toHaveBeenCalledWith('playhq', 'max')
+    expect(cache.revalidateTag).toHaveBeenCalledWith('playhq', { expire: 0 })
   })
 
   it('are a no-op with context.disableRevalidate', async () => {
@@ -44,6 +44,6 @@ describe('revalidate hook helpers', () => {
     const doc = { slug: 'a' }
     await revalidateAfterChange(['/players'], ['player-stats'])({ doc, req: { context: {} } } as never)
     await revalidateAfterDelete(['/players'], ['player-stats'])({ doc, req: { context: {} } } as never)
-    expect(cache.revalidateTag.mock.calls).toEqual([['player-stats', 'max'], ['player-stats', 'max']])
+    expect(cache.revalidateTag.mock.calls).toEqual([['player-stats', { expire: 0 }], ['player-stats', { expire: 0 }]])
   })
 })
