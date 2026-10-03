@@ -23,16 +23,30 @@ export function requireEnv(name: string): string {
   return value
 }
 
-function hostOf(url: string, name: string): string {
+/**
+ * Every host a Postgres URL can connect to. node-postgres (pg-connection-string) lets a
+ * `?host=` query parameter override the URL host, and libpq also honours `hostaddr`, so
+ * both count; each may be a comma-separated list. The first entry is the effective host.
+ */
+export function dbHostsOf(url: string, name = 'database URL'): string[] {
+  let parsed: URL
   try {
-    return new URL(url).hostname
+    parsed = new URL(url)
   } catch {
     throw new Error(`[env] ${name} is not a valid URL`)
   }
+  const fromParams = ['host', 'hostaddr'].flatMap((k) => parsed.searchParams.getAll(k).flatMap((v) => v.split(',')))
+  const hosts = [...fromParams, parsed.hostname].map((h) => h.trim()).filter(Boolean)
+  return hosts.length ? hosts : ['']
+}
+
+function hostOf(url: string, name: string): string {
+  const hosts = dbHostsOf(url, name)
+  return hosts.find((h) => !LOCAL_HOSTS.has(h)) ?? hosts[0]
 }
 
 export function isLocalDbUrl(url: string): boolean {
-  return LOCAL_HOSTS.has(hostOf(url, 'database URL'))
+  return dbHostsOf(url).every((h) => LOCAL_HOSTS.has(h))
 }
 
 /**

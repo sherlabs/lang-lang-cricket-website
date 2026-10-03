@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FAKE_BLOB_STORE_ID, assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, resolveServerURL } from '@/payload/env'
+import { FAKE_BLOB_STORE_ID, assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, isLocalDbUrl, resolveServerURL } from '@/payload/env'
 import { checkGuard } from '@/payload/scripts/_guard'
 
 const LOCAL = 'postgres://postgres:postgres@127.0.0.1:54329/langlang_dev'
@@ -35,6 +35,24 @@ describe('assertSafeEnv', () => {
 
   it('checks a named variable (transitional db/ uses LEGACY_DATABASE_URL)', () => {
     expect(() => assertSafeEnv({ LEGACY_DATABASE_URL: REMOTE }, 'LEGACY_DATABASE_URL')).toThrow(/LEGACY_DATABASE_URL/)
+  })
+})
+
+describe('host query parameter (pg lets ?host= override the URL host)', () => {
+  const sneaky = `${LOCAL}?host=ep-x.neon.tech`
+  it('isLocalDbUrl / assertSafeEnv / assertLocalDb treat it as remote', () => {
+    expect(isLocalDbUrl(sneaky)).toBe(false)
+    expect(isLocalDbUrl(`${LOCAL}?hostaddr=10.0.0.5`)).toBe(false)
+    expect(isLocalDbUrl(`${LOCAL}?host=127.0.0.1,ep-x.neon.tech`)).toBe(false)
+    expect(isLocalDbUrl(`${LOCAL}?host=localhost&sslmode=disable`)).toBe(true)
+    expect(() => assertSafeEnv({ DATABASE_URI: sneaky })).toThrow(/ep-x\.neon\.tech/)
+    expect(() => assertSafeEnv({ LEGACY_DATABASE_URL: sneaky }, 'LEGACY_DATABASE_URL')).toThrow(/not local/)
+    expect(() => assertLocalDb({ DATABASE_URI: sneaky })).toThrow()
+  })
+  it('the script guard targets the effective host and requires ALLOW_REMOTE_DB', () => {
+    const env = { DATABASE_URI: sneaky }
+    expect(() => checkGuard({ write: false }, ['--target', '127.0.0.1/langlang_dev'], env)).toThrow(/does not match/)
+    expect(() => checkGuard({ write: false }, ['--target', 'ep-x.neon.tech/langlang_dev'], env)).toThrow(/ALLOW_REMOTE_DB/)
   })
 })
 

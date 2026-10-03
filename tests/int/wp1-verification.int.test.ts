@@ -145,6 +145,67 @@ describe('7.6(a) resizeOptions under clientUploads', () => {
   })
 })
 
+// WP1 review: the real `media` config (no resizeOptions) still runs sharp for GIF/WebP/TIFF and
+// for crops. Without clientUploadInMemory those re-put an EMPTY buffer over the original.
+describe('media: client uploads that go through sharp (temp-file shape)', () => {
+  const tempUpload = async (bytes: Buffer, name: string) => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs')
+    const os = await import('node:os')
+    const tempFilePath = path.join(mkdtempSync(path.join(os.tmpdir(), 'wp1-media-')), 'upload')
+    writeFileSync(tempFilePath, bytes)
+    return { data: Buffer.alloc(0), tempFilePath, name, size: bytes.length, clientUploadContext: { pathname: name } }
+  }
+
+  it.each([
+    ['webp', 'image/webp', 'RIFF'],
+    ['gif', 'image/gif', 'GIF8'],
+  ])('a %s upload is re-put with real bytes, never empty', async (ext, mimetype, magic) => {
+    const sharp = (await import('sharp')).default
+    const bytes = await (ext === 'webp' ? sharp(PNG).webp() : sharp(PNG).gif()).toBuffer()
+    const doc = await payload.create({
+      collection: 'media',
+      data: {},
+      file: { ...(await tempUpload(bytes, `client-a.${ext}`)), mimetype } as never,
+    })
+    expect(doc.width).toBe(161)
+    expect(blob.put).toHaveBeenCalledTimes(1)
+    const [pathname, body] = blob.put.mock.calls[0]
+    expect(pathname).toBe(`client-a.${ext}`)
+    expect((body as Buffer).length).toBeGreaterThan(0)
+    expect(Buffer.from(body as Buffer).subarray(0, 4).toString('latin1')).toBe(magic)
+  })
+
+  it('a plain PNG is not re-put (the browser-uploaded blob stands)', async () => {
+    await payload.create({
+      collection: 'media',
+      data: {},
+      file: { ...(await tempUpload(PNG, 'client-b.png')), mimetype: 'image/png' } as never,
+    })
+    expect(blob.put).not.toHaveBeenCalled()
+  })
+
+  it('a crop applied during upload re-puts the cropped bytes, never empty', async () => {
+    // The plugin then writes upload metadata back with a nested update on the same req. Without
+    // the hook dropping uploadEdits there, that update re-fetches the stored blob and crops it
+    // again (here: a FileRetrievalError, as the fake host cannot be fetched).
+    const doc = await payload.create({
+      collection: 'media',
+      data: {},
+      file: { ...(await tempUpload(PNG, 'client-c.png')), mimetype: 'image/png' } as never,
+      req: { query: { uploadEdits: { crop: { x: 0, y: 0, width: 50, height: 50 }, widthInPixels: 80, heightInPixels: 100 } } } as never,
+    })
+    expect(doc.width).toBe(80)
+    expect(doc.height).toBe(100)
+    expect(blob.put).toHaveBeenCalledTimes(1)
+    const body = blob.put.mock.calls[0][1] as Buffer
+    expect(body.length).toBeGreaterThan(0)
+    const sharp = (await import('sharp')).default
+    expect((await sharp(Buffer.from(body)).metadata()).width).toBe(80)
+    const stored = await payload.findByID({ collection: 'media', id: doc.id })
+    expect([stored.width, stored.height]).toEqual([80, 100])
+  })
+})
+
 describe('7.6(b) delete of a registered media row (collection prefix "")', () => {
   const register = (filename: string, legacyUrl?: string) =>
     payload.create({
@@ -167,9 +228,12 @@ describe('7.6(b) delete of a registered media row (collection prefix "")', () =>
   })
 
   it('skips the blob delete for a legacyUrl row (guardLegacyBlobDeletes)', async () => {
-    const legacyUrl = 'https://fakestore.public.blob.vercel-storage.com/players/reg-c-Xy12.jpg'
+    // A path that differs from prefix/filename, as on a restored dump, so the assertion
+    // proves legacyUrlWinsOnRead rather than matching the generated URL by coincidence.
+    const legacyUrl = 'https://fakestore.public.blob.vercel-storage.com/legacy/player-photos/reg-c-old.jpg'
     const doc = await register('reg-c-Xy12.jpg', legacyUrl)
     expect(doc.url).toBe(legacyUrl)
+    expect(doc.url).not.toBe('https://fakestore.public.blob.vercel-storage.com/players/reg-c-Xy12.jpg')
     await payload.delete({ collection: 'media', id: doc.id })
     expect(blob.del).not.toHaveBeenCalled()
   })

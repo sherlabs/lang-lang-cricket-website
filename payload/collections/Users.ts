@@ -1,4 +1,4 @@
-import { Forbidden, type CollectionConfig } from 'payload'
+import { APIError, Forbidden, type CollectionConfig } from 'payload'
 import { isAdmin, isAdminField } from '../access'
 
 /** Spec §3.1. */
@@ -17,6 +17,8 @@ export const Users: CollectionConfig = {
     read: ({ req }) => (req.user?.role === 'admin' ? true : req.user ? { id: { equals: req.user.id } } : false),
     create: isAdmin,
     delete: isAdmin,
+    // Payload's default is any logged-in user; an editor could clear an admin's lockout (§3.1).
+    unlock: isAdmin,
     update: ({ req }) => (req.user?.role === 'admin' ? true : req.user ? { id: { equals: req.user.id } } : false),
   },
   hooks: {
@@ -24,11 +26,17 @@ export const Users: CollectionConfig = {
      * First-register is closed structurally: `registerFirstUser` creates with
      * overrideAccess, so `access.create` cannot stop it. Any anonymous create
      * (first-register included) is refused unless the seed script opts in.
+     *
+     * Forgot-password is disabled: there is no email adapter, so Payload would write the
+     * reset link and token to the server logs. An admin sets a new password instead (§3.1).
      */
     beforeOperation: [
       ({ operation, req, args }) => {
         if (operation === 'create' && !req.user && !req.context?.seedAdmin) {
           throw new Forbidden(req.t)
+        }
+        if (operation === 'forgotPassword') {
+          throw new APIError('Password reset by email is not available. Ask an admin to set a new password.', 403, null, true)
         }
         return args
       },

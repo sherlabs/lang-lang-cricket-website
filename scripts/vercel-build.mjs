@@ -14,7 +14,9 @@ const fail = (msg) => {
 const bareHost = (url, name) => {
   if (!url) fail(`${name} is not set`)
   try {
-    return new URL(url).hostname.replace('-pooler', '')
+    // pg lets a ?host= query parameter override the URL host; compare the one it would use.
+    const u = new URL(url)
+    return (u.searchParams.get('host')?.split(',')[0] || u.hostname).replace('-pooler', '')
   } catch {
     fail(`${name} is not a valid URL`)
   }
@@ -28,7 +30,7 @@ const payload = './node_modules/.bin/payload'
 const next = './node_modules/.bin/next'
 
 if (env.VERCEL_ENV === 'production') {
-  run(payload, ['migrate'], { DATABASE_URI: env.DATABASE_URI_UNPOOLED ?? fail('DATABASE_URI_UNPOOLED is not set') })
+  run(payload, ['migrate'], { DATABASE_URI: env.DATABASE_URI_UNPOOLED || fail('DATABASE_URI_UNPOOLED is not set') })
   run(next, ['build'])
 } else if (env.VERCEL_ENV === 'preview') {
   for (const name of ['DATABASE_URI', 'DATABASE_URI_UNPOOLED']) {

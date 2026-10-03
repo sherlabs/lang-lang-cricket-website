@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, staffOr } from '../access'
+import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
 import { legacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
 
 export const MEDIA_MAX_BYTES = 15 * 1024 * 1024
@@ -29,11 +30,13 @@ export const Media: CollectionConfig = {
     filesRequiredOnCreate: false,
     focalPoint: true,
     crop: true,
-    // No resizeOptions (spec 7.6(a), WP1 finding): under clientUploads a real browser upload
-    // arrives as an empty buffer + tempFilePath; core writes the resized bytes to the temp file
-    // and the Vercel Blob adapter re-uploads `file.data` — an EMPTY buffer — over the original.
+    // No resizeOptions (spec 7.6(a), WP1 findings). Crop and GIF/WebP/TIFF still go through
+    // sharp, so a client upload's temp file is read into memory first (clientUploadInMemory);
+    // otherwise core writes the result to the temp file only and the Vercel Blob adapter
+    // re-uploads `file.data` — an EMPTY buffer — over the original.
   },
   hooks: {
+    beforeOperation: [clientUploadInMemory(MEDIA_MAX_BYTES)],
     beforeValidate: [maxFileSize(MEDIA_MAX_BYTES)],
     beforeChange: [refuseLegacyFileReplace],
     afterRead: [legacyUrlWinsOnRead],

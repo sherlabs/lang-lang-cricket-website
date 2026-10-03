@@ -66,6 +66,28 @@ describe('access: users', () => {
     expect(list.json.docs.map((u: { email: string }) => u.email)).toEqual(['editor@example.com'])
   })
 
+  it('only an admin can unlock a user', async () => {
+    const editor = await rest('POST', '/users/login', { body: { email: 'editor@example.com', password: 'editor-pass-123' } })
+    const denied = await rest('POST', '/users/unlock', { token: editor.json.token, body: { email: 'admin@example.com' } })
+    expect(denied.status).toBe(403)
+    const access = await rest('GET', '/access', { token: editor.json.token })
+    // /api/access strips denied permissions; before the fix it reported "unlock": true.
+    expect(access.json.collections.users.unlock).toBeUndefined()
+    expect((await rest('POST', '/users/unlock', { body: { email: 'admin@example.com' } })).status).toBe(403)
+
+    const admin = await rest('POST', '/users/login', { body: { email: 'admin@example.com', password: 'admin-pass-123' } })
+    const ok = await rest('POST', '/users/unlock', { token: admin.json.token, body: { email: 'editor@example.com' } })
+    expect(ok.status).toBe(200)
+  })
+
+  it('forgot-password is disabled (no email adapter; it would log the reset token)', async () => {
+    const before = await payload.find({ collection: 'users', where: { email: { equals: 'admin@example.com' } }, showHiddenFields: true })
+    const res = await rest('POST', '/users/forgot-password', { body: { email: 'admin@example.com' } })
+    expect(res.status).toBe(403)
+    const after = await payload.find({ collection: 'users', where: { email: { equals: 'admin@example.com' } }, showHiddenFields: true })
+    expect(after.docs[0].resetPasswordToken ?? null).toBe(before.docs[0].resetPasswordToken ?? null)
+  })
+
   it('anonymous REST cannot list users', async () => {
     const res = await rest('GET', '/users')
     expect(res.status).toBe(403)
