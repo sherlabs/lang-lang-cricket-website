@@ -1,13 +1,18 @@
 import { APIError, Forbidden, type CollectionConfig } from 'payload'
 import { isAdmin, isAdminField } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 
 /** Spec §3.1. */
 export const Users: CollectionConfig = {
   slug: 'users',
+  labels: { singular: 'User', plural: 'Users' },
   admin: {
     useAsTitle: 'email',
-    group: 'Settings',
+    group: false,
+    hideAPIURL: true,
+    hidden: hiddenFromEditors,
     defaultColumns: ['email', 'name', 'role'],
+    description: 'People who can sign in to this admin. Editors run the day-to-day website; admins also see the advanced settings.',
   },
   auth: {
     tokenExpiration: 604800,
@@ -44,7 +49,7 @@ export const Users: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'name', type: 'text' },
+    { name: 'name', type: 'text', admin: { description: 'Shown in the greeting, e.g. "Hello, Sam".' } },
     {
       name: 'role',
       type: 'select',
@@ -52,9 +57,10 @@ export const Users: CollectionConfig = {
       defaultValue: 'editor',
       saveToJWT: true,
       options: [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Editor', value: 'editor' },
+        { label: 'Admin (looks after the site)', value: 'admin' },
+        { label: 'Editor (committee member)', value: 'editor' },
       ],
+      admin: { description: 'Editors see a short, simple menu. Admins also see the Advanced section.' },
       access: { update: isAdminField, create: isAdminField },
     },
   ],

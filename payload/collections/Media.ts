@@ -11,10 +11,16 @@ export const MEDIA_MAX_BYTES = 15 * 1024 * 1024
  */
 export const Media: CollectionConfig = {
   slug: 'media',
+  labels: { singular: 'Picture', plural: 'Media library' },
   admin: {
-    group: 'Media',
-    defaultColumns: ['filename', 'alt', 'prefix', 'updatedAt'],
+    group: false,
+    hideAPIURL: true,
+    // Not hidden: editors upload pictures from the forms that need them (logo, photo, cover).
+    defaultColumns: ['filename', 'alt', 'updatedAt'],
+    description: 'Every picture uploaded to the site. Normally you add pictures from the form that needs them (a sponsor logo, a contact photo, an event cover).',
   },
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: {
     // Pending/rejected story images stay unlistable anonymously; not isStaff, because
     // dev-mode public pages load files through /api/media/file/* (read-checked).
@@ -42,5 +48,14 @@ export const Media: CollectionConfig = {
     afterRead: [legacyUrlWinsOnRead],
   },
   timestamps: true,
-  fields: [{ name: 'alt', type: 'text', defaultValue: '' }, legacyUrlField],
+  fields: [
+    {
+      name: 'alt',
+      label: 'Picture description',
+      type: 'text',
+      defaultValue: '',
+      admin: { description: 'A few words for people who cannot see the picture, e.g. "Under 12s celebrating the 2024 grand final".', placeholder: 'What is in the picture?' },
+    },
+    legacyUrlField,
+  ],
 }

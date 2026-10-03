@@ -2,13 +2,14 @@ import type { GlobalConfig } from 'payload'
 import { TIER_ORDER } from '../../lib/sponsors'
 import { DEFAULT_SPONSOR_CAROUSEL_TIERS } from '../../lib/site-settings-core'
 import { anyone, isStaff } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 import { revalidatePaths } from '../hooks/revalidate'
 
 /** Site behaviour (spec §4.2). Feature flags are deferred to the template work. */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site settings',
-  admin: { group: 'Settings' },
+  admin: { group: false, hidden: hiddenFromEditors },
   access: { read: anyone, update: isStaff },
   hooks: {
     afterChange: [

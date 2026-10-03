@@ -4,6 +4,7 @@ import type { CollectionConfig, FieldHook } from 'payload'
 const normaliseNameKey: FieldHook = ({ value, req }) =>
   req.context?.etl || typeof value !== 'string' ? value : value.trim().toLowerCase()
 import { isAdmin, isStaff } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 
 /**
  * Player aliases (spec §3.13) ← `public.player_aliases`. PlayHQ has no stable player id: a
@@ -14,7 +15,9 @@ export const PlayerAliases: CollectionConfig = {
   slug: 'player-aliases',
   labels: { singular: 'Player alias', plural: 'Player aliases' },
   admin: {
-    group: 'Players',
+    group: false,
+    hideAPIURL: true,
+    hidden: hiddenFromEditors,
     useAsTitle: 'nameKey',
     defaultColumns: ['nameKey', 'player'],
     description: 'PlayHQ name keys (first|last, lower case) and the player each one belongs to. Normally managed by sync and merge.',

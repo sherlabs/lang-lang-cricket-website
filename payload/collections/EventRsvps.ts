@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 import { RSVP_RESPONSE_OPTIONS } from '../../lib/rsvp-response'
 import { isStaff } from '../access'
+import { hiddenFromEditors } from '../admin/visibility'
 import { tokenField } from '../fields/tokenField'
 import { allOf, emailOrEmpty, maxChars } from '../fields/validators'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
@@ -32,11 +33,15 @@ export const EventRsvps: CollectionConfig = {
   slug: 'event-rsvps',
   labels: { singular: 'RSVP', plural: 'RSVPs' },
   admin: {
-    group: 'Events',
+    group: false,
+    hideAPIURL: true,
+    hidden: hiddenFromEditors,
     useAsTitle: 'name',
     defaultColumns: ['name', 'event', 'occurrenceDate', 'response', 'meal'],
   },
   defaultSort: '-createdAt',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
   hooks: {
     beforeChange: [noMealOnNo],

@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
+import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { Announcements } from './payload/collections/Announcements'
 import { Documents } from './payload/collections/Documents'
@@ -44,12 +45,24 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
-    meta: { titleSuffix: ' — Club admin' },
+    // Light, spacious look for the committee (see payload/components/admin.css).
+    theme: 'light',
+    meta: {
+      titleSuffix: adminTitleSuffix,
+      icons: [{ rel: 'icon', type: 'image/png', url: '/assets/branding/logo.png' }],
+    },
     components: {
       graphics: { Logo: '/payload/components/Logo#Logo', Icon: '/payload/components/Icon#Icon' },
-      beforeDashboard: ['/payload/components/Dashboard#Dashboard'],
+      // The sidebar is drawn by AdminNav (flat, role-aware); see payload/admin/navigation.ts.
+      beforeNavLinks: ['/payload/components/AdminNav#AdminNav'],
+      views: {
+        dashboard: { Component: '/payload/components/Dashboard#Dashboard' },
+        approvals: { Component: '/payload/components/ApprovalsView#ApprovalsView', path: '/approvals', meta: { title: 'Waiting for approval' } },
+        help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
+      },
     },
   },
+  i18n: { translations: adminTranslations },
   graphQL: { disable: true },
   collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns],
   globals: [Club, SiteSettings],

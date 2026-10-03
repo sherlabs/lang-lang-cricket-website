@@ -424,3 +424,312 @@
   flex: 1 1 18rem;
   max-width: 28rem;
 }
+
+/* ===== Simple admin theme (spec 2026-10-03-simple-admin-design.md) =====
+   Light, roomy, high contrast. Brand tokens from DESIGN.md: cream #FAF7EF, stone #F3F1EA,
+   charcoal #26262B, grey #5A5A62, gold #F5B700, gold-deep #8A6500. */
+:root {
+  --club-cream: #faf7ef;
+  --club-stone: #f3f1ea;
+  --club-charcoal: #26262b;
+  --club-grey: #5a5a62;
+  --club-gold-deep: #8a6500;
+}
+html[data-theme='light'] {
+  --theme-bg: var(--club-cream);
+  --theme-text: var(--club-black);
+  --theme-input-bg: #fff;
+  --font-body: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+body {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  background: var(--club-cream);
+  color: var(--club-black);
+}
+/* Bigger, clearer controls */
+.btn {
+  font-size: 1rem;
+}
+.btn--size-medium,
+.btn--size-large {
+  min-height: 2.75rem;
+}
+.btn--style-primary {
+  font-weight: 700;
+}
+.field-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--club-black);
+}
+.field-description {
+  font-size: 0.9375rem;
+  color: var(--club-grey);
+}
+.field-type input,
+.field-type textarea,
+.field-type .rs__control {
+  font-size: 1.0625rem;
+  min-height: 2.75rem;
+  background: #fff;
+  border-color: var(--theme-elevation-300);
+}
+.field-type textarea {
+  min-height: 7rem;
+}
+:focus-visible {
+  outline: 3px solid var(--club-gold);
+  outline-offset: 2px;
+}
+/* Nothing here uses password reset by email (disabled), so do not offer it */
+a[href$='/forgot'] {
+  display: none;
+}
+.card,
+.collection-list,
+.document-fields__main {
+  background: transparent;
+}
+
+/* Sidebar */
+.nav {
+  background: #fff;
+  border-right: 1px solid var(--theme-elevation-150);
+}
+.club-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+.club-nav .club-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--club-charcoal);
+  text-decoration: none;
+}
+.club-nav .club-nav__link:hover {
+  background: var(--club-stone);
+  color: var(--club-black);
+}
+.club-nav .club-nav__link--active {
+  background: var(--color-success-50);
+  box-shadow: inset 4px 0 0 var(--club-gold);
+  color: var(--club-black);
+  font-weight: 700;
+}
+.club-nav__badge {
+  min-width: 1.5rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--club-gold);
+  color: var(--club-black);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+}
+.club-nav__advanced {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--theme-elevation-150);
+}
+.club-nav__advanced summary {
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--club-grey);
+}
+.club-nav__advanced .club-nav__link {
+  font-size: 0.9375rem;
+  color: var(--club-grey);
+}
+
+/* Home */
+.club-home {
+  padding-bottom: calc(var(--base) * 2);
+}
+.club-home__title,
+.club-page__title {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.club-home__lead,
+.club-page__lead {
+  margin: 0.25rem 0 1.5rem;
+  max-width: 42rem;
+  font-size: 1.1875rem;
+  color: var(--club-grey);
+}
+.club-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+.club-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid var(--theme-elevation-150);
+  border-left: 6px solid var(--club-gold);
+  border-radius: 0.75rem;
+  color: var(--club-black);
+  text-decoration: none;
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+.club-tile:hover,
+.club-tile:focus-visible {
+  box-shadow: 0 6px 18px rgb(11 11 13 / 0.12);
+  transform: translateY(-1px);
+}
+.club-tile__title {
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.club-tile__hint {
+  font-size: 0.9375rem;
+  color: var(--club-grey);
+}
+.club-attention {
+  max-width: 42rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-success-50);
+  border: 1px solid var(--club-gold);
+  border-radius: 0.75rem;
+}
+.club-attention__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+.club-attention__none {
+  margin: 0;
+  color: var(--club-charcoal);
+}
+.club-attention__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+.club-attention__list a {
+  color: var(--club-black);
+  font-size: 1.125rem;
+}
+.club-advanced {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--theme-elevation-300);
+  border-radius: 0.75rem;
+}
+.club-advanced > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--club-grey);
+}
+.club-advanced .club-dashboard__cards {
+  margin-top: 1rem;
+}
+
+/* Custom pages (Help, Waiting for approval) */
+.club-page {
+  padding-bottom: calc(var(--base) * 2);
+}
+.club-help__jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+.club-help__jump a,
+.club-button-link {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--theme-elevation-200);
+  color: var(--club-black);
+  font-weight: 600;
+  text-decoration: none;
+}
+.club-help__jump a:hover,
+.club-button-link:hover {
+  background: var(--club-gold);
+  border-color: var(--club-gold);
+}
+.club-help__section {
+  max-width: 44rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 0.75rem;
+}
+.club-help__section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
+}
+.club-help__section ol,
+.club-help__section ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.club-approval-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  max-width: 44rem;
+}
+.club-approval-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 0.75rem;
+}
+.club-approval-list__item p {
+  margin: 0;
+}
+
+/* Phones */
+@media (max-width: 768px) {
+  .club-home__title,
+  .club-page__title {
+    font-size: 1.75rem;
+  }
+  .club-tiles {
+    grid-template-columns: 1fr;
+  }
+  .club-approval-list__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

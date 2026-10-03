@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, nobodyField, staffOr } from '../access'
+import { adminOnlyCondition } from '../admin/visibility'
 import { mergePlayersEndpoint } from '../endpoints/mergePlayers'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
@@ -23,17 +24,17 @@ export const Players: CollectionConfig = {
   slug: 'players',
   labels: { singular: 'Player', plural: 'Players' },
   admin: {
-    group: 'Players',
+    group: false,
+    hideAPIURL: true,
     useAsTitle: 'displayName',
-    defaultColumns: ['displayName', 'source', 'hidden', 'updatedAt'],
+    defaultColumns: ['displayName', 'source', 'hidden'],
     listSearchableFields: ['displayName', 'slug'],
     description:
-      "Senior players are synced from PlayHQ every night. Add photos, bios and honours here; they're never overwritten by the sync. Create a player to add someone from before PlayHQ.",
-    components: {
-      beforeList: ['/payload/components/PlayerSyncPanel#PlayerSyncPanel'],
-    },
+      'Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".',
   },
   defaultSort: 'displayName',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: {
     read: staffOr({ hidden: { equals: false } }),
     create: isStaff,
@@ -59,9 +60,9 @@ export const Players: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'firstName', type: 'text', required: true, validate: maxChars(100, { required: true }) },
+        { name: 'firstName', label: 'First name', type: 'text', required: true, validate: maxChars(100, { required: true }) },
         // Optional, as in legacy: PlayHQ players with one name are synced with lastName ''.
-        { name: 'lastName', type: 'text', defaultValue: '', validate: maxChars(100) },
+        { name: 'lastName', label: 'Last name', type: 'text', defaultValue: '', validate: maxChars(100) },
       ],
     },
     {
@@ -78,10 +79,11 @@ export const Players: CollectionConfig = {
       index: true,
       access: syncOwned,
       hooks: { beforeChange: [uniqueSlug('players', (d) => fullName(d.firstName, d.lastName))] },
-      admin: { position: 'sidebar', readOnly: true, description: 'Set from the name when the player is created; never changes.' },
+      admin: { position: 'sidebar', readOnly: true, condition: adminOnlyCondition(), description: 'Set from the name when the player is created; never changes.' },
     },
     {
       name: 'source',
+      label: 'Where they came from',
       type: 'select',
       defaultValue: 'manual',
       options: [
@@ -90,31 +92,35 @@ export const Players: CollectionConfig = {
       ],
       access: syncOwned,
       hooks: { beforeChange: [playerSource] },
-      admin: { position: 'sidebar', readOnly: true, description: 'PlayHQ players come from the nightly sync and cannot be deleted.' },
+      admin: { position: 'sidebar', readOnly: true, description: 'PlayHQ players come in automatically and cannot be deleted.' },
     },
     {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'Shown square on the players page; use the crop tool to frame the face.' },
+      admin: { description: 'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle.' },
     },
     {
       name: 'bio',
+      label: 'About this player',
       type: 'textarea',
       defaultValue: '',
-      admin: { description: 'Plain text. Leave a blank line between paragraphs.' },
+      admin: { description: 'Leave a blank line between paragraphs.', placeholder: 'A few lines about their cricket and their time at the club.' },
     },
     {
       name: 'manualYears',
+      label: 'Years played',
       type: 'text',
       defaultValue: '',
       admin: {
         condition: (data) => data?.source !== 'playhq',
-        description: 'Years played, e.g. 1978–1992. Shown when the player has no synced seasons.',
+        description: 'For example 1978–1992. Shown when the player has no seasons recorded automatically.',
+        placeholder: '1978–1992',
       },
     },
     {
       name: 'activeOverride',
+      label: 'Show as',
       type: 'select',
       options: [
         { label: 'Active', value: 'active' },
@@ -122,7 +128,7 @@ export const Players: CollectionConfig = {
       ],
       admin: {
         position: 'sidebar',
-        description: 'Leave empty to decide from the synced seasons (played this season or last = active).',
+        description: 'Leave empty and the site decides (played this season or last = current player).',
       },
     },
     {
@@ -131,20 +137,21 @@ export const Players: CollectionConfig = {
       defaultValue: false,
       access: syncOwned,
       hooks: { beforeChange: [keepStored(false)] },
-      admin: { position: 'sidebar', readOnly: true, description: 'Set by the sync: played in the latest two seasons.' },
+      admin: { position: 'sidebar', readOnly: true, condition: adminOnlyCondition(), description: 'Set by the sync: played in the latest two seasons.' },
     },
     {
       name: 'hidden',
+      label: 'Hide from the website',
       type: 'checkbox',
       defaultValue: false,
       index: true,
-      admin: { position: 'sidebar', description: 'Hidden players are left off the public site.' },
+      admin: { position: 'sidebar', description: 'Tick to keep this player off the public website.' },
     },
     {
       name: 'honours',
       type: 'array',
       labels: { singular: 'Honour', plural: 'Honours & roles' },
-      admin: { description: 'Drag to reorder. Shown on the player page in this order.' },
+      admin: { description: 'Awards and roles, e.g. "Club champion". Drag to change the order.' },
       fields: [
         {
           type: 'row',
@@ -164,6 +171,7 @@ export const Players: CollectionConfig = {
       defaultLimit: 50,
       admin: {
         allowCreate: false,
+        condition: adminOnlyCondition(),
         defaultColumns: ['seasonName', 'teamName', 'games', 'batRuns', 'bowlWickets', 'catches'],
         description: 'Written by the PlayHQ sync.',
       },
@@ -175,6 +183,7 @@ export const Players: CollectionConfig = {
       on: 'player',
       admin: {
         allowCreate: false,
+        condition: adminOnlyCondition(),
         defaultColumns: ['nameKey'],
         description: 'PlayHQ names that map to this player. Merging moves them.',
       },
@@ -182,7 +191,7 @@ export const Players: CollectionConfig = {
     {
       name: 'merge',
       type: 'ui',
-      admin: { components: { Field: '/payload/components/MergePlayerField#MergePlayerField' } },
+      admin: { condition: adminOnlyCondition(), components: { Field: '/payload/components/MergePlayerField#MergePlayerField' } },
     },
   ],
 }

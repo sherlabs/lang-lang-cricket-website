@@ -11,12 +11,18 @@ const PATHS = ['/', '/announcements']
  */
 export const Announcements: CollectionConfig = {
   slug: 'announcements',
+  labels: { singular: 'Announcement', plural: 'Announcements' },
   admin: {
-    group: 'Club',
+    group: false,
+    hideAPIURL: true,
     useAsTitle: 'title',
     defaultColumns: ['title', 'published', 'createdAt'],
+    listSearchableFields: ['title', 'body'],
+    description: 'News for members. The newest one that is switched on shows as a banner at the top of the home page.',
   },
   defaultSort: '-createdAt',
+  // Duplicate is noise for the committee (and would copy tokens/files).
+  disableDuplicate: true,
   access: {
     read: staffOr({ published: { equals: true } }),
     create: isStaff,
@@ -30,19 +36,24 @@ export const Announcements: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'title', type: 'text', required: true },
+    { name: 'title', label: 'Headline', type: 'text', required: true, admin: { placeholder: 'e.g. Presentation night is this Friday' } },
     {
       name: 'body',
+      label: 'Message',
       type: 'textarea',
       defaultValue: '',
-      admin: { description: 'Plain text. Leave a blank line between paragraphs. The first line shows in the home page banner.' },
+      admin: {
+        description: 'Leave a blank line between paragraphs. The first line shows in the banner on the home page.',
+        placeholder: 'Write your message here.',
+      },
     },
     {
       name: 'published',
+      label: 'Show on the website',
       type: 'checkbox',
       defaultValue: false,
       index: true,
-      admin: { description: 'The newest published announcement shows as a banner on the home page.' },
+      admin: { description: 'Nothing shows on the website until this is switched on. Switch it off later to take the announcement down without deleting it.' },
     },
   ],
 }
