@@ -29,10 +29,9 @@ export const Media: CollectionConfig = {
     filesRequiredOnCreate: false,
     focalPoint: true,
     crop: true,
-    // Spec 7.6(a): verified in WP1 that under clientUploads the plugin re-stores the
-    // sharp-processed file (core drops clientUploadContext after resizing), so this caps
-    // originals. Registered legacy rows carry no file and are never resized.
-    resizeOptions: { width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true },
+    // No resizeOptions (spec 7.6(a), WP1 finding): under clientUploads a real browser upload
+    // arrives as an empty buffer + tempFilePath; core writes the resized bytes to the temp file
+    // and the Vercel Blob adapter re-uploads `file.data` — an EMPTY buffer — over the original.
   },
   hooks: {
     beforeValidate: [maxFileSize(MEDIA_MAX_BYTES)],

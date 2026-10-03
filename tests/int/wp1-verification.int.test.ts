@@ -79,7 +79,7 @@ async function adminToken(): Promise<string> {
 }
 
 describe('7.6(a) resizeOptions under clientUploads', () => {
-  it('a client-uploaded file IS re-stored resized when the collection has resizeOptions', async () => {
+  it('with an in-memory buffer the resized file IS re-stored (core drops clientUploadContext)', async () => {
     const doc = await payload.create({
       collection: 'resize-probe',
       data: {},
@@ -100,6 +100,33 @@ describe('7.6(a) resizeOptions under clientUploads', () => {
     const [pathname, body] = blob.put.mock.calls[0]
     expect(pathname).toBe('probe/client-probe.png')
     expect((body as Buffer).length).toBeLessThan(PNG.length)
+  })
+
+  // The shape getFileFromClientUpload really produces ('full' content requirement): no bytes in
+  // `data`, the original streamed to a temp file. Core writes the resized output back to the
+  // temp file only; the Vercel Blob adapter uploads `file.data` → it overwrites the original with
+  // an EMPTY buffer. This is why resizeOptions stays OFF on every client-upload collection.
+  it('HAZARD: on the real client-upload shape (empty data + tempFilePath) the re-upload is EMPTY', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs')
+    const os = await import('node:os')
+    const tempFilePath = path.join(mkdtempSync(path.join(os.tmpdir(), 'wp1-probe-')), 'upload')
+    writeFileSync(tempFilePath, PNG)
+    await payload.create({
+      collection: 'resize-probe',
+      data: {},
+      file: {
+        data: Buffer.alloc(0),
+        tempFilePath,
+        mimetype: 'image/png',
+        name: 'client-temp.png',
+        size: PNG.length,
+        clientUploadContext: { pathname: 'probe/client-temp.png' },
+      } as never,
+    })
+    expect(blob.put).toHaveBeenCalledTimes(1)
+    const [pathname, body] = blob.put.mock.calls[0]
+    expect(pathname).toBe('probe/client-temp.png')
+    expect((body as Buffer).length).toBe(0)
   })
 
   it('without resizeOptions a client-uploaded file is NOT re-uploaded', async () => {
@@ -164,22 +191,6 @@ describe('7.6(b) delete of a registered media row (collection prefix "")', () =>
         file: { data: PNG, mimetype: 'image/png', name: 'replacement.png', size: PNG.length },
       }),
     ).rejects.toThrow(/cannot be replaced/)
-  })
-})
-
-describe('media resizeOptions (enabled because of 7.6(a))', () => {
-  it('a client upload larger than 2000px is re-stored at most 2000px on the long edge', async () => {
-    const sharp = (await import('sharp')).default
-    const big = await sharp({ create: { width: 2600, height: 1300, channels: 3, background: '#F5B700' } }).jpeg().toBuffer()
-    const doc = await payload.create({
-      collection: 'media',
-      data: { alt: '' },
-      file: { data: big, mimetype: 'image/jpeg', name: 'big.jpg', size: big.length, clientUploadContext: { pathname: 'big.jpg' } } as never,
-    })
-    expect(doc.width).toBe(2000)
-    expect(doc.height).toBe(1000)
-    expect(blob.put).toHaveBeenCalledTimes(1)
-    expect(blob.put.mock.calls[0][0]).toBe('big.jpg')
   })
 })
 
