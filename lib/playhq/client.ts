@@ -1,6 +1,7 @@
+import { PLAYHQ_DEFAULTS } from '@/config/site'
 const HOST = 'https://api.playhq.com'
 
-export const PLAYHQ_ORG_ID = process.env.PLAYHQ_ORG_ID ?? '484ced51-403a-466c-9a94-bd95eedf7319'
+export const PLAYHQ_ORG_ID = process.env.PLAYHQ_ORG_ID || PLAYHQ_DEFAULTS.orgId
 
 export class PlayHQError extends Error {
   constructor(public status: number, public path: string) {

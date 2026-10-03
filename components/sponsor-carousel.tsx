@@ -1,22 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import { cn } from '@/lib/utils'
-import { dedupeByHighestTier, groupByTier, type Sponsor } from '@/components/sponsor-logos'
+import type { Sponsor } from '@/components/sponsor-logos'
+
+export { selectCarouselSponsors } from '@/lib/site-settings-core'
 
 /** Below this many logos a marquee looks silly; show them as a static centred row instead. */
 const MARQUEE_MIN = 4
-
-/**
- * Sponsors that belong in the home page carousel: only the selected tiers,
- * only those with a logo, one entry per business (at its highest selected
- * tier), ordered by tier then name.
- */
-export function selectCarouselSponsors(rows: Sponsor[], tiers: readonly string[]): Sponsor[] {
-  const eligible = rows.filter((s) => tiers.includes(s.tier) && s.logoUrl)
-  const ordered = groupByTier(eligible).flatMap((g) =>
-    [...g.items].sort((a, b) => a.name.localeCompare(b.name))
-  )
-  return dedupeByHighestTier(ordered)
-}
 
 function Logo({ sponsor, tabIndex }: { sponsor: Sponsor; tabIndex?: number }) {
   const img = (

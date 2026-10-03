@@ -8,11 +8,10 @@ export function slugify(input: string): string {
   return slug || 'story'
 }
 
-// Slugs that collide with static routes under /history/*. Treated as always
-// "taken" so makeUniqueSlug appends -2 the same way it does for a real
-// collision, otherwise the story would be unreachable (the static route
-// always wins the match).
-const RESERVED_SLUGS = new Set(['submit', 'drafts'])
+// Slugs that collide with static routes (/history/submit, /history/drafts, /players/compare).
+// Treated as always "taken" so makeUniqueSlug appends -2 the same way it does for a real
+// collision, otherwise the row would be unreachable (the static route always wins the match).
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set(['submit', 'drafts', 'compare'])
 
 /** Appends -2, -3, ... to the base slug until `isTaken` reports one that's free. */
 export async function makeUniqueSlug(

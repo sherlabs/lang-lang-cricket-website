@@ -1,3 +1,4 @@
+import { CLUB_TIMEZONE } from '@/config/site'
 function parseHHmm(t: string): { h: number; m: number } {
   const [h, m] = t.split(':').map(Number)
   return { h: Number.isFinite(h) ? h : 0, m: Number.isFinite(m) ? m : 0 }
@@ -53,8 +54,9 @@ export function getOneTimeEventDateTime(event: { eventDate: Date; eventTime: str
  * input and is trivial to test with a fixed instant.
  */
 export function nowAsEventClock(now: Date = new Date()): Date {
+  // A fixed locale on purpose: these parts are parsed as numbers, not displayed.
   const parts = new Intl.DateTimeFormat('en-AU', {
-    timeZone: 'Australia/Melbourne',
+    timeZone: CLUB_TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

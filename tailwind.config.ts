@@ -1,31 +1,19 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import { BRAND } from "./config/brand";
 
 const config: Config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // Public site only: the Payload admin (app/(payload), payload/components) has its own CSS.
+    "./app/(frontend)/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        brand: {
-          black: "#0B0B0D",
-          ink: "#17171A",
-          charcoal: "#26262B",
-          gold: "#F5B700",
-          "gold-dark": "#C99400",
-          "gold-light": "#FFD966",
-          "gold-pale": "#FFF4CC",
-          // Darkened gold for small text on light backgrounds (>= 4.5:1 on white and gold-pale).
-          "gold-deep": "#8A6500",
-          cream: "#FAF7EF",
-          stone: "#F3F1EA",
-          // Warm neutrals for body/muted copy so we never reach for Tailwind's default greys.
-          grey: "#5A5A62",
-          "grey-light": "#6E6E76",
-        },
+        brand: BRAND,
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -99,6 +87,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 };
 export default config;

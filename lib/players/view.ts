@@ -1,13 +1,21 @@
-import type { Player, PlayerSeason } from '@/db/schema'
+import type { Player, PlayerSeason } from '@/lib/domain'
 import { battingAverages, bowlingAverages } from '@/lib/playhq/players'
 import { EMPTY_COUNTS, combineCounts, pickCounts, type SeasonCounts } from './season-math'
+import { PLAYHQ_DEFAULTS } from '@/config/site'
 
 export function isActive(p: Pick<Player, 'activeOverride' | 'isActiveDerived'>) {
   return p.activeOverride ? p.activeOverride === 'active' : p.isActiveDerived
 }
 export const playerName = (p: Pick<Player, 'firstName' | 'lastName'>) => `${p.firstName} ${p.lastName}`.trim()
 export const seasonYears = (name: string) => /\d{4}(\/\d{2})?/.exec(name)?.[0] ?? name
-export const teamLabel = (teamName: string) => teamName.replace(/^Lang Lang\s+/i, '')
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * "Lang Lang B Grade" → "B Grade": strips the club's PlayHQ team-name prefix. Callers pass
+ * `club.teamNamePrefix`; omitted, it falls back to the config default.
+ */
+export const teamLabel = (teamName: string, prefix: string = PLAYHQ_DEFAULTS.teamNamePrefix) =>
+  prefix ? teamName.replace(new RegExp(`^${escapeRegExp(prefix)}\\s+`, 'i'), '') : teamName
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).slice(0, 2).join('')
 
 export type SeasonLite = Pick<PlayerSeason, 'seasonName' | 'seasonOrder' | 'teamName'>
@@ -21,17 +29,17 @@ export function yearsLabel(p: Pick<Player, 'source' | 'manualYears'>, seasons: S
 
 export type PlayerCard = { id: number; slug: string; name: string; photoUrl: string; yearsLabel: string; grades: string[]; latestOrder: number | null; active: boolean }
 
-export function toCard(p: Player, seasons: SeasonLite[]): PlayerCard {
+export function toCard(p: Player, seasons: SeasonLite[], teamNamePrefix?: string): PlayerCard {
   const newestFirst = [...seasons].sort((a, b) => a.seasonOrder - b.seasonOrder)
   return {
     id: p.id, slug: p.slug, name: playerName(p), photoUrl: p.photoUrl, yearsLabel: yearsLabel(p, seasons),
-    grades: [...new Set(newestFirst.map((s) => teamLabel(s.teamName)))],
+    grades: [...new Set(newestFirst.map((s) => teamLabel(s.teamName, teamNamePrefix)))],
     latestOrder: newestFirst[0]?.seasonOrder ?? null, active: isActive(p),
   }
 }
 
-export function splitPlayers(list: { player: Player; seasons: SeasonLite[] }[]) {
-  const cards = list.filter((x) => !x.player.hidden).map((x) => toCard(x.player, x.seasons))
+export function splitPlayers(list: { player: Player; seasons: SeasonLite[] }[], teamNamePrefix?: string) {
+  const cards = list.filter((x) => !x.player.hidden).map((x) => toCard(x.player, x.seasons, teamNamePrefix))
   const byName = (a: PlayerCard, b: PlayerCard) => a.name.localeCompare(b.name)
   const active = cards.filter((c) => c.active).sort(byName)
   const past = cards.filter((c) => !c.active).sort((a, b) =>

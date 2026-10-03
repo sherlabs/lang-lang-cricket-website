@@ -1,13 +1,25 @@
-import type { Event, Story } from '@/db/schema'
-import { absoluteUrl, DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from './site-metadata'
+import type { Event, Story } from '@/lib/domain'
+import { CLUB_TIMEZONE } from '@/config/site'
+import { absoluteUrl } from './site-metadata'
 
-export const CLUB_EMAIL = 'langlangcricketclub@gmail.com'
-const MELBOURNE = 'Australia/Melbourne'
+const MELBOURNE = CLUB_TIMEZONE
 const CONTEXT = 'https://schema.org'
 
 type JsonLd = Record<string, unknown>
 
-const clubRef = () => ({ '@type': 'SportsOrganization', name: SITE_NAME, url: SITE_URL })
+/** The club values JSON-LD needs (a `getClub()` result satisfies it). */
+export type JsonLdClub = {
+  name: string
+  siteUrl: string
+  sport: string
+  email: string
+  logoUrl: string
+  address: { locality: string; region: string; country: string }
+  ogImage: { url: string }
+  sameAs: string[]
+}
+
+const clubRef = (club: JsonLdClub) => ({ '@type': 'SportsOrganization', name: club.name, url: club.siteUrl })
 
 function offsetMs(instant: Date): number {
   const p = new Intl.DateTimeFormat('en-AU', {
@@ -39,22 +51,28 @@ export function serializeJsonLd(data: JsonLd): string {
   return JSON.stringify(data).replace(/</g, '\\u003c')
 }
 
-export function organizationJsonLd(): JsonLd {
+export function organizationJsonLd(club: JsonLdClub): JsonLd {
   return {
     '@context': CONTEXT,
     '@type': 'SportsOrganization',
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: absoluteUrl('/assets/branding/logo.png'),
-    sport: 'Cricket',
-    email: CLUB_EMAIL,
-    address: { '@type': 'PostalAddress', addressLocality: 'Caldermeade', addressRegion: 'VIC', addressCountry: 'AU' },
+    name: club.name,
+    url: club.siteUrl,
+    logo: absoluteUrl(club.logoUrl, club.siteUrl),
+    sport: club.sport,
+    email: club.email,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: club.address.locality,
+      addressRegion: club.address.region,
+      addressCountry: club.address.country,
+    },
+    ...(club.sameAs.length ? { sameAs: club.sameAs } : {}),
   }
 }
 
-export function eventJsonLd(event: Event, occurrence: Date | null): JsonLd | null {
+export function eventJsonLd(event: Event, occurrence: Date | null, club: JsonLdClub): JsonLd | null {
   if (!occurrence) return null
-  const url = absoluteUrl(`/events/${event.id}`)
+  const url = absoluteUrl(`/events/${event.id}`, club.siteUrl)
   const data: JsonLd = {
     '@context': CONTEXT,
     '@type': 'Event',
@@ -62,9 +80,9 @@ export function eventJsonLd(event: Event, occurrence: Date | null): JsonLd | nul
     startDate: melbourneIso(occurrence),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    image: [absoluteUrl(event.coverImageUrl || DEFAULT_OG_IMAGE.url)],
-    description: event.description || `${event.title} at ${SITE_NAME}.`,
-    organizer: clubRef(),
+    image: [absoluteUrl(event.coverImageUrl || club.ogImage.url, club.siteUrl)],
+    description: event.description || `${event.title} at ${club.name}.`,
+    organizer: clubRef(club),
     url,
   }
   if (event.location) {
@@ -76,29 +94,83 @@ export function eventJsonLd(event: Event, occurrence: Date | null): JsonLd | nul
   return data
 }
 
-export function playerJsonLd(p: { slug: string; name: string; photoUrl?: string }): JsonLd {
+export function playerJsonLd(p: { slug: string; name: string; photoUrl?: string }, club: JsonLdClub): JsonLd {
   return {
     '@context': CONTEXT,
     '@type': 'Person',
     name: p.name,
-    url: absoluteUrl(`/players/${p.slug}`),
-    ...(p.photoUrl ? { image: absoluteUrl(p.photoUrl) } : {}),
-    memberOf: clubRef(),
+    url: absoluteUrl(`/players/${p.slug}`, club.siteUrl),
+    ...(p.photoUrl ? { image: absoluteUrl(p.photoUrl, club.siteUrl) } : {}),
+    memberOf: clubRef(club),
   }
 }
 
-export function storyJsonLd(story: Pick<Story, 'slug' | 'title' | 'coverImageUrl' | 'authorName' | 'publishedAt' | 'reviewedAt' | 'createdAt'>): JsonLd {
+export function storyJsonLd(
+  story: Pick<Story, 'slug' | 'title' | 'coverImageUrl' | 'authorName' | 'publishedAt' | 'createdAt' | 'updatedAt'>,
+  club: JsonLdClub,
+): JsonLd {
   const published = story.publishedAt ?? story.createdAt
-  const modified = story.reviewedAt ?? published
+  // updatedAt (spec §14); never earlier than the publication date.
+  const modified = story.updatedAt > published ? story.updatedAt : published
   return {
     '@context': CONTEXT,
     '@type': 'Article',
     headline: story.title,
-    image: [absoluteUrl(story.coverImageUrl || DEFAULT_OG_IMAGE.url)],
+    image: [absoluteUrl(story.coverImageUrl || club.ogImage.url, club.siteUrl)],
     datePublished: published.toISOString(),
     dateModified: modified.toISOString(),
     author: { '@type': 'Person', name: story.authorName },
-    publisher: { '@type': 'SportsOrganization', name: SITE_NAME, url: SITE_URL, logo: { '@type': 'ImageObject', url: absoluteUrl('/assets/branding/logo.png') } },
-    mainEntityOfPage: absoluteUrl(`/history/${story.slug}`),
+    publisher: {
+      '@type': 'SportsOrganization',
+      name: club.name,
+      url: club.siteUrl,
+      logo: { '@type': 'ImageObject', url: absoluteUrl(club.logoUrl, club.siteUrl) },
+    },
+    mainEntityOfPage: absoluteUrl(`/history/${story.slug}`, club.siteUrl),
+  }
+}
+
+/** BreadcrumbList for the stats pages. Relative hrefs are resolved against the club's site URL. */
+export function breadcrumbJsonLd(items: { name: string; href: string }[], club: Pick<JsonLdClub, 'siteUrl'>): JsonLd {
+  return {
+    '@context': CONTEXT,
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: absoluteUrl(it.href, club.siteUrl) })),
+  }
+}
+
+/** Ordered list of players for a leaderboard: names and profile URLs only, never the stat values. */
+export function playerListJsonLd(name: string, players: { name: string; slug: string }[], club: Pick<JsonLdClub, 'siteUrl'>): JsonLd | null {
+  if (!players.length) return null
+  return {
+    '@context': CONTEXT,
+    '@type': 'ItemList',
+    name,
+    itemListElement: players.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: { '@type': 'Person', name: p.name, url: absoluteUrl(`/players/${p.slug}`, club.siteUrl) },
+    })),
+  }
+}
+
+/** A season yearbook as a CreativeWork: title, season and the date it was published; never the stats. */
+export function yearbookJsonLd(
+  book: { slug: string; title: string; seasonName: string; coverUrl: string; publishedAt: Date | null; updatedAt: Date },
+  club: JsonLdClub,
+): JsonLd {
+  const published = book.publishedAt ?? book.updatedAt
+  const modified = book.updatedAt > published ? book.updatedAt : published
+  return {
+    '@context': CONTEXT,
+    '@type': 'CreativeWork',
+    name: book.title,
+    headline: book.title,
+    about: book.seasonName,
+    image: [absoluteUrl(book.coverUrl || club.ogImage.url, club.siteUrl)],
+    datePublished: published.toISOString(),
+    dateModified: modified.toISOString(),
+    publisher: { '@type': 'SportsOrganization', name: club.name, url: club.siteUrl, logo: { '@type': 'ImageObject', url: absoluteUrl(club.logoUrl, club.siteUrl) } },
+    mainEntityOfPage: absoluteUrl(`/yearbooks/${book.slug}`, club.siteUrl),
   }
 }
