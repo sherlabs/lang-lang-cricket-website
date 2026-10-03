@@ -8,6 +8,7 @@ import * as migration_20261003_055903_wp5_players from './20261003_055903_wp5_pl
 import * as migration_20261003_064657_wp5_review_fixes from './20261003_064657_wp5_review_fixes';
 import * as migration_20261003_101141_dup_shared_legacy_url from './20261003_101141_dup_shared_legacy_url';
 import * as migration_20261003_113720_stats_settings from './20261003_113720_stats_settings';
+import * as migration_20261003_120047_profile_extras from './20261003_120047_profile_extras';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20261003_113720_stats_settings.up,
     down: migration_20261003_113720_stats_settings.down,
-    name: '20261003_113720_stats_settings'
+    name: '20261003_113720_stats_settings',
+  },
+  {
+    up: migration_20261003_120047_profile_extras.up,
+    down: migration_20261003_120047_profile_extras.down,
+    name: '20261003_120047_profile_extras'
   },
 ];

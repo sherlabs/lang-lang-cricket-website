@@ -12,6 +12,8 @@ export async function seedStats(payload: Payload): Promise<{ players: number; ro
       collection: 'players',
       data: {
         firstName: p.firstName, lastName: p.lastName, hidden: p.hidden, source: 'manual', manualYears: p.manualYears,
+        // Manual players are never "derived active"; whoever played the newest seeded season is active, so the public milestone strip has people.
+        activeOverride: p.rows.some((r) => r.seasonName === 'Summer 2025/26') ? 'active' : 'past',
         bio: `${SEED_MARKER} Fixture player for local stats checks.`, honours: p.honours,
       },
       context: CTX,

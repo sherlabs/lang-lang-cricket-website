@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isStaff, nobodyField, staffOr } from '../access'
+import { isAdminField, isStaff, isStaffField, nobodyField, staffOr } from '../access'
 import { mergePlayersEndpoint } from '../endpoints/mergePlayers'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
@@ -10,10 +10,20 @@ import { uniqueSlug } from '../hooks/slug'
 import { trimHonours, trimStrings } from '../hooks/trimStrings'
 
 // Hidden/name/honours changes also move the leaderboards and records, which read the `player-stats` cache tag.
-const STATS_PATHS = ['/stats', '/records']
+const STATS_PATHS = ['/stats', '/records', '/honours', '/players/compare']
 const STATS_TAGS = ['player-stats']
 const paths = (doc: Record<string, unknown>) =>
-  doc.slug ? ['/players', `/players/${doc.slug}`, ...STATS_PATHS] : ['/players', ...STATS_PATHS]
+  doc.slug
+    ? ['/players', `/players/${doc.slug}`, `/api/public/players/${doc.slug}/card`, ...STATS_PATHS]
+    : ['/players', ...STATS_PATHS]
+
+/** Pre-PlayHQ totals used only by milestones (spec 3.6). Names match the `players` columns. */
+export const BASELINE_FIELDS = [
+  { name: 'baselineGames', label: 'Games before PlayHQ' },
+  { name: 'baselineRuns', label: 'Runs before PlayHQ' },
+  { name: 'baselineWickets', label: 'Wickets before PlayHQ' },
+  { name: 'baselineCatches', label: 'Catches before PlayHQ' },
+] as const
 
 /** Hook- or sync-owned: read-only in the admin AND unwritable over REST (spec §2: `admin.readOnly` is UI only). */
 const syncOwned = { create: nobodyField, update: nobodyField }
@@ -158,6 +168,26 @@ export const Players: CollectionConfig = {
           ],
         },
       ],
+    },
+    {
+      type: 'collapsible',
+      label: 'Before PlayHQ (milestones)',
+      admin: {
+        initCollapsed: true,
+        description:
+          'Optional. Games, runs, wickets and catches from before the seasons the database holds (2023/24 onwards). They are added to the stored totals for milestones only, so a long-serving player is not shown as "approaching" a milestone they passed years ago. Leave at 0 when unknown.',
+      },
+      fields: BASELINE_FIELDS.map(({ name, label }) => ({
+        name,
+        label,
+        type: 'number' as const,
+        defaultValue: 0,
+        min: 0,
+        // Admin-only to edit; staff may read it (the Local API ignores both).
+        access: { read: isStaffField, create: isAdminField, update: isAdminField },
+        validate: (value: unknown) =>
+          value == null || (typeof value === 'number' && Number.isInteger(value) && value >= 0) ? true : 'Enter a whole number, 0 or more.',
+      })),
     },
     {
       name: 'seasons',

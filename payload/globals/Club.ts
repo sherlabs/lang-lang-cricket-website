@@ -18,6 +18,8 @@ const PAGE_LABELS: Record<SeoPage, string> = {
   fixtures: 'Fixtures',
   stats: 'Stats',
   records: 'Records',
+  honours: 'Honours',
+  compare: 'Compare players',
   statlab: 'StatLab',
 }
 

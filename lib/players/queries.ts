@@ -4,6 +4,7 @@ import type { Player, PlayerHonour, PlayerSeason } from '@/lib/domain'
 import { getPayloadClient } from '@/lib/payload/client'
 import { toPlayer, toPlayerSeason } from '@/lib/payload/mappers'
 import type { SeasonCounts } from './season-math'
+import type { Baseline } from '@/lib/stats/milestones'
 import { careerTotals, isActive, playerName, splitPlayers, toCard, yearsLabel, type SeasonLite } from './view'
 
 /**
@@ -34,6 +35,8 @@ export async function listPublicPlayers(teamNamePrefix?: string) {
 export type PlayerProfile = {
   player: Player; active: boolean; name: string; yearsLabel: string; grades: string[]
   honours: PlayerHonour[]; seasons: PlayerSeason[]; career: SeasonCounts | null
+  /** Pre-PlayHQ totals recorded by an admin (zeros when none); used by milestones only. */
+  baseline: Baseline
 }
 
 /** Shared by `generateMetadata` and the page through React `cache()` (one fetch per request). */
@@ -64,5 +67,6 @@ export const getPlayerProfile = cache(async (slug: string, teamNamePrefix?: stri
   return {
     player, active: isActive(player), name: playerName(player), yearsLabel: yearsLabel(player, seasons), grades: card.grades,
     honours, seasons, career: seasons.length ? careerTotals(seasons) : null,
+    baseline: { games: Number(doc.baselineGames ?? 0), runs: Number(doc.baselineRuns ?? 0), wickets: Number(doc.baselineWickets ?? 0), catches: Number(doc.baselineCatches ?? 0) },
   }
 })

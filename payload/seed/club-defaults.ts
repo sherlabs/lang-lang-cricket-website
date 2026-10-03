@@ -48,6 +48,8 @@ export const SEO_PAGES = [
   'fixtures',
   'stats',
   'records',
+  'honours',
+  'compare',
   'statlab',
 ] as const
 export type SeoPage = (typeof SEO_PAGES)[number]
@@ -151,9 +153,17 @@ export type ClubDefaults = ClubGlobalDefaults & {
       introNo: string
     }
     rsvpEdit: { header: HeaderCopy }
-    players: { header: HeaderCopy; empty: string }
+    players: { header: HeaderCopy; empty: string; milestones: { heading: string } }
     stats: { header: HeaderCopy; empty: string; notEnoughHeading: string; notEnoughNote: string }
     records: { header: HeaderCopy; empty: string }
+    honours: { header: HeaderCopy; empty: string; byHonourLabel: string; byYearLabel: string }
+    compare: {
+      header: HeaderCopy
+      empty: string
+      /** Shown when a slug is unknown or the player is hidden. */
+      unknownPlayer: string
+      sameLabel: string
+    }
     storyDraftEdit: { header: HeaderCopy }
     emptyStates: { sponsors: string; documents: string; announcements: string }
   }
@@ -254,6 +264,14 @@ export const clubDefaults: ClubDefaults = {
     records: {
       title: 'Club Records',
       description: 'Club batting, bowling and fielding records for Lang Lang Cricket Club, across every season on record.',
+    },
+    honours: {
+      title: 'Honour Board',
+      description: 'Life members, premiership players, best and fairest winners and other honours at Lang Lang Cricket Club.',
+    },
+    compare: {
+      title: 'Compare Players',
+      description: 'Compare two Lang Lang Cricket Club players side by side: batting, bowling and fielding.',
     },
     statlab: {
       title: 'StatLab',
@@ -528,6 +546,7 @@ export const clubDefaults: ClubDefaults = {
           'Everyone who has pulled on the colours for our senior teams — current squads and the players who came before them.',
       },
       empty: 'Player records are on their way.',
+      milestones: { heading: 'Milestones' },
     },
     stats: {
       header: {
@@ -546,6 +565,26 @@ export const clubDefaults: ClubDefaults = {
         intro: 'The best individual performances on record for our senior teams, across seasons and in a single season.',
       },
       empty: 'No records are available yet.',
+    },
+    honours: {
+      header: {
+        eyebrow: 'The honour board',
+        title: 'Honours',
+        intro: 'Life members, premiership players, award winners and office-holders, as recorded on each player page.',
+      },
+      empty: 'No honours have been recorded yet.',
+      byHonourLabel: 'By honour',
+      byYearLabel: 'By year',
+    },
+    compare: {
+      header: {
+        eyebrow: 'Head to head',
+        title: 'Compare players',
+        intro: 'Pick two players to set their batting, bowling and fielding side by side. Copy the link to share the comparison.',
+      },
+      empty: 'Choose two players to compare.',
+      unknownPlayer: 'We could not find that player. Pick someone from the list.',
+      sameLabel: 'Pick two different players.',
     },
     storyDraftEdit: {
       header: {
@@ -590,6 +629,7 @@ export const clubDefaults: ClubDefaults = {
           { href: '/players', label: 'Players' },
           { href: '/stats', label: 'Stats' },
           { href: '/records', label: 'Records' },
+          { href: '/honours', label: 'Honours' },
           { href: '/history', label: 'History' },
           { href: '/contact', label: 'Contact' },
         ],

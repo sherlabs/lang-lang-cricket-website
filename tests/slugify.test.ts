@@ -32,4 +32,9 @@ describe('makeUniqueSlug', () => {
     const slug = await makeUniqueSlug('Drafts', async () => false)
     expect(slug).toBe('drafts-2')
   })
+
+  it('treats "compare" as reserved so a player never shadows /players/compare', async () => {
+    const slug = await makeUniqueSlug('Compare', async () => false)
+    expect(slug).toBe('compare-2')
+  })
 })

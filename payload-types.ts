@@ -545,6 +545,10 @@ export interface Player {
         id?: string | null;
       }[]
     | null;
+  baselineGames?: number | null;
+  baselineRuns?: number | null;
+  baselineWickets?: number | null;
+  baselineCatches?: number | null;
   /**
    * Written by the PlayHQ sync.
    */
@@ -996,6 +1000,10 @@ export interface PlayersSelect<T extends boolean = true> {
         title?: T;
         id?: T;
       };
+  baselineGames?: T;
+  baselineRuns?: T;
+  baselineWickets?: T;
+  baselineCatches?: T;
   seasons?: T;
   aliases?: T;
   updatedAt?: T;
@@ -1207,6 +1215,14 @@ export interface Club {
       description?: string | null;
     };
     records?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    honours?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    compare?: {
       title?: string | null;
       description?: string | null;
     };
@@ -1425,6 +1441,18 @@ export interface ClubSelect<T extends boolean = true> {
               description?: T;
             };
         records?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        honours?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        compare?:
           | T
           | {
               title?: T;

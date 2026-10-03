@@ -1,7 +1,9 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { getPayloadClient } from '@/lib/payload/client'
-import { playerName } from '@/lib/players/view'
+import { isActive, playerName } from '@/lib/players/view'
+import type { HonourPlayer } from './honours'
+import type { MilestonePlayer } from './milestones'
 import type { SeasonCounts } from '@/lib/players/season-math'
 import type { StatRow } from './aggregate'
 import { seasonIndex, type SeasonInfo } from './season-window'
@@ -29,7 +31,7 @@ type SlimSeason = { seasonName: string; teams: string[]; grades: string[]; rows:
  * `unstable_cache` needs a Next incremental cache; outside a Next request (vitest, `payload run`
  * scripts) it throws that exact invariant, and the loader is simply run uncached.
  */
-async function cached<T>(keyParts: string[], loader: () => Promise<T>): Promise<T> {
+export async function cached<T>(keyParts: string[], loader: () => Promise<T>): Promise<T> {
   try {
     return await unstable_cache(loader, keyParts, { tags: [STATS_TAG], revalidate: REVALIDATE_SECONDS })()
   } catch (err) {
@@ -142,4 +144,60 @@ export async function getLastSyncAt(): Promise<Date | null> {
   })
   const at = (docs[0] as { finishedAt?: string | null } | undefined)?.finishedAt
   return at ? new Date(at) : null
+}
+
+
+type PlayerDocLite = {
+  id: number; firstName?: string | null; lastName?: string | null; slug?: string | null
+  activeOverride?: 'active' | 'past' | null; isActiveDerived?: boolean | null; manualYears?: string | null
+  baselineGames?: number | null; baselineRuns?: number | null; baselineWickets?: number | null; baselineCatches?: number | null
+  honours?: { years?: string | null; title?: string | null }[] | null
+}
+
+const PLAYER_SELECT = {
+  firstName: true, lastName: true, slug: true, activeOverride: true, isActiveDerived: true, manualYears: true,
+  baselineGames: true, baselineRuns: true, baselineWickets: true, baselineCatches: true,
+} as const
+
+const toMilestonePlayer = (d: PlayerDocLite): MilestonePlayer => ({
+  id: d.id,
+  name: playerName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '' }),
+  slug: d.slug ?? '',
+  active: isActive({ activeOverride: d.activeOverride ?? null, isActiveDerived: Boolean(d.isActiveDerived) }),
+  manualYears: d.manualYears ?? '',
+  baseline: { games: Number(d.baselineGames ?? 0), runs: Number(d.baselineRuns ?? 0), wickets: Number(d.baselineWickets ?? 0), catches: Number(d.baselineCatches ?? 0) },
+})
+
+async function loadMilestonePlayers(hiddenToo: boolean): Promise<MilestonePlayer[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'players', ...(hiddenToo ? {} : { where: { hidden: { equals: false } } }),
+    pagination: false, depth: 0, joins: false, sort: 'id', select: PLAYER_SELECT,
+  })
+  return (docs as unknown as PlayerDocLite[]).map(toMilestonePlayer)
+}
+
+/** Visible players with the fields milestones need (active flag, manual years, baseline), cached under the stats tag. */
+export const getMilestonePlayers = (): Promise<MilestonePlayer[]> => cached(['stat-milestone-players'], () => loadMilestonePlayers(false))
+
+/** Admin-only twin: uncached, hidden players included. Only `payload/components` may import it. */
+export const getAllMilestonePlayersForAdmin = (): Promise<MilestonePlayer[]> => loadMilestonePlayers(true)
+
+/** Visible players that hold at least one honour, for the honour board. */
+export async function getHonourPlayers(): Promise<HonourPlayer[]> {
+  return cached(['stat-honour-players'], async () => {
+    const payload = await getPayloadClient()
+    const { docs } = await payload.find({
+      collection: 'players', where: { hidden: { equals: false } },
+      pagination: false, depth: 0, joins: false, sort: 'id', select: { firstName: true, lastName: true, slug: true, honours: true },
+    })
+    return (docs as unknown as PlayerDocLite[])
+      .map((d) => ({
+        id: d.id,
+        name: playerName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '' }),
+        slug: d.slug ?? '',
+        honours: (d.honours ?? []).map((h) => ({ years: h.years ?? '', title: h.title ?? '' })),
+      }))
+      .filter((p) => p.honours.length > 0)
+  })
 }

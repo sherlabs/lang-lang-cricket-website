@@ -27,7 +27,7 @@ export function isLocked(latest: { status: string | null; startedAt: Date } | un
  * errors Next throws outside a request (`payload run`, ETL, tests).
  */
 export async function revalidatePlayerPages(): Promise<void> {
-  await revalidatePaths(['/players', '/stats', '/records'], undefined, ['player-stats'])
+  await revalidatePaths(['/players', '/stats', '/records', '/players/compare'], undefined, ['player-stats'])
   try {
     const { revalidatePath } = await import('next/cache')
     revalidatePath('/players/[slug]', 'page')
