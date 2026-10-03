@@ -62,6 +62,7 @@ describe('wp2 review fixes', () => {
       publicDir: path.resolve(process.cwd(), 'public'),
     })
     // An admin has edited the saved global; the logo is set, the OG image is empty.
+    const originalName = (await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })).name
     await payload.updateGlobal({ slug: 'club', data: { name: 'Edited Club', logo: null, ogImage: null }, overrideAccess: true, context: { disableRevalidate: true } })
     const own = await payload.create({
       collection: 'media',
@@ -83,7 +84,7 @@ describe('wp2 review fixes', () => {
     await clubStep.run(ctx(true))
     expect((await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })).updatedAt).toBe(before)
 
-    await payload.updateGlobal({ slug: 'club', data: { logo: null, ogImage: null }, overrideAccess: true, context: { disableRevalidate: true } })
+    await payload.updateGlobal({ slug: 'club', data: { name: originalName, logo: null, ogImage: null }, overrideAccess: true, context: { disableRevalidate: true } })
     for (const id of [own.id, typeof og === 'object' ? og?.id : null]) if (id) await payload.delete({ collection: 'media', id, overrideAccess: true })
   })
 })
