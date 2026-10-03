@@ -37,10 +37,17 @@ export function honourMentionsSeason(years: string, seasonName: string): boolean
   const s = seasonParts(seasonName)
   if (!s) return false
   const text = years.replace(/[‐-―−]/g, '-')
+  // A range of bare years ("2010-2012", "2023 - 2026") covers every season that starts inside it.
+  for (const m of text.matchAll(/(?<![\d/])((?:19|20)\d{2})\s*-\s*((?:19|20)\d{2})(?![\d/])/g)) {
+    const lo = Math.min(Number(m[1]), Number(m[2])), hi = Math.max(Number(m[1]), Number(m[2]))
+    if (s.start >= lo && s.start <= hi) return true
+  }
   const [a, b] = s.short.includes('/') ? s.short.split('/') : [s.short, '']
   if (b && (text.includes(s.short) || new RegExp(`(?<!\\d)${a}\\s*-\\s*(?:${a.slice(0, 2)})?${b}(?!\\d)`).test(text))) return true
-  // A bare year (no season slash after it) matches the starting year only.
-  return new RegExp(`(?<![\\d/-])${s.start}(?![\\d/]|\\s*-\\s*\\d)`).test(text)
+  // A bare year (no season slash after it) matches the starting year, or the season's end year
+  // (a calendar-year award "2026" for 2025/26).
+  const years4 = b ? [s.start, Number(`${a.slice(0, 2)}${b}`) + (Number(b) < Number(a.slice(2)) ? 100 : 0)] : [s.start]
+  return years4.some((y) => new RegExp(`(?<![\\d/-])${y}(?![\\d/]|\\s*-\\s*\\d)`).test(text))
 }
 
 export type SeasonHonour = { playerId: number; name: string; slug: string; title: string; years: string }
@@ -58,13 +65,15 @@ export function honoursForSeason(players: readonly HonourPlayer[], seasonName: s
 
 export type ResultSummary = { played: number; won: number; lost: number; other: number; winRate: number | null }
 
-/** Club-wide results for a season: finished games only. `other` is a draw, tie, no result or abandonment. */
+/**
+ * Club-wide results for a season. Abandoned games are not counted as played. `winRate` is wins as a
+ * share of games played (draws, ties and no results count in the denominator). `other` is a draw, tie or no result.
+ */
 export function summariseResults(games: readonly Game[]): ResultSummary {
-  const fin = games.filter(isFinished)
+  const fin = games.filter((g) => isFinished(g) && g.status !== 'ABANDONED')
   let won = 0, lost = 0
   for (const g of fin) {
     const o = g.club.outcome ?? ''
-    if (g.status === 'ABANDONED') continue
     if (o.startsWith('WON')) won++
     else if (o.startsWith('LOST')) lost++
   }

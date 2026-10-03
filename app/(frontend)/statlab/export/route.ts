@@ -19,7 +19,8 @@ export async function GET(request: Request): Promise<Response> {
       'Content-Type': 'text/csv; charset=utf-8',
       // The scope is a whitelisted value; no user input reaches this header.
       'Content-Disposition': `attachment; filename="langlang-statlab-${params.scope}.csv"`,
-      'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=60',
+      // Short: hiding a player is a privacy action and a route-handler response is not purged by revalidate*.
+      'Cache-Control': 'public, s-maxage=60',
       'X-Robots-Tag': 'noindex',
       ...(truncated ? { 'X-Export-Truncated': '1' } : {}),
     },

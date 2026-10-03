@@ -31,7 +31,17 @@ const notFound = () =>
 const asDataUri = (buf: Buffer, type: string) => `data:${type};base64,${buf.toString('base64')}`
 
 /** The club crest as a data URI satori can draw: the configured logo when PNG/JPEG, else the bundled PNG, else none. */
+let crestCache: { key: string; at: number; value: string | null } | null = null
+const CREST_TTL_MS = 10 * 60 * 1000
+
 async function loadCrest(logoUrl: string): Promise<string | null> {
+  if (crestCache && crestCache.key === logoUrl && Date.now() - crestCache.at < CREST_TTL_MS) return crestCache.value
+  const value = await loadCrestUncached(logoUrl)
+  crestCache = { key: logoUrl, at: Date.now(), value }
+  return value
+}
+
+async function loadCrestUncached(logoUrl: string): Promise<string | null> {
   try {
     if (/^https?:\/\//i.test(logoUrl)) {
       const res = await fetch(logoUrl, { signal: AbortSignal.timeout(LOGO_TIMEOUT_MS) })
@@ -63,6 +73,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   if (!player) return notFound()
 
   const season = parseCardSeason(url.searchParams.get('season'), data.seasons.map((s) => s.seasonName))
+  // One cache entry per card: redirect any non-canonical query (extras, reordering) to the canonical URL.
+  const query = new URLSearchParams()
+  if (format !== 'og') query.set('format', format)
+  if (season) query.set('season', season)
+  const canonical = `${url.pathname}${query.size ? `?${query}` : ''}`
+  if (`${url.pathname}${url.search}` !== canonical) {
+    return new Response(null, { status: 308, headers: { Location: canonical, 'Cache-Control': 'public, s-maxage=300', 'X-Robots-Tag': 'noindex' } })
+  }
   const scoped = filterRows(data.rows, { cats: settings.defaultIncludedCategories, rules: settings.gradeRules }).filter((r) => r.playerId === player.id)
   const rows = season ? scoped.filter((r) => r.seasonName === season) : scoped
   const counts = (season ? mergeBySeason(rows)[0]?.counts : careerOf(rows)[0]?.counts) ?? EMPTY_COUNTS

@@ -12,5 +12,5 @@ export function SubHeading({ title, count, id }: { title: string; count?: number
 }
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey-light">{children}</p>
+  return <p className="rounded-xl bg-brand-stone p-8 text-center text-sm text-brand-grey">{children}</p>
 }

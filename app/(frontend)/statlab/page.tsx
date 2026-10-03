@@ -39,7 +39,7 @@ export default async function StatLabPage({ searchParams }: Props) {
   const raw = await searchParams
   const [club, lab] = await Promise.all([getClub(), runStatLab(raw)])
   const copy = club.pageCopy.statlab
-  const { params, result, data, settings, cats, hasJuniors } = lab
+  const { params, result, data, settings, cats, categories } = lab
   const grades = gradeNames(filterRows(data.rows, { cats, rules: settings.gradeRules }))
   const shown = result.rows.slice(0, PAGE_ROWS)
   const id = identityColumns(params.scope)
@@ -72,9 +72,9 @@ export default async function StatLabPage({ searchParams }: Props) {
           </ul>
         </div>
 
-        <StatLabForm params={params} seasons={data.seasons.map((s) => s.seasonName)} grades={grades} showJuniors={hasJuniors} />
+        <StatLabForm params={params} seasons={data.seasons.map((s) => s.seasonName)} grades={grades} categories={categories} selected={cats} />
 
-        <div className="space-y-3">
+        <div id="lab-results" className="scroll-mt-24 space-y-3">
           <SubHeading title="Your table" count={result.total} />
           <p className="text-sm text-brand-grey">
             Figures {params.season === ALL ? since : params.season}. {copy.coverageNote}
@@ -98,7 +98,7 @@ export default async function StatLabPage({ searchParams }: Props) {
               </caption>
               <TableHeader>
                 <TableRow className="border-brand-black/10 hover:bg-transparent">
-                  <TableHead scope="col" aria-sort={ariaSort('name')} className="text-brand-grey">
+                  <TableHead scope="col" aria-sort={ariaSort('name')} className="sticky left-0 z-10 bg-white text-brand-grey">
                     <Link href={sortHref('name')} className="hover:text-brand-black hover:underline">Player</Link>
                   </TableHead>
                   {id.map((c) => (
@@ -118,7 +118,7 @@ export default async function StatLabPage({ searchParams }: Props) {
               <TableBody>
                 {shown.map((r, i) => (
                   <TableRow key={`${r.playerId}-${r.season}-${r.team}-${i}`} className="border-brand-black/5 hover:bg-brand-stone/60">
-                    <TableCell className="whitespace-nowrap font-semibold text-brand-black">
+                    <TableCell className="sticky left-0 z-10 whitespace-nowrap bg-white font-semibold text-brand-black">
                       <Link href={`/players/${r.slug}`} className="hover:text-brand-gold-deep hover:underline">{r.name}</Link>
                     </TableCell>
                     {id.map((c) => (

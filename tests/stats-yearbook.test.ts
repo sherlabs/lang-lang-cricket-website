@@ -25,7 +25,7 @@ describe('honourMentionsSeason', () => {
   const S = 'Summer 2025/26'
   it.each([
     ['2025/26', true], ['2025-26', true], ['2025–26', true], ['2025', true], ['2023/24 - 2025/26', true], ['2025/2026', false],
-    ['2024/25', false], ['2024', false], ['2026', false], ['unknown', false], ['', false], ['2024/25 - 2025/26', true], ['2025 to 2027', true],
+    ['2024/25', false], ['2024', false], ['2026', true], ['2023-2026', true], ['2010–2012', false], ['2025-2027', true], ['2022-2024', false], ['unknown', false], ['', false], ['2024/25 - 2025/26', true], ['2025 to 2027', true],
   ])('%s -> %s', (years, expected) => {
     expect(honourMentionsSeason(years, S)).toBe(expected)
   })
@@ -39,6 +39,11 @@ describe('honourMentionsSeason', () => {
       { id: 2, name: 'Amy', slug: 'amy', honours: [{ years: '2025', title: 'Best and Fairest' }] },
     ]
     expect(honoursForSeason(players, S).map((h) => [h.name, h.title])).toEqual([['Amy', 'Best and Fairest'], ['Zed', 'Best and Fairest']])
+  })
+  it('a range of bare years covers the seasons that start inside it', () => {
+    expect(honourMentionsSeason('2010-2012', 'Summer 2011/12')).toBe(true)
+    expect(honourMentionsSeason('2023-2026', 'Summer 2025/26')).toBe(true)
+    expect(honourMentionsSeason('2010-2012', 'Summer 2013/14')).toBe(false)
   })
   it('a season name with no year matches nothing', () => {
     expect(seasonParts('Summer')).toBeNull()
@@ -59,7 +64,7 @@ describe('results', () => {
     game({ id: '6', outcome: 'WON', gradeName: 'B Grade' }),
   ]
   it('summarises finished games only', () => {
-    expect(summariseResults(games)).toEqual({ played: 5, won: 2, lost: 1, other: 2, winRate: 40 })
+    expect(summariseResults(games)).toEqual({ played: 4, won: 2, lost: 1, other: 1, winRate: 50 })
     expect(summariseResults([])).toEqual({ played: 0, won: 0, lost: 0, other: 0, winRate: null })
   })
   it('groups by grade, skipping unfinished games', () => {

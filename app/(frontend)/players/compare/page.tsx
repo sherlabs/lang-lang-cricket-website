@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { JsonLd } from '@/components/json-ld'
 import { PageHeader } from '@/components/page-header'
 import { CompareTable, SeasonSplitTable } from '@/components/stats/compare-table'
+import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { ShareButton } from '@/components/stats/share-button'
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { getClub } from '@/lib/club'
@@ -71,6 +72,7 @@ export default async function ComparePage({ searchParams }: Props) {
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Players', href: '/players' }, { name: 'Compare', href: '/players/compare' }], club)} />
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
       <section className="container-site space-y-8 py-12 lg:py-16">
+        <StatsSubNav current="/players/compare" />
         <form method="get" action="/players/compare" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">
           <div>
             <label htmlFor="cmp-a" className="eyebrow">First player</label>

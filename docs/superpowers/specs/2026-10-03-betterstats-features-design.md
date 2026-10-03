@@ -273,3 +273,14 @@ Rejected: none outright. Not verified here (to be confirmed during implementatio
 - The `overs` metric value is balls/6 (true decimal overs) while it displays in cricket notation, so a `min.overs` of 12.3 means 12.3 true overs, not 12.3 cricket overs.
 - Strike rate is career runs over career balls; a few legacy `player_seasons` rows have runs but no recorded balls, which inflates SR for affected players.
 - `/matches` and yearbook results include junior grades (consistent with `/fixtures`), while yearbook stat leaders exclude them by default.
+
+## Review follow-ups (definitions and limits)
+
+- Win rate on yearbooks is wins as a share of games played; abandoned games are not counted as played. Draws, ties and no results stay in the denominator.
+- Honour years: a bare-year range ("2023-2026") covers every season that starts inside it; a bare year matches the season's start year or its end year.
+- High score board: a 0 not out is never ranked.
+- StatLab CSV writes overs and best bowling as text (leading apostrophe) so spreadsheets do not read them as decimals or dates. Export cache is 60s because hiding a player is a privacy action; minimums are quantised to 0.1 to bound distinct URLs.
+- Milestone "partial" (earlier history not in the database) is decided per key.
+- Grade categories are chosen with a checkbox group (`cat=` repeated) on /stats and /statlab; `juniors=1` remains as a legacy alias.
+- The milestone strip shows on /players and /stats. Compare is in the stats sub-nav; the seeded footer links StatLab and Compare (existing sites keep their stored footer until edited in the admin).
+- Not done: the player profile still computes league ranks per request (React `cache()` de-duplicates profile and settings lookups only); a Vercel firewall rate limit on /statlab/export is a deployment setting.

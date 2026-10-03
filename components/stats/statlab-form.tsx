@@ -1,4 +1,6 @@
+import { CategoryChecks } from '@/components/stats/category-checks'
 import { ColumnPicker } from '@/components/stats/column-picker'
+import type { GradeCategory } from '@/lib/stats/categories'
 import { METRICS } from '@/lib/stats/metrics'
 import { ALL } from '@/lib/stats/query-string'
 import { SCOPES, SCOPE_LABELS, type StatLabParams } from '@/lib/stats/statlab'
@@ -11,17 +13,18 @@ export function StatLabForm({
   params,
   seasons,
   grades,
-  showJuniors,
+  categories,
+  selected,
 }: {
   params: StatLabParams
   seasons: string[]
   grades: string[]
-  showJuniors: boolean
+  categories: GradeCategory[]
+  selected: GradeCategory[]
 }) {
   const sortKey = `${params.sort.key}.${params.sort.dir}`
   return (
     <form method="get" action="/statlab" className="space-y-6 rounded-2xl bg-white p-5 shadow-card ring-1 ring-brand-black/5 sm:p-6">
-      {params.cats && <input type="hidden" name="cat" value={params.cats.join(',')} />}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label htmlFor="lab-scope" className="eyebrow">Rows</label>
@@ -66,22 +69,18 @@ export function StatLabForm({
             <input type="checkbox" name="active" value="1" defaultChecked={params.active} className="h-4 w-4 accent-brand-gold" />
             Active players only
           </label>
-          {showJuniors && (
-            <label className="flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-black">
-              <input type="checkbox" name="juniors" value="1" defaultChecked={params.juniors} className="h-4 w-4 accent-brand-gold" />
-              Include juniors
-            </label>
-          )}
         </div>
       </div>
+      <CategoryChecks categories={categories} selected={selected} />
 
       <details open className="group">
-        <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand-gold-deep hover:text-brand-black">Choose columns</summary>
+        <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand-gold-deep hover:text-brand-black">Choose columns (tap to hide or show)</summary>
         <div className="mt-3"><ColumnPicker params={params} /></div>
       </details>
 
       <div className="flex flex-wrap gap-3">
         <button type="submit" className="min-h-11 rounded-md bg-brand-black px-5 text-sm font-semibold text-white transition hover:bg-brand-charcoal">Build table</button>
+        <a href="#lab-results" className="inline-flex min-h-11 items-center rounded-md px-4 text-sm font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black sm:hidden">Jump to your table</a>
         <a href="/statlab" className="inline-flex min-h-11 items-center rounded-md px-4 text-sm font-semibold text-brand-grey underline underline-offset-2 hover:text-brand-black">Reset</a>
       </div>
     </form>

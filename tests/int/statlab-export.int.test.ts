@@ -39,7 +39,7 @@ describe('GET /statlab/export', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('text/csv; charset=utf-8')
     expect(res.headers.get('content-disposition')).toBe('attachment; filename="langlang-statlab-season.csv"')
-    expect(res.headers.get('cache-control')).toBe('public, s-maxage=600, stale-while-revalidate=60')
+    expect(res.headers.get('cache-control')).toBe('public, s-maxage=60')
     expect(res.headers.get('x-robots-tag')).toBe('noindex')
     expect(res.headers.get('x-export-truncated')).toBeNull()
     expect((await lines(res))[0]).toBe('Player,Season,Grades,Runs,Wickets')

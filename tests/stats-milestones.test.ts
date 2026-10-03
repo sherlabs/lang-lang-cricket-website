@@ -47,11 +47,19 @@ describe('milestonesFor', () => {
     const m = milestonesFor({
       seasons: mergeBySeason(rowsFor(1, [10, 10, 10])), manualYears: '1998–2024', baseline: { games: 65, runs: 0, wickets: 0, catches: 0 }, ...base,
     })
-    expect(m.partial).toBe(false)
+    // Decided per key: games has a baseline (complete), the other keys still lack earlier history.
+    expect(m.partial).toBe(true)
     expect(m.totals.games).toBe(95)
     expect(m.approaching).toContainEqual({ key: 'games', threshold: 100, current: 95, remaining: 5 })
     // 50 was crossed before the window, so there is no season to report; 100 is not yet reached
     expect(m.achieved.find((a) => a.key === 'games' && a.threshold === 50)).toMatchObject({ reachedIn: null, sinceWindow: false })
+  })
+  it('partial is decided per key: a runs-only baseline leaves wickets and catches flagged', () => {
+    const m = milestonesFor({
+      seasons: mergeBySeason(rowsFor(1, [10, 10, 10], [100, 0, 0])), manualYears: '1998–2024', baseline: { games: 0, runs: 480, wickets: 0, catches: 0 }, ...base,
+    })
+    expect(m.achieved.find((a) => a.key === 'runs' && a.threshold === 500)).toMatchObject({ sinceWindow: false })
+    expect(m.approaching.some((a) => a.key === 'wickets' || a.key === 'catches')).toBe(false)
   })
   it('baseline: crossing inside the window reports the season', () => {
     const m = milestonesFor({

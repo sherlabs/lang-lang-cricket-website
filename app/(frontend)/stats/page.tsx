@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/json-ld'
 import { PageHeader } from '@/components/page-header'
+import { MilestoneStrip } from '@/components/stats/milestone-strip'
 import { FilterBar } from '@/components/stats/filter-bar'
 import { LeaderboardTable, type LeaderboardRow } from '@/components/stats/leaderboard-table'
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
@@ -8,6 +9,7 @@ import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { getClub } from '@/lib/club'
 import { getStatsSettings } from '@/lib/site-settings'
 import { availableCategories, boardContext, buildLeaderboard, filterRows, gradeNames } from '@/lib/stats/leaderboard'
+import { milestoneBoard } from '@/lib/stats/milestone-board'
 import { GROUP_LABELS, getMetric, leaderboardMetrics } from '@/lib/stats/metrics'
 import { ALL, effectiveCategories, parseStatsParams, statsHref } from '@/lib/stats/query-string'
 import { qualifierText } from '@/lib/stats/qualify'
@@ -42,11 +44,16 @@ const TOP_FULL = 50
 const formatAsOf = (d: Date) => new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium', timeZone: 'Australia/Melbourne' }).format(d)
 
 export default async function StatsPage({ searchParams }: Props) {
-  const [club, settings, data, asOf] = await Promise.all([
+  const [club, settings, data, asOf, board] = await Promise.all([
     getClub(),
     getStatsSettings(),
     getVisibleStatData(),
     getLastSyncAt().catch(() => null),
+    // The strip is a bonus: if it cannot be built the leaderboards still render.
+    milestoneBoard().catch((err) => {
+      console.warn('[stats] milestone strip unavailable:', (err as Error).message)
+      return null
+    }),
   ])
   const copy = club.pageCopy.stats
   const rules = settings.gradeRules
@@ -57,7 +64,7 @@ export default async function StatsPage({ searchParams }: Props) {
   // A grade outside the chosen categories is not selectable, so treat it as "All grades" rather than show nothing.
   const gradeOptions = gradeNames(filterRows(data.rows, { cats, rules }))
   const params = parsed.grade !== ALL && !gradeOptions.includes(parsed.grade) ? { ...parsed, grade: ALL } : parsed
-  const hasJuniors = availableCategories(data.rows, rules).includes('junior')
+  const categories = availableCategories(data.rows, rules)
   const scopeLabel = params.season === ALL ? sinceLabel(data.rows) : params.season
   const scopeText = `${scopeLabel}${params.grade !== ALL ? `, ${params.grade}` : ''}`
 
@@ -92,11 +99,15 @@ export default async function StatsPage({ searchParams }: Props) {
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
       <section className="container-site space-y-8 py-12 lg:py-16">
         <StatsSubNav current="/stats" />
+        {board && (
+          <MilestoneStrip heading={club.pageCopy.players.milestones.heading} note={board.note} approaching={board.approaching} achieved={board.achievedNow} windowLabel={board.windowLabel} />
+        )}
         <FilterBar
           params={params}
           seasons={data.seasons.map((s) => s.seasonName)}
           grades={gradeOptions}
-          showJuniors={hasJuniors}
+          categories={categories}
+          selected={cats}
         />
 
         <div className="space-y-2">

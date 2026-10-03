@@ -44,15 +44,17 @@ describe('GET /api/public/players/[slug]/card', () => {
     expect(size(Buffer.from(await res.arrayBuffer()))).toEqual({ width: 1080, height: 1080 })
   }, 60_000)
 
-  it('ignores an unknown format and an unknown season', async () => {
-    const res = await call(PLANTED.careerLeader.slug, '?format=giant&season=Summer%201999%2F00')
-    expect(res.status).toBe(200)
-    expect(size(Buffer.from(await res.arrayBuffer()))).toEqual({ width: 1200, height: 630 })
+  it('redirects an unknown format and an unknown season to the canonical card URL', async () => {
+    const res = await call(PLANTED.careerLeader.slug, '?format=giant&season=Summer%201999%2F00&x=1')
+    expect(res.status).toBe(308)
+    expect(res.headers.get('location')).toBe(`/api/public/players/${PLANTED.careerLeader.slug}/card`)
   }, 60_000)
 
-  it('accepts a known season', async () => {
-    const res = await call(PLANTED.careerLeader.slug, '?season=Summer%202025%2F26')
+  it('accepts a known season at its canonical URL, and redirects any other spelling', async () => {
+    const res = await call(PLANTED.careerLeader.slug, '?season=Summer+2025%2F26')
     expect(res.status).toBe(200)
+    const other = await call(PLANTED.careerLeader.slug, '?season=Summer%202025%2F26&x=2')
+    expect(other.status).toBe(308)
   }, 60_000)
 
   it('404s a hidden player with a short cache, same as an unknown player', async () => {

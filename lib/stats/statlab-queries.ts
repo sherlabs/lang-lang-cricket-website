@@ -20,5 +20,5 @@ export async function runStatLab(raw: Parameters<typeof parseStatLabParams>[0]) 
     rules: settings.gradeRules,
     activeIds: new Set(milestonePlayers.filter((p) => p.active).map((p) => p.id)),
   })
-  return { params, result, data, settings, cats, hasJuniors: availableCategories(data.rows, settings.gradeRules).includes('junior') }
+  return { params, result, data, settings, cats, categories: availableCategories(data.rows, settings.gradeRules) }
 }

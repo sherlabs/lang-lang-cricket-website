@@ -34,7 +34,9 @@ export function rankBy<T extends { counts: SeasonCounts }>(items: readonly T[], 
     const v = metric.value(it.counts)
     if (v === null || !Number.isFinite(v)) continue
     if (metric.qualifier === 'count') {
-      if (v > 0) eligible.push(it)
+      // `hs` carries a +0.5 not-out tie-break, so gate on the real score: a "0*" is not a high score.
+      const real = metric.key === 'hs' ? it.counts.batHighScore : v
+      if (real > 0) eligible.push(it)
     } else if (qualifies(metric.qualifier, it.counts, scope)) eligible.push(it)
     else unqualified.push(it)
   }

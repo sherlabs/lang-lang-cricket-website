@@ -4,7 +4,7 @@ import { parseCategories, type GradeCategory } from './categories'
 import { csvCell, toCsv, type CsvCell } from './csv'
 import { filterRows } from './leaderboard'
 import { getMetric, METRIC_KEYS, type Metric } from './metrics'
-import { ALL, first, MAX_PARAM_LENGTH } from './query-string'
+import { ALL, catParam, first, MAX_PARAM_LENGTH } from './query-string'
 
 /**
  * StatLab-lite (spec A11): column picker, filters, sort and thresholds over the same metric
@@ -84,10 +84,10 @@ export function parseStatLabParams(raw: Raw, known: StatLabKnown): StatLabParams
     const key = k.slice(4)
     if (!METRIC_KEYS.includes(key)) continue
     const n = Number(clean(first(v)))
-    if (Number.isFinite(n) && n > 0) mins[key] = Math.min(n, MAX_MIN)
+    if (Number.isFinite(n) && n > 0) mins[key] = Math.round(Math.min(n, MAX_MIN) * 10) / 10 // quantised: bounds the distinct cacheable URLs
   }
   const ms = Number(clean(first(raw.maxseasons)))
-  const cats = parseCategories(clean(first(raw.cat)))
+  const cats = parseCategories(clean(catParam(raw.cat)))
   return {
     scope,
     season: seasonIn && known.seasons.includes(seasonIn) ? seasonIn : ALL,
@@ -223,6 +223,9 @@ export function identityColumns(scope: StatLabScope): { key: 'season' | 'team' |
 export function metricCell(m: Metric, c: SeasonCounts): CsvCell {
   const f = m.format(c)
   if (f === '–') return null
+  // Overs ("12.3" = 12 overs 3 balls) and best figures ("5/21") must stay text; a spreadsheet would
+  // read them as a decimal or a date. The apostrophe is the usual text marker and toCsv keeps it.
+  if (m.key === 'overs' || /\//.test(f)) return `'${f}`
   const n = Number(f)
   return Number.isFinite(n) ? n : f
 }

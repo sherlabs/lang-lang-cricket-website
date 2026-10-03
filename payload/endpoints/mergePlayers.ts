@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { playerTables } from '../../lib/players/db'
 import { planMerge } from '../../lib/players/merge'
+import { revalidatePlayerPages } from '../../lib/players/revalidate'
 import { pickCounts } from '../../lib/players/season-math'
 import { revalidatePaths } from '../hooks/revalidate'
 
@@ -92,7 +93,8 @@ export const mergePlayersEndpoint: Endpoint = {
       await tx.delete(t.players).where(eq(t.players.id, sId))
     })
 
-    await revalidatePaths(['/players', `/players/${source.slug}`, `/players/${target.slug}`])
+    await revalidatePlayerPages()
+    await revalidatePaths([`/players/${source.slug}`, `/players/${target.slug}`, '/honours'])
     return Response.json({ ok: true, targetId: tId })
   },
 }

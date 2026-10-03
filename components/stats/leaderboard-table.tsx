@@ -43,6 +43,10 @@ export function LeaderboardTable({
               <TableCell><RankBadge rank={r.rank} badge={badgeFor(r.rank)} /></TableCell>
               <TableCell className="font-semibold text-brand-black">
                 <Link href={`/players/${r.slug}`} className="hover:text-brand-gold-deep hover:underline">{r.name}</Link>
+                {/* The context column is hidden on phones: show it under the name so the qualifier basis is not lost. */}
+                <span className="block text-xs font-normal tabular-nums text-brand-grey sm:hidden">
+                  <span className="sr-only">{contextLabel}: </span>{r.context}
+                </span>
               </TableCell>
               <TableCell className="text-right font-semibold tabular-nums text-brand-black">{r.value}</TableCell>
               <TableCell className="hidden text-right tabular-nums text-brand-charcoal sm:table-cell">{r.context}</TableCell>

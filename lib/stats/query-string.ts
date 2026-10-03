@@ -8,6 +8,9 @@ export function first(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v
 }
 
+/** `?cat=a,b` or repeated `?cat=a&cat=b` (checkbox group) as one comma list. */
+export const catParam = (v: string | string[] | undefined): string | undefined => (Array.isArray(v) ? v.join(',') : v)
+
 export const MAX_PARAM_LENGTH = 80
 const clean = (v: string | undefined): string | undefined => {
   const t = v?.trim()
@@ -48,7 +51,7 @@ export function parseStatsParams(raw: Raw, known: StatsKnown): StatsParams {
       : groupOk
         ? (leaderboardMetrics(groupOk)[0]?.key ?? DEFAULT_METRIC)
         : DEFAULT_METRIC
-  const cats = parseCategories(clean(first(raw.cat)))
+  const cats = parseCategories(clean(catParam(raw.cat)))
   const juniors = first(raw.juniors) === '1'
   return {
     season: seasonIn && known.seasons.includes(seasonIn) ? seasonIn : ALL,

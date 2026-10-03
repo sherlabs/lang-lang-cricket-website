@@ -673,6 +673,8 @@ export const clubDefaults: ClubDefaults = {
           { href: '/stats', label: 'Stats' },
           { href: '/records', label: 'Records' },
           { href: '/honours', label: 'Honours' },
+          { href: '/statlab', label: 'StatLab' },
+          { href: '/players/compare', label: 'Compare players' },
           { href: '/yearbooks', label: 'Yearbooks' },
           { href: '/history', label: 'History' },
           { href: '/contact', label: 'Contact' },

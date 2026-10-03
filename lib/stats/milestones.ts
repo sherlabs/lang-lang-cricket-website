@@ -54,13 +54,16 @@ export function milestonesFor(o: {
   config: MilestoneConfig
 }): PlayerMilestones {
   const baseline = o.baseline ?? NO_BASELINE
-  const recorded = MILESTONE_KEYS.some((k) => baseline[k] > 0)
-  const partial = !recorded && hasEarlierHistory(o.manualYears ?? '', o.windowStart)
+  const earlier = hasEarlierHistory(o.manualYears ?? '', o.windowStart)
+  let partial = false
   const oldestFirst = [...o.seasons].sort((a, b) => b.seasonOrder - a.seasonOrder)
   const achieved: Achieved[] = []
   const approaching: Approaching[] = []
   const totals = { ...NO_BASELINE }
   for (const key of MILESTONE_KEYS) {
+    // Partial per key: no recorded baseline for this key while earlier history exists.
+    const keyPartial = earlier && baseline[key] === 0
+    if (keyPartial) partial = true
     const stored = oldestFirst.reduce((n, s) => n + COUNT_OF[key](s.counts), 0)
     const total = stored + baseline[key]
     totals[key] = total
@@ -68,16 +71,16 @@ export function milestonesFor(o: {
     for (const t of thresholds) {
       if (total < t) break
       let reachedIn: string | null = null
-      if (!partial && baseline[key] < t) {
+      if (!keyPartial && baseline[key] < t) {
         let cum = baseline[key]
         for (const s of oldestFirst) {
           cum += COUNT_OF[key](s.counts)
           if (cum >= t) { reachedIn = shortSeason(s.seasonName); break }
         }
       }
-      achieved.push({ key, threshold: t, reachedIn, sinceWindow: partial })
+      achieved.push({ key, threshold: t, reachedIn, sinceWindow: keyPartial })
     }
-    if (partial) continue
+    if (keyPartial) continue
     const next = thresholds.find((t) => t > total)
     if (next !== undefined && next - total <= o.config.window[key]) approaching.push({ key, threshold: next, current: total, remaining: next - total })
   }

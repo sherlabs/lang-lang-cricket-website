@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, notInArray, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
-import { revalidatePaths } from '@/payload/hooks/revalidate'
+import { revalidatePlayerPages } from './revalidate'
 import { getClubTeams, getGameSummary, getSeasonGroups, getTeamGames, isJuniorGrade } from '@/lib/playhq/queries'
 import { mapLimit } from '@/lib/playhq/client'
 import { aggregatePlayers } from '@/lib/playhq/players'
@@ -19,21 +19,6 @@ export type SyncResult = { status: 'ok' | 'error' | 'locked'; playersCreated: nu
 
 export function isLocked(latest: { status: string | null; startedAt: Date } | undefined, now: Date): boolean {
   return !!latest && latest.status === 'running' && now.getTime() - latest.startedAt.getTime() < LOCK_MS
-}
-
-/**
- * `/players`, every `/players/[slug]` page and the stats pages (tag `player-stats`). The legacy
- * `/history` call is dropped (nothing there reads players). `revalidatePaths` swallows the
- * errors Next throws outside a request (`payload run`, ETL, tests).
- */
-export async function revalidatePlayerPages(): Promise<void> {
-  await revalidatePaths(['/players', '/stats', '/records', '/players/compare'], undefined, ['player-stats'])
-  try {
-    const { revalidatePath } = await import('next/cache')
-    revalidatePath('/players/[slug]', 'page')
-  } catch {
-    // outside a Next request (tests, `payload run`): nothing to revalidate
-  }
 }
 
 /** Every senior club team's aggregated stats, newest senior season group = order 0. Throws on any PlayHQ failure. */

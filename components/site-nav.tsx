@@ -8,8 +8,15 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon, Cancel01Icon, Mail01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
-const isActivePath = (pathname: string, href: string) =>
-  href === '/' ? pathname === '/' : pathname.startsWith(href)
+// Pages that live under the Stats item without sharing its URL prefix.
+const STATS_FAMILY = ['/stats', '/records', '/honours', '/statlab', '/yearbooks', '/matches', '/players/compare']
+const isActivePath = (pathname: string, href: string) => {
+  if (href === '/') return pathname === '/'
+  if (href === '/stats') return STATS_FAMILY.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  // /players/compare belongs to Stats, not to Players.
+  if (href === '/players' && (pathname === '/players/compare' || pathname.startsWith('/players/compare/'))) return false
+  return pathname.startsWith(href)
+}
 
 // Shared desktop item styling: the gold underline sits on the header's bottom edge.
 const desktopItemClass = cn(

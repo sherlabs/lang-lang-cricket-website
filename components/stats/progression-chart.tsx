@@ -20,12 +20,20 @@ export function ProgressionChart({ series, idPrefix }: { series: Series; idPrefi
   const y = (v: number) => TOP + plotH - (v / max) * plotH
   const titleId = `${idPrefix}-t`, descId = `${idPrefix}-d`
   const desc = points.map((p) => `${p.label}: ${p.text}`).join('. ')
-  const line = points.flatMap((p, i) => (p.value === null ? [] : [`${x(i)},${y(p.value)}`])).join(' ')
+  // A missed season breaks the line: one polyline per run of consecutive seasons with a value.
+  const segments: string[] = []
+  let run: string[] = []
+  points.forEach((p, i) => {
+    if (p.value === null) { if (run.length) segments.push(run.join(' ')); run = [] } else run.push(`${x(i)},${y(p.value)}`)
+  })
+  if (run.length) segments.push(run.join(' '))
 
   return (
     <figure className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-brand-black/5">
       <figcaption className="display text-lg text-brand-black">{series.label}</figcaption>
-      <svg role="img" aria-labelledby={`${titleId} ${descId}`} viewBox={`0 0 ${W} ${H}`} className="mt-2 h-auto w-full" preserveAspectRatio="xMidYMid meet">
+      {/* Scrolls sideways rather than shrinking: at 375px a long career would scale the labels below legibility. */}
+      <div className="mt-2 overflow-x-auto">
+      <svg role="img" aria-labelledby={`${titleId} ${descId}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ minWidth: W, maxWidth: 'none' }} className="h-auto w-full" preserveAspectRatio="xMidYMid meet">
         <title id={titleId}>{series.label}</title>
         <desc id={descId}>{desc}</desc>
         <line x1={LEFT} x2={W - RIGHT} y1={TOP + plotH} y2={TOP + plotH} className="stroke-brand-black/15" strokeWidth={1} />
@@ -40,7 +48,9 @@ export function ProgressionChart({ series, idPrefix }: { series: Series; idPrefi
             )
           : (
             <>
-              <polyline points={line} fill="none" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="stroke-brand-gold-deep" />
+              {segments.map((pts) => (
+                <polyline key={pts} points={pts} fill="none" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="stroke-brand-gold-deep" />
+              ))}
               {points.map((p, i) =>
                 p.value === null ? null : (
                   <g key={p.seasonName}>
@@ -55,6 +65,7 @@ export function ProgressionChart({ series, idPrefix }: { series: Series; idPrefi
           <text key={p.seasonName} x={x(i)} y={H - 8} textAnchor="middle" className="fill-brand-grey text-[10px]">{p.label}</text>
         ))}
       </svg>
+      </div>
       <details className="mt-2 text-sm text-brand-grey">
         <summary className="min-h-11 cursor-pointer py-2 font-semibold text-brand-gold-deep">Show the numbers</summary>
         <table className="w-full text-left">

@@ -4,28 +4,12 @@ import { listPublicPlayers } from '@/lib/players/queries'
 import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 import { MilestoneStrip } from '@/components/stats/milestone-strip'
 import { getClub } from '@/lib/club'
-import { getStatsSettings } from '@/lib/site-settings'
-import { filterRows } from '@/lib/stats/leaderboard'
-import { buildMilestoneBoard } from '@/lib/stats/milestones'
-import { getMilestonePlayers, getVisibleStatData } from '@/lib/stats/queries'
-import { coverage, currentSeasonName, shortSeason } from '@/lib/stats/season-window'
+import { milestoneBoard } from '@/lib/stats/milestone-board'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   return { alternates: canonicalFor('/players'), ...pageSeo(await getClub(), 'players') }
-}
-
-async function milestoneBoard() {
-  const [settings, data, players] = await Promise.all([getStatsSettings(), getVisibleStatData(), getMilestonePlayers()])
-  const rows = filterRows(data.rows, { cats: settings.defaultIncludedCategories, rules: settings.gradeRules })
-  const windowStart = coverage(data.rows)?.from ?? null
-  const board = buildMilestoneBoard({
-    players, rows, windowStart, currentSeason: currentSeasonName(rows), onlyActive: true,
-    config: { thresholds: settings.milestoneThresholds, window: settings.approachWindow },
-  })
-  const windowLabel = windowStart ? shortSeason(windowStart) : null
-  return { ...board, windowLabel, note: windowLabel ? `Counts cover seasons since ${windowLabel} unless an earlier total has been recorded for the player. Updated after each nightly sync.` : '' }
 }
 
 export default async function PlayersPage() {
@@ -44,7 +28,7 @@ export default async function PlayersPage() {
       <section className="container-site py-16 lg:py-20">
         {board && (
           <MilestoneStrip
-            heading={`${copy.milestones.heading}${board.windowLabel ? ` (since ${board.windowLabel} unless a baseline is recorded)` : ''}`}
+            heading={copy.milestones.heading}
             note={board.note}
             approaching={board.approaching}
             achieved={board.achievedNow}

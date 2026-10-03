@@ -5,6 +5,7 @@ const LINKS = [
   { href: '/stats', label: 'Leaderboards' },
   { href: '/records', label: 'Records' },
   { href: '/honours', label: 'Honours' },
+  { href: '/players/compare', label: 'Compare' },
   { href: '/statlab', label: 'StatLab' },
   { href: '/yearbooks', label: 'Yearbooks' },
   { href: '/matches', label: 'Matches' },

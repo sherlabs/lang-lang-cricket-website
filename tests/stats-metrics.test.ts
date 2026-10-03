@@ -84,3 +84,14 @@ describe('rank', () => {
     expect([1, 2, 3, 4, 11, 12, 21, 22].map(ordinal)).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '21st', '22nd'])
   })
 })
+
+describe('high score board', () => {
+  it('does not rank a 0 not out', () => {
+    const items = [
+      { counts: counts({ batInnings: 2, batNotOuts: 1, batHighScore: 0, batHighScoreNotOut: true }) },
+      { counts: counts({ batInnings: 2, batNotOuts: 0, batHighScore: 12, batHighScoreNotOut: false }) },
+    ]
+    const r = rankBy(items, getMetric('hs')!, DEFAULT_QUALIFICATION.season)
+    expect(r.ranked.map((x) => x.display)).toEqual(['12'])
+  })
+})

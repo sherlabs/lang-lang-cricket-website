@@ -2,8 +2,9 @@ import { JsonLd } from '@/components/json-ld'
 import { playerJsonLd } from '@/lib/structured-data'
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
-import { getPlayerProfile } from '@/lib/players/queries'
+import { getPlayerProfile as loadPlayerProfile } from '@/lib/players/queries'
 import { baseOpenGraph, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
 import { battingView, bowlingView, initials } from '@/lib/players/view'
@@ -13,12 +14,16 @@ import { RankBadge } from '@/components/stats/rank-badge'
 import { ShareButton } from '@/components/stats/share-button'
 import { buildProfileExtras, splitJuniorSeasons } from '@/lib/players/profile-extras'
 import { careerTotals } from '@/lib/players/view'
-import { getStatsSettings } from '@/lib/site-settings'
+import { getStatsSettings as loadStatsSettings } from '@/lib/site-settings'
 import { getVisibleStatData } from '@/lib/stats/queries'
 import { describeAchieved, topAchieved } from '@/lib/stats/milestones'
 import { coverage, shortSeason, sinceLabel } from '@/lib/stats/season-window'
 
 export const dynamic = 'force-dynamic'
+
+// generateMetadata and the page both need these: de-duplicate within one request.
+const getPlayerProfile = cache(loadPlayerProfile)
+const getStatsSettings = cache(loadStatsSettings)
 
 type Props = {
   params: Promise<{ slug: string }>

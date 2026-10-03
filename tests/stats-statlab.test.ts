@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { METRIC_KEYS } from '@/lib/stats/metrics'
-import { DEFAULT_COLS, MAX_COLUMNS, MAX_MIN, buildStatLab, parseStatLabParams, rawFromSearchParams, statLabCsv, statLabHref, type StatLabParams } from '@/lib/stats/statlab'
+import { METRIC_KEYS, getMetric } from '@/lib/stats/metrics'
+import { DEFAULT_COLS, MAX_COLUMNS, MAX_MIN, buildStatLab, metricCell, parseStatLabParams, rawFromSearchParams, statLabCsv, statLabHref, type StatLabParams } from '@/lib/stats/statlab'
 import { row } from './stats-helpers'
 
 const known = { seasons: ['Summer 2024/25', 'Summer 2025/26'], grades: ['A Grade', 'B Grade'] }
@@ -138,5 +138,14 @@ describe('statLabCsv', () => {
     const lines = csv.trimEnd().split('\r\n')
     expect(lines[0]).toBe('# truncated to 1 of 2 rows')
     expect(lines).toHaveLength(3)
+  })
+})
+
+describe('metricCell text safety', () => {
+  it('keeps overs and best figures as text so a spreadsheet does not reinterpret them', () => {
+    const c = { ...row().counts, bowlBalls: 75, bowlBestWickets: 5, bowlBestRuns: 21 }
+    expect(metricCell(getMetric('overs')!, c)).toBe("'12.3")
+    expect(metricCell(getMetric('best')!, c)).toBe("'5/21")
+    expect(metricCell(getMetric('runs')!, c)).toBe(0)
   })
 })
