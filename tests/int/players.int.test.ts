@@ -227,6 +227,17 @@ describe('players: merge endpoint', () => {
   })
 })
 
+describe('players: merge picker query', () => {
+  it('MergePlayerField’s REST query (limit=0) lists every other player, not one page', async () => {
+    for (let i = 0; i < 12; i++) await payload.create({ collection: 'players', data: { firstName: `P${i}`, lastName: 'Q' }, context: ctx })
+    const self = (await payload.find({ collection: 'players', limit: 1, depth: 0 })).docs[0].id
+    const res = await rest('GET', `/players?where[id][not_equals]=${self}&limit=0&select[displayName]=true&sort=displayName&depth=0`, { token: editor })
+    expect(res.status).toBe(200)
+    expect(res.json.docs).toHaveLength(11)
+    expect(Object.keys(res.json.docs[0]).sort()).toEqual(['displayName', 'id'])
+  })
+})
+
 describe('players: public queries', () => {
   it('list and profile skip hidden players, sort seasons, keep honours order and resolve the photo URL', async () => {
     const media = await payload.create({
