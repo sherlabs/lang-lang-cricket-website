@@ -20,6 +20,10 @@ afterAll(async () => {
 })
 beforeEach(async () => {
   await resetPlayers(payload)
+  // Other files may leave submissions waiting for approval; this file counts on an empty queue.
+  for (const collection of ['stories', 'event-photos'] as const) {
+    await payload.delete({ collection, where: { status: { equals: 'pending' } }, overrideAccess: true, context: { disableRevalidate: true } }).catch(() => undefined)
+  }
 })
 
 async function addRun(values: Record<string, unknown>) {
