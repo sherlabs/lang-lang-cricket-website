@@ -23,6 +23,15 @@ describe('phqFetch', () => {
     expect(init.next).toEqual({ revalidate: 60, tags: ['playhq', 't'] })
   })
 
+  it('fresh bypasses the cache with no-store and no next options (Next rejects both)', async () => {
+    fetchMock.mockResolvedValue(json({ data: [] }))
+    await phqFetch('/v1/x', { revalidate: 60, tags: ['t'], fresh: true })
+    const [, init] = fetchMock.mock.calls[0]
+    expect(init.cache).toBe('no-store')
+    expect(init.next).toBeUndefined()
+    expect(init.headers['x-api-key']).toBe('key-123')
+  })
+
   it('throws PlayHQError on non-2xx', async () => {
     fetchMock.mockResolvedValue(json({ error: 'nope' }, 404))
     await expect(phqFetch('/v1/missing', { revalidate: 1 })).rejects.toBeInstanceOf(PlayHQError)

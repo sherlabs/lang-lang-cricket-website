@@ -1,6 +1,6 @@
 /**
  * players-sync.int (spec §15; replaces players-sync): `syncPlayers` against real Postgres with
- * the PlayHQ queries mocked (the scorecards are the recorded fixtures, mapped by the real
+ * the PlayHQ queries mocked (the raw summaries are the recorded fixtures, mapped by the real
  * `mapScorecard`). Covers a first run and a stable second run, the advisory-lock with two
  * concurrent starts, the stale-lock rule, the wipe guard, a PlayHQ failure leaving players
  * untouched, orphan healing, active flags with the `updated_at` bump, and the drizzle column keys.
@@ -28,7 +28,6 @@ const phq = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/playhq/queries', async () => {
-  const { mapScorecard } = await import('@/lib/playhq/scorecard')
   const group = (name: string, id: string) => ({ name, isJunior: false, status: 'COMPLETED', seasons: [{ id, status: 'COMPLETED', competitionName: 'Seniors', isJunior: false }] })
   const team = (id: string, name: string, gradeName: string) => ({ id, name, seasonId: 's', seasonName: 's', competitionName: 'Seniors', isJunior: false, gradeId: 'g', gradeName })
   return {
@@ -45,10 +44,9 @@ vi.mock('@/lib/playhq/queries', async () => {
       return []
     }),
     getTeamGames: vi.fn(async (t: { id: string }) => [{ id: t.id === B_GRADE ? twoDay.data.id : oneDay.data.id, status: 'FINAL' }]),
-    getGameSummary: vi.fn(async (id: string) => {
+    getRawGameSummary: vi.fn(async (id: string) => {
       if (phq.summariesFail) throw new Error('summary 500')
-      const raw = id === twoDay.data.id ? twoDay.data : oneDay.data
-      return mapScorecard(raw as never, ORG, false)
+      return id === twoDay.data.id ? twoDay.data : oneDay.data
     }),
     isJuniorGrade: vi.fn(() => false),
   }

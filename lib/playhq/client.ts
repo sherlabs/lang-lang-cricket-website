@@ -10,7 +10,8 @@ export class PlayHQError extends Error {
   }
 }
 
-export type FetchOpts = { revalidate: number; tags?: string[] }
+/** `fresh` bypasses the fetch cache entirely (`cache: 'no-store'`, no `next.revalidate`: Next rejects both). */
+export type FetchOpts = { revalidate: number; tags?: string[]; fresh?: boolean }
 
 function headers() {
   const key = process.env.PLAYHQ_CLIENT_ID
@@ -23,10 +24,12 @@ function headers() {
 }
 
 export async function phqFetch<T>(path: string, opts: FetchOpts): Promise<T> {
-  const res = await fetch(`${HOST}${path}`, {
-    headers: headers(),
-    next: { revalidate: opts.revalidate, tags: ['playhq', ...(opts.tags ?? [])] },
-  })
+  const res = await fetch(
+    `${HOST}${path}`,
+    opts.fresh
+      ? { headers: headers(), cache: 'no-store' }
+      : { headers: headers(), next: { revalidate: opts.revalidate, tags: ['playhq', ...(opts.tags ?? [])] } },
+  )
   if (!res.ok) throw new PlayHQError(res.status, path)
   return (await res.json()) as T
 }

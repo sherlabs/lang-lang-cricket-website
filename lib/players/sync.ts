@@ -1,16 +1,22 @@
 import { and, count, desc, eq, inArray, notInArray, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { revalidatePlayerPages } from './revalidate'
-import { getClubTeams, getGameSummary, getSeasonGroups, getTeamGames, isJuniorGrade } from '@/lib/playhq/queries'
-import { mapLimit } from '@/lib/playhq/client'
+import { getClubTeams, getRawGameSummary, getSeasonGroups, getTeamGames, isJuniorGrade } from '@/lib/playhq/queries'
+import { PLAYHQ_ORG_ID, mapLimit } from '@/lib/playhq/client'
+import { isSkip, mapMatchBundle, seasonStartYearOf, type MatchBundle, type SkipReason } from '@/lib/playhq/match-rows'
 import { aggregatePlayers } from '@/lib/playhq/players'
+import { mapScorecard } from '@/lib/playhq/scorecard'
+import type { RawGameSummary } from '@/lib/playhq/types'
+import { reconcileMatchStore, pairKey } from '@/lib/match-store/reconcile'
+import { relinkMatchPlayers, storedFixtureStamps, upsertMatchBundle } from '@/lib/match-store/write'
+import { revalidatePaths } from '../../payload/hooks/revalidate'
 import { chunk, playerTables } from './db'
 import { buildSyncPlan, type TeamAggregate } from './plan'
 
 /**
  * PlayHQ → players sync (spec §8.2) on `payload.db.drizzle`. Same steps and order as the legacy
  * sync: lock, collect (network only), heal, plan (pure), new players + aliases, wipe guard, one
- * transaction for seasons and active flags, mark the run, revalidate. Raw writes bypass the
+ * transaction for seasons and active flags, then the per-match store (own try/catch), mark the run, revalidate. Raw writes bypass the
  * collection hooks on purpose, so revalidation is explicit.
  */
 
@@ -21,32 +27,115 @@ export function isLocked(latest: { status: string | null; startedAt: Date } | un
   return !!latest && latest.status === 'running' && now.getTime() - latest.startedAt.getTime() < LOCK_MS
 }
 
-/** Every senior club team's aggregated stats, newest senior season group = order 0. Throws on any PlayHQ failure. */
-export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
+export type CollectedMatch = { bundle: MatchBundle; seasonName: string; teamId: string }
+export type CollectedData = {
+  /** Season aggregates of every FINAL game (the season rows are planned from these, as before). */
+  aggregates: TeamAggregate[]
+  /** The same aggregates restricted to the games that produced a stored match (what the reconciliation compares). */
+  matchAggregates: TeamAggregate[]
+  matches: CollectedMatch[]
+  skipped: { gameId: string; reason: SkipReason }[]
+  /** Games whose summary was fetched uncached because the fixture stamp differed from the stored one. */
+  refreshed: number
+}
+
+/**
+ * Every senior club team's season aggregates, newest senior season group = order 0, and from the
+ * SAME summary fetches (one PlayHQ call per game) the mapped match bundles. Throws on any PlayHQ
+ * failure above the per-game level. `stored` maps gameId to the fixture `updatedAt` stored with its
+ * match: a game that is new or whose stamp changed is fetched uncached, so a corrected scorecard is
+ * never served from the seven-day cache, and the one fresh object feeds both the season aggregate
+ * and the bundle so they cannot disagree.
+ */
+export async function collectSeniorData(opts: { stored?: ReadonlyMap<string, string | null> } = {}): Promise<CollectedData> {
   const groups = (await getSeasonGroups()).filter((g) => g.seasons.some((s) => !s.isJunior))
-  const out: TeamAggregate[] = []
+  const out: CollectedData = { aggregates: [], matchAggregates: [], matches: [], skipped: [], refreshed: 0 }
   for (const [order, group] of groups.entries()) {
     const teams = await getClubTeams(group)
     const clubIds = new Set(teams.map((t) => t.id))
+    const seasonStartYear = seasonStartYearOf(group.name)
     // Season-level flag OR grade-name heuristic, same as getGameSummaryAuto: a U-age grade
     // inside a senior-classified season must never put junior names into players tables.
     for (const team of teams.filter((t) => !t.isJunior && !isJuniorGrade(t.gradeName ?? ''))) {
       const finals = (await getTeamGames(team, clubIds)).filter((g) => g.status === 'FINAL')
       // One broken scorecard shouldn't block every future sync: skip it (logged) and
       // let the next run retry. Season/team/fixture failures above still abort.
-      const cards = await mapLimit(finals, 5, (g) =>
-        getGameSummary(g.id, false, 'FINAL').catch((err) => {
+      const fetched = await mapLimit(finals, 5, async (g) => {
+        const known = opts.stored?.has(g.id) ?? false
+        const fresh = !known || (g.updatedAt ?? null) !== (opts.stored?.get(g.id) ?? null)
+        try {
+          const raw: RawGameSummary = await getRawGameSummary(g.id, { status: 'FINAL', fresh })
+          return { game: g, raw, refreshed: fresh && known }
+        } catch (err) {
           console.error('[players] skipping game summary', g.id, err instanceof Error ? err.message : err)
           return null
+        }
+      })
+      const ok = fetched.filter((f): f is NonNullable<typeof f> => f !== null)
+      out.refreshed += ok.filter((f) => f.refreshed).length
+      const cards = ok.map((f) => ({ ...f, card: mapScorecard(f.raw, PLAYHQ_ORG_ID, false) }))
+      const stats = aggregatePlayers(cards.map((c) => c.card), team.id, false)
+      if (stats.length) out.aggregates.push({ seasonName: group.name, seasonOrder: order, teamId: team.id, teamName: team.name, gradeName: team.gradeName, stats })
+
+      const kept: typeof cards = []
+      for (const c of cards) {
+        const bundle = mapMatchBundle(c.raw, {
+          clubOrgId: PLAYHQ_ORG_ID, clubIds, seasonName: group.name, seasonStartYear, competitionName: team.competitionName, isJunior: false, fixture: c.game,
         })
-      )
-      const stats = aggregatePlayers(cards.filter((c): c is NonNullable<typeof c> => c !== null), team.id, false)
-      if (stats.length) out.push({ seasonName: group.name, seasonOrder: order, teamId: team.id, teamName: team.name, gradeName: team.gradeName, stats })
+        if (isSkip(bundle)) out.skipped.push({ gameId: c.raw.id, reason: bundle.skip })
+        else {
+          out.matches.push({ bundle, seasonName: group.name, teamId: bundle.match.clubTeamId })
+          kept.push(c)
+        }
+      }
+      const keptStats = aggregatePlayers(kept.map((c) => c.card), team.id, false)
+      if (keptStats.length) out.matchAggregates.push({ seasonName: group.name, seasonOrder: order, teamId: team.id, teamName: team.name, gradeName: team.gradeName, stats: keptStats })
     }
   }
   return out
 }
 
+/** The season aggregates only (kept for callers that do not need match rows). */
+export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
+  return (await collectSeniorData()).aggregates
+}
+
+export type MatchStoreCounters = { matchesUpserted: number; matchesSkipped: number; matchMismatches: number; matchError: number }
+
+/**
+ * Writes the collected bundles and reconciles them with the season aggregates. Never throws: a
+ * match-store failure must not fail the player sync (the season data is already committed), so every
+ * failure is counted in `matchError` and logged. A (team, season) holding a game whose write failed
+ * is left out of the reconciliation.
+ */
+export async function writeMatchStore(payload: Payload, data: CollectedData, aliasMap: ReadonlyMap<string, number>): Promise<MatchStoreCounters> {
+  const counters: MatchStoreCounters = { matchesUpserted: 0, matchesSkipped: data.skipped.length, matchMismatches: 0, matchError: 0 }
+  try {
+    const failed = new Set<string>()
+    const warnings = new Set<string>()
+    for (const m of data.matches) {
+      for (const w of m.bundle.warnings) warnings.add(`${w} (game ${m.bundle.match.gameId})`)
+      try {
+        if ((await upsertMatchBundle(payload, m.bundle, aliasMap)) !== 'unchanged') counters.matchesUpserted++
+      } catch (err) {
+        counters.matchError++
+        failed.add(pairKey(m.teamId, m.seasonName))
+        console.error('[matches] write failed', m.bundle.match.gameId, err instanceof Error ? err.message : err)
+      }
+    }
+    for (const w of warnings) console.warn('[matches] unknown_shape', w)
+    await relinkMatchPlayers(payload)
+    const rec = await reconcileMatchStore(payload, { aggregates: data.matchAggregates, aliasMap, skipPairs: failed })
+    counters.matchMismatches = rec.mismatchedPlayers
+    for (const m of rec.samples.slice(0, 5)) console.error('[matches] reconcile', m)
+    // Corrected scorecards were fetched uncached: expire the cached copies and the match-store tag.
+    await revalidatePaths([], undefined, [...(data.refreshed ? ['playhq-game'] : []), 'match-store'])
+  } catch (err) {
+    counters.matchError = Math.max(1, counters.matchError, data.matches.length)
+    console.error('[matches] match-store step failed', err instanceof Error ? err.message : err)
+  }
+  return counters
+}
 
 /**
  * Step 1 — lock. One short transaction: a transaction-scoped advisory lock (safe under the
@@ -105,8 +194,14 @@ export async function syncPlayers(payload: Payload, now = new Date()): Promise<S
   const db = payload.db.drizzle
 
   try {
-    // 2. Collect everything first — a PlayHQ failure aborts before any player write.
-    const aggregates = await collectSeniorAggregates()
+    // 2. Collect everything first — a PlayHQ failure aborts before any player write. The stored
+    //    fixture stamps (match store) only decide which scorecards are fetched uncached.
+    const stored = await storedFixtureStamps(payload).catch((err) => {
+      console.error('[matches] could not read stored fixture stamps', err instanceof Error ? err.message : err)
+      return new Map<string, string | null>()
+    })
+    const data = await collectSeniorData({ stored })
+    const aggregates = data.aggregates
     await healOrphanPlayers(payload)
     const aliasRows: { nameKey: string; player: number }[] = await db.select({ nameKey: t.player_aliases.nameKey, player: t.player_aliases.player }).from(t.player_aliases)
     const slugRows: { slug: string | null }[] = await db.select({ slug: t.players.slug }).from(t.players)
@@ -180,10 +275,15 @@ export async function syncPlayers(payload: Payload, now = new Date()): Promise<S
       }
     })
 
+    // 7b. Per-match rows, in their own try/catch (never fails the sync). The alias map is read AFTER
+    //     the new-player insert above, so a player first seen in this run resolves.
+    const aliasNow: { nameKey: string; player: number }[] = await db.select({ nameKey: t.player_aliases.nameKey, player: t.player_aliases.player }).from(t.player_aliases)
+    const matchCounters = await writeMatchStore(payload, data, new Map(aliasNow.map((a) => [a.nameKey, a.player])))
+
     // 8. Mark the run.
     await db
       .update(t.player_sync_runs)
-      .set({ status: 'ok', finishedAt: new Date().toISOString(), playersCreated: plan.newPlayers.length, seasonRows: rows.length })
+      .set({ status: 'ok', finishedAt: new Date().toISOString(), playersCreated: plan.newPlayers.length, seasonRows: rows.length, ...matchCounters })
       .where(eq(t.player_sync_runs.id, runId))
     // 9. Revalidate.
     await revalidatePlayerPages()

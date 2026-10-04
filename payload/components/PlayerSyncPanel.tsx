@@ -20,7 +20,7 @@ const STATUS_LABEL: Record<string, string> = { ok: 'OK', running: 'Running', err
  * the button's `router.refresh()` re-renders it.
  */
 export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
-  let run: { status?: string | null; startedAt?: string; finishedAt?: string | null; playersCreated?: number | null; seasonRows?: number | null; error?: string | null } | null = null
+  let run: { status?: string | null; startedAt?: string; finishedAt?: string | null; playersCreated?: number | null; seasonRows?: number | null; matchesUpserted?: number | null; matchesSkipped?: number | null; matchMismatches?: number | null; matchError?: number | null; error?: string | null } | null = null
   try {
     const { docs } = await payload.find({ collection: 'player-sync-runs', sort: '-startedAt', limit: 1, depth: 0, overrideAccess: true })
     run = docs[0] ?? null
@@ -42,7 +42,8 @@ export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
             ) : null}
             {status === 'ok' && (
               <>
-                {' '}— {run.playersCreated ?? 0} new players, {run.seasonRows ?? 0} season rows
+                {' '}— {run.playersCreated ?? 0} new players, {run.seasonRows ?? 0} season rows, {run.matchesUpserted ?? 0} matches saved
+                {(run.matchesSkipped ?? 0) > 0 && <>, {run.matchesSkipped} skipped</>}
               </>
             )}
           </p>
@@ -50,6 +51,16 @@ export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
           <p className="club-muted">No sync has run yet.</p>
         )}
         {status === 'error' && run?.error && <p className="club-error">{run.error}</p>}
+        {status === 'ok' && (run?.matchError ?? 0) > 0 && (
+          <p className="club-error">
+            Season totals updated, but {run?.matchError} game{run?.matchError === 1 ? '' : 's'} could not be saved to the match store. The next sync retries.
+          </p>
+        )}
+        {status === 'ok' && (run?.matchMismatches ?? 0) > 0 && (
+          <p className="club-error">
+            {run?.matchMismatches} player{run?.matchMismatches === 1 ? '' : 's'} had match totals that disagree with their season totals. Ask your developer to check the sync log.
+          </p>
+        )}
       </div>
       <PlayerSyncButton />
     </section>

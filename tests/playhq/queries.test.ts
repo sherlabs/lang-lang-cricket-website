@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import seasons from '../fixtures/playhq/seasons.json'
 import seniorTeams from '../fixtures/playhq/teams-senior-2025-26.json'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
-import { findClubTeam, getGameSummaryAuto } from '@/lib/playhq/queries'
+import { findClubTeam, getGameSummary, getGameSummaryAuto, getRawGameSummary } from '@/lib/playhq/queries'
 
 const ORG = '484ced51-403a-466c-9a94-bd95eedf7319'
 const LL_B = '61e6c836-a80b-49f1-ae65-625bd0f55016'
@@ -79,5 +79,30 @@ describe('getGameSummaryAuto junior policy', () => {
     const other = { data: { ...twoDay.data, teams: twoDay.data.teams.map((t) => ({ ...t, organisation: { id: 'x', name: 'x' } })) } }
     vi.stubGlobal('fetch', vi.fn(async () => json(other)))
     expect(await getGameSummaryAuto(GAME)).toBeNull()
+  })
+})
+
+describe('getRawGameSummary', () => {
+  beforeEach(() => { process.env.PLAYHQ_CLIENT_ID = 'k' })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('caches a FINAL game for seven days and a live one for 15 minutes; fresh bypasses the cache', async () => {
+    const fetchMock = vi.fn(async () => json(twoDay))
+    vi.stubGlobal('fetch', fetchMock)
+    expect((await getRawGameSummary(GAME, { status: 'FINAL' })).id).toBe(GAME)
+    await getRawGameSummary(GAME)
+    await getRawGameSummary(GAME, { status: 'FINAL', fresh: true })
+    const inits = fetchMock.mock.calls.map((c) => (c as unknown as [string, RequestInit & { next?: { revalidate: number } }])[1])
+    expect(inits[0].next?.revalidate).toBe(604800)
+    expect(inits[1].next?.revalidate).toBe(900)
+    expect(inits[2].cache).toBe('no-store')
+    expect(inits[2].next).toBeUndefined()
+  })
+
+  it('getGameSummary is the raw summary mapped to a scorecard', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(twoDay)))
+    const sc = await getGameSummary(GAME, false, 'FINAL')
+    expect(sc.id).toBe(GAME)
+    expect(sc.innings).toHaveLength(4)
   })
 })
