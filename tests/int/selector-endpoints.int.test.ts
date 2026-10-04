@@ -48,7 +48,7 @@ describe('selector endpoints and invites', () => {
     expect(token).toHaveLength(43)
     expect(res.json.inviteUrl.startsWith(payload.config.serverURL)).toBe(true)
     const row = await payload.db.findOne({ collection: 'users', where: { email: { equals: 'sam@example.com' } } })
-    const r = row as { role: string; inviteTokenHash: string; inviteExpiresAt: string }
+    const r = row as unknown as { role: string; inviteTokenHash: string; inviteExpiresAt: string }
     expect(r.role).toBe('selector')
     expect(r.inviteTokenHash).toBe(hashInviteToken(token))
     expect(r.inviteTokenHash).not.toContain(token)
@@ -71,7 +71,7 @@ describe('selector endpoints and invites', () => {
     expect(results.filter(Boolean)).toHaveLength(1)
     expect(await consumeInvite(payload, token)).toBeNull()
     expect(await findInvitee(payload, token)).toBeNull()
-    const row = (await payload.db.findOne({ collection: 'users', where: { email: { equals: 'race@example.com' } } })) as { inviteTokenHash: string | null; inviteExpiresAt: string | null }
+    const row = (await payload.db.findOne({ collection: 'users', where: { email: { equals: 'race@example.com' } } })) as unknown as { inviteTokenHash: string | null; inviteExpiresAt: string | null }
     expect(row.inviteTokenHash ?? null).toBeNull()
     expect(row.inviteExpiresAt ?? null).toBeNull()
     expect(await consumeInvite(payload, newInviteToken())).toBeNull()
@@ -128,7 +128,7 @@ describe('selector endpoints and invites', () => {
     const id = made.json.id
     await payload.update({ collection: 'users', id, data: { facebookId: 'fb-fay' }, context: { disableRevalidate: true, facebookBind: true } })
     expect((await post('unlink', editor, { id })).status).toBe(200)
-    const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: id } } })) as { facebookId?: string | null }
+    const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: id } } })) as unknown as { facebookId?: string | null }
     expect(row.facebookId ?? null).toBeNull()
   })
 

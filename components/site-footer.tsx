@@ -3,7 +3,7 @@ import { ClubLogo } from '@/components/club-logo'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
-import { agencyCreditHref, AGENCY_CREDIT } from '@/config/site'
+import { agencyCreditHref, AGENCY_CREDIT, selectorPaths } from '@/config/site'
 import { ApparelLink } from '@/components/apparel-link'
 import type { Club } from '@/lib/club'
 import type { Link as NavLink } from '@/payload/seed/club-defaults'
@@ -126,6 +126,12 @@ export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: 
               ·
             </span>
             <span className="text-balance">{nav.fundingCredit}</span>
+            <span aria-hidden className="hidden text-white/30 lg:inline">
+              ·
+            </span>
+            <Link href={selectorPaths.login} className="inline-flex min-h-9 items-center underline decoration-white/30 underline-offset-4 transition hover:text-brand-gold lg:min-h-0">
+              Selector login
+            </Link>
           </p>
 
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}

@@ -59,9 +59,21 @@ export default {
   ...withPayloadConfig,
   async headers() {
     const rules = payloadHeaders ? await payloadHeaders() : []
-    return rules.map((rule) =>
+    const scoped = rules.map((rule) =>
       rule.source === '/:path*' && rule.headers.some((h) => h.key === 'Critical-CH') ? { ...rule, source: '/admin/:path*' } : rule,
     )
+    // The selector area holds private tools and invite tokens in its addresses: never cached, never sent on as a referrer.
+    return [
+      ...scoped,
+      {
+        source: '/selector/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+    ]
   },
 } satisfies NextConfig
 

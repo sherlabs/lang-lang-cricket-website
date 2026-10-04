@@ -95,6 +95,7 @@ export interface Config {
     'saved-reports': SavedReport;
     'merge-log': MergeLog;
     'ai-draft-counter': AiDraftCounter;
+    'throttle-hits': ThrottleHit;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -140,6 +141,7 @@ export interface Config {
     'saved-reports': SavedReportsSelect<false> | SavedReportsSelect<true>;
     'merge-log': MergeLogSelect<false> | MergeLogSelect<true>;
     'ai-draft-counter': AiDraftCounterSelect<false> | AiDraftCounterSelect<true>;
+    'throttle-hits': ThrottleHitsSelect<false> | ThrottleHitsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1286,6 +1288,22 @@ export interface AiDraftCounter {
   createdAt: string;
 }
 /**
+ * Counts sign-in attempts so guessing is slowed down. Written by the site; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "throttle-hits".
+ */
+export interface ThrottleHit {
+  id: number;
+  key: string;
+  count: number;
+  windowStart: string;
+  lockedUntil?: string | null;
+  strikes: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1420,6 +1438,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ai-draft-counter';
         value: number | AiDraftCounter;
+      } | null)
+    | ({
+        relationTo: 'throttle-hits';
+        value: number | ThrottleHit;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2086,6 +2108,19 @@ export interface MergeLogSelect<T extends boolean = true> {
 export interface AiDraftCounterSelect<T extends boolean = true> {
   day?: T;
   count?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "throttle-hits_select".
+ */
+export interface ThrottleHitsSelect<T extends boolean = true> {
+  key?: T;
+  count?: T;
+  windowStart?: T;
+  lockedUntil?: T;
+  strikes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

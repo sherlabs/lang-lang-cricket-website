@@ -6730,6 +6730,117 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "payload.throttle_hits": {
+      "name": "throttle_hits",
+      "schema": "payload",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locked_until": {
+          "name": "locked_until",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "strikes": {
+          "name": "strikes",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "throttle_hits_key_idx": {
+          "name": "throttle_hits_key_idx",
+          "columns": [
+            {
+              "expression": "key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "throttle_hits_updated_at_idx": {
+          "name": "throttle_hits_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "throttle_hits_created_at_idx": {
+          "name": "throttle_hits_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "payload.payload_kv": {
       "name": "payload_kv",
       "schema": "payload",
@@ -7054,6 +7165,12 @@
         },
         "ai_draft_counter_id": {
           "name": "ai_draft_counter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "throttle_hits_id": {
+          "name": "throttle_hits_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -7524,6 +7641,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "payload_locked_documents_rels_throttle_hits_id_idx": {
+          "name": "payload_locked_documents_rels_throttle_hits_id_idx",
+          "columns": [
+            {
+              "expression": "throttle_hits_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -7926,6 +8058,20 @@
           "schemaTo": "payload",
           "columnsFrom": [
             "ai_draft_counter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_throttle_hits_fk": {
+          "name": "payload_locked_documents_rels_throttle_hits_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "throttle_hits",
+          "schemaTo": "payload",
+          "columnsFrom": [
+            "throttle_hits_id"
           ],
           "columnsTo": [
             "id"
@@ -10214,6 +10360,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "27a661f1-dc52-4235-baaa-6a2b6c1f58b5",
+  "id": "bffac7eb-328c-4786-a26e-046a8d2c7f8f",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

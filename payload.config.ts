@@ -36,6 +36,7 @@ import { PlayerSeasons } from './payload/collections/PlayerSeasons'
 import { PlayerSyncRuns } from './payload/collections/PlayerSyncRuns'
 import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
+import { ThrottleHits } from './payload/collections/ThrottleHits'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
 import { selectorEndpoints } from './payload/endpoints/selectors'
@@ -85,7 +86,7 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits],
   globals: [Club, ClubApparel, SiteSettings, Theme],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
