@@ -9,6 +9,7 @@ const CELL_CLASS: Record<ResultLetter, { rect: string; text: string }> = {
   D: { rect: 'fill-brand-stone', text: 'fill-brand-charcoal' },
   T: { rect: 'fill-brand-stone', text: 'fill-brand-charcoal' },
   N: { rect: 'fill-brand-stone', text: 'fill-brand-charcoal' },
+  U: { rect: 'fill-brand-stone', text: 'fill-brand-charcoal' },
 }
 
 /** Text alternative of a series: one sentence per game. */
@@ -18,7 +19,7 @@ export function winLossDescription(p: GradeProgression): string {
 
 /**
  * Win/loss progression for one grade as server-rendered inline SVG (W2 spec 5.5): a result strip with a
- * letter per game (W L D T N, never colour alone) above a stepped line of cumulative wins minus losses.
+ * letter per game (W L D T N, or a dash for an unknown result, never colour alone) above a stepped line of cumulative wins minus losses.
  * Colours are Tailwind brand classes. The same figures sit in a table inside `<details>`.
  */
 export function WinLossChart({ progression, idPrefix }: { progression: GradeProgression; idPrefix: string }) {
@@ -54,7 +55,7 @@ export function WinLossChart({ progression, idPrefix }: { progression: GradeProg
           {cells.map((c, i) => (
             <g key={c.gameId}>
               <rect x={cx(i) - CELL / 2} y={STRIP_TOP} width={CELL} height={CELL} rx={4} className={CELL_CLASS[c.letter].rect} />
-              <text x={cx(i)} y={STRIP_TOP + CELL / 2 + 5} textAnchor="middle" className={`${CELL_CLASS[c.letter].text} text-[13px] font-bold`}>{c.letter}</text>
+              <text x={cx(i)} y={STRIP_TOP + CELL / 2 + 5} textAnchor="middle" className={`${CELL_CLASS[c.letter].text} text-[13px] font-bold`}>{c.letter === 'U' ? '–' : c.letter}</text>
               {c.forfeit && <text x={cx(i) + CELL / 2 - 1} y={STRIP_TOP + 9} textAnchor="end" className={`${CELL_CLASS[c.letter].text} text-[9px] font-bold`}>f</text>}
             </g>
           ))}
@@ -86,7 +87,7 @@ export function WinLossChart({ progression, idPrefix }: { progression: GradeProg
               <tr key={c.gameId} className="border-t border-brand-black/5">
                 <td className="py-1 pr-3">{c.date ? formatCoverageDate(c.date) : '–'}</td>
                 <td className="py-1 pr-3">{c.opponent}</td>
-                <td className="py-1 pr-3">{c.letter}<span className="sr-only"> ({c.word})</span> <span aria-hidden>{c.word}</span></td>
+                <td className="py-1 pr-3">{c.letter === 'U' ? '–' : c.letter}<span className="sr-only"> ({c.word})</span> <span aria-hidden>{c.word}</span></td>
                 <td className="py-1 text-right tabular-nums">{c.net}</td>
               </tr>
             ))}

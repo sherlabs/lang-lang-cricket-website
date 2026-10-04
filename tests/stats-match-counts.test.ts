@@ -44,6 +44,11 @@ describe('batting milestones (spec 2.2)', () => {
     expect(c1).toMatchObject({ ballInnings: 1, ballsFaced: 30, runsOnBalls: 40, boundaryInnings: 1, boundaries: 5, boundaryBalls: 30 })
   })
 
+  it('treats missing fours and sixes as zero when balls are known', () => {
+    const c = countsFor({ innings: [batInnings([{ who: 'c1', pos: 1, runs: 12, status: 'out', dismissal: 'bowled', balls: 20, fours: null, sixes: null }])] })
+    expect(c).toMatchObject({ boundaryInnings: 1, boundaryBalls: 20, boundaries: 0 })
+  })
+
   it('does not count did-not-bat, and an unknown row is neither out nor not out', () => {
     const c = countsFor({ innings: [batInnings([{ who: 'c1', pos: 1, runs: 5, status: 'unknown' }, { who: 'c2', pos: 2, status: 'did_not_bat' }])] })
     expect(c).toMatchObject({ battingInnings: 1, outs: 0, notOuts: 0 })

@@ -54,10 +54,11 @@ describe('headToHead', () => {
   it('counts results, marks forfeits and excludes them from win percentage', () => {
     const specs: BundleSpec[] = [
       game(1, { result: 'won' }), game(2, { result: 'lost' }), game(3, { result: 'draw' }), game(4, { result: 'tie' }), game(5, { result: 'no_result' }),
+      { id: 8, gameId: 'g8', result: null },
       { id: 6, gameId: 'g6', result: 'won', forfeit: true, extra: ['c1'] }, { id: 7, gameId: 'g7', result: 'lost', forfeit: true, extra: ['c1'] },
     ]
     const [h] = headToHead(factsOf(specs), { winGames: 4 })
-    expect(h).toMatchObject({ played: 7, won: 1, lost: 1, drawn: 1, tied: 1, noResult: 1, wonByForfeit: 1, lostByForfeit: 1 })
+    expect(h).toMatchObject({ played: 8, won: 1, lost: 1, drawn: 1, tied: 1, noResult: 1, unknown: 1, wonByForfeit: 1, lostByForfeit: 1 })
     expect(h.winPct).toBeCloseTo(25)
     expect(headToHead(factsOf(specs), { winGames: 5 })[0].winPct).toBeNull()
   })

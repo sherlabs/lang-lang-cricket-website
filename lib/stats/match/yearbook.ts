@@ -60,8 +60,9 @@ export function inningsText(s: InningsScore): string {
 /** All played innings of one side: one for a one-day game, two for a two-day game (joined with `&`). */
 export const sideScore = (innings: readonly InningsScore[]): string => (innings.length ? innings.map(inningsText).join(' & ') : '–')
 
-export type ResultLetter = 'W' | 'L' | 'D' | 'T' | 'N'
-export const RESULT_WORDS: Record<ResultLetter, string> = { W: 'Won', L: 'Lost', D: 'Drawn', T: 'Tied', N: 'No result' }
+export type ResultLetter = 'W' | 'L' | 'D' | 'T' | 'N' | 'U'
+/** U is a game stored without a result (a blank import): shown as a dash. */
+export const RESULT_WORDS: Record<ResultLetter, string> = { W: 'Won', L: 'Lost', D: 'Drawn', T: 'Tied', N: 'No result', U: '–' }
 
 export function resultLetter(l: Pick<ResultLine, 'result'>): ResultLetter {
   switch (l.result) {
@@ -69,7 +70,8 @@ export function resultLetter(l: Pick<ResultLine, 'result'>): ResultLetter {
     case 'lost': return 'L'
     case 'draw': return 'D'
     case 'tie': return 'T'
-    default: return 'N'
+    case 'no_result': return 'N'
+    default: return 'U' // blank or unknown: not a no-result
   }
 }
 
@@ -100,7 +102,7 @@ export type GradeProgression = { grade: string; cells: ProgressionCell[] }
 
 /**
  * Per grade, the games in date order with the running wins minus losses. A drawn, tied or no-result
- * game keeps the line level; a forfeit counts as the win or loss it was and is marked.
+ * game keeps the line level (so does an unknown result); a forfeit counts as the win or loss it was and is marked.
  */
 export function progressionByGrade(lines: readonly ResultLine[], gradeLabel: (g: string | null) => string | null = (g) => g): GradeProgression[] {
   return resultsByGradeFromLines(lines, gradeLabel).map(({ grade, lines: ls }) => {

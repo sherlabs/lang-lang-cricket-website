@@ -146,6 +146,25 @@ describe('merge writes a log and undo restores identity', () => {
     expect(await payload.findByID({ collection: 'players', id: s.target, depth: 0, joins: false })).toMatchObject({ bio: 'Edited by the committee.' })
   })
 
+  it('gives the source player its imported season rows back, and the target its own counts', async () => {
+    const s = await setup()
+    // One imported row on a team the target never played for (moved), one on team B (combined with the target's B row).
+    await season(s.source, 'IMP-OLD', 2, { source: 'import', games: 7, batRuns: 100, seasonName: 'Summer 2012/13' })
+    await season(s.target, 'IMP-B', 3, { source: 'import', games: 5, batRuns: 40, seasonName: 'Summer 2013/14' })
+    await season(s.source, 'IMP-B', 3, { source: 'import', games: 2, batRuns: 10, seasonName: 'Summer 2013/14' })
+    expect((await rest('POST', `/players/${s.source}/merge`, { token: editor, body: { targetId: s.target } })).status).toBe(200)
+    const merged = (await rows('player_seasons')).filter((r) => r.source === 'import')
+    expect(merged.every((r) => r.player_id === s.target)).toBe(true)
+    expect(merged.find((r) => r.team_id === 'IMP-B')).toMatchObject({ games: '7', bat_runs: '50' })
+
+    const log = (await rows('merge_log'))[0]
+    expect((await rest('POST', `/players/merge-log/${log.id}/undo`, { token: admin })).status).toBe(200)
+    const after = (await rows('player_seasons')).filter((r) => r.source === 'import')
+    expect(after.find((r) => r.team_id === 'IMP-OLD')).toMatchObject({ player_id: s.source, games: '7', bat_runs: '100' })
+    expect(after.find((r) => r.team_id === 'IMP-B' && r.player_id === s.source)).toMatchObject({ games: '2', bat_runs: '10' })
+    expect(after.find((r) => r.team_id === 'IMP-B' && r.player_id === s.target)).toMatchObject({ games: '5', bat_runs: '40' })
+  })
+
   it('is refused once the player it was merged into has itself been merged away', async () => {
     const s = await setup()
     const third = await player('Johnny', 'Smythe')

@@ -55,14 +55,14 @@ export function positionSummary(bat: readonly BatFact[], min: Pick<MatchMinimums
     line.runs += r.runs
     if (r.status === 'out') line.outs++
     if (r.status === 'not_out') line.notOuts++
-    if (r.runs >= 50) line.fifties++
+    if (r.runs >= 50 && r.runs < 100) line.fifties++ // 50 to 99, like counts.fifties
     const notOut = r.status === 'not_out'
     if (r.runs > line.highScore || (r.runs === line.highScore && notOut && !line.highScoreNotOut)) {
       line.highScore = r.runs
       line.highScoreNotOut = notOut
     }
   }
-  for (const l of lines) l.average = l.innings >= min.positionInnings && l.outs > 0 ? l.runs / l.outs : null
+  for (const l of lines) l.average = l.innings >= min.positionInnings && l.innings - l.notOuts > 0 ? l.runs / (l.innings - l.notOuts) : null // unknown status counts as an out, like the classic average
   let mostCommon: number | null = null
   for (const [p, f] of freq) if (mostCommon === null || f > freq.get(mostCommon)! || (f === freq.get(mostCommon) && p < mostCommon)) mostCommon = p
   return { lines, mostCommon, averagePosition: n > 0 ? sum / n : null, excluded }

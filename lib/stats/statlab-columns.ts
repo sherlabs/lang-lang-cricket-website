@@ -32,7 +32,7 @@ export type LabColumn = {
   /** Plain-English rule shown in the column picker (match columns only). */
   help: string | null
   /** What recorded data the column needs, for the coverage caption. */
-  needs: 'balls' | 'bowling' | 'fow' | null
+  needs: 'balls' | 'bowling' | 'fow' | 'fielding' | null
   value: (c: LabCells, min: MatchMinimums) => number | null
   format: (c: LabCells, min: MatchMinimums) => string
 }
@@ -47,7 +47,7 @@ const fromMatch: LabColumn[] = MATCH_METRICS.map((m) => {
   const ok = (c: LabCells, min: MatchMinimums) => c.match !== null && matchQualifies(m.qualifier, c.match.counts, min)
   return {
     key: m.key, label: m.label, short: m.short, group: m.group, matchOnly: true, higherIsBetter: m.higherIsBetter, help: m.help,
-    needs: m.needs === 'balls' || m.needs === 'bowling' ? m.needs : null,
+    needs: m.needs,
     value: (c, min) => (ok(c, min) ? m.value(c.match!.counts) : null),
     format: (c, min) => (ok(c, min) ? m.format(c.match!.counts) : '–'),
   }

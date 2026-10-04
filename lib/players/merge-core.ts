@@ -4,14 +4,15 @@ import { relinkMatchPlayers } from '@/lib/match-store/write'
 import { revalidateStats } from '@/lib/stats/tags'
 import { playerTables } from './db'
 import { planMerge } from './merge'
-import { buildMergeSnapshot, revertTargetPatch, type MergeSnapshot, type SnapshotPlayer } from './merge-snapshot'
+import { buildMergeSnapshot, revertTargetPatch, type ImportedSeasonsSnapshot, type MergeSnapshot, type SnapshotPlayer } from './merge-snapshot'
 import { sameGameMessage } from './same-game'
 import { pickCounts } from './season-math'
 
 /**
  * The merge and its undo, on `payload.db.drizzle` (W2 spec 6.2). One transaction each, so a failure leaves both players
  * untouched. The merge writes a `merge-log` row (with the identity snapshot) inside the same transaction; the undo restores
- * identity only and marks the log `undone`. Season rows and appearances are never restored: the next sync rebuilds them.
+ * identity (plus any imported season rows, which no sync would recreate) and marks the log `undone`. PlayHQ season rows and
+ * appearances are never restored: the next sync rebuilds them.
  */
 export const MERGE_LOG_TAG = 'merge-log'
 export const MERGE_LOG_RETENTION_DAYS = 365
@@ -30,6 +31,8 @@ export async function revalidateAfterMergeChange(extra: string[] = []): Promise<
 
 type SharedGame = { date: string | null; opponent: string | null }
 const int = (v: unknown) => Number(v)
+/** Counts compared by value (the driver returns numeric columns as strings). */
+const sameCounts = (a: Record<string, unknown>, b: Record<string, unknown>) => Object.keys(a).every((k) => (typeof a[k] === 'boolean' || typeof b[k] === 'boolean' ? Boolean(a[k]) === Boolean(b[k]) : Number(a[k]) === Number(b[k])))
 
 /** The games both players appear in (stored club-side appearances). */
 export async function sharedGamesOf(payload: Payload, a: number, b: number): Promise<{ matchIds: number[]; games: SharedGame[] }> {
@@ -87,9 +90,20 @@ export async function mergePlayerInto(
     const [{ max }] = await tx.select({ max: sql<number>`COALESCE(MAX(${t.players_honours._order}), 0)` }).from(t.players_honours).where(eq(t.players_honours._parentID, tId))
     const peopleRows: { id: number }[] = await tx.select({ id: t.people.id }).from(t.people).where(eq(t.people.player, sId))
     const sponsorRows: { id: number }[] = await tx.select({ id: t.player_sponsors.id }).from(t.player_sponsors).where(eq(t.player_sponsors.player, sId))
+    // Imported history is never rebuilt by the sync, so record what the merge does to it.
+    const importRows = (await tx.select().from(t.player_seasons).where(and(eq(t.player_seasons.player, sId), eq(t.player_seasons.source, 'import')))) as (Record<string, unknown> & { id: number })[]
+    const importIds = new Set(importRows.map((r) => int(r.id)))
+    const importedSeasons: ImportedSeasonsSnapshot = {
+      movedIds: plan.moveSeasonIds.filter((id) => importIds.has(id)),
+      combined: plan.combine.flatMap((c) => {
+        const sourceRow = importRows.find((r) => int(r.id) === c.sourceRowId)
+        const before = targetSeasons.find((r) => r.id === c.targetRowId)
+        return sourceRow && before ? [{ sourceRow, targetRowId: c.targetRowId, targetBefore: pickCounts(before as never), targetMerged: c.counts }] : []
+      }),
+    }
     const snapshot = buildMergeSnapshot({
       source: srcRow as SnapshotPlayer, aliases: aliasRows, honours: honourRows, targetMaxHonourOrder: Number(max),
-      targetBefore: asP(target), plan, peopleIds: peopleRows.map((r) => int(r.id)), playerSponsorIds: sponsorRows.map((r) => int(r.id)),
+      targetBefore: asP(target), plan, peopleIds: peopleRows.map((r) => int(r.id)), playerSponsorIds: sponsorRows.map((r) => int(r.id)), importedSeasons,
     })
 
     // 1. Target patch (photo/bio fill-if-empty, OR of derived activity).
@@ -167,6 +181,19 @@ export async function undoMerge(payload: Payload, logId: number, userId: number 
     }
     if (snap.peopleIds.length) await tx.update(t.people).set({ player: sId, updatedAt: stamp }).where(and(inArray(t.people.id, snap.peopleIds), eq(t.people.player, tId)))
     if (snap.playerSponsorIds.length) await tx.update(t.player_sponsors).set({ player: sId, updatedAt: stamp }).where(and(inArray(t.player_sponsors.id, snap.playerSponsorIds), eq(t.player_sponsors.player, tId)))
+    // Imported season rows (no sync recreates them): moved ones go back, combined ones are restored and the target row's
+    // counts return to what they were, but only while it still holds the merged counts (a newer edit is never overwritten).
+    const imp = snap.importedSeasons
+    if (imp) {
+      if (imp.movedIds.length) await tx.update(t.player_seasons).set({ player: sId, updatedAt: stamp }).where(and(inArray(t.player_seasons.id, imp.movedIds), eq(t.player_seasons.player, tId)))
+      for (const c of imp.combined) {
+        await tx.insert(t.player_seasons).values({ ...c.sourceRow, player: sId, updatedAt: stamp }).onConflictDoNothing()
+        const [now] = await tx.select().from(t.player_seasons).where(eq(t.player_seasons.id, c.targetRowId))
+        if (now && sameCounts(pickCounts(now as never), c.targetMerged)) {
+          await tx.update(t.player_seasons).set({ ...c.targetBefore, updatedAt: stamp }).where(eq(t.player_seasons.id, c.targetRowId))
+        }
+      }
+    }
     // The target patch is reverted only for fields still holding the merged value.
     const patch = revertTargetPatch(snap, { photo: target.photo === null || target.photo === undefined ? null : int(target.photo), bio: target.bio ?? '', isActiveDerived: target.isActiveDerived === true })
     if (Object.keys(patch).length) await tx.update(t.players).set({ ...patch, updatedAt: stamp }).where(eq(t.players.id, tId))

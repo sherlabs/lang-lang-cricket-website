@@ -1,4 +1,5 @@
 import type { MergePlan } from './merge'
+import type { SeasonCounts } from './season-math'
 
 /**
  * Identity-only snapshot taken inside the merge transaction before any write (W2 spec 6.2). The sync deletes and re-inserts
@@ -6,6 +7,10 @@ import type { MergePlan } from './merge'
  * restoring counts would overwrite fresher numbers with stale ones. The snapshot therefore holds only what an undo needs to
  * bring the source identity back: the player row, its aliases, its honours, the links that pointed at it, and the target's
  * pre-merge photo, bio and active flag. A few kilobytes.
+ *
+ * One exception: season rows with `source = 'import'`. The sync never recreates imported history (it only replaces its own
+ * rows), so those are recorded too: the full source row when it was combined into a target row (with the target's counts
+ * before and after), and the ids of the rows that were simply moved. An undo puts them back; PlayHQ rows still come from the next sync.
  */
 export type SnapshotPlayer = Record<string, unknown> & { id: number; slug: string; firstName: string; lastName: string }
 export type MergeSnapshot = {
@@ -20,6 +25,14 @@ export type MergeSnapshot = {
   targetMerged: { photo?: number; bio?: string; isActiveDerived: boolean }
   peopleIds: number[]
   playerSponsorIds: number[]
+  importedSeasons?: ImportedSeasonsSnapshot
+}
+
+export type ImportedSeasonsSnapshot = {
+  /** Imported source rows moved to the target unchanged. */
+  movedIds: number[]
+  /** Imported source rows folded into a target row: the whole row (deleted by the merge), and the target row's counts before and after. */
+  combined: { sourceRow: Record<string, unknown> & { id: number }; targetRowId: number; targetBefore: SeasonCounts; targetMerged: SeasonCounts }[]
 }
 
 export type SnapshotInput = {
@@ -31,6 +44,7 @@ export type SnapshotInput = {
   plan: Pick<MergePlan, 'targetPatch'>
   peopleIds: number[]
   playerSponsorIds: number[]
+  importedSeasons?: ImportedSeasonsSnapshot
 }
 
 export function buildMergeSnapshot(i: SnapshotInput): MergeSnapshot {
@@ -44,6 +58,7 @@ export function buildMergeSnapshot(i: SnapshotInput): MergeSnapshot {
     targetMerged: { ...i.plan.targetPatch },
     peopleIds: [...i.peopleIds].sort((a, b) => a - b),
     playerSponsorIds: [...i.playerSponsorIds].sort((a, b) => a - b),
+    ...(i.importedSeasons && (i.importedSeasons.movedIds.length || i.importedSeasons.combined.length) ? { importedSeasons: i.importedSeasons } : {}),
   }
 }
 

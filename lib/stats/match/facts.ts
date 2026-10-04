@@ -160,6 +160,7 @@ export function filterFacts(set: FactSet, keep: (h: MatchHeader) => boolean): Fa
     bowl: set.bowl.filter((r) => has(r.m)),
     credits: set.credits.filter((r) => has(r.m)),
     partnerships: set.partnerships.filter((r) => has(r.m)),
+    ...(set.seasonCap ? { seasonCap: set.seasonCap } : {}),
   }
 }
 
@@ -175,6 +176,7 @@ export function playerFacts(set: FactSet, playerId: number): FactSet {
     bowl: set.bowl.filter((r) => r.player === playerId),
     credits: set.credits.filter((r) => r.player === playerId),
     partnerships: set.partnerships.filter((p) => p.a === playerId || p.b === playerId),
+    ...(set.seasonCap ? { seasonCap: set.seasonCap } : {}),
   }
 }
 

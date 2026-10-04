@@ -74,7 +74,7 @@ Counts of 50s, 100s and ducks need no ball or bowling flag (`runs` and `status` 
 
 ### 2.2a Per-row rule for ball-based figures
 
-Decide on each batting row, never on `innings.hasBallData`: strike rate and golden ducks use rows with `balls != null`; balls per boundary and boundary share use rows with `balls`, `fours` and `sixes` all non-null; `batRunsUnballed` is the sum of `runs` over rows that fail those tests. The innings flag stays only as a coverage-caption count.
+Decide on each batting row, never on `innings.hasBallData`: strike rate and golden ducks use rows with `balls != null`; balls per boundary and boundary share also use rows with `balls != null`, and a missing `fours` or `sixes` counts as 0 there (PlayHQ may omit zero values, and the classic table makes the same assumption, so dropping boundary-less innings would flatter the figure); `batRunsUnballed` is the sum of `runs` over rows with `balls == null`. The innings flag stays only as a coverage-caption count.
 
 ### 2.3 Dismissals (issue #4)
 

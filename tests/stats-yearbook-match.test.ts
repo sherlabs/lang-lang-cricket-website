@@ -24,7 +24,7 @@ describe('score text', () => {
 
 describe('result letters and words', () => {
   it('maps results to W L D T N and spells forfeits and first-innings results', () => {
-    expect(['won', 'lost', 'draw', 'tie', 'no_result', null].map((r) => resultLetter({ result: r as ResultLine['result'] }))).toEqual(['W', 'L', 'D', 'T', 'N', 'N'])
+    expect(['won', 'lost', 'draw', 'tie', 'no_result', null].map((r) => resultLetter({ result: r as ResultLine['result'] }))).toEqual(['W', 'L', 'D', 'T', 'N', 'U'])
     expect(resultWord({ result: 'won', forfeit: true, onFirstInnings: false })).toBe('Won by forfeit')
     expect(resultWord({ result: 'lost', forfeit: false, onFirstInnings: true })).toBe('Lost on first innings')
     expect(resultWord({ result: 'draw', forfeit: false, onFirstInnings: false })).toBe('Drawn')

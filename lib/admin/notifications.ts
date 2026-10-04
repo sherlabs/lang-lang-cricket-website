@@ -1,4 +1,5 @@
 import { notificationCopy as copy } from '../../payload/admin/copy'
+import { LOCK_MS } from '../players/lock'
 
 /**
  * The lines on the admin Home page (W2 spec 6.4, issue #11). Pure: the dashboard loads the facts, this decides the words.
@@ -33,10 +34,17 @@ export function notificationLines(
 ): NotificationLine[] {
   const lines: NotificationLine[] = []
   const { adminRoute: r } = o
-  const run = input.latestRun
+  const raw = input.latestRun
+  // A `running` row older than the sync lock window belongs to a run the platform killed: the next start would close it, but until
+  // then the committee must not read "being updated right now". It counts as a failed run.
+  const startedAt = raw?.startedAt ? new Date(raw.startedAt) : null
+  const stuck = !!raw && raw.status === 'running' && !!startedAt && o.now.getTime() - startedAt.getTime() > LOCK_MS
+  const run = raw && stuck ? { ...raw, status: 'error', error: raw.error ?? 'The update started but never finished.' } : raw
   if (run) {
     if (run.status === 'error') {
-      lines.push({ key: 'sync-failed', tone: 'warn', text: copy.committee.syncFailed })
+      const when = run.finishedAt ? new Date(run.finishedAt) : startedAt
+      const old = !!when && o.now.getTime() - when.getTime() > LAST_NIGHT_MS
+      lines.push({ key: 'sync-failed', tone: 'warn', text: old && when ? copy.committee.syncFailedOlder(o.formatDate(when)) : copy.committee.syncFailed })
       if (o.isAdmin && run.error) lines.push({ key: 'sync-error', tone: 'warn', text: copy.admin.syncError(run.error.slice(0, 300)), href: `${r}/collections/player-sync-runs`, linkText: copy.admin.syncRuns })
     } else if (run.status === 'running') {
       lines.push({ key: 'sync-running', tone: 'info', text: copy.committee.syncRunning })

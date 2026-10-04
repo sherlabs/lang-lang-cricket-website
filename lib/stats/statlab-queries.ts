@@ -74,8 +74,8 @@ export async function runStatLab(raw: Parameters<typeof parseStatLabParams>[0]) 
     result = buildMatchStatLab(params, set, {
       players: data.players, activeIds, minimums: settings.matchMinimums, gradeLabel: (g) => (g ? canonicalGrade(g, labels) : null),
     }, forcedByColumn)
-    const need = params.cols.map((c) => getLabColumn(c)?.needs).find((n) => n)
-    caption = statLabCaption({ mode, since, matchCaption: unavailable ? 'Match data is unavailable right now.' : coverageCaption(coverageOf(set), need ?? undefined) })
+    const need = params.cols.map((c) => getLabColumn(c)?.needs)
+    caption = statLabCaption({ mode, since, matchCaption: unavailable ? 'Match data is unavailable right now.' : coverageCaption(coverageOf(set), need) })
   }
   return { params, result, data, settings, cats, caption, opps, categories: availableCategories(data.rows, settings.gradeRules) }
 }

@@ -14,7 +14,7 @@ import { revalidateStats } from '@/lib/stats/tags'
 import { parseCsv } from './csv-parse'
 import { parseMatchRows, MATCH_ROWS_COLUMNS, MATCH_ROWS_EXPORT_EXTRA } from './match-rows'
 import { parseSeasonTotals, SEASON_TOTALS_COLUMNS, SEASON_TOTALS_EXPORT_EXTRA } from './season-totals'
-import { planMatchRowsImport, planSeasonTotalsImport, seasonSignature, type ImportContext, type ImportPlan, type KnownPlayer, type MatchOp, type SeasonOp } from './plan'
+import { gameSlotKey, planMatchRowsImport, planSeasonTotalsImport, seasonSignature, type ImportContext, type ImportPlan, type KnownPlayer, type MatchOp, type SeasonOp } from './plan'
 import type { ImportKind } from './templates'
 
 /**
@@ -49,7 +49,7 @@ export async function loadImportContext(payload: Payload, createUnknown: boolean
     db.select({ id: players.id, firstName: players.firstName, lastName: players.lastName, hidden: players.hidden }).from(players),
     db.select({ nameKey: player_aliases.nameKey, player: player_aliases.player }).from(player_aliases),
     db.select().from(player_seasons),
-    db.select({ gameId: t.matches.gameId, source: t.matches.source, sourceHash: t.matches.sourceHash, localDate: t.matches.localDate, opponentName: t.matches.opponentName, opponentOrgName: t.matches.opponentOrgName }).from(t.matches),
+    db.select({ gameId: t.matches.gameId, source: t.matches.source, sourceHash: t.matches.sourceHash, localDate: t.matches.localDate, opponentName: t.matches.opponentName, opponentOrgName: t.matches.opponentOrgName, gradeName: t.matches.gradeName, clubTeamName: t.matches.clubTeamName }).from(t.matches),
   ])
   const byId = new Map<number, KnownPlayer>()
   for (const p of playerRows as { id: number; firstName: string; lastName: string; hidden: boolean | null }[]) {
@@ -72,14 +72,16 @@ export async function loadImportContext(payload: Payload, createUnknown: boolean
     }
   }
   const playhqGames = new Set<string>()
+  const playhqGameSlots = new Set<string>()
   const existingMatches = new Map<string, string>()
-  for (const m of matchRows as { gameId: string; source: string | null; sourceHash: string | null; localDate: string | null; opponentName: string | null; opponentOrgName: string | null }[]) {
+  for (const m of matchRows as { gameId: string; source: string | null; sourceHash: string | null; localDate: string | null; opponentName: string | null; opponentOrgName: string | null; gradeName: string | null; clubTeamName: string | null }[]) {
     if (m.source === 'import') existingMatches.set(m.gameId, m.sourceHash ?? '')
     else if (m.localDate) {
+      playhqGameSlots.add(gameSlotKey(m.localDate, m.gradeName, m.clubTeamName))
       for (const name of [m.opponentOrgName, m.opponentName]) if (name) playhqGames.add(`${m.localDate}|${normaliseClubName(name)}`)
     }
   }
-  return { playersByKey, allPlayers: [...byId.values()], playhqSeasons, playhqGames, existingSeasons, existingMatches, createUnknown }
+  return { playersByKey, allPlayers: [...byId.values()], playhqSeasons, playhqGames, playhqGameSlots, existingSeasons, existingMatches, createUnknown }
 }
 
 export type PlanResult = { ok: true; fileHash: string; plan: AnyPlan } | { ok: false; error: string }

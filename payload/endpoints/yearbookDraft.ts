@@ -34,8 +34,9 @@ export const yearbookDraftEndpoint: Endpoint = {
       throw err
     }
     if (!res.ok) {
-      // A failed call does not use up one of the day's drafts.
-      await releaseDraft(req.payload)
+      // A call that failed fast (502) does not use up one of the day's drafts. A timeout (504) is not refunded: the model may
+      // still have run and been billed, so repeated timeouts must count against the daily limit.
+      if (res.status !== 504) await releaseDraft(req.payload)
       return fail(res.status, res.message)
     }
     return Response.json({ text: res.text, aiAssisted: true })

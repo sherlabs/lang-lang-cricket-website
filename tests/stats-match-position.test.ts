@@ -18,6 +18,11 @@ describe('positionSummary', () => {
     expect(middle).toMatchObject({ innings: 2, runs: 107, outs: 1, highScore: 100, highScoreNotOut: true })
     expect(middle.average).toBeNull()
   })
+  it('averages over innings minus not outs (unknown counts as an out) and keeps hundreds out of the 50s', () => {
+    const s = positionSummary([f(1, 10), f(1, 20), f(1, 30, 'unknown'), f(1, 52), f(1, 100, 'not_out'), f(1, 40, 'not_out')], min)
+    expect(s.lines[0].fifties).toBe(1)
+    expect(s.lines[0].average).toBeCloseTo(252 / 4)
+  })
   it('gives the most common position (a tie goes to the lower number) and the average position', () => {
     const s = positionSummary([f(3, 1), f(3, 1), f(2, 1), f(2, 1), f(9, 1)], min)
     expect(s.mostCommon).toBe(2)

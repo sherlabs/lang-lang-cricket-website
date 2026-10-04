@@ -75,7 +75,7 @@ export const MATCH_METRICS: readonly MatchMetric[] = [
   rate('lbwPct', 'Dismissed LBW %', 'LBW%', 'batting', (c) => share(c.dismissals.lbw, c.outs - c.dismissalsNotRecorded), 'dismissals', 'Share of dismissals with a recorded type that were LBW.', { higherIsBetter: false }),
   rate('notOutPct', 'Not out %', 'NO%', 'batting', (c) => share(c.notOuts, c.battingInnings), 'innings', 'Share of innings that ended not out.'),
   rate('avgPosition', 'Average batting position (as scored)', 'Pos', 'batting', (c) => (c.positionCount > 0 ? c.positionSum / c.positionCount : null), 'innings', 'Average card position as the scorer recorded it, not proof of arrival order.', { higherIsBetter: false }),
-  rate('ballsPerBoundary', 'Balls per boundary', 'B/Bdy', 'batting', (c) => (c.boundaries > 0 ? c.boundaryBalls / c.boundaries : null), 'ballsForBoundary', 'Balls faced per four or six, over innings with balls, fours and sixes recorded.', {
+  rate('ballsPerBoundary', 'Balls per boundary', 'B/Bdy', 'batting', (c) => (c.boundaries > 0 ? c.boundaryBalls / c.boundaries : null), 'ballsForBoundary', 'Balls faced per four or six, over innings with balls recorded (a missing four or six count as none).', {
     higherIsBetter: false, needs: 'balls', coverage: (c) => ({ known: c.boundaryInnings, total: c.battingInnings }),
   }),
   rate('fiftyConversion', 'Fifty conversion', 'Conv%', 'batting', (c) => share(c.hundreds, c.fifties + c.hundreds), 'fiftyScores', 'Hundreds as a share of scores of 50 or more (needs five such scores).'),

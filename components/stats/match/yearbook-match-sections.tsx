@@ -55,7 +55,7 @@ export function YearbookMatchResults({ byGrade, caption }: { byGrade: GradeLines
                       <TableCell className="whitespace-nowrap tabular-nums text-brand-charcoal">{l.forfeit ? '–' : sideScore(l.club)}</TableCell>
                       <TableCell className="whitespace-nowrap tabular-nums text-brand-charcoal">{l.forfeit ? '–' : sideScore(l.opp)}</TableCell>
                       <TableCell className="whitespace-nowrap font-semibold text-brand-black">
-                        <span aria-hidden className="mr-1.5 inline-block w-4 text-center">{resultLetter(l)}</span>
+                        <span aria-hidden className="mr-1.5 inline-block w-4 text-center">{resultLetter(l) === 'U' ? '–' : resultLetter(l)}</span>
                         {resultWord(l)}
                       </TableCell>
                     </TableRow>

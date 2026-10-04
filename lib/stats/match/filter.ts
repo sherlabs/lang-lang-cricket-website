@@ -25,5 +25,10 @@ export function matchKeeper(f: MatchFilter): (h: MatchHeader) => boolean {
     (!f.format || h.format === f.format)
 }
 
-export const filterMatchFacts = (set: FactSet, f: MatchFilter): FactSet => filterFacts(set, matchKeeper(f))
+export function filterMatchFacts(set: FactSet, f: MatchFilter): FactSet {
+  const out = filterFacts(set, matchKeeper(f))
+  // A single season is never cut by the season cap, so the note only applies to a request across seasons.
+  if (f.season) delete out.seasonCap
+  return out
+}
 

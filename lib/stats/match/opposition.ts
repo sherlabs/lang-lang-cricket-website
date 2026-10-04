@@ -16,6 +16,7 @@ export type OppositionPlayerRow = {
   battingInnings: number
   runs: number
   outs: number
+  notOuts: number
   average: number | null
   highScore: number
   highScoreNotOut: boolean
@@ -40,7 +41,7 @@ export function oppositionTable(set: FactSet, min: Pick<MatchMinimums, 'oppositi
     let r = rows.get(h.oppKey)
     if (!r) {
       r = {
-        key: h.oppKey, label: h.oppLabel, games: 0, battingInnings: 0, runs: 0, outs: 0, average: null, highScore: 0, highScoreNotOut: false, fifties: 0, hundreds: 0,
+        key: h.oppKey, label: h.oppLabel, games: 0, battingInnings: 0, runs: 0, outs: 0, notOuts: 0, average: null, highScore: 0, highScoreNotOut: false, fifties: 0, hundreds: 0,
         ducks: 0, bowlingInnings: 0, wickets: 0, runsConceded: 0, bowlBalls: 0, bestWickets: 0, bestRuns: 0, economy: null, catches: 0, lastDate: null,
       }
       rows.set(h.oppKey, r)
@@ -63,6 +64,7 @@ export function oppositionTable(set: FactSet, min: Pick<MatchMinimums, 'oppositi
     r.battingInnings++
     r.runs += b.runs
     if (b.status === 'out') r.outs++
+    if (b.status === 'not_out') r.notOuts++
     if (b.runs >= 100) r.hundreds++
     else if (b.runs >= 50) r.fifties++
     if (b.status === 'out' && b.runs === 0 && b.dismissal !== 'retired_out') r.ducks++
@@ -90,7 +92,9 @@ export function oppositionTable(set: FactSet, min: Pick<MatchMinimums, 'oppositi
     if (h) get(h).catches += f.catches
   }
   for (const r of rows.values()) {
-    r.average = r.battingInnings >= min.oppositionInnings && r.outs > 0 ? r.runs / r.outs : null
+    // Same as the classic table: innings minus not outs, so an innings of unknown status counts as an out.
+    const dismissals = r.battingInnings - r.notOuts
+    r.average = r.battingInnings >= min.oppositionInnings && dismissals > 0 ? r.runs / dismissals : null
     r.economy = r.bowlBalls >= min.oppositionBalls ? r.runsConceded / (r.bowlBalls / 6) : null
   }
   return [...rows.values()].sort((a, b) => b.games - a.games || a.label.localeCompare(b.label))
@@ -105,6 +109,8 @@ export type HeadToHeadRow = {
   drawn: number
   tied: number
   noResult: number
+  /** Games stored with no recorded result (a blank import): neither a win, loss nor a no-result. */
+  unknown: number
   wonByForfeit: number
   lostByForfeit: number
   lastMeeting: string | null
@@ -124,7 +130,7 @@ export function headToHead(set: FactSet, min: Pick<MatchMinimums, 'winGames'>): 
     let r = rows.get(h.oppKey)
     if (!r) {
       r = {
-        key: h.oppKey, label: h.oppLabel, played: 0, won: 0, lost: 0, drawn: 0, tied: 0, noResult: 0, wonByForfeit: 0, lostByForfeit: 0,
+        key: h.oppKey, label: h.oppLabel, played: 0, won: 0, lost: 0, drawn: 0, tied: 0, noResult: 0, unknown: 0, wonByForfeit: 0, lostByForfeit: 0,
         lastMeeting: null, lastResult: null, highestFor: null, highestAgainst: null, lowestCompletedFor: null, lowestCompletedAgainst: null, winPct: null,
       }
       rows.set(h.oppKey, r)
@@ -137,7 +143,8 @@ export function headToHead(set: FactSet, min: Pick<MatchMinimums, 'winGames'>): 
     else if (h.result === 'lost') r.lost++
     else if (h.result === 'draw') r.drawn++
     else if (h.result === 'tie') r.tied++
-    else r.noResult++
+    else if (h.result === 'no_result') r.noResult++
+    else r.unknown++
     if (h.date && (r.lastMeeting === null || h.date >= r.lastMeeting)) {
       r.lastMeeting = h.date
       r.lastResult = h.forfeit ? `${h.result === 'won' ? 'Won' : 'Lost'} by forfeit` : h.result

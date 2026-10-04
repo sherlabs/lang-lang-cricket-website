@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { decodeFacts, encodeFacts } from '@/lib/stats/match/codec'
 import { coverageCaption, coverageOf } from '@/lib/stats/match/coverage'
 import { assembleFacts, deriveFacts, filterFacts, mergeFactSets } from '@/lib/stats/match/facts'
+import { filterMatchFacts } from '@/lib/stats/match/filter'
 import { emptyFactSet, inningsKey, type FactSet } from '@/lib/stats/match/types'
 import { mkBundle, everyone } from './match-facts-helpers'
 import { generateMatchSeed } from '@/payload/scripts/fixtures/match-seed-data'
@@ -23,6 +24,15 @@ describe('coverage caption (one format, rule 0.3)', () => {
     ['bowling', 'From 20 Sep 2025, 2 games stored. 1 of 2 innings have bowling figures.'],
   ] as const)('adds the %s denominator', (need, text) => {
     expect(coverageCaption(coverageOf(set), need, 'en-AU').replace('Sept ', 'Sep ')).toBe(text)
+  })
+  it('lists each distinct need once, and says when only the newest seasons were read', () => {
+    const text = coverageCaption(coverageOf(set), ['balls', 'bowling', 'balls', null, undefined], 'en-AU').replace('Sept ', 'Sep ')
+    expect(text).toBe('From 20 Sep 2025, 2 games stored. 1 of 2 innings have ball-by-ball totals. 1 of 2 innings have bowling figures.')
+    const capped = coverageCaption(coverageOf({ ...set, seasonCap: { kept: 8, total: 11 } }), undefined, 'en-AU')
+    expect(capped).toContain('Only the newest 8 of 11 stored seasons are included.')
+    // A filter to one season drops the note; a player slice keeps it.
+    expect(coverageOf(filterMatchFacts({ ...set, seasonCap: { kept: 8, total: 11 } }, { season: set.matches.get(1)!.seasonName })).seasonCap).toBeUndefined()
+    expect(coverageOf(filterMatchFacts({ ...set, seasonCap: { kept: 8, total: 11 } }, {})).seasonCap).toEqual({ kept: 8, total: 11 })
   })
   it('handles an empty store and a single game', () => {
     expect(coverageCaption(coverageOf(emptyFactSet()))).toBe('No matches are stored yet.')

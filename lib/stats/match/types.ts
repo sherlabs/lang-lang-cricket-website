@@ -113,6 +113,8 @@ export type FactSet = {
   bowl: BowlFact[]
   credits: CreditFact[]
   partnerships: PartnershipFact[]
+  /** Set when the set holds only the newest `kept` of `total` stored seasons (a request cap), so captions can say so. */
+  seasonCap?: { kept: number; total: number }
 }
 
 export const inningsKey = (m: number, seq: number) => `${m}:${seq}`

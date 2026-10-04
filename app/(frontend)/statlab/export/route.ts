@@ -16,7 +16,7 @@ export async function GET(request: Request): Promise<Response> {
   if (!isCanonicalRequest(url, canonical)) {
     return new Response(null, { status: 308, headers: { Location: canonical, 'Cache-Control': 'public, s-maxage=600', 'X-Robots-Tag': 'noindex' } })
   }
-  // Env EXPORT_FILENAME_PREFIX (Lang Lang: langlang), else derived from the club's short name for a new club.
+  // Env EXPORT_FILENAME_PREFIX, else derived from the club short name.
   const prefix = EXPORT_FILENAME_PREFIX || slugify((await getClub()).shortName) || 'club'
   const { csv, truncated } = statLabCsv(params, result, EXPORT_ROWS, settings.matchMinimums)
   return new Response(csv, {

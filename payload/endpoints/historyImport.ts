@@ -43,7 +43,9 @@ export const historyImportEndpoints: Endpoint[] = [
       if (refused) return refused
       const body = await readJson(req)
       if (!isImportKind(body.kind) || typeof body.csv !== 'string') return fail(400, 'Choose what you are importing and attach a file.')
-      const res = await applyImport(req.payload, body.kind, body.csv, { createUnknown: body.createUnknown === true, expectedHash: typeof body.fileHash === 'string' ? body.fileHash : null })
+      // The hash of the previewed file is required: an API client cannot skip the "this is the file you looked at" check.
+      if (typeof body.fileHash !== 'string' || !body.fileHash) return fail(400, 'Preview the file first, then import it with the fileHash the preview returned.')
+      const res = await applyImport(req.payload, body.kind, body.csv, { createUnknown: body.createUnknown === true, expectedHash: body.fileHash })
       if (!res.ok) return fail(400, res.error)
       return Response.json(res)
     },

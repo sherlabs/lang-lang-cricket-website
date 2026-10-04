@@ -65,8 +65,20 @@ describe('notification lines', () => {
     expect(allCaughtUp(lines)).toBe(true)
   })
 
+  it('a running update that started long ago is a failed run, not "right now"', () => {
+    const lines = notificationLines(input({ latestRun: run({ status: 'running', startedAt: '2026-10-03T16:00:00Z', finishedAt: null }) }), { ...opts(false), now: new Date('2026-10-03T16:30:00Z') })
+    expect(lines[0].text).toBe(notificationCopy.committee.syncFailed)
+    expect(allCaughtUp(lines)).toBe(false)
+  })
+
+  it('a failure from days ago does not say "last night"', () => {
+    const lines = notificationLines(input({ latestRun: run({ status: 'error' }) }), { ...opts(false), now: new Date('2026-10-08T16:00:00Z') })
+    expect(lines[0].text).not.toContain('Last night')
+    expect(lines[0].text).toContain('has not worked since')
+  })
+
   it('a running update is information, not a problem', () => {
-    const lines = notificationLines(input({ latestRun: run({ status: 'running', finishedAt: null }) }), opts(false))
+    const lines = notificationLines(input({ latestRun: run({ status: 'running', startedAt: '2026-10-04T07:58:00Z', finishedAt: null }) }), opts(false))
     expect(lines[0].text).toBe(notificationCopy.committee.syncRunning)
     expect(allCaughtUp(lines)).toBe(true)
   })

@@ -64,7 +64,7 @@ export function HistoryImportPanel({ api, batches }: { api: string; batches: Bat
     setBusy(true)
     try {
       const res = await call('/history-import/apply', { kind, csv, createUnknown, fileHash: preview.fileHash })
-      toast.success(`Imported: ${res.created} new, ${res.updated} changed, ${res.unchanged} unchanged.`)
+      toast.success(`Imported: ${res.created} new, ${res.updated} changed, ${res.unchanged} unchanged.${Number(res.updated) > 0 ? ' Undoing this import later deletes the changed rows rather than restoring their earlier values.' : ''}`)
       setPreview(null)
       setCsv(null)
       setFileName('')
@@ -78,7 +78,7 @@ export function HistoryImportPanel({ api, batches }: { api: string; batches: Bat
   }
 
   const undo = async (b: Batch) => {
-    if (!window.confirm(`Remove everything this import brought in (${b.seasons} season rows, ${b.matches} games)? Players it created are kept.`)) return
+    if (!window.confirm(`Delete every row this import wrote (${b.seasons} season rows, ${b.matches} games)? If this import corrected rows that were already on the site, those rows are deleted too: the earlier values are not restored (re-import the earlier file to bring them back). Players it created are kept.`)) return
     setBusy(true)
     try {
       await call('/history-import/undo-batch', { batch: b.batch })

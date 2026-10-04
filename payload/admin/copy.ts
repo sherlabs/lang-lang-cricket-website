@@ -36,6 +36,7 @@ export const notificationCopy = {
   committee: {
     syncOk: 'Player stats were updated last night.',
     syncOkOlder: (when: string) => `Player stats were last updated ${when}.`,
+    syncFailedOlder: (when: string) => `The stats update failed on ${when} and has not worked since. The site is still showing the previous numbers. Please tell the site administrator.`,
     syncRunning: 'Player stats are being updated right now.',
     syncFailed: "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator.",
     stories: (n: number) => `${n} ${n === 1 ? 'story is' : 'stories are'} waiting for approval`,

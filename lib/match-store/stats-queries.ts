@@ -18,7 +18,7 @@ import { readStoredBundles } from './read'
  * a visible (non-hidden, resolved) player, and a hidden player appears nowhere, not even as a
  * partner (partnerships carry `null` for a hidden partner). The collections stay staff-read only.
  *
- * One cached slim blob per season (`['match-facts', year]`, tags `ALL_STATS_TAGS`); a profile reads
+ * One cached slim blob per season (`['match-facts', 'v1', year]`, bumped with the codec layout, tags `ALL_STATS_TAGS`); a profile reads
  * the season blobs and filters rows in memory, so there is no per-player cache and no per-request scan.
  */
 
@@ -63,7 +63,7 @@ async function loadSeasonFacts(year: number): Promise<SlimFacts> {
 
 /** One season's facts (cached). Visible players only. */
 export async function getSeasonFacts(seasonStartYear: number): Promise<FactSet> {
-  const [blob, labels] = await Promise.all([cached(['match-facts', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)), getLabelMap()])
+  const [blob, labels] = await Promise.all([cached(['match-facts', 'v1', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)), getLabelMap()])
   return labelHeaders(decodeFacts(blob), labels)
 }
 
@@ -100,8 +100,12 @@ export async function getOppositionOptions(): Promise<OppositionOption[]> {
 /** Facts for the given seasons, bounded to the newest `max` (the cap that keeps a wide request cheap). */
 export async function getFactsFor(seasonYears: readonly number[], max: number = STATLAB_MAX_SEASONS): Promise<FactSet> {
   const unique = [...new Set(seasonYears)].sort((a, b) => b - a)
-  const years = [...unique.filter((y) => y !== NO_YEAR_SEASON).slice(0, max), ...unique.filter((y) => y === NO_YEAR_SEASON)]
-  return mergeFactSets(await Promise.all(years.map(getSeasonFacts)))
+  const dated = unique.filter((y) => y !== NO_YEAR_SEASON)
+  const years = [...dated.slice(0, max), ...unique.filter((y) => y === NO_YEAR_SEASON)]
+  const set = mergeFactSets(await Promise.all(years.map(getSeasonFacts)))
+  // Say so when the cap cut seasons off, so a caption never reads as "everything stored".
+  if (dated.length > max) set.seasonCap = { kept: max, total: dated.length }
+  return set
 }
 
 /** Every stored season (newest `PROFILE_MAX_SEASONS`). */

@@ -5,11 +5,12 @@ import { getYearbookMatchData } from '@/lib/match-store/yearbook-queries'
 import { getStatsSettings } from '@/lib/site-settings'
 import { boardContext, buildLeaderboard } from '@/lib/stats/leaderboard'
 import { getMetric } from '@/lib/stats/metrics'
-import { resultLetter, resultsByGradeFromLines } from '@/lib/stats/match/yearbook'
+import { loadGamesForSeasonName } from '@/lib/matches-queries'
+import { resultsByGradeFromLines, storedShare } from '@/lib/stats/match/yearbook'
 import { effectiveCategories } from '@/lib/stats/query-string'
 import { getHonourPlayers, getVisibleStatData } from '@/lib/stats/queries'
 import { honoursForSeason } from '@/lib/stats/yearbook'
-import type { YearbookFacts } from './yearbook-draft'
+import type { YearbookFacts, YearbookRecord } from './yearbook-draft'
 
 /**
  * The facts for one yearbook draft, from published data only (W2 spec 6.5): the stored season record and results by grade,
@@ -43,19 +44,32 @@ export async function gatherYearbookFacts(book: { seasonName: string; premiershi
 
   const match = await getYearbookMatchData(book.seasonName, { cats, rules: settings.gradeRules })
   const lines = match?.lines ?? []
+  const empty = (): YearbookRecord => ({ played: 0, won: 0, lost: 0, drawn: 0, tied: 0, noResult: 0, unrecorded: 0, forfeitWins: 0, forfeitLosses: 0 })
   const byGrade = resultsByGradeFromLines(lines).map((g) => {
-    const n = { won: 0, lost: 0, drawn: 0, other: 0 }
+    const n = empty()
     for (const l of g.lines) {
-      const r = resultLetter(l)
-      if (r === 'W') n.won++
-      else if (r === 'L') n.lost++
-      else if (r === 'D') n.drawn++
-      else n.other++
+      n.played++
+      if (l.forfeit) {
+        if (l.result === 'won') n.forfeitWins++
+        else if (l.result === 'lost') n.forfeitLosses++
+        else n.unrecorded++
+      } else if (l.result === 'won') n.won++
+      else if (l.result === 'lost') n.lost++
+      else if (l.result === 'draw') n.drawn++
+      else if (l.result === 'tie') n.tied++
+      else if (l.result === 'no_result') n.noResult++
+      else n.unrecorded++
     }
-    return { grade: g.grade, played: g.lines.length, ...n }
+    return { grade: g.grade, ...n }
   })
-  const sum = (k: 'played' | 'won' | 'lost' | 'drawn' | 'other') => byGrade.reduce((s, g) => s + g[k], 0)
-  const record = byGrade.length ? { played: sum('played'), won: sum('won'), lost: sum('lost'), drawn: sum('drawn'), other: sum('other') } : null
+  // The public yearbook only shows stored results when every finished game is stored; the draft follows the same rule,
+  // so it never claims "won 6 of 10" for a 14 game season. Without a live list (PlayHQ unreadable) the count is stored as-is and labelled.
+  const live = await loadGamesForSeasonName(book.seasonName).catch(() => null)
+  const share = storedShare(lines, live && live.status === 'ok' ? live.games : null, { cats, rules: settings.gradeRules })
+  const sum = (k: keyof YearbookRecord) => byGrade.reduce((s, g) => s + g[k], 0)
+  const total = empty()
+  for (const k of Object.keys(total) as (keyof YearbookRecord)[]) total[k] = sum(k)
+  const record = byGrade.length && (share.complete || share.live === null) ? total : null
 
   const highlights: { text: string }[] = []
   if (match && match.set.matches.size > 0) {
@@ -72,7 +86,8 @@ export async function gatherYearbookFacts(book: { seasonName: string; premiershi
     seasonName: book.seasonName,
     locale: CLUB_LOCALE,
     record,
-    byGrade,
+    byGrade: record ? byGrade : [],
+    coverage: { stored: share.stored, live: share.live, complete: share.complete },
     leaders,
     highlights,
     honours: honoursForSeason(honourPlayers, book.seasonName).map((h) => ({ player: h.name, title: h.title })),

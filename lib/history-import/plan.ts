@@ -21,12 +21,18 @@ export type ImportContext = {
   playhqSeasons: ReadonlySet<string>
   /** `${localDate}|${normalised opponent}` for every PlayHQ game. */
   playhqGames: ReadonlySet<string>
+  /** `${localDate}|${grade}|${team}` (see `gameSlotKey`) for every PlayHQ game: catches a double count when the opponent is spelled differently. */
+  playhqGameSlots?: ReadonlySet<string>
   /** Imported season rows: key `${playerId}|${teamId}` to the stored counts (JSON of the counts, grade and team name). */
   existingSeasons: ReadonlyMap<string, string>
   /** Imported games: `gameId` to the stored `sourceHash`. */
   existingMatches: ReadonlyMap<string, string>
   createUnknown: boolean
 }
+
+/** A game's date, grade and our team, lower-cased with spaces collapsed. */
+export const gameSlotKey = (date: string, grade: string | null | undefined, team: string | null | undefined): string =>
+  [date, grade, team].map((s) => (s ?? '').trim().toLowerCase().replace(/\s+/g, ' ')).join('|')
 
 export type NewPlayerPlan = { nameKey: string; firstName: string; lastName: string; rows: number[] }
 export type PlanSummary = { create: number; update: number; unchanged: number; errors: number; warnings: number; ignored: number }
@@ -137,6 +143,9 @@ export function planMatchRowsImport(
       rowErrors.push(issue)
       overlaps.push(issue)
       continue
+    }
+    if (ctx.playhqGameSlots?.has(gameSlotKey(game.date, game.gradeName, game.teamName))) {
+      warnings.push({ row: game.firstRow, column: 'opponent', message: `PlayHQ already has a ${game.teamName} ${game.gradeName} game on ${game.date}, under a different opponent name. If it is the same game, remove these rows so it is not counted twice.` })
     }
     const bundle = buildImportedBundle(game)
     const stored = ctx.existingMatches.get(game.gameId)

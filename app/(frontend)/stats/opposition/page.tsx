@@ -37,7 +37,7 @@ const head = 'text-brand-grey'
 const num = 'tabular-nums text-right'
 const nf = (v: number | null) => (v === null ? '–' : String(v))
 
-const resultWord = (r: string | null) => (r === 'won' ? 'Won' : r === 'lost' ? 'Lost' : r === 'draw' ? 'Drawn' : r === 'tie' ? 'Tied' : r === 'no_result' ? 'No result' : (r ?? ''))
+const resultWord = (r: string | null) => (r === 'won' ? 'Won' : r === 'lost' ? 'Lost' : r === 'draw' ? 'Drawn' : r === 'tie' ? 'Tied' : r === 'no_result' ? 'No result' : (r ?? '–'))
 
 function forfeitText(r: HeadToHeadRow): string {
   const parts = [r.wonByForfeit ? `${r.wonByForfeit} won` : '', r.lostByForfeit ? `${r.lostByForfeit} lost` : ''].filter(Boolean)

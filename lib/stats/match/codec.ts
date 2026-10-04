@@ -7,7 +7,8 @@ import {
 /**
  * Columnar encoding of a fact set for the per-season cache blob (W2 spec section 3): one integer row
  * per fact instead of an object, so a season stays far below the 2 MB `unstable_cache` entry cap.
- * Null is -1 (no fact value is negative). `decodeFacts(encodeFacts(x))` equals `x`.
+ * Null is -1 (no fact value is negative). The layout is positional: bump the version segment of the `match-facts` cache key
+ * in `lib/match-store/stats-queries.ts` whenever it changes, or an old cached blob decodes into wrong values. `decodeFacts(encodeFacts(x))` equals `x`.
  */
 export type SlimFacts = {
   matches: MatchHeader[]

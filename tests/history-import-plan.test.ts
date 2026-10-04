@@ -5,7 +5,7 @@ import { buildImportedBundle } from '@/lib/history-import/bundle'
 import { IMPORTED_SEASON_ORDER_MIN, importedSeasonOrder, isImportedSeasonOrder } from '@/lib/history-import/constants'
 import { parseCsv } from '@/lib/history-import/csv-parse'
 import { parseMatchRows } from '@/lib/history-import/match-rows'
-import { planMatchRowsImport, planSeasonTotalsImport, seasonSignature, type ImportContext, type KnownPlayer } from '@/lib/history-import/plan'
+import { gameSlotKey, planMatchRowsImport, planSeasonTotalsImport, seasonSignature, type ImportContext, type KnownPlayer } from '@/lib/history-import/plan'
 import { parseSeasonTotals } from '@/lib/history-import/season-totals'
 import { currentSeasonOrder, seasonIndex } from '@/lib/stats/season-window'
 
@@ -92,6 +92,15 @@ describe('match rows plan', () => {
     expect(p.overlaps).toHaveLength(1)
     expect(p.overlaps[0].message).toContain('PlayHQ already has the game on 2013-02-09')
     expect(p.ops).toHaveLength(3)
+  })
+
+  it('warns (but still plans the game) when PlayHQ has a game in the same grade and team on the same date under another opponent name', () => {
+    const [first] = planMatchRowsImport(parsed, ctx({ createUnknown: true })).ops
+    const slot = gameSlotKey(first.game.date, first.game.gradeName, first.game.teamName.toUpperCase())
+    const p = planMatchRowsImport(parsed, ctx({ createUnknown: true, playhqGameSlots: new Set([slot]) }))
+    expect(p.warnings.some((w) => w.message.includes('different opponent name'))).toBe(true)
+    expect(p.overlaps).toHaveLength(0)
+    expect(p.ops).toHaveLength(4)
   })
 
   it('the bundle never links an opposition person', () => {

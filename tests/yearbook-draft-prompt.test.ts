@@ -4,8 +4,9 @@ import { MAX_OUTPUT_TOKENS, MAX_WORDS, aiConfigured, buildPrompt, dailyLimit, dr
 
 const facts = (over: Partial<YearbookFacts> = {}): YearbookFacts => ({
   clubName: 'Demo Cricket Club', seasonName: 'Summer 2025/26', locale: 'en-AU', premiership: null,
-  record: { played: 10, won: 6, lost: 3, drawn: 1, other: 0 },
-  byGrade: [{ grade: 'Demo B Grade', played: 5, won: 3, lost: 2, drawn: 0, other: 0 }, { grade: 'Demo A Grade', played: 5, won: 3, lost: 1, drawn: 1, other: 0 }],
+  record: { played: 10, won: 6, lost: 3, drawn: 1, tied: 0, noResult: 0, unrecorded: 0, forfeitWins: 0, forfeitLosses: 0 },
+  coverage: { stored: 10, live: 10, complete: true },
+  byGrade: [{ grade: 'Demo B Grade', played: 5, won: 3, lost: 2, drawn: 0, tied: 0, noResult: 0, unrecorded: 0, forfeitWins: 0, forfeitLosses: 0 }, { grade: 'Demo A Grade', played: 5, won: 3, lost: 1, drawn: 1, tied: 0, noResult: 0, unrecorded: 0, forfeitWins: 0, forfeitLosses: 0 }],
   leaders: [{ board: 'Most runs', entries: [{ name: 'Pat Lee', value: '412 runs' }] }],
   highlights: [{ text: 'Pat Lee scored 112 against Demo Rovers' }],
   honours: [{ player: 'Sam Tester', title: 'Best and Fairest' }, { player: 'Alex Demoson', title: 'Most improved' }],
@@ -50,6 +51,13 @@ describe('prompt', () => {
     expect(a.system).toContain('en-AU')
     const json = a.prompt.slice(a.prompt.indexOf('```json') + 7, a.prompt.lastIndexOf('```'))
     expect(JSON.parse(json).resultsByGrade.map((g: { grade: string }) => g.grade)).toEqual(['Demo A Grade', 'Demo B Grade'])
+  })
+
+  it('labels how many games are stored, and carries a null record as null', () => {
+    expect(buildPrompt(facts()).prompt).toContain('10 of 10 finished games stored')
+    const p = buildPrompt(facts({ record: null, byGrade: [], coverage: { stored: 6, live: 14, complete: false } })).prompt
+    expect(p).toContain('6 of 14 finished games stored')
+    expect(p).toContain('"record": null')
   })
 
   it('an injected instruction inside an honour stays inside the data block', () => {

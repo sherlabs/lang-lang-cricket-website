@@ -39,7 +39,7 @@ export function buildMatchBoard(set: FactSet, metric: MatchMetric, min: MatchMin
   const items = [...countsByPlayer(set)].map(([playerId, counts]) => ({ playerId, counts }))
   const { ranked, unqualified } = rankMatchBy(items, metric, min)
   const ctx = matchBoardContext(metric)
-  const need = metric.needs === 'balls' ? 'balls' : metric.needs === 'bowling' ? 'bowling' : undefined
+  const need = metric.needs ?? undefined
   return {
     ranked: ranked.map((r) => ({ rank: r.rank, playerId: r.item.playerId, display: r.display, context: ctx.text(r.item.counts) })),
     unqualified: unqualified.map((u) => ({ playerId: u.playerId, display: metric.format(u.counts) })),

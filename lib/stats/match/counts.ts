@@ -52,11 +52,12 @@ export function matchCountsOf(set: FactSet): MatchCounts {
       c.ballsFaced += b.balls
       c.runsOnBalls += b.runs
     }
-    if (b.balls !== null && b.fours !== null && b.sixes !== null) {
+    // Same rule as the classic table: PlayHQ may omit fours/sixes when zero, so a missing one is 0 whenever balls are known.
+    if (b.balls !== null) {
       c.boundaryInnings++
       c.boundaryRuns += b.runs
       c.boundaryBalls += b.balls
-      c.boundaries += b.fours + b.sixes
+      c.boundaries += (b.fours ?? 0) + (b.sixes ?? 0)
     }
     if (b.status === 'out') {
       if (b.dismissal) c.dismissals[dismissalKey(b.dismissal)]++

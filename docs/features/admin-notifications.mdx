@@ -21,7 +21,7 @@ Failures were only visible in the Sync runs list, which volunteers never open ([
 ## What it does
 
 - Replaces the "Needs your attention" block on Home with one short list built from data that already exists:
-  - **The latest PlayHQ update.** Committee: "Player stats were updated last night." (or "last updated <date>" when older than a day and a half; "being updated right now"), or, when it failed, "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator." Raw errors are never shown to editors.
+  - **The latest PlayHQ update.** Committee: "Player stats were updated last night." (or "last updated <date>" when older than a day and a half; "being updated right now"), or, when it failed, "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator." (a failure older than a day and a half says "failed on <date> and has not worked since" instead). An update that has been "running" for more than ten minutes (the sync lock window) is treated as a failed one, not shown as in progress. Raw errors are never shown to editors.
   - **Waiting for approval:** stories and photos, with links.
   - **Admins also see** the error text, the counts (matches saved, matches that did not save, players whose match totals disagree with their season totals) with a link to Sync runs, the number of possible duplicate players, and the import log (how many imports are on the site and when the latest was).
 - Problems come first; "You are all caught up" shows only when nothing needs attention.
@@ -30,7 +30,7 @@ Failures were only visible in the Sync runs list, which volunteers never open ([
 
 ## How to use it
 
-Open **Home**. Follow a link to act on an item. An admin who sees the "did not finish" line opens **Sync runs** or presses **Run sync now** under Advanced.
+Open **Home**. Follow a link to act on an item. An admin who sees the "did not finish" line opens **Sync runs** or presses **Run sync now** in the Advanced panel on Home (or on the Players list).
 
 ## Not included / deferred
 
