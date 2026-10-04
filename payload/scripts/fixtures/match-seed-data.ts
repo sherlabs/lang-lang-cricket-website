@@ -64,7 +64,7 @@ const OPP_FIRST = ['Aaron', 'Blake', 'Cody', 'Drew', 'Elliot', 'Finn', 'Grant', 
 const OPP_LAST = ['Archer', 'Baxter', 'Calder', 'Dawson', 'Eastman', 'Fenwick', 'Gallo', 'Hartley', 'Irving', 'Jessop', 'Kemp', 'Lowe', 'Marsh', 'Norris', 'Oakes']
 const OPP_CLUBS = ['Caldermeade Rovers', 'Bunyip Creek', 'Tynong North', 'Garfield Bandits', 'Koo Wee Rup Colts', 'Nyora Hawks']
 
-const FILL_IN: Person = { firstName: 'Quentin', lastName: 'Fillin' }
+export const MATCH_SEED_FILL_IN: Person = { firstName: 'Quentin', lastName: 'Fillin' }
 
 type Roster = { teamId: string; orgId: string; teamName: string; orgName: string; apps: RawAppearance[]; coach: RawAppearance }
 
@@ -309,7 +309,7 @@ export function generateMatchSeed(clubOrgId: string): SeedGame[] {
       const p = MATCH_SEED_CLUB_PLAYERS[i]
       return spec.dan && p.firstName === 'Daniel' ? { firstName: 'Dan', lastName: p.lastName } : p
     })
-    if (spec.fillIn) clubPeople[10] = FILL_IN
+    if (spec.fillIn) clubPeople[10] = MATCH_SEED_FILL_IN
     if (spec.samePair) {
       const sam = MATCH_SEED_CLUB_PLAYERS[13]
       if (!clubPeople.some((p) => p.lastName === sam.lastName && p.firstName === sam.firstName)) clubPeople[9] = sam
