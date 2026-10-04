@@ -51,7 +51,7 @@ export async function destroyTestPayload(payload: Payload | undefined): Promise<
 }
 
 /** A logged-in user's JWT, creating the user first when needed (context.seedAdmin passes the first-register guard). */
-export async function tokenFor(payload: Payload, role: 'admin' | 'editor', email = `${role}@example.com`): Promise<string> {
+export async function tokenFor(payload: Payload, role: 'admin' | 'editor' | 'selector', email = `${role}@example.com`): Promise<string> {
   const password = `${role}-pass-123`
   const found = await payload.find({ collection: 'users', where: { email: { equals: email } }, limit: 1, depth: 0 })
   if (!found.docs.length) {

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isStaff, isStaffField, nobodyField, staffOr } from '../access'
+import { isStaff, isStaffField, isStaffUser, nobodyField, staffOr } from '../access'
 import { adminOnlyCondition } from '../admin/visibility'
 import { storyEditor } from '../editor/storyLexical'
 import { tokenField } from '../fields/tokenField'
@@ -101,7 +101,7 @@ export const Stories: CollectionConfig = {
       type: 'select',
       required: true,
       index: true,
-      defaultValue: ({ user }) => (user ? 'published' : 'pending'),
+      defaultValue: ({ user }) => (isStaffUser(user) ? 'published' : 'pending'),
       options: [
         { label: 'Waiting for approval', value: 'pending' },
         { label: 'On the website', value: 'published' },

@@ -1,5 +1,6 @@
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import type { CollectionBeforeChangeHook, CollectionBeforeValidateHook } from 'payload'
+import { isStaffUser } from '../access'
 import { mergeOver } from '../../lib/club-merge'
 import { htmlToExcerpt } from '../../lib/story-excerpt'
 import { clubDefaults } from '../seed/club-defaults'
@@ -34,7 +35,7 @@ export function excerptFromContent(content: unknown): string {
 export const defaultAuthorName: CollectionBeforeValidateHook = async ({ data, operation, req }) => {
   if (!data || req.context?.etl || operation !== 'create') return data
   if (typeof data.authorName === 'string' && data.authorName.trim()) return data
-  if (!req.user) return data
+  if (!isStaffUser(req.user)) return data
   let name = clubDefaults.name
   try {
     const club = await req.payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true, req })
@@ -51,7 +52,7 @@ export const defaultAuthorName: CollectionBeforeValidateHook = async ({ data, op
  * 1. Public token edit (`context.publicSubmission`): strip the protected keys and force
  *    `pending` — a leaked edit link must never publish (spec §5 "Behaviour change"). A public
  *    create is forced to `pending` the same way.
- * 2. `submittedByAdmin`: computed on create (`Boolean(req.user) && !publicSubmission`), kept on update.
+ * 2. `submittedByAdmin`: computed on create (`isStaffUser(req.user) && !publicSubmission`), kept on update.
  * 3. Timestamps on status transitions: → published: `publishedAt ??= now`, and `reviewedAt = now`
  *    on an update (a review); → rejected: `reviewedAt = now`. Otherwise both keep the stored
  *    values, so nothing can backdate them (they also have create/update access `nobody`).
@@ -68,7 +69,7 @@ export const storyLifecycle: CollectionBeforeChangeHook = ({ data, operation, or
     data.status = 'pending'
   }
 
-  data.submittedByAdmin = operation === 'create' ? Boolean(req.user) && !isPublic : Boolean(original.submittedByAdmin)
+  data.submittedByAdmin = operation === 'create' ? isStaffUser(req.user) && !isPublic : Boolean(original.submittedByAdmin)
 
   const previous = operation === 'update' ? original.status : undefined
   const status = data.status ?? previous

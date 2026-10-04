@@ -190,7 +190,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * People who can sign in to this admin. Editors run the day-to-day website; admins also see the advanced settings.
+ * People who can sign in. Editors run the day-to-day website; admins also see the advanced settings; selectors pick the teams and never see this admin. Add selectors from Advanced > Selectors.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
@@ -202,9 +202,23 @@ export interface User {
    */
   name?: string | null;
   /**
-   * Editors see a short, simple menu. Admins also see the Advanced section.
+   * Editors see a short, simple menu. Admins also see the Advanced section. Selectors only use the team selection area of the website.
    */
-  role: 'admin' | 'editor';
+  role: 'admin' | 'editor' | 'selector';
+  /**
+   * Tick to stop this person signing in. Their open sessions end straight away.
+   */
+  disabled?: boolean | null;
+  inviteTokenHash?: string | null;
+  inviteExpiresAt?: string | null;
+  invitedAt?: string | null;
+  facebookId?: string | null;
+  /**
+   * When a Facebook sign-in was linked.
+   */
+  facebookLinkedAt?: string | null;
+  lastLoginAt?: string | null;
+  lastLoginMethod?: ('password' | 'facebook') | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1456,6 +1470,14 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  disabled?: T;
+  inviteTokenHash?: T;
+  inviteExpiresAt?: T;
+  invitedAt?: T;
+  facebookId?: T;
+  facebookLinkedAt?: T;
+  lastLoginAt?: T;
+  lastLoginMethod?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

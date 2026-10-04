@@ -1,6 +1,6 @@
 import { APIError, type CollectionBeforeChangeHook, type CollectionBeforeValidateHook, type CollectionConfig } from 'payload'
 import { MAX_QUERY_LENGTH, MAX_SAVED_REPORTS, canonicaliseReport } from '../../lib/stats/saved-reports'
-import { isAdmin, nobodyField } from '../access'
+import { isAdmin, isAdminUser, nobodyField } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
 import { maxChars } from '../fields/validators'
 import { uniqueSlug } from '../hooks/slug'
@@ -28,7 +28,8 @@ const canonicaliseQuery: CollectionBeforeValidateHook = async ({ data, operation
 
 /** The owner is whoever created the report; nothing else sets it. */
 const stampOwner: CollectionBeforeChangeHook = ({ data, operation, req }) => {
-  if (operation === 'create' && req.user) data.owner = req.user.id
+  const user = req.user
+  if (operation === 'create' && user && isAdminUser(user)) data.owner = user.id
   return data
 }
 

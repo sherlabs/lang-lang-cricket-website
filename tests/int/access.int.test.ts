@@ -60,12 +60,15 @@ describe('access: users', () => {
 
     const login = await rest('POST', '/users/login', { body: { email: 'editor@example.com', password: 'editor-pass-123' } })
     const token = login.json.token as string
+    // An attempt to change a role is refused outright (visible), not silently dropped.
     const patch = await rest('PATCH', `/users/${editorId}`, { token, body: { role: 'admin', name: 'Ed' } })
-    expect(patch.status).toBe(200)
-    const after = await payload.findByID({ collection: 'users', id: editorId })
-    expect(after.role).toBe('editor')
-    expect(after.name).toBe('Ed')
+    expect(patch.status).toBe(403)
+    const unchanged = await payload.findByID({ collection: 'users', id: editorId })
+    expect(unchanged.role).toBe('editor')
+    expect((await rest('PATCH', `/users/${editorId}`, { token, body: { name: 'Ed' } })).status).toBe(200)
+    expect((await payload.findByID({ collection: 'users', id: editorId })).name).toBe('Ed')
 
+    // An editor reads themselves and selectors only (no selectors exist yet), never the admin.
     const list = await rest('GET', '/users', { token })
     expect(list.json.docs.map((u: { email: string }) => u.email)).toEqual(['editor@example.com'])
   })

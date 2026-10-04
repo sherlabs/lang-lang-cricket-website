@@ -1,5 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { dismissPair, mergePlayerInto, undoMerge } from '../../lib/players/merge-core'
+import { isSignedIn, isStaffUser } from '../access'
 import { fail, readJson, refuseNonAdmin } from './adminOnly'
 
 const toId = (v: unknown): number | null => {
@@ -19,7 +20,8 @@ export const mergePlayersEndpoint: Endpoint = {
   path: '/:id/merge',
   method: 'post',
   handler: async (req) => {
-    if (!req.user) return fail(401, 'You must be logged in to merge players.')
+    if (!isSignedIn(req.user)) return fail(401, 'You must be logged in to merge players.')
+    if (!isStaffUser(req.user)) return fail(403, 'Only the committee can merge players.')
     const sId = toId(req.routeParams?.id)
     const body = await readJson(req)
     const tId = toId(body.targetId)

@@ -1,5 +1,6 @@
 import 'server-only'
 import { headers } from 'next/headers'
+import { isStaffUser } from '@/payload/access'
 import type { NewsView, PageView } from '@/lib/domain'
 import { getPayloadClient } from '@/lib/payload/client'
 import { toNewsView, toPageView } from '@/lib/payload/mappers'
@@ -11,7 +12,7 @@ export async function hasStaffSession(): Promise<boolean> {
   try {
     const payload = await getPayloadClient()
     const { user } = await payload.auth({ headers: await headers() })
-    return Boolean(user)
+    return isStaffUser(user)
   } catch (err) {
     console.warn('[preview] could not check the session:', (err as Error).message)
     return false

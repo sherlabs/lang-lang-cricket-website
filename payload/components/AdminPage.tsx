@@ -1,6 +1,7 @@
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
+import { isStaffUser } from '../access'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 
@@ -34,5 +35,5 @@ export function AdminPage({ view, children, className = '' }: { view: AdminViewS
  */
 export function requireUser(view: AdminViewServerProps, path: string): void {
   const { req } = view.initPageResult
-  if (!req.user) redirect(`${req.payload.config.routes.admin}/login?redirect=${encodeURIComponent(`${req.payload.config.routes.admin}${path}`)}`)
+  if (!isStaffUser(req.user)) redirect(`${req.payload.config.routes.admin}/login?redirect=${encodeURIComponent(`${req.payload.config.routes.admin}${path}`)}`)
 }

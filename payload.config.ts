@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 
 import { BRANDING } from './config/site'
 import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
+import { restrictBuiltinCollections } from './payload/access/builtins'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { AiDraftCounter } from './payload/collections/AiDraftCounter'
 import { Announcements } from './payload/collections/Announcements'
@@ -86,6 +87,7 @@ export default buildConfig({
   globals: [Club, ClubApparel, SiteSettings, Theme],
   endpoints: [...historyImportEndpoints],
   editor: lexicalEditor(),
+  onInit: restrictBuiltinCollections,
   db: postgresAdapter({
     pool: {
       connectionString: requireEnv('DATABASE_URI'),

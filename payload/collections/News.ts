@@ -1,5 +1,5 @@
 import type { Access, CollectionConfig, Validate } from 'payload'
-import { isAdminField, isStaff, nobodyField } from '../access'
+import { isAdminField, isStaff, isStaffUser, nobodyField } from '../access'
 import { publishedNow } from '../../lib/news-visibility'
 import { adminOnlyCondition } from '../admin/visibility'
 import { storyEditor } from '../editor/storyLexical'
@@ -25,7 +25,7 @@ const revalidateAfter = async (doc: Record<string, unknown>, previousDoc: Record
  * constant), so a post scheduled for the future turns visible on its own.
  */
 export const readNews: Access = ({ req }) => {
-  if (req.user) return true
+  if (isStaffUser(req.user)) return true
   return publishedNow()
 }
 

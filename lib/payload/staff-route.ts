@@ -1,5 +1,6 @@
 import 'server-only'
 import type { TypedUser } from 'payload'
+import { isSignedIn, isStaffUser } from '@/payload/access'
 import { getPayloadClient } from './client'
 
 /**
@@ -17,7 +18,9 @@ export async function requireStaff(request: Request): Promise<{ user: TypedUser 
   // caller gets 401 (not signed in) rather than 403.
   if (mutating && origin && !payload.config.csrf.includes(origin)) return forbidden
   const { user } = await payload.auth({ headers: request.headers })
-  if (!user) return { response: Response.json({ error: 'Unauthorized' }, { status: 401 }) }
+  if (!isSignedIn(user)) return { response: Response.json({ error: 'Unauthorized' }, { status: 401 }) }
+  // A selector (or a disabled user) is signed in but is not committee: same refusal as a foreign Origin.
+  if (!isStaffUser(user)) return forbidden
   if (mutating && !origin) return forbidden
-  return { user }
+  return { user: user as TypedUser }
 }
