@@ -5,6 +5,7 @@ import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { JsonLd } from '@/components/json-ld'
 import { PageHeader } from '@/components/page-header'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
+import { YearbookHighlights, YearbookMatchResults, YearbookPartnerships, YearbookProgression, highlightLines } from '@/components/stats/match/yearbook-match-sections'
 import { LeaderboardTable, type LeaderboardRow } from '@/components/stats/leaderboard-table'
 import { PrintButton } from '@/components/stats/print-button'
 import { SubHeading } from '@/components/stats/sub-heading'
@@ -17,6 +18,7 @@ import {
   YearbookSponsors,
 } from '@/components/stats/yearbook-sections'
 import { getClub } from '@/lib/club'
+import { getYearbookMatchData } from '@/lib/match-store/yearbook-queries'
 import { loadGamesForSeasonName } from '@/lib/matches-queries'
 import { getStatsSettings } from '@/lib/site-settings'
 import { baseOpenGraph, canonicalFor, titleWithSuffix, truncateDescription } from '@/lib/site-metadata'
@@ -24,6 +26,10 @@ import { mergeBySeason } from '@/lib/stats/aggregate'
 import { boardContext, buildLeaderboard, filterRows } from '@/lib/stats/leaderboard'
 import { getMetric } from '@/lib/stats/metrics'
 import { qualifierText } from '@/lib/stats/qualify'
+import { buildLabelMap, canonicalGrade } from '@/lib/stats/labels'
+import { coverageCaption, coverageOf } from '@/lib/stats/match/coverage'
+import { buildMatchRecords, partnershipCoverageText, partnershipRecordsByWicket, partnershipTop } from '@/lib/stats/match/records'
+import { matchAllRounders, progressionByGrade, resultsByGradeFromLines, shareText, storedShare } from '@/lib/stats/match/yearbook'
 import { effectiveCategories } from '@/lib/stats/query-string'
 import { getHonourPlayers, getVisibleStatData } from '@/lib/stats/queries'
 import { ALLROUNDER_FORMULA, honoursForSeason, resultsByGrade, summariseResults, topAllRounders } from '@/lib/stats/yearbook'
@@ -72,6 +78,16 @@ export default async function YearbookPage({ params }: Props) {
   const copy = club.pageCopy.yearbooks
   // The same categories and the same builder as /stats?season=..., so the numbers cannot differ.
   const cats = effectiveCategories({ cats: null, juniors: false }, settings.defaultIncludedCategories)
+  // Match-data sections (W2 spec 5.5): only when the season has stored matches; otherwise the page is as before.
+  const match = await getYearbookMatchData(book.seasonName, { cats, rules: settings.gradeRules })
+  const hasMatches = !!match && match.lines.length > 0
+  const share = hasMatches ? storedShare(match.lines, results.status === 'ok' ? results.games : null) : null
+  const storedResults = hasMatches && share?.complete === true
+  const labels = hasMatches ? buildLabelMap(match.lines.map((l) => ({ kind: 'grade' as const, label: l.grade }))) : null
+  const gradeLabel = (g: string | null) => (g && labels ? canonicalGrade(g, labels) : g)
+  const matchCaption = hasMatches && share ? `${coverageCaption(coverageOf(match.set))} ${shareText(share)}` : ''
+  const names = new Map([...data.players].map(([id, p]) => [id, { name: p.name, slug: p.slug as string | null }]))
+  const records = hasMatches && match.set.matches.size > 0 ? buildMatchRecords(match.set, settings.matchMinimums, gradeLabel) : null
   const hasStats = data.rows.some((r) => r.seasonName === book.seasonName)
 
   const boards = hasStats
@@ -143,8 +159,8 @@ export default async function YearbookPage({ params }: Props) {
               ))}
               {allRounders.length > 0 && (
                 <LeaderboardTable
-                  title="Top all-rounders"
-                  caption={`Top all-rounders, ${book.seasonName}. Ranked by ${ALLROUNDER_FORMULA}. Ties share a rank.`}
+                  title="Top all-rounders, from season totals"
+                  caption={`Top all-rounders from season totals, ${book.seasonName}. Ranked by ${ALLROUNDER_FORMULA}. Ties share a rank.`}
                   valueLabel="Score"
                   contextLabel="Runs / wkts"
                   rows={allRounders}
@@ -155,12 +171,46 @@ export default async function YearbookPage({ params }: Props) {
           </section>
         )}
 
-        {results.status === 'ok' && <YearbookResults byGrade={resultsByGrade(results.games)} season={book.seasonName} />}
-        {results.status === 'unavailable' && (
+        {storedResults && match && <YearbookMatchResults byGrade={resultsByGradeFromLines(match.lines, gradeLabel)} caption={matchCaption} />}
+        {!storedResults && results.status === 'ok' && (
+          <YearbookResults
+            byGrade={resultsByGrade(results.games)}
+            season={book.seasonName}
+            source={`Results from the fixtures list.${hasMatches && share ? ` Scores from stored scorecards are used only when every finished game is stored. ${shareText(share)}` : ''}`}
+          />
+        )}
+        {!storedResults && results.status === 'unavailable' && (
           <section className="print-section space-y-6">
             <SubHeading title="Results" />
             <PlayHQUnavailable what="results" />
           </section>
+        )}
+
+        {hasMatches && match && (
+          <>
+            <YearbookProgression items={progressionByGrade(match.lines, gradeLabel)} caption={matchCaption} />
+            {records && (
+              <YearbookPartnerships
+                byWicket={partnershipRecordsByWicket(match.set)}
+                top={partnershipTop(match.set, 5).slice(0, 5)}
+                names={names}
+                caption={matchCaption}
+                note={partnershipCoverageText(match.set)}
+              />
+            )}
+            {records && (
+              <YearbookHighlights
+                lines={highlightLines(records)}
+                partnership={partnershipTop(match.set, 1)[0] ?? null}
+                allRounders={storedResults ? matchAllRounders(match.set).flatMap((r) => {
+                  const p = data.players.get(r.playerId)
+                  return p ? [{ key: r.playerId, rank: r.rank, name: p.name, slug: p.slug, value: String(r.score), context: `${r.runs} / ${r.wickets}` }] : []
+                }) : []}
+                names={names}
+                caption={matchCaption}
+              />
+            )}
+          </>
         )}
 
         <YearbookHonours items={honours} />

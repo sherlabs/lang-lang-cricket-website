@@ -51,11 +51,12 @@ export function YearbookOverview({ summary }: { summary: ResultSummary }) {
   )
 }
 
-export function YearbookResults({ byGrade, season }: { byGrade: { grade: string; games: Game[] }[]; season: string }) {
+export function YearbookResults({ byGrade, season, source }: { byGrade: { grade: string; games: Game[] }[]; season: string; source?: string }) {
   if (!byGrade.length) return null
   return (
     <section aria-labelledby="yb-results" className="print-section space-y-6">
       <SubHeading id="yb-results" title="Results by grade" />
+      {source && <p className="text-sm text-brand-grey">{source}</p>}
       <div className="space-y-4">
         {byGrade.map((g) => (
           <details key={g.grade} className="group rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5" open={byGrade.length === 1}>
