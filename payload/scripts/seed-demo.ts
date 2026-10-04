@@ -15,6 +15,9 @@
  * through the real writer, only when `matches` is empty, and prints the reconciliation against the season
  * aggregates (expect 0 mismatches).
  *
+ * It also writes four info pages (one a draft, one footer-placed) and six news posts (four published with covers
+ * from the gallery, one draft, one scheduled two weeks ahead), only when `pages` or `news` is empty.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -24,6 +27,7 @@ import path from 'node:path'
 import { getPayload, type CollectionSlug, type Payload } from 'payload'
 import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
+import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
@@ -252,6 +256,48 @@ async function main() {
         context: CTX,
       })
       return 1
+    })
+
+    await seedCollection(payload, 'pages', async () => {
+      for (const p of DEMO_PAGES) {
+        const content = []
+        for (const b of p.blocks) {
+          if (b.type === 'text') content.push({ blockType: 'text' as const, richText: await htmlToLexical(b.html, payload.config) })
+          else if (b.type === 'image') {
+            const image = await mediaFor(b.file, b.alt)
+            if (image) content.push({ blockType: 'image' as const, image, alt: b.alt, caption: b.caption ?? '', width: b.width ?? 'wide' })
+          } else content.push({ blockType: 'cta' as const, label: b.label, url: b.url, style: b.style ?? 'primary', note: b.note ?? '' })
+        }
+        await payload.create({
+          collection: 'pages',
+          data: { title: p.title, status: p.status, showInNavigation: p.showInNavigation, navOrder: p.navOrder, navLabel: p.navLabel ?? '', content },
+          overrideAccess: true,
+          context: CTX,
+        })
+      }
+      return DEMO_PAGES.length
+    })
+
+    await seedCollection(payload, 'news', async () => {
+      const now = Date.now()
+      for (const n of DEMO_NEWS) {
+        await payload.create({
+          collection: 'news',
+          data: {
+            title: n.title,
+            status: n.status,
+            // A draft keeps no date (it is stamped when published); a scheduled post has a future one.
+            publishedAt: n.status === 'published' ? new Date(now + n.daysFromNow * 86_400_000).toISOString() : undefined,
+            cover: n.cover ? await mediaFor(n.cover, n.title) : null,
+            excerpt: n.excerpt,
+            body: await htmlToLexical(n.html, payload.config),
+            author: n.author,
+          },
+          overrideAccess: true,
+          context: CTX,
+        })
+      }
+      return DEMO_NEWS.length
     })
 
     await seedCollection(payload, 'players', async () => {

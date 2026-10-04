@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Event } from '@/lib/domain'
 import { resolveClub } from '@/lib/club-merge'
-import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd, yearbookJsonLd } from '@/lib/structured-data'
+import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, newsArticleJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd, webPageJsonLd, yearbookJsonLd } from '@/lib/structured-data'
 
 // The unseeded club (defaults module) — the values pages pass in before `seed:club`.
 const club = resolveClub(null)
@@ -132,5 +132,41 @@ describe('yearbookJsonLd', () => {
   })
   it('carries no statistics', () => {
     expect(JSON.stringify(yearbookJsonLd(book, club))).not.toMatch(/runs|wickets|catches/i)
+  })
+})
+
+describe('news and page json-ld', () => {
+  const post = { slug: 'grand-final', title: 'Grand final win', coverUrl: '', author: '', publishedAt: new Date('2026-10-01T00:00:00.000Z'), updatedAt: new Date('2026-10-03T00:00:00.000Z') }
+
+  it('news article: headline, dates, absolute urls, the club as author when none is set and as publisher with a logo', () => {
+    const a = newsArticleJsonLd(post, club) as any
+    expect(a['@type']).toBe('Article')
+    expect(a.headline).toBe('Grand final win')
+    expect(a.datePublished).toBe('2026-10-01T00:00:00.000Z')
+    expect(a.dateModified).toBe('2026-10-03T00:00:00.000Z')
+    expect(a.image).toEqual(['https://langlangcricketclub.com/og-image.jpg'])
+    expect(a.author).toMatchObject({ '@type': 'SportsOrganization', name: club.name })
+    expect(a.publisher.logo.url).toBe('https://langlangcricketclub.com/assets/branding/logo.png')
+    expect(a.mainEntityOfPage).toBe('https://langlangcricketclub.com/news/grand-final')
+  })
+
+  it('news article: a named author and cover are used, and dateModified is never before datePublished', () => {
+    const a = newsArticleJsonLd({ ...post, author: 'Sam', coverUrl: '/media/c.jpg', updatedAt: new Date('2026-09-01T00:00:00.000Z') }, club) as any
+    expect(a.author).toEqual({ '@type': 'Person', name: 'Sam' })
+    expect(a.image).toEqual(['https://langlangcricketclub.com/media/c.jpg'])
+    expect(a.dateModified).toBe(a.datePublished)
+  })
+
+  it('web page: name, canonical url, description only when there is one, and the club as publisher', () => {
+    const page = { slug: 'about', title: 'About', description: '', updatedAt: new Date('2026-05-01T00:00:00.000Z'), publishedAt: null }
+    const w = webPageJsonLd(page, club) as any
+    expect(w['@type']).toBe('WebPage')
+    expect(w.url).toBe('https://langlangcricketclub.com/info/about')
+    expect(w.description).toBeUndefined()
+    expect(w.datePublished).toBeUndefined()
+    expect(w.publisher.name).toBe(club.name)
+    const d = webPageJsonLd({ ...page, description: 'Who we are', publishedAt: new Date('2026-04-01T00:00:00.000Z') }, club) as any
+    expect(d.description).toBe('Who we are')
+    expect(d.datePublished).toBe('2026-04-01T00:00:00.000Z')
   })
 })

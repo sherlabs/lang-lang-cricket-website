@@ -21,6 +21,15 @@ beforeEach(() => {
       { id: 2, slug: 'summer-2024-25-draft', status: 'draft', updatedAt: '2026-04-02T00:00:00.000Z' },
     ],
     events: [{ id: 7, createdAt: '2025-12-01T00:00:00.000Z' }],
+    pages: [
+      { id: 1, slug: 'about-the-club', status: 'published', updatedAt: '2026-05-01T00:00:00.000Z' },
+      { id: 2, slug: 'draft-season-plan', status: 'draft', updatedAt: '2026-05-02T00:00:00.000Z' },
+    ],
+    news: [
+      { id: 1, slug: 'launch-bbq', status: 'published', publishedAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z' },
+      { id: 2, slug: 'draft-post', status: 'draft', publishedAt: null, updatedAt: '2026-01-03T00:00:00.000Z' },
+      { id: 3, slug: 'scheduled-post', status: 'published', publishedAt: '2999-01-01T00:00:00.000Z', updatedAt: '2026-01-04T00:00:00.000Z' },
+    ],
     stories: [
       { id: 1, slug: 'first-win', status: 'published', updatedAt: '2026-03-01T00:00:00.000Z' },
       { id: 2, slug: 'pending-one', status: 'pending', updatedAt: '2026-03-02T00:00:00.000Z' },
@@ -94,5 +103,23 @@ describe('sitemap', () => {
     const byUrl = new Map(entries.map((e) => [e.url, e]))
     expect(byUrl.get('https://club.test/stats')).toMatchObject({ changeFrequency: 'weekly', priority: 0.7 })
     expect(byUrl.get('https://club.test/records')).toMatchObject({ changeFrequency: 'weekly', priority: 0.6 })
+  })
+
+  it('lists the news feed, published pages and visible news posts only (own filters), with lastModified = updatedAt', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const entries = await sitemap()
+    const urls = entries.map((e) => e.url)
+    expect(urls).toContain('https://club.test/news')
+    expect(urls).toContain('https://club.test/info/about-the-club')
+    expect(urls).not.toContain('https://club.test/info/draft-season-plan')
+    expect(urls).toContain('https://club.test/news/launch-bbq')
+    expect(urls).not.toContain('https://club.test/news/draft-post')
+    expect(urls).not.toContain('https://club.test/news/scheduled-post')
+    expect(fake.callsTo('find', 'pages')[0].args).toMatchObject({ where: { status: { equals: 'published' } }, depth: 0, pagination: false })
+    const newsWhere = fake.callsTo('find', 'news')[0].args.where as { and: unknown[] }
+    expect(newsWhere.and[0]).toEqual({ status: { equals: 'published' } })
+    expect(JSON.stringify(newsWhere.and[1])).toContain('less_than_equal')
+    expect(entries.find((e) => e.url === 'https://club.test/info/about-the-club')?.lastModified).toEqual(new Date('2026-05-01T00:00:00.000Z'))
+    expect(entries.find((e) => e.url === 'https://club.test/news/launch-bbq')?.lastModified).toEqual(new Date('2026-01-02T00:00:00.000Z'))
   })
 })

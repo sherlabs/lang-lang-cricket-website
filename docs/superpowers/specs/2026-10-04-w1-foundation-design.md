@@ -466,6 +466,20 @@ Manual: in `/admin` as an editor, click "Add a page", fill title and one text bl
 - The `club` global gains columns: migration reviewed so existing saved values are untouched.
 - The admin menu grows to 16 entries (accepted, see P6).
 
+### P13. As built (deviations from P1 to P12)
+
+- **Shared renderer.** The "verify" in P4 resolved to the existing React renderer `components/stories/story-body.tsx` (Lexical through `RichText`, no HTML string, unsafe links become plain text), not `lib/stories-convert.ts`. Pages and news use it as is; nothing was extracted.
+- **News list is per request.** `/news` reads `?page`, so it is `force-dynamic` (not `revalidate = 300`) and shows a scheduled post the moment its time comes. `/news/[slug]`, `/info/[slug]` and the menu's cached read keep the five-minute backstop, so only those can lag by up to five minutes. The home page was already per request.
+- **Slug editing.** `uniqueSlug` gained an optional reserved set (pages reserve only `index`, news nothing), and a new `editableSlug` hook keeps an admin's edit on update (field access `create: nobody`, `update: isAdminField`, validated by `slugValidator`); a committee update always keeps the stored slug.
+- **`publishedAt`.** Stamped by one collection `beforeValidate` hook (`payload/hooks/publishedAt.ts`) for both collections, so news can require it "when published" without a `defaultValue` of now on drafts.
+- **Alt text default.** The image block's `alt` is filled from the media record's `alt` by a field `beforeValidate` hook; if neither has text, validation asks for it.
+- **Extra small modules.** `lib/news-visibility.ts` (the one "visible post" filter shared by the REST rule and all queries), `lib/preview.ts` (param whitelist) and `lib/preview-queries.ts` (session check, unfiltered read), `lib/news-format.ts` (date in the club locale and timezone), `payload/seed/demo-pages-news.ts` (demo data).
+- **Footer.** `SiteFooter` takes an optional `footerNav` prop; the shell passes the merged lists. Pages placed in Clubhouse or the main menu are not repeated in the footer (P5 says only footer pages and the News link are).
+- **Club SEO columns.** Only the new `news` key uses function `defaultValue`s; the earlier keys keep static defaults, because switching them would rewrite existing columns in the migration.
+- **Preview and CSRF.** Payload's cookie auth refuses a request that is not same-origin: browsers send `Sec-Fetch-Site`, `curl` needs `-H 'Sec-Fetch-Site: same-origin'` to see the preview.
+- **Copy.** The home strip heading ("Latest news"), the feed title and the empty-state text are generic English in components, not `club` fields (gap, see the doc).
+
+
 ---
 
 ## 4. Interfaces that W2 and later waves rely on (stable contracts)

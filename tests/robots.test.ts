@@ -12,6 +12,7 @@ describe('robots', () => {
     expect(rule.disallow).toContain('/players/compare$')
     expect(rule.disallow).toContain('/players/compare?')
     expect(rule.disallow).toContain('/statlab/export')
+    expect(rule.disallow).toContain('/preview')
     expect(r.sitemap).toBe('https://club.test/sitemap.xml')
   })
 })

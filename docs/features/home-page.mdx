@@ -2,10 +2,10 @@
 title: Home page
 status: shipped
 routes: ["/"]
-collections: [announcements, sponsors, people, gallery-photos, club, club-apparel, site-settings]
+collections: [announcements, news, sponsors, people, gallery-photos, club, club-apparel, site-settings]
 admin: "Nothing is edited on the home page itself; each section is edited where its data lives"
 owner: "Committee as a whole; visitors are first-time families, fans and sponsors"
-related: [announcements, club-apparel-link, sponsors, gallery, committee-and-contacts, club-and-site-settings]
+related: [announcements, news, club-apparel-link, sponsors, gallery, committee-and-contacts, club-and-site-settings]
 added: feat/payload-cms
 ---
 
@@ -27,12 +27,13 @@ Sections, in order (`app/(frontend)/page.tsx`):
 3. The [club apparel](./club-apparel-link.mdx) strip, only when a shop link is set.
 4. The [sponsor](./sponsors.mdx) logo carousel (tiers chosen in Site settings).
 5. About / facilities text (club page copy defaults).
-6. Gallery teaser: the six newest [gallery](./gallery.mdx) photos.
-7. Committee cards from the one [people](./committee-and-contacts.mdx) query.
-8. Sponsor logo strip.
-9. Call to action to join or get in touch.
+6. Latest news: the three newest visible [news](./news.mdx) posts (a post scheduled for later is not shown); the section is left out when there are none, and a failed news read leaves it out rather than breaking the page.
+7. Gallery teaser: the six newest [gallery](./gallery.mdx) photos.
+8. Committee cards from the one [people](./committee-and-contacts.mdx) query.
+9. Sponsor logo strip.
+10. Call to action to join or get in touch.
 
-Headings and page wording live in `payload/seed/club-defaults.ts` (the `club` global merges its saved values over those defaults). The Club details form in the admin edits identity, contact, socials, SEO and the history text only; home page copy, page copy and navigation are changed in code in this version. The page is rendered per request, so changes made in the admin show on the next load; saving the relevant collection also revalidates `/`.
+Headings and page wording live in `payload/seed/club-defaults.ts` (the `club` global merges its saved values over those defaults). The Club details form in the admin edits identity, contact, socials, SEO and the history text only; home page copy and page copy are changed in code in this version. The menu's built-in links are too, but pages and the News link are added to it from the admin (see [Info pages](./pages.mdx)). The page is rendered per request, so changes made in the admin show on the next load; saving the relevant collection also revalidates `/`.
 
 ## How to use it
 
