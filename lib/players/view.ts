@@ -7,6 +7,12 @@ export function isActive(p: Pick<Player, 'activeOverride' | 'isActiveDerived'>) 
   return p.activeOverride ? p.activeOverride === 'active' : p.isActiveDerived
 }
 export const playerName = (p: Pick<Player, 'firstName' | 'lastName'>) => `${p.firstName} ${p.lastName}`.trim()
+/**
+ * The name shown on the site: `displayName` (the preferred name when one is set, else the full name; derived by the
+ * `players.displayName` hook), falling back to the PlayHQ name. Every read that selects names uses this, so a preferred
+ * name changes what visitors see and nothing else: aliases, name keys and merges never see it.
+ */
+export const shownName = (p: Pick<Player, 'firstName' | 'lastName'> & { displayName?: string | null }): string => p.displayName?.trim() || playerName(p)
 export const seasonYears = (name: string) => /\d{4}(\/\d{2})?/.exec(name)?.[0] ?? name
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -32,7 +38,7 @@ export type PlayerCard = { id: number; slug: string; name: string; photoUrl: str
 export function toCard(p: Player, seasons: SeasonLite[], teamNamePrefix?: string): PlayerCard {
   const newestFirst = [...seasons].sort((a, b) => a.seasonOrder - b.seasonOrder)
   return {
-    id: p.id, slug: p.slug, name: playerName(p), photoUrl: p.photoUrl, yearsLabel: yearsLabel(p, seasons),
+    id: p.id, slug: p.slug, name: shownName(p), photoUrl: p.photoUrl, yearsLabel: yearsLabel(p, seasons),
     grades: [...new Set(newestFirst.map((s) => teamLabel(s.teamName, teamNamePrefix)))],
     latestOrder: newestFirst[0]?.seasonOrder ?? null, active: isActive(p),
   }

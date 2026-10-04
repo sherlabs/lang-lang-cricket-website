@@ -1,6 +1,9 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
 import { cached, getVisibleStatData } from '@/lib/stats/queries'
+import { getLabelMap } from '@/lib/stats/label-queries'
+import { renameFor } from '@/lib/stats/labels'
+import { labelHeaders } from '@/lib/stats/match/label-headers'
 import { assembleFacts, deriveFacts, mergeFactSets, playerFacts } from '@/lib/stats/match/facts'
 import { decodeFacts, encodeFacts, type SlimFacts } from '@/lib/stats/match/codec'
 import { coverageOf, type MatchCoverage } from '@/lib/stats/match/coverage'
@@ -60,7 +63,8 @@ async function loadSeasonFacts(year: number): Promise<SlimFacts> {
 
 /** One season's facts (cached). Visible players only. */
 export async function getSeasonFacts(seasonStartYear: number): Promise<FactSet> {
-  return decodeFacts(await cached(['match-facts', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)))
+  const [blob, labels] = await Promise.all([cached(['match-facts', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)), getLabelMap()])
+  return labelHeaders(decodeFacts(blob), labels)
 }
 
 export type OppositionOption = { key: string; label: string }
@@ -80,8 +84,18 @@ async function loadOppositionOptions(): Promise<OppositionOption[]> {
   return [...by].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label) || a.key.localeCompare(b.key))
 }
 
-/** Every opposition with a stored FINAL match (StatLab's opposition filter). Names only, no individuals. */
-export const getOppositionOptions = (): Promise<OppositionOption[]> => cached(['match-opposition-options'], loadOppositionOptions)
+/**
+ * Every opposition with a stored FINAL match (StatLab's opposition filter). Names only, no individuals. An opposition an admin
+ * mapped onto another (`opponent` rename) is listed once, under the target.
+ */
+export async function getOppositionOptions(): Promise<OppositionOption[]> {
+  const [options, labels] = await Promise.all([cached(['match-opposition-options'], loadOppositionOptions), getLabelMap()])
+  const keys = new Set(options.map((o) => o.key))
+  return options.filter((o) => {
+    const to = renameFor('opponent', o.label, labels) ?? renameFor('opponent', o.key, labels)
+    return !(to && to !== o.key && keys.has(to))
+  })
+}
 
 /** Facts for the given seasons, bounded to the newest `max` (the cap that keeps a wide request cheap). */
 export async function getFactsFor(seasonYears: readonly number[], max: number = STATLAB_MAX_SEASONS): Promise<FactSet> {

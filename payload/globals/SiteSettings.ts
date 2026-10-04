@@ -86,6 +86,31 @@ const statsGroup: Field = {
       ],
     },
     {
+      name: 'labelRenames',
+      label: 'Grade and team names',
+      type: 'array',
+      maxRows: 200,
+      admin: { description: 'Show one name for a grade or team everywhere (leaderboards, records, StatLab, yearbooks). The data from PlayHQ is not changed, so this survives every update. Do not chain renames (A to B, then B to C).' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'kind', type: 'select', required: true, defaultValue: 'grade', admin: { width: '20%' },
+              options: [{ label: 'Grade', value: 'grade' }, { label: 'Team', value: 'team' }, { label: 'Opposition (advanced)', value: 'opponent' }],
+            },
+            { name: 'from', label: 'From (as in the data)', type: 'text', required: true, maxLength: 120, admin: { width: '40%' } },
+            { name: 'to', label: 'Show as', type: 'text', required: true, maxLength: 120, admin: { width: '40%' } },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'labelRenamesHelp',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/LabelRenamesHelp#LabelRenamesHelp' } },
+    },
+    {
       name: 'qualification',
       label: 'Qualification minimums',
       type: 'group',

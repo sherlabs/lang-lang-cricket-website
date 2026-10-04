@@ -1,6 +1,8 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
 import { cached } from '@/lib/stats/queries'
+import { getLabelMap } from '@/lib/stats/label-queries'
+import { canonicalGrade, canonicalTeam } from '@/lib/stats/labels'
 import { classifyGrade, type GradeCategory, type GradeRule } from '@/lib/stats/categories'
 import { resultLineOf, type ResultLine } from '@/lib/stats/match/yearbook'
 import { emptyFactSet, type FactSet } from '@/lib/stats/match/types'
@@ -32,7 +34,9 @@ export async function getYearbookMatchData(seasonName: string, o: { cats: readon
   try {
     const year = seasonParts(seasonName)?.start ?? NO_YEAR_SEASON
     const [lines, all] = await Promise.all([cached(['yearbook-result-lines', 'v1', seasonName], () => loadResultLines(seasonName)), getSeasonFacts(year)])
-    const keep = lines.filter((l) => o.cats.includes(classifyGrade(l.grade, l.team, o.rules)))
+    const labels = await getLabelMap()
+    const tidy = lines.map((l) => ({ ...l, grade: l.grade ? canonicalGrade(l.grade, labels) : l.grade, team: canonicalTeam(l.team, labels) }))
+    const keep = tidy.filter((l) => o.cats.includes(classifyGrade(l.grade, l.team, o.rules)))
     const set = filterMatchFacts(all, { cats: o.cats, rules: o.rules, season: seasonName })
     return { lines: keep, set: set.matches.size ? set : emptyFactSet() }
   } catch (err) {

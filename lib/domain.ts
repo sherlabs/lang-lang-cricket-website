@@ -197,6 +197,8 @@ export type Player = {
   slug: string
   firstName: string
   lastName: string
+  /** The name shown on the site: the preferred name when set, else the full name (derived by the `displayName` hook). */
+  displayName?: string
   /** '' when there is no photo (initials are shown). */
   photoUrl: string
   bio: string

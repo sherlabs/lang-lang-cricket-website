@@ -3,6 +3,7 @@
  * `site-settings` global config, the query module and unit tests can all use them.
  */
 import { TIER_ORDER } from './sponsors'
+import type { LabelRename } from './stats/labels'
 import { GRADE_CATEGORIES, compileRules, type GradeCategory, type GradeRule } from './stats/categories'
 import { DEFAULT_MATCH_MINIMUMS, resolveMatchMinimums, type MatchMinimums } from './stats/match/minimums'
 import { DEFAULT_QUALIFICATION, type QualConfig, type QualScope } from './stats/qualify'
@@ -63,6 +64,8 @@ export type StatsSettings = {
   milestoneThresholds: Record<MilestoneKey, number[]>
   approachWindow: Record<MilestoneKey, number>
   honourCategories: HonourCategoryRule[]
+  /** Club-wide grade, team and opponent label renames (W2 6.3); applied when reading, never written back to the data. */
+  labelRenames: LabelRename[]
 }
 
 export const DEFAULT_MILESTONE_THRESHOLDS: Record<MilestoneKey, number[]> = {
@@ -91,6 +94,7 @@ export const DEFAULT_STATS_SETTINGS: StatsSettings = {
   milestoneThresholds: DEFAULT_MILESTONE_THRESHOLDS,
   approachWindow: DEFAULT_APPROACH_WINDOW,
   honourCategories: DEFAULT_HONOUR_CATEGORIES,
+  labelRenames: [],
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -141,6 +145,13 @@ export function resolveStatsSettings(raw: unknown): StatsSettings {
         }))
         .filter((h) => h.label)
     : []
+  const renames: LabelRename[] = Array.isArray(o.labelRenames)
+    ? o.labelRenames
+        .filter(isObj)
+        .map((r) => ({ kind: r.kind as LabelRename['kind'], from: String(r.from ?? '').trim(), to: String(r.to ?? '').trim() }))
+        .filter((r) => (r.kind === 'grade' || r.kind === 'team' || r.kind === 'opponent') && r.from && r.to)
+        .slice(0, 200)
+    : []
   return {
     // An explicitly saved empty list is kept as the fallback default: hiding everything is never useful.
     defaultIncludedCategories: cats && cats.length ? cats : DEFAULT_INCLUDED_CATEGORIES,
@@ -150,5 +161,6 @@ export function resolveStatsSettings(raw: unknown): StatsSettings {
     milestoneThresholds: Object.fromEntries(keys.map((k) => [k, thresholds(mt[k], DEFAULT_MILESTONE_THRESHOLDS[k])])) as Record<MilestoneKey, number[]>,
     approachWindow: Object.fromEntries(keys.map((k) => [k, nonNeg(aw[k], DEFAULT_APPROACH_WINDOW[k])])) as Record<MilestoneKey, number>,
     honourCategories: honours.length ? honours : DEFAULT_HONOUR_CATEGORIES,
+    labelRenames: renames,
   }
 }

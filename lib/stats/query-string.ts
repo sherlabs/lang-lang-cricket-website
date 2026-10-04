@@ -1,3 +1,4 @@
+import { resolveGradeParam } from './labels'
 import { GRADE_CATEGORIES, parseCategories, type GradeCategory } from './categories'
 import { GROUPS, LEADERBOARD_METRIC_KEYS, getMetric, leaderboardMetrics, type MetricGroup } from './metrics'
 import { MATCH_LEADERBOARD_KEYS, getMatchMetric, matchLeaderboardMetrics } from './match/metrics'
@@ -44,7 +45,7 @@ export type StatsParams = {
   group: MetricGroup
 }
 
-export type StatsKnown = { seasons: readonly string[]; grades: readonly string[] }
+export type StatsKnown = { seasons: readonly string[]; grades: readonly string[]; /** Maps a raw grade spelling to the label shown now (admin renames), so an old shared link keeps working. */ canonicalGrade?: (raw: string) => string }
 
 export const DEFAULT_METRIC = 'runs'
 
@@ -66,7 +67,7 @@ export function parseStatsParams(raw: Raw, known: StatsKnown): StatsParams {
   const juniors = first(raw.juniors) === '1'
   return {
     season: seasonIn && known.seasons.includes(seasonIn) ? seasonIn : ALL,
-    grade: gradeIn && known.grades.includes(gradeIn) ? gradeIn : ALL,
+    grade: resolveGradeParam(gradeIn, known.grades, known.canonicalGrade) ?? ALL,
     cats: cats.length ? cats : null,
     juniors,
     metric,

@@ -139,6 +139,7 @@ export const toPlayer = (d: PlayerDoc): Player => ({
   slug: d.slug ?? '',
   firstName: d.firstName,
   lastName: d.lastName ?? '',
+  displayName: d.displayName ?? undefined,
   photoUrl: mediaUrl(d.photo),
   bio: d.bio ?? '',
   source: d.source === 'playhq' ? 'playhq' : 'manual',

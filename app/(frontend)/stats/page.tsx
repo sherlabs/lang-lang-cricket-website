@@ -9,6 +9,8 @@ import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { getClub } from '@/lib/club'
 import { getStatsSettings } from '@/lib/site-settings'
+import { getLabelMap } from '@/lib/stats/label-queries'
+import { canonicalGrade } from '@/lib/stats/labels'
 import { availableCategories, boardContext, buildLeaderboard, filterRows, gradeNames } from '@/lib/stats/leaderboard'
 import { milestoneBoard } from '@/lib/stats/milestone-board'
 import { GROUP_LABELS, getMetric } from '@/lib/stats/metrics'
@@ -64,7 +66,8 @@ export default async function StatsPage({ searchParams }: Props) {
   const rules = settings.gradeRules
   const rawParams = await searchParams
   const seasonNames = data.seasons.map((s) => s.seasonName)
-  const parsed = parseStatsParams(rawParams, { seasons: seasonNames, grades: gradeNames(data.rows) })
+  const labelMap = await getLabelMap()
+  const parsed = parseStatsParams(rawParams, { seasons: seasonNames, grades: gradeNames(data.rows), canonicalGrade: (raw) => canonicalGrade(raw, labelMap) })
   const cats = effectiveCategories(parsed, settings.defaultIncludedCategories)
   // A grade outside the chosen categories is not selectable, so treat it as "All grades" rather than show nothing.
   const gradeOptions = gradeNames(filterRows(data.rows, { cats, rules }))

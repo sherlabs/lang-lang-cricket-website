@@ -3,6 +3,7 @@ import { careerOf, mergeBySeason, type StatRow } from './aggregate'
 import { parseCategories, type GradeCategory } from './categories'
 import { toCsv, type CsvCell } from './csv'
 import { filterRows } from './leaderboard'
+import { resolveGradeParam } from './labels'
 import { DEFAULT_MATCH_MINIMUMS, type MatchMinimums } from './match/minimums'
 import { ALL, catParam, first, MAX_PARAM_LENGTH } from './query-string'
 import { getLabColumn, isMatchOnlyColumn, LAB_COLUMN_KEYS, type LabCells, type LabColumn, type MatchCells } from './statlab-columns'
@@ -59,7 +60,7 @@ export type StatLabParams = {
 }
 
 /** `opps` is the list of known opposition keys; without it any well-formed key is accepted (re-checked at load). */
-export type StatLabKnown = { seasons: readonly string[]; grades: readonly string[]; opps?: readonly string[] }
+export type StatLabKnown = { seasons: readonly string[]; grades: readonly string[]; opps?: readonly string[]; canonicalGrade?: (raw: string) => string }
 
 export type StatLabMode = 'season' | 'match'
 
@@ -117,7 +118,7 @@ export function parseStatLabParams(raw: Raw, known: StatLabKnown): StatLabParams
   return {
     scope,
     season: seasonIn && known.seasons.includes(seasonIn) ? seasonIn : ALL,
-    grade: gradeIn && known.grades.includes(gradeIn) ? gradeIn : ALL,
+    grade: resolveGradeParam(gradeIn, known.grades, known.canonicalGrade) ?? ALL,
     cats: cats.length ? cats : null,
     juniors: first(raw.juniors) === '1',
     cols,

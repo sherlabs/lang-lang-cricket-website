@@ -57,7 +57,7 @@ export const Players: CollectionConfig = {
     delete: isStaff,
   },
   hooks: {
-    beforeValidate: [trimStrings(['firstName', 'lastName']), trimHonours],
+    beforeValidate: [trimStrings(['firstName', 'lastName', 'preferredName']), trimHonours],
     beforeDelete: [
       refusePlayhqDelete,
       cascadeDelete([
@@ -80,6 +80,13 @@ export const Players: CollectionConfig = {
         // Optional, as in legacy: PlayHQ players with one name are synced with lastName ''.
         { name: 'lastName', label: 'Last name', type: 'text', defaultValue: '', validate: maxChars(100) },
       ],
+    },
+    {
+      name: 'preferredName',
+      label: 'Preferred name',
+      type: 'text',
+      validate: maxChars(100),
+      admin: { description: 'Shown on the site instead of the PlayHQ name, for example a nickname. Leave empty to use the first and last name above. The address of the player page and the PlayHQ matching do not change.' },
     },
     {
       name: 'displayName',

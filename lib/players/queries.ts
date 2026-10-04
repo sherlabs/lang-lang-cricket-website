@@ -7,7 +7,7 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { toPlayer, toPlayerSeason } from '@/lib/payload/mappers'
 import type { SeasonCounts } from './season-math'
 import type { Baseline } from '@/lib/stats/milestones'
-import { careerTotals, isActive, playerName, splitPlayers, toCard, yearsLabel, type SeasonLite } from './view'
+import { careerTotals, isActive, shownName, splitPlayers, toCard, yearsLabel, type SeasonLite } from './view'
 
 /**
  * Public player queries (spec §14) on the Local API. It runs with `overrideAccess`, so every
@@ -36,7 +36,7 @@ export async function listPublicPlayers(teamNamePrefix?: string) {
   return splitPlayers(
     players.docs.map((d) => {
       const player = toPlayer(d)
-      const photoUrl = resolvePlayerIdentity({ name: playerName(player), photoUrl: player.photoUrl }, people.get(d.id)).photoUrl
+      const photoUrl = resolvePlayerIdentity({ name: shownName(player), photoUrl: player.photoUrl }, people.get(d.id)).photoUrl
       return { player: { ...player, photoUrl }, seasons: byPlayer.get(d.id) ?? [] }
     }),
     teamNamePrefix,
@@ -68,7 +68,7 @@ export const getPlayerProfile = cache(async (slug: string, teamNamePrefix?: stri
   if (!doc) return null
   const own = toPlayer(doc)
   const person = (await getLinkedPeople([own.id])).get(own.id)
-  const identity = resolvePlayerIdentity({ name: playerName(own), photoUrl: own.photoUrl }, person)
+  const identity = resolvePlayerIdentity({ name: shownName(own), photoUrl: own.photoUrl }, person)
   const player = { ...own, photoUrl: identity.photoUrl }
   const { docs: seasonDocs } = await payload.find({
     collection: 'player-seasons',

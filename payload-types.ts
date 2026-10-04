@@ -394,6 +394,10 @@ export interface Player {
   id: number;
   firstName: string;
   lastName?: string | null;
+  /**
+   * Shown on the site instead of the PlayHQ name, for example a nickname. Leave empty to use the first and last name above. The address of the player page and the PlayHQ matching do not change.
+   */
+  preferredName?: string | null;
   displayName?: string | null;
   /**
    * Set from the name when the player is created; never changes.
@@ -1644,6 +1648,7 @@ export interface StoriesSelect<T extends boolean = true> {
 export interface PlayersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
+  preferredName?: T;
   displayName?: T;
   slug?: T;
   source?: T;
@@ -2264,6 +2269,17 @@ export interface SiteSetting {
         }[]
       | null;
     /**
+     * Show one name for a grade or team everywhere (leaderboards, records, StatLab, yearbooks). The data from PlayHQ is not changed, so this survives every update. Do not chain renames (A to B, then B to C).
+     */
+    labelRenames?:
+      | {
+          kind: 'grade' | 'team' | 'opponent';
+          from: string;
+          to: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
      * Players below a minimum are listed under "Not enough data yet" and never ranked.
      */
     qualification?: {
@@ -2605,6 +2621,14 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               category?: T;
               pattern?: T;
               flags?: T;
+              id?: T;
+            };
+        labelRenames?:
+          | T
+          | {
+              kind?: T;
+              from?: T;
+              to?: T;
               id?: T;
             };
         qualification?:

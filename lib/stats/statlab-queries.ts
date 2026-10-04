@@ -3,6 +3,7 @@ import { filterMatchFacts, getAllFacts, getFactsFor, getOppositionOptions, type 
 import { getStatsSettings } from '@/lib/site-settings'
 import { availableCategories, gradeNames } from './leaderboard'
 import { buildLabelMap, canonicalGrade } from './labels'
+import { getLabelMap } from './label-queries'
 import { coverageCaption, coverageOf } from './match/coverage'
 import { STATLAB_MAX_SEASONS } from './match/limits'
 import { emptyFactSet } from './match/types'
@@ -31,19 +32,19 @@ export function statLabCaption(o: { mode: 'season' | 'match'; since: string; mat
 
 /** The real season, grade and opposition lists a saved report is checked against. */
 export async function getStatLabKnown() {
-  const [data, opps] = await Promise.all([getVisibleStatData(), getOppositionOptions().catch((): OppositionOption[] => [])])
-  return { seasons: data.seasons.map((s) => s.seasonName), grades: gradeNames(data.rows), opps: opps.map((o) => o.key) }
+  const [data, opps, labels] = await Promise.all([getVisibleStatData(), getOppositionOptions().catch((): OppositionOption[] => []), getLabelMap()])
+  return { seasons: data.seasons.map((s) => s.seasonName), grades: gradeNames(data.rows), opps: opps.map((o) => o.key), canonicalGrade: (raw: string) => canonicalGrade(raw, labels) }
 }
 
 export async function runStatLab(raw: Parameters<typeof parseStatLabParams>[0]) {
-  const [settings, data, milestonePlayers, opps] = await Promise.all([
-    getStatsSettings(), getVisibleStatData(), getMilestonePlayers(),
+  const [settings, data, milestonePlayers, labelMap, opps] = await Promise.all([
+    getStatsSettings(), getVisibleStatData(), getMilestonePlayers(), getLabelMap(),
     getOppositionOptions().catch((err): OppositionOption[] => {
       console.warn('[statlab] opposition list unavailable:', (err as Error).message)
       return []
     }),
   ])
-  const params = parseStatLabParams(raw, { seasons: data.seasons.map((s) => s.seasonName), grades: gradeNames(data.rows), opps: opps.map((o) => o.key) })
+  const params = parseStatLabParams(raw, { seasons: data.seasons.map((s) => s.seasonName), grades: gradeNames(data.rows), opps: opps.map((o) => o.key), canonicalGrade: (raw) => canonicalGrade(raw, labelMap) })
   const cats = effectiveCategories(params, settings.defaultIncludedCategories)
   const activeIds = new Set(milestonePlayers.filter((p) => p.active).map((p) => p.id))
   const { mode, forcedByColumn } = statLabMode(params)

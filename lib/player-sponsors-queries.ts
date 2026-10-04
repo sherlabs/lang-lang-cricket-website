@@ -3,7 +3,7 @@ import { resolvePhotoUrl } from '@/lib/identity'
 import { getLinkedPeople } from '@/lib/people-queries'
 import { getPayloadClient } from '@/lib/payload/client'
 import { mediaUrl, toPlayer } from '@/lib/payload/mappers'
-import { playerName } from '@/lib/players/view'
+import { shownName } from '@/lib/players/view'
 import type { PlayerSponsor as PlayerSponsorDoc } from '@/payload-types'
 
 /** One player sponsorship as the public pages show it. */
@@ -49,7 +49,7 @@ export async function listPlayerSponsorTiles(): Promise<PlayerSponsorTile[]> {
       sponsorId: d.sponsor.id,
       playerId: player.id,
       playerSlug: player.slug,
-      playerName: playerName(player),
+      playerName: shownName(player),
       playerPhotoUrl: resolvePhotoUrl(player.photoUrl, people.get(player.id)?.photoUrl),
       sponsorName: d.sponsor.name,
       sponsorLogoUrl: mediaUrl(d.sponsor.logo),

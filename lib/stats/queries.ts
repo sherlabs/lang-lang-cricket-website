@@ -1,12 +1,14 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { getPayloadClient } from '@/lib/payload/client'
-import { isActive, playerName } from '@/lib/players/view'
+import { isActive, shownName } from '@/lib/players/view'
 import type { HonourPlayer } from './honours'
 import type { MilestonePlayer } from './milestones'
 import type { SeasonCounts } from '@/lib/players/season-math'
 import type { StatRow } from './aggregate'
 import { seasonIndex, type SeasonInfo } from './season-window'
+import { getLabelMap } from './label-queries'
+import { applyLabels } from './labels'
 import { ALL_STATS_TAGS, STATS_TAG } from './tags'
 
 /**
@@ -100,9 +102,9 @@ async function loadPlayers(hiddenToo: boolean): Promise<PlayerLite[]> {
   const { docs } = await payload.find({
     collection: 'players', ...(hiddenToo ? {} : { where: { hidden: { equals: false } } }),
     pagination: false, depth: 0, joins: false, sort: 'id',
-    select: { firstName: true, lastName: true, slug: true },
+    select: { firstName: true, lastName: true, displayName: true, slug: true },
   })
-  return docs.map((d) => ({ id: d.id, name: playerName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '' }), slug: d.slug ?? '' }))
+  return docs.map((d) => ({ id: d.id, name: shownName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '', displayName: d.displayName }), slug: d.slug ?? '' }))
 }
 
 /**
@@ -117,7 +119,9 @@ export async function getVisibleStatData(): Promise<StatData> {
   const perSeason = await Promise.all(seasons.map((s) => cached(['stat-rows', 'v2', s.seasonName], () => loadSeason(s.seasonName))))
   const lookup = new Map(players.map((p) => [p.id, p]))
   // Defensive join: a stats row whose player is not in the visible list is dropped.
-  const rows = perSeason.flatMap(expand).filter((r) => lookup.has(r.playerId))
+  // Grade and team labels are tidied at read time (admin renames, "B Grade" and "B grade" as one); the stored rows are untouched.
+  const labels = await getLabelMap()
+  const rows = applyLabels(perSeason.flatMap(expand).filter((r) => lookup.has(r.playerId)), labels)
   return { rows, seasons, players: lookup }
 }
 
@@ -133,7 +137,7 @@ export async function getAllStatRowsForAdmin(): Promise<StatData> {
   ])
   const byName = new Map<string, SeasonDoc[]>()
   for (const d of docs as unknown as SeasonDoc[]) byName.set(d.seasonName, [...(byName.get(d.seasonName) ?? []), d])
-  const rows = [...byName].flatMap(([name, list]) => expand(slim(name, list)))
+  const rows = applyLabels([...byName].flatMap(([name, list]) => expand(slim(name, list))), await getLabelMap())
   return { rows, seasons: seasonIndex(rows), players: new Map(players.map((p) => [p.id, p])) }
 }
 
@@ -149,20 +153,20 @@ export async function getLastSyncAt(): Promise<Date | null> {
 
 
 type PlayerDocLite = {
-  id: number; firstName?: string | null; lastName?: string | null; slug?: string | null
+  id: number; firstName?: string | null; lastName?: string | null; displayName?: string | null; slug?: string | null
   activeOverride?: 'active' | 'past' | null; isActiveDerived?: boolean | null; manualYears?: string | null
   baselineGames?: number | null; baselineRuns?: number | null; baselineWickets?: number | null; baselineCatches?: number | null
   honours?: { years?: string | null; title?: string | null }[] | null
 }
 
 const PLAYER_SELECT = {
-  firstName: true, lastName: true, slug: true, activeOverride: true, isActiveDerived: true, manualYears: true,
+  firstName: true, lastName: true, displayName: true, slug: true, activeOverride: true, isActiveDerived: true, manualYears: true,
   baselineGames: true, baselineRuns: true, baselineWickets: true, baselineCatches: true,
 } as const
 
 const toMilestonePlayer = (d: PlayerDocLite): MilestonePlayer => ({
   id: d.id,
-  name: playerName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '' }),
+  name: shownName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '', displayName: d.displayName }),
   slug: d.slug ?? '',
   active: isActive({ activeOverride: d.activeOverride ?? null, isActiveDerived: Boolean(d.isActiveDerived) }),
   manualYears: d.manualYears ?? '',
@@ -190,12 +194,12 @@ export async function getHonourPlayers(): Promise<HonourPlayer[]> {
     const payload = await getPayloadClient()
     const { docs } = await payload.find({
       collection: 'players', where: { hidden: { equals: false } },
-      pagination: false, depth: 0, joins: false, sort: 'id', select: { firstName: true, lastName: true, slug: true, honours: true },
+      pagination: false, depth: 0, joins: false, sort: 'id', select: { firstName: true, lastName: true, displayName: true, slug: true, honours: true },
     })
     return (docs as unknown as PlayerDocLite[])
       .map((d) => ({
         id: d.id,
-        name: playerName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '' }),
+        name: shownName({ firstName: d.firstName ?? '', lastName: d.lastName ?? '', displayName: d.displayName }),
         slug: d.slug ?? '',
         honours: (d.honours ?? []).map((h) => ({ years: h.years ?? '', title: h.title ?? '' })),
       }))

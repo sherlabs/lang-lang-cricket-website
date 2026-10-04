@@ -23,14 +23,14 @@ export const EMPTY_LABEL_MAP: LabelMap = { renames: new Map(), spellings: new Ma
 const k = (kind: LabelKind, label: string) => `${kind}\u0000${normaliseLabel(label)}`
 
 /** Build the map from the labels present in the data and the admin renames. */
-export function buildLabelMap(samples: Iterable<{ kind: LabelKind; label: string | null | undefined }>, renames: readonly LabelRename[] = []): LabelMap {
+export function buildLabelMap(samples: Iterable<{ kind: LabelKind; label: string | null | undefined; count?: number }>, renames: readonly LabelRename[] = []): LabelMap {
   const counts = new Map<string, Map<string, number>>()
   for (const s of samples) {
     const label = s.label?.replace(/\s+/g, ' ').trim()
     if (!label) continue
     const key = k(s.kind, label)
     const m = counts.get(key) ?? new Map<string, number>()
-    m.set(label, (m.get(label) ?? 0) + 1)
+    m.set(label, (m.get(label) ?? 0) + (s.count ?? 1))
     counts.set(key, m)
   }
   const spellings = new Map<string, string>()
@@ -41,6 +41,9 @@ export function buildLabelMap(samples: Iterable<{ kind: LabelKind; label: string
   }
   return { renames: new Map(renames.filter((r) => r.from.trim() && r.to.trim()).map((r) => [k(r.kind, r.from), r.to.trim()])), spellings }
 }
+
+/** The admin rename for a label, or undefined. For `opponent` the result is an `oppositionKey`. */
+export const renameFor = (kind: LabelKind, raw: string | null | undefined, map: LabelMap): string | undefined => (raw ? map.renames.get(k(kind, raw)) : undefined)
 
 function canonical(kind: LabelKind, raw: string | null | undefined, map: LabelMap): string {
   const label = raw?.replace(/\s+/g, ' ').trim() ?? ''
@@ -64,3 +67,17 @@ export function applyLabels<T extends { gradeName?: string | null; teamName?: st
 
 /** True when two grade labels are the same grade after canonicalisation (used by shared-link filters). */
 export const sameLabel = (a: string | null | undefined, b: string | null | undefined): boolean => normaliseLabel(a) === normaliseLabel(b)
+
+/**
+ * A `?grade=` value from a shared link, resolved against the grades that exist now: an exact match first; then the label
+ * as the admin renames and the default tidy-up would show it; then any grade that normalises to the same label (so a link
+ * that used the old spelling of a merged grade keeps working). Null when nothing matches.
+ */
+export function resolveGradeParam(input: string | null | undefined, known: readonly string[], canonical?: (raw: string) => string): string | null {
+  const t = (input ?? '').trim()
+  if (!t) return null
+  if (known.includes(t)) return t
+  const mapped = canonical?.(t)
+  if (mapped && known.includes(mapped)) return mapped
+  return known.find((g) => sameLabel(g, t)) ?? null
+}
