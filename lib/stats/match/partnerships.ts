@@ -21,7 +21,7 @@ export type PartnershipInput = {
   hasFow: boolean
   allOut: boolean
   totalRuns: number | null
-  totalWickets: number
+  totalWickets: number | null
   /** Batting rows of the club innings with `battingStatus != did_not_bat`, any order. */
   rows: readonly PartnershipRow[]
 }

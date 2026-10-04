@@ -1,3 +1,4 @@
+import { isAdmin } from '../access'
 import { internalCollection, num, rel, text } from './internalCollection'
 
 /**
@@ -11,6 +12,8 @@ export const MergeLog = internalCollection({
   singular: 'Merge log entry',
   plural: 'Merge log (data)',
   description: 'Player merges that can be undone, and pairs marked as different people. Written by the site; read only.',
+  // Snapshots hold whole player rows (hidden players too), so editors cannot read them over REST.
+  read: isAdmin,
   defaultColumns: ['kind', 'status', 'sourceName', 'targetPlayer', 'createdAt'],
   fields: [
     { name: 'kind', type: 'select', required: true, index: true, options: ['merge', 'dismissed'] },

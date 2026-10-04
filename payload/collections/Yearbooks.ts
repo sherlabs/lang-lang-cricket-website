@@ -10,8 +10,8 @@ import { trimStrings } from '../hooks/trimStrings'
 
 export const YEARBOOK_STATUSES = ['draft', 'published'] as const
 
-/** The shape of `player-seasons.seasonName` as PlayHQ names it: "Summer 2025/26". */
-export const SEASON_NAME_RE = /^[A-Za-z]+ \d{4}\/\d{2}$/
+/** The shape of `player-seasons.seasonName`: PlayHQ's "Summer 2025/26", or an imported season such as "2012/13" or "2013". */
+export const SEASON_NAME_RE = /^(?:[A-Za-z]+ )?\d{4}(?:\/\d{2})?$/
 
 const MESSAGE_MAX = 6000
 
@@ -46,7 +46,7 @@ const summaryState: CollectionBeforeChangeHook = ({ data, originalDoc, req }) =>
 
 const seasonName = (value: unknown, ctx?: { req?: { context?: Record<string, unknown> } }): true | string => {
   if (ctx?.req?.context?.etl === true) return true
-  return typeof value === 'string' && SEASON_NAME_RE.test(value.trim()) ? true : 'Use the PlayHQ season name, for example "Summer 2025/26".'
+  return typeof value === 'string' && SEASON_NAME_RE.test(value.trim()) ? true : 'Use the PlayHQ season name, for example "Summer 2025/26" (or "2012/13" for imported history).'
 }
 
 /**
@@ -148,7 +148,7 @@ export const Yearbooks: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       // Set by the draft button (admin only), cleared by the hook when the summary is empty. Editors never see or send it.
-      access: { create: isAdminField, update: isAdminField },
+      access: { read: isAdminField, create: isAdminField, update: isAdminField },
       admin: { condition: adminOnlyCondition(), readOnly: true, description: 'Set when the summary came from the AI draft button.' },
     },
     {
@@ -167,7 +167,8 @@ export const Yearbooks: CollectionConfig = {
       name: 'seasonSummaryCheckedBy',
       type: 'relationship',
       relationTo: 'users',
-      access: hookOwned,
+      // Hook-owned, and admin-only to read: a published yearbook is public over REST and must not expose a user id.
+      access: { ...hookOwned, read: isAdminField },
       admin: { readOnly: true, condition: adminOnlyCondition(), description: 'Who ticked the box (kept for the record).' },
     },
     { name: 'photos', type: 'relationship', relationTo: 'gallery-photos', hasMany: true },

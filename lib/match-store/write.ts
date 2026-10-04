@@ -123,7 +123,9 @@ export async function relinkMatchPlayers(payload: Payload): Promise<number> {
   const res = await payload.db.drizzle.execute(
     sql.raw(
       `UPDATE "${MATCH_SCHEMA}"."match_appearances" ma SET "player_id" = pa."player_id", "updated_at" = '${stamp}' ` +
-        `FROM "${MATCH_SCHEMA}"."player_aliases" pa WHERE ma."name_key" = pa."name_key" AND ma."is_club_side" = true AND ma."player_id" IS DISTINCT FROM pa."player_id"`,
+        `FROM "${MATCH_SCHEMA}"."player_aliases" pa WHERE ma."name_key" = pa."name_key" AND ma."is_club_side" = true AND ma."player_id" IS DISTINCT FROM pa."player_id" ` +
+        // A confirmed same-game merge leaves the source's row unlinked on purpose: never put one player on two rows of one game.
+        `AND NOT EXISTS (SELECT 1 FROM "${MATCH_SCHEMA}"."match_appearances" o WHERE o."match_id" = ma."match_id" AND o."player_id" = pa."player_id" AND o."id" <> ma."id")`,
     ),
   )
   // A hand-deleted alias: the club-side row keeps a link that nothing backs any more, so clear it.

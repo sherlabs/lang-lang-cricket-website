@@ -7,6 +7,8 @@
 import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { relinkMatchPlayers } from '@/lib/match-store/write'
+import { dismissPair, purgeOldMergeLog } from '@/lib/players/merge-core'
 import { playerTables } from '@/lib/players/db'
 import { buildSyncPlan } from '@/lib/players/plan'
 import { getDuplicateSuggestions, getRecentMerges } from '@/lib/players/duplicate-queries'
@@ -186,6 +188,11 @@ describe('same-game refusal', () => {
     // The colliding row is not merged (left unlinked); the other game moves.
     expect(apps.filter((x) => x.match_id === shared && x.name_key === 'pat|lee')[0].player_id).toBeNull()
     expect(apps.filter((x) => x.name_key === 'pat|lee' && x.match_id !== shared)[0].player_id).toBe(b)
+    // A later sync relinks by alias; it must not put one player on both rows of the shared game again.
+    await relinkMatchPlayers(payload)
+    const after = (await rows('match_appearances')).filter((x) => x.match_id === shared)
+    expect(after.filter((x) => x.player_id === b)).toHaveLength(1)
+    expect(after.find((x) => x.name_key === 'pat|lee')!.player_id).toBeNull()
   })
 })
 
@@ -204,5 +211,35 @@ describe('duplicate suggestions', () => {
     expect((await rest('POST', '/players/duplicates/dismiss', { token: editor, body: { a, b } })).status).toBe(403)
     expect((await rest('POST', '/players/duplicates/dismiss', { token: admin, body: { a, b } })).status).toBe(200)
     expect((await getDuplicateSuggestions()).map((x) => [x.a.id, x.b.id].sort().join('|'))).not.toContain([a, b].sort().join('|'))
+  })
+})
+
+describe('dismissals', () => {
+  it('rejects unknown ids, survives the one-year purge and survives the other player being deleted', async () => {
+    const a = await player('Jon', 'Smith'), b = await player('John', 'Smith')
+    await season(a, 'T1'); await season(b, 'T1')
+    expect((await rest('POST', '/players/duplicates/dismiss', { token: admin, body: { a, b: 999999 } })).status).toBe(404)
+    expect(await dismissPair(payload, a, b, null)).toEqual({ ok: true })
+    const old = new Date(Date.now() - 400 * 86_400_000).toISOString()
+    await payload.db.drizzle.execute(sql.raw(`UPDATE "payload"."merge_log" SET created_at = '${old}'`))
+    await purgeOldMergeLog(payload)
+    expect(await rows('merge_log')).toHaveLength(1)
+    // The other player is deleted: the foreign key clears, the pair is still remembered.
+    const t = playerTables(payload)
+    await payload.db.drizzle.execute(sql.raw(`DELETE FROM "payload"."player_seasons" WHERE player_id = ${b}`))
+    const c = await player('Joan', 'Smith')
+    await season(c, 'T1')
+    await payload.db.drizzle.execute(sql.raw(`UPDATE "payload"."merge_log" SET target_player_id = NULL`))
+    expect(t).toBeTruthy()
+    expect((await getDuplicateSuggestions()).map((x) => [x.a.id, x.b.id].sort().join('|'))).not.toContain([a, b].sort().join('|'))
+  })
+})
+
+describe('merge log access', () => {
+  it('is readable by an admin and not by an editor', async () => {
+    const a = await player('Jon', 'Smith'), b = await player('John', 'Smith')
+    await dismissPair(payload, a, b, null)
+    expect((await rest('GET', '/merge-log', { token: editor })).status).toBe(403)
+    expect((await rest('GET', '/merge-log', { token: admin })).status).toBe(200)
   })
 })

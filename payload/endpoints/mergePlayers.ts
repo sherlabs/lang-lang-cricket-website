@@ -56,7 +56,8 @@ export const dismissDuplicateEndpoint: Endpoint = {
     const body = await readJson(req)
     const a = toId(body.a), b = toId(body.b)
     if (!a || !b || a === b) return fail(400, 'Pick two different players.')
-    await dismissPair(req.payload, a, b, userId(req))
+    const res = await dismissPair(req.payload, a, b, userId(req))
+    if (!res.ok) return fail(404, res.message)
     return Response.json({ ok: true })
   },
 }

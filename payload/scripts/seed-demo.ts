@@ -34,6 +34,10 @@ import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
 import { PRESETS, presetHref } from '../../lib/stats/presets'
 import { mergePlayerInto } from '../../lib/players/merge-core'
 import { playerTables } from '../../lib/players/db'
+import { matchTables } from '../../lib/match-store/db'
+import { writeBundle } from '../../lib/match-store/write'
+import { buildImportedBundle } from '../../lib/history-import/bundle'
+import { importedGameId, type ImportedGame, type MatchPlayerRow } from '../../lib/history-import/match-rows'
 import { guard } from './_guard'
 import { reconcileSeed, seedMatchSeasonRows, seedMatchStore } from './fixtures/match-seed-db'
 import { MATCH_SEED_SEASONS } from './fixtures/match-seed-data'
@@ -211,13 +215,19 @@ async function seedDemoAdminTools(payload: Payload) {
   const patrick = await person('Patrick', 'Twin')
   await row(pat, 'demo-seconds', 'Demo Seconds', 'Demo Seconds')
   await row(patrick, 'demo-seconds', 'Demo Seconds', 'Demo Seconds')
-  const [m] = await db.insert(t.matches).values({
-    gameId: 'imp:demo-twin-game', status: 'FINAL', type: 'oneDay', seasonName: season.name, seasonStartYear: season.startYear, competitionName: '', gradeName: 'Demo Seconds', localDate: `${season.startYear}-11-08`,
-    startsAt: `${season.startYear}-11-08T12:00:00.000Z`, days: 1, clubTeamId: 'import:demo-seconds', clubTeamName: 'Demo Seconds', opponentName: 'Demo Rovers', result: 'won', source: 'import', importBatch: 'imp-demo', sourceHash: 'demo', createdAt: stamp, updatedAt: stamp,
-  }).returning({ id: t.matches.id })
-  for (const [i, [id, key]] of ([[pat, 'pat|twin'], [patrick, 'patrick|twin']] as const).entries()) {
-    await db.insert(t.match_appearances).values({ match: m.id, appearanceId: `i${i + 1}`, teamId: 'import:demo-seconds', isClubSide: true, player: id, nameKey: key, createdAt: stamp, updatedAt: stamp })
+  // Written through the importer's own bundle builder (hashed game id, real source hash), so exporting the match rows and importing them back is a no-op.
+  const twinDate = `${season.startYear}-11-08`
+  const twinPlayer = (row: number, first: string, runs: number): MatchPlayerRow => ({
+    row, firstName: first, lastName: 'Twin', nameKey: `${first}|twin`.toLowerCase(), batted: true, runs, balls: null, fours: null, sixes: null, howOut: 'bowled',
+    bowlBalls: null, maidens: null, runsConceded: null, wickets: null,
+  })
+  const twinGame: ImportedGame = {
+    gameId: importedGameId({ date: twinDate, gradeName: 'Demo Seconds', teamName: 'Demo Seconds', opponent: 'Demo Rovers', gameRef: null }),
+    firstRow: 2, date: twinDate, seasonStartYear: season.startYear, seasonName: season.name, gradeName: 'Demo Seconds', teamName: 'Demo Seconds', teamSlug: 'demo-seconds',
+    opponent: 'Demo Rovers', gameRef: null, format: 'one_day', result: 'won', teamRuns: 30, teamWickets: 4, oppRuns: null, oppWickets: null,
+    players: [twinPlayer(2, 'Pat', 20), twinPlayer(3, 'Patrick', 10)],
   }
+  await db.transaction((tx: unknown) => writeBundle(tx, matchTables(payload), buildImportedBundle(twinGame), new Map([[`pat|twin`, pat], [`patrick|twin`, patrick]]), { source: 'import', importBatch: 'imp-demo' }))
   // A merge done through the real code: the merge log (and its Undo) comes from it.
   const mergeTarget = await person('Sam', 'Mergeable')
   const mergeSource = await person('Sammy', 'Mergeable')

@@ -44,6 +44,6 @@ PlayHQ only holds recent seasons, so careers, records and leaderboards started i
 ## Not included / deferred
 
 - No per-ball or scorecard-level import (no bowler or fielder names, fall of wickets or partnerships for imported games).
-- A match-rows file has no season column: the season comes from the date (July starts a season). Season-totals files carry the season explicitly.
+- A match-rows file has no season column: the season comes from the date and the club's configured season start month and name format (environment `SEASON_START_MONTH`, default 7 for a July start, and `SEASON_NAME_FORMAT`, `split` for "2012/13" or `single` for "2013"). Season-totals files carry the season explicitly.
 - Imported opponents have no PlayHQ organisation id, so they appear as separate oppositions unless an admin maps them with an opposition rename in Site settings ([name and grade labels](./name-and-grade-labels.mdx)).
 - Undo removes an import's rows but not the players it created. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

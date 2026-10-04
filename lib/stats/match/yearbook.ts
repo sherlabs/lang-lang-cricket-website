@@ -12,7 +12,7 @@ import type { FactSet } from './types'
  * the season (cached) and these functions turn them into results lines, a win/loss progression, and
  * all-rounder figures. Nothing here estimates; a score is shown only as the scorer recorded it.
  */
-export type InningsScore = { seq: number; runs: number; wickets: number; balls: number; declared: boolean; allOut: boolean }
+export type InningsScore = { seq: number; runs: number | null; wickets: number | null; balls: number; declared: boolean; allOut: boolean }
 
 export type ResultLine = {
   gameId: string
@@ -52,7 +52,9 @@ export const oversText = (balls: number): string => `${Math.floor(balls / 6)}.${
 
 /** `152/6 (40.0 ov)`; `152/6d` when declared; `152 all out` is left to the wickets (`152/10`). */
 export function inningsText(s: InningsScore): string {
-  return `${s.runs}/${s.wickets}${s.declared ? 'd' : ''}${s.balls > 0 ? ` (${oversText(s.balls)} ov)` : ''}`
+  if (s.runs === null) return '–' // an imported game with no team total: unknown, not 0/0
+  const wickets = s.wickets === null ? '' : `/${s.wickets}`
+  return `${s.runs}${wickets}${s.declared ? 'd' : ''}${s.balls > 0 ? ` (${oversText(s.balls)} ov)` : ''}`
 }
 
 /** All played innings of one side: one for a one-day game, two for a two-day game (joined with `&`). */

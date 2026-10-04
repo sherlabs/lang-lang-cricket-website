@@ -24,6 +24,15 @@ export const COOKIE_PREFIX = env.COOKIE_PREFIX || 'llcc'
 /** Wall-clock timezone for event dates, JSON-LD offsets, announcement and PlayHQ dates. Env `CLUB_TIMEZONE`. */
 export const CLUB_TIMEZONE = env.CLUB_TIMEZONE || 'Australia/Melbourne'
 
+/**
+ * When the club's season starts (1-12) and how a season is named. Env `SEASON_START_MONTH` (default 7: a southern-hemisphere
+ * summer season starting in July) and `SEASON_NAME_FORMAT` (`split` gives "2012/13", `single` gives "2013", the start year, for
+ * a northern-hemisphere club whose season sits inside one calendar year with `SEASON_START_MONTH=1`). Used to place imported history.
+ */
+const startMonth = Number(env.SEASON_START_MONTH)
+export const SEASON_START_MONTH = Number.isInteger(startMonth) && startMonth >= 1 && startMonth <= 12 ? startMonth : 7
+export const SEASON_NAME_FORMAT: 'split' | 'single' = env.SEASON_NAME_FORMAT === 'single' ? 'single' : 'split'
+
 /** BCP 47 locale for displayed dates (keep in step with `club.locale`). Env `CLUB_LOCALE`. */
 export const CLUB_LOCALE = env.CLUB_LOCALE || 'en-AU'
 

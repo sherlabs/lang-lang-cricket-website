@@ -29,7 +29,7 @@ export function encodeFacts(set: FactSet): SlimFacts {
   return {
     matches: [...set.matches.values()],
     innings: [...set.innings.values()].map((i) => [
-      i.m, i.seq, b(i.clubBatting), b(i.declared), b(i.allOut), i.runs, i.wickets, b(i.hasFow), b(i.hasBowling), b(i.hasBall),
+      i.m, i.seq, b(i.clubBatting), b(i.declared), b(i.allOut), i.runs ?? -1, i.wickets ?? -1, b(i.hasFow), b(i.hasBowling), b(i.hasBall),
       i.partnerships === null ? -1 : i.partnerships === 'ok' ? 0 : PARTNERSHIP_REASONS.indexOf(i.partnerships) + 1,
     ]),
     appearances: set.appearances.map((a) => [a.m, a.player]),
@@ -44,7 +44,7 @@ export function decodeFacts(s: SlimFacts): FactSet {
   const innings = new Map<string, InningsMeta>()
   for (const r of s.innings) {
     innings.set(inningsKey(r[0], r[1]), {
-      m: r[0], seq: r[1], clubBatting: r[2] === 1, declared: r[3] === 1, allOut: r[4] === 1, runs: r[5], wickets: r[6], hasFow: r[7] === 1, hasBowling: r[8] === 1, hasBall: r[9] === 1,
+      m: r[0], seq: r[1], clubBatting: r[2] === 1, declared: r[3] === 1, allOut: r[4] === 1, runs: r[5] < 0 ? null : r[5], wickets: r[6] < 0 ? null : r[6], hasFow: r[7] === 1, hasBowling: r[8] === 1, hasBall: r[9] === 1,
       partnerships: r[10] < 0 ? null : r[10] === 0 ? 'ok' : PARTNERSHIP_REASONS[r[10] - 1],
     })
   }

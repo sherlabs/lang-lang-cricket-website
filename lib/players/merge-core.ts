@@ -181,17 +181,22 @@ export async function undoMerge(payload: Payload, logId: number, userId: number 
 }
 
 /** Dismisses a suggested pair ("not the same person"): it is not suggested again. */
-export async function dismissPair(payload: Payload, a: number, b: number, userId: number | null): Promise<void> {
+export async function dismissPair(payload: Payload, a: number, b: number, userId: number | null): Promise<{ ok: true } | { ok: false; message: string }> {
   const t = playerTables(payload)
+  const found: { id: number }[] = await payload.db.drizzle.select({ id: t.players.id }).from(t.players).where(inArray(t.players.id, [a, b]))
+  if (found.length !== 2) return { ok: false, message: 'One of those players no longer exists.' }
   const stamp = new Date().toISOString()
-  await payload.db.drizzle.insert(t.merge_log).values({ kind: 'dismissed', status: 'dismissed', sourcePlayerId: Math.min(a, b), targetPlayer: Math.max(a, b), createdBy: userId, createdAt: stamp, updatedAt: stamp })
+  const lo = Math.min(a, b), hi = Math.max(a, b)
+  // The target column is a foreign key that clears when that player goes, so the pair itself is also kept in the snapshot.
+  await payload.db.drizzle.insert(t.merge_log).values({ kind: 'dismissed', status: 'dismissed', sourcePlayerId: lo, targetPlayer: hi, snapshot: { pair: [lo, hi] }, createdBy: userId, createdAt: stamp, updatedAt: stamp })
   await revalidateAfterMergeChange()
+  return { ok: true }
 }
 
-/** The log keeps one year of history. */
+/** The log keeps one year of merge history. "Not the same person" decisions are kept for good, so a pair is never suggested again. */
 export async function purgeOldMergeLog(payload: Payload, now = new Date()): Promise<number> {
   const t = playerTables(payload)
   const cutoff = new Date(now.getTime() - MERGE_LOG_RETENTION_DAYS * 86_400_000).toISOString()
-  const gone: { id: number }[] = await payload.db.drizzle.delete(t.merge_log).where(lt(t.merge_log.createdAt, cutoff)).returning({ id: t.merge_log.id })
+  const gone: { id: number }[] = await payload.db.drizzle.delete(t.merge_log).where(and(eq(t.merge_log.kind, 'merge'), lt(t.merge_log.createdAt, cutoff))).returning({ id: t.merge_log.id })
   return gone.length
 }

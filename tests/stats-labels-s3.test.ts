@@ -131,3 +131,16 @@ describe('single source for names and labels', () => {
     )
   })
 })
+
+describe('renamed grades keep their category', () => {
+  it('classifies by the shown label, then the raw one', async () => {
+    const { withRenamedGradeRules } = await import('@/lib/site-settings-core')
+    const { classifyGrade } = await import('@/lib/stats/categories')
+    const base = resolveStatsSettings({ labelRenames: [{ kind: 'grade', from: "Women's A Grade", to: 'Premier' }, { kind: 'grade', from: 'B Grade', to: 'Seconds' }] })
+    const s = withRenamedGradeRules(base)
+    expect(classifyGrade('Premier', null, base.gradeRules)).toBe('senior')
+    expect(classifyGrade('Premier', null, s.gradeRules)).toBe('womens')
+    expect(classifyGrade('Seconds', null, s.gradeRules)).toBe('senior')
+    expect(base.gradeRules).toEqual([])
+  })
+})

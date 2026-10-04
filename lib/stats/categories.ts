@@ -56,6 +56,12 @@ function matchOne(text: string, custom: { category: GradeCategory; re: RegExp }[
   return null
 }
 
+/** The category a single label matches by a rule (admin first, then built-in), or null when none does (no senior default). */
+export function classifyGradeStrict(label: string | null | undefined, rules: readonly GradeRule[] | null | undefined = []): GradeCategory | null {
+  const g = (label ?? '').trim()
+  return g ? matchOne(g, compileRules(rules)) : null
+}
+
 /**
  * Category of a player-season row. The grade name decides first; the team name is only
  * consulted when the grade is empty or classifies as plain senior. Admin rules are tried

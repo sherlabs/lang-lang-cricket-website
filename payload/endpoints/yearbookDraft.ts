@@ -24,8 +24,15 @@ export const yearbookDraftEndpoint: Endpoint = {
     if (!(await claimDraft(req.payload, dailyLimit()))) return fail(429, 'The limit of AI drafts for today has been reached. Try again tomorrow, or write the summary yourself.')
     // Loaded on demand: the facts module reads the public stats queries, which are server-only and must stay out of the config import graph.
     const { gatherYearbookFacts } = await import('../../lib/ai/yearbook-facts')
-    const facts = await gatherYearbookFacts({ seasonName: book.seasonName, premiership: book.premiership ?? null })
-    const res = await draftSeasonSummary(facts)
+    let res: Awaited<ReturnType<typeof draftSeasonSummary>>
+    try {
+      const facts = await gatherYearbookFacts({ seasonName: book.seasonName, premiership: book.premiership ?? null })
+      res = await draftSeasonSummary(facts)
+    } catch (err) {
+      // Anything that throws before a draft exists does not use up one of the day's drafts either.
+      await releaseDraft(req.payload)
+      throw err
+    }
     if (!res.ok) {
       // A failed call does not use up one of the day's drafts.
       await releaseDraft(req.payload)

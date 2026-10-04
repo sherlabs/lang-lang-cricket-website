@@ -1,4 +1,5 @@
 import type { CollectionConfig, Field } from 'payload'
+import type { Access } from 'payload'
 import { isStaff, nobody } from '../access'
 
 /**
@@ -15,6 +16,8 @@ export function internalCollection(opts: {
   defaultColumns: string[]
   fields: Field[]
   indexes?: NonNullable<CollectionConfig['indexes']>
+  /** Who may read over REST; staff by default. Use `isAdmin` for anything holding personal snapshots. */
+  read?: Access
 }): CollectionConfig {
   return {
     slug: opts.slug,
@@ -26,7 +29,7 @@ export function internalCollection(opts: {
       defaultColumns: opts.defaultColumns,
       description: opts.description,
     },
-    access: { read: isStaff, create: nobody, update: nobody, delete: nobody },
+    access: { read: opts.read ?? isStaff, create: nobody, update: nobody, delete: nobody },
     indexes: opts.indexes,
     timestamps: true,
     fields: opts.fields,

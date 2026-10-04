@@ -109,3 +109,10 @@ describe('all-rounders from match data', () => {
     expect(matchAllRounders(assembleFacts([deriveFacts(bundle(1, 60, 4), everyone)!]))).toEqual([])
   })
 })
+
+describe('unknown team totals', () => {
+  it('prints a dash, never 0/0, when an imported game gives no total', () => {
+    expect(inningsText({ seq: 1, runs: null, wickets: null, balls: 0, declared: false, allOut: false })).toBe('–')
+    expect(inningsText({ seq: 1, runs: 201, wickets: null, balls: 0, declared: false, allOut: false })).toBe('201')
+  })
+})

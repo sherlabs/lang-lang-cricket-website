@@ -87,3 +87,10 @@ describe('match rows import', () => {
     expect(r.issues.every((i) => i.message.includes('Remove the example rows'))).toBe(true)
   })
 })
+
+describe('seasonOfDate with club config', () => {
+  it('follows the configured start month and name format', () => {
+    expect(seasonOfDate('2013-04-10', { startMonth: 1, format: 'single' })).toEqual({ startYear: 2013, name: '2013' })
+    expect(seasonOfDate('2013-04-10', { startMonth: 9, format: 'split' })).toEqual({ startYear: 2012, name: '2012/13' })
+  })
+})

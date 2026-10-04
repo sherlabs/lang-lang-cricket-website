@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { SEASON_NAME_FORMAT, SEASON_START_MONTH } from '@/config/site'
 import { JUNIOR_GRADE_RE } from '@/lib/playhq/junior-rules'
 import { nameKeyOf, type DismissalType } from '@/lib/playhq/match-rows'
 import { slugify } from '@/lib/slugify'
@@ -56,12 +57,11 @@ export type ImportedGame = {
   players: MatchPlayerRow[]
 }
 
-/** Cricket seasons start in July: a game on 2013-02-10 belongs to 2012/13. */
-export const SEASON_START_MONTH = 7
-export function seasonOfDate(date: string): { startYear: number; name: string } {
+/** The season a game belongs to, from the club's configured start month and name format (default: July start, a game on 2013-02-10 is 2012/13). */
+export function seasonOfDate(date: string, cfg: { startMonth: number; format: 'split' | 'single' } = { startMonth: SEASON_START_MONTH, format: SEASON_NAME_FORMAT }): { startYear: number; name: string } {
   const [y, m] = date.split('-').map(Number)
-  const startYear = m >= SEASON_START_MONTH ? y : y - 1
-  return { startYear, name: `${startYear}/${String((startYear + 1) % 100).padStart(2, '0')}` }
+  const startYear = m >= cfg.startMonth ? y : y - 1
+  return { startYear, name: cfg.format === 'single' ? String(startYear) : `${startYear}/${String((startYear + 1) % 100).padStart(2, '0')}` }
 }
 
 const validDate = (s: string): boolean => {

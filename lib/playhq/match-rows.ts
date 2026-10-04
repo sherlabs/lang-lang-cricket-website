@@ -38,7 +38,8 @@ export type MatchRow = {
 export type InningsRow = {
   sequenceNo: number; periodName: string | null; battingTeamId: string | null; bowlingTeamId: string | null; isClubBatting: boolean
   periodStatus: string | null; played: boolean; declared: boolean; allOut: boolean
-  totalRuns: number; totalWickets: number; totalBalls: number
+  /** Null when an imported game gives no team total (unknown, never 0). */
+  totalRuns: number | null; totalWickets: number | null; totalBalls: number
   extrasTotal: number; wides: number; noBalls: number; byes: number; legByes: number; penalty: number
   hasFallOfWickets: boolean; hasBowlingData: boolean; hasBallData: boolean
 }

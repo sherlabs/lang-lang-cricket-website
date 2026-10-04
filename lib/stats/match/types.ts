@@ -38,8 +38,9 @@ export type InningsMeta = {
   clubBatting: boolean
   declared: boolean
   allOut: boolean
-  runs: number
-  wickets: number
+  /** Null for an imported game with no team total (encoded as -1). */
+  runs: number | null
+  wickets: number | null
   hasFow: boolean
   hasBowling: boolean
   hasBall: boolean

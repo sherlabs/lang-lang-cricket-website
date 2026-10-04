@@ -47,10 +47,15 @@ describe('yearbooks collection rules', () => {
     await expect(create({})).rejects.toThrow()
   })
 
-  it('rejects a season name that is not in the PlayHQ shape', async () => {
-    for (const bad of ['2025/26', 'Summer 2025', 'Summer 2025-26', '']) {
+  it('rejects a season name that is not a PlayHQ or imported season shape', async () => {
+    for (const bad of ['Summer 2025-26', '2025-26', 'Summer', '']) {
       await expect(create({ seasonName: bad })).rejects.toThrow()
     }
+  })
+
+  it('accepts an imported season name, "2012/13" or "2013"', async () => {
+    await create({ seasonName: '2012/13' })
+    await create({ seasonName: '2013', title: 'Single' })
   })
 
   it('defaults to draft and stamps publishedAt only once published', async () => {
@@ -78,6 +83,14 @@ describe('yearbooks REST access', () => {
     expect(probe.json.docs).toEqual([])
     const probeOr = await rest('GET', '/yearbooks?where[or][0][status][equals]=draft&where[or][1][status][equals]=published&depth=2')
     expect(probeOr.json.docs.map((d: { title: string }) => d.title)).toEqual(['Live'])
+  })
+
+  it('does not expose who ticked the summary or the AI flag to anonymous readers', async () => {
+    const all = await rest('GET', '/yearbooks')
+    for (const d of all.json.docs) {
+      expect(d).not.toHaveProperty('seasonSummaryCheckedBy')
+      expect(d).not.toHaveProperty('seasonSummaryAi')
+    }
   })
 
   it('anonymous cannot fetch a draft by id or write anything', async () => {

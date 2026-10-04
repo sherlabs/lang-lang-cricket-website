@@ -147,7 +147,7 @@ export function headToHead(set: FactSet, min: Pick<MatchMinimums, 'winGames'>): 
   for (const i of set.innings.values()) {
     const h = set.matches.get(i.m)
     const r = h && rows.get(h.oppKey)
-    if (!r) continue
+    if (!r || i.runs === null) continue // an unknown team total is not a score of 0
     const hi = i.clubBatting ? 'highestFor' : 'highestAgainst'
     r[hi] = Math.max(r[hi] ?? 0, i.runs)
     if (i.allOut) {

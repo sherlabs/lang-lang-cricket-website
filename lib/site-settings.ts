@@ -1,6 +1,6 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
-import { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, type StatsSettings } from './site-settings-core'
+import { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, withRenamedGradeRules, type StatsSettings } from './site-settings-core'
 
 export { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, selectCarouselSponsors } from './site-settings-core'
 export type { StatsSettings } from './site-settings-core'
@@ -37,7 +37,7 @@ export async function getStatsSettings(): Promise<StatsSettings> {
     const payload = await getPayloadClient()
     const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
     if (!settings?.updatedAt) return DEFAULT_STATS_SETTINGS
-    return resolveStatsSettings((settings as unknown as { stats?: unknown }).stats)
+    return withRenamedGradeRules(resolveStatsSettings((settings as unknown as { stats?: unknown }).stats))
   } catch (err) {
     console.warn('[site-settings] could not read stats settings, using defaults:', (err as Error).message)
     return DEFAULT_STATS_SETTINGS

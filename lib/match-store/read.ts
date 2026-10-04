@@ -67,7 +67,7 @@ export async function readStoredBundles(payload: Payload, filter?: { gameIds?: s
       match,
       innings: (inn.get(id) ?? []).map<InningsRow>((r) => ({
         sequenceNo: n(r.sequenceNo), periodName: s(r.periodName), battingTeamId: s(r.battingTeamId), bowlingTeamId: s(r.bowlingTeamId), isClubBatting: b(r.isClubBatting),
-        periodStatus: s(r.periodStatus), played: b(r.played), declared: b(r.declared), allOut: b(r.allOut), totalRuns: n(r.totalRuns), totalWickets: n(r.totalWickets),
+        periodStatus: s(r.periodStatus), played: b(r.played), declared: b(r.declared), allOut: b(r.allOut), totalRuns: nn(r.totalRuns), totalWickets: nn(r.totalWickets),
         totalBalls: n(r.totalBalls), extrasTotal: n(r.extrasTotal), wides: n(r.wides), noBalls: n(r.noBalls), byes: n(r.byes), legByes: n(r.legByes), penalty: n(r.penalty),
         hasFallOfWickets: b(r.hasFallOfWickets), hasBowlingData: b(r.hasBowlingData), hasBallData: b(r.hasBallData),
       })),

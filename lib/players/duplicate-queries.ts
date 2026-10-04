@@ -25,7 +25,7 @@ async function loadSuggestions(): Promise<Suggestion[]> {
   const [players, seasons, dismissed] = await Promise.all([
     db.select({ id: t.players.id, firstName: t.players.firstName, lastName: t.players.lastName, hidden: t.players.hidden }).from(t.players),
     db.select({ player: t.player_seasons.player, seasonName: t.player_seasons.seasonName, seasonStartYear: t.player_seasons.seasonStartYear, teamId: t.player_seasons.teamId, gradeName: t.player_seasons.gradeName, games: t.player_seasons.games }).from(t.player_seasons),
-    db.select({ a: t.merge_log.sourcePlayerId, b: t.merge_log.targetPlayer }).from(t.merge_log).where(eq(t.merge_log.kind, 'dismissed')),
+    db.select({ a: t.merge_log.sourcePlayerId, b: t.merge_log.targetPlayer, snapshot: t.merge_log.snapshot }).from(t.merge_log).where(eq(t.merge_log.kind, 'dismissed')),
   ])
   const byPlayer = new Map<number, DupPlayer>()
   for (const p of players as { id: number; firstName: string; lastName: string | null; hidden: boolean | null }[]) {
@@ -37,7 +37,14 @@ async function loadSuggestions(): Promise<Suggestion[]> {
     p.games += Number(s.games ?? 0)
     p.seasons.push({ seasonStartYear: s.seasonStartYear != null ? Number(s.seasonStartYear) : startYear(String(s.seasonName)), teamKey: String(s.teamId), grade: s.gradeName })
   }
-  const dismissedPairs = new Set((dismissed as { a: number | string; b: number | null }[]).filter((d) => d.b != null).map((d) => pairId(Number(d.a), Number(d.b))))
+  const dismissedPairs = new Set(
+    (dismissed as { a: number | string; b: number | null; snapshot: unknown }[]).flatMap((d) => {
+      // The target is cleared when that player is deleted; the pair is also kept in the snapshot.
+      const pair = (d.snapshot as { pair?: unknown } | null)?.pair
+      const b = d.b ?? (Array.isArray(pair) && pair.length === 2 ? Number(pair[1]) : null)
+      return b == null ? [] : [pairId(Number(d.a), b)]
+    }),
+  )
   // Over-fetch, then drop the pairs that played in one game (checked only for the candidates), then cap.
   const candidates = suggestDuplicates([...byPlayer.values()], { dismissed: dismissedPairs, limit: 400 })
   if (!candidates.length) return []

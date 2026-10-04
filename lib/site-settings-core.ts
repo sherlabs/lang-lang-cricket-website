@@ -4,7 +4,7 @@
  */
 import { TIER_ORDER } from './sponsors'
 import type { LabelRename } from './stats/labels'
-import { GRADE_CATEGORIES, compileRules, type GradeCategory, type GradeRule } from './stats/categories'
+import { GRADE_CATEGORIES, MAX_RULE_PATTERN_LENGTH, classifyGradeStrict, compileRules, type GradeCategory, type GradeRule } from './stats/categories'
 import { DEFAULT_MATCH_MINIMUMS, resolveMatchMinimums, type MatchMinimums } from './stats/match/minimums'
 import { DEFAULT_QUALIFICATION, type QualConfig, type QualScope } from './stats/qualify'
 
@@ -116,6 +116,27 @@ function thresholds(raw: unknown, def: number[]): number[] {
   if (!Array.isArray(raw)) return def
   const xs = [...new Set(raw.filter((n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0).map(Math.floor))].sort((a, b) => a - b)
   return xs.length ? xs : def
+}
+
+const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * A renamed grade is classified by the label shown first, then by the raw one (W2 spec). The pages only see the
+ * shown label, so for each grade rename whose new label matches no rule but whose old one does, add an exact-match
+ * rule for the new label. Appended after the admin's own rules; never saved back.
+ */
+export function withRenamedGradeRules(settings: StatsSettings): StatsSettings {
+  const extra: GradeRule[] = []
+  for (const r of settings.labelRenames) {
+    if (r.kind !== 'grade') continue
+    const pattern = `^${escapeRe(r.to)}$`
+    if (pattern.length > MAX_RULE_PATTERN_LENGTH) continue
+    const shown = classifyGradeStrict(r.to, settings.gradeRules)
+    if (shown) continue
+    const raw = classifyGradeStrict(r.from, settings.gradeRules)
+    if (raw) extra.push({ category: raw, pattern, flags: 'i' })
+  }
+  return extra.length ? { ...settings, gradeRules: [...settings.gradeRules, ...extra] } : settings
 }
 
 /**
