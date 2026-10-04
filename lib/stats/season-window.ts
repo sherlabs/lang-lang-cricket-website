@@ -1,3 +1,4 @@
+import { isImportedSeasonOrder } from '@/lib/history-import/constants'
 import { seasonYears } from '@/lib/players/view'
 
 export type SeasonInfo = { seasonName: string; seasonOrder: number }
@@ -15,7 +16,8 @@ export function seasonIndex(rows: readonly { seasonName: string; seasonOrder: nu
  */
 export function currentSeasonOrder(rows: readonly { seasonOrder: number }[]): number | null {
   let min: number | null = null
-  for (const r of rows) if (min === null || r.seasonOrder < min) min = r.seasonOrder
+  // Imported history is never the current season, however recent its year.
+  for (const r of rows) if (!isImportedSeasonOrder(r.seasonOrder) && (min === null || r.seasonOrder < min)) min = r.seasonOrder
   return min
 }
 

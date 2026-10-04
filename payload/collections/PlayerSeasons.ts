@@ -55,5 +55,15 @@ export const PlayerSeasons: CollectionConfig = {
     { name: 'gradeName', type: 'text' },
     ...COUNT_FIELDS.map((name): Field => ({ name, type: 'number', required: true, defaultValue: 0 })),
     { name: 'batHighScoreNotOut', type: 'checkbox', defaultValue: false },
+    {
+      name: 'source',
+      type: 'select',
+      defaultValue: 'playhq',
+      index: true,
+      options: [{ label: 'PlayHQ', value: 'playhq' }, { label: 'Imported history', value: 'import' }],
+      admin: { description: 'The PlayHQ sync replaces only its own rows; imported history is never touched by it.' },
+    },
+    { name: 'importBatch', type: 'text', index: true, admin: { description: 'Which import brought the row in (used to undo a whole import).' } },
+    { name: 'seasonStartYear', type: 'number', admin: { description: 'Set on imported rows; orders them by year (they all sit below the PlayHQ seasons).' } },
   ],
 }

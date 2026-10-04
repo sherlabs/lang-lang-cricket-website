@@ -500,6 +500,18 @@ export interface PlayerSeason {
   bowlBestRuns: number;
   catches: number;
   batHighScoreNotOut?: boolean | null;
+  /**
+   * The PlayHQ sync replaces only its own rows; imported history is never touched by it.
+   */
+  source?: ('playhq' | 'import') | null;
+  /**
+   * Which import brought the row in (used to undo a whole import).
+   */
+  importBatch?: string | null;
+  /**
+   * Set on imported rows; orders them by year (they all sit below the PlayHQ seasons).
+   */
+  seasonStartYear?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1027,6 +1039,8 @@ export interface Match {
   playhqUpdatedAt?: string | null;
   sourceHash?: string | null;
   syncedAt?: string | null;
+  source?: ('playhq' | 'import') | null;
+  importBatch?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1660,6 +1674,9 @@ export interface PlayerSeasonsSelect<T extends boolean = true> {
   bowlBestRuns?: T;
   catches?: T;
   batHighScoreNotOut?: T;
+  source?: T;
+  importBatch?: T;
+  seasonStartYear?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1822,6 +1839,8 @@ export interface MatchesSelect<T extends boolean = true> {
   playhqUpdatedAt?: T;
   sourceHash?: T;
   syncedAt?: T;
+  source?: T;
+  importBatch?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -38,7 +38,7 @@ export const PLAYER_COLUMN_KEYS: Record<keyof PlayerTables, readonly string[]> =
   player_seasons: [
     'id', 'player', 'seasonName', 'seasonOrder', 'teamId', 'teamName', 'gradeName',
     'games', 'batInnings', 'batNotOuts', 'batRuns', 'batHighScore', 'batHighScoreNotOut', 'batBalls', 'batFours', 'batSixes', 'batRunsUnballed',
-    'bowlBalls', 'bowlMaidens', 'bowlRuns', 'bowlWickets', 'bowlBestWickets', 'bowlBestRuns', 'catches', 'createdAt', 'updatedAt',
+    'bowlBalls', 'bowlMaidens', 'bowlRuns', 'bowlWickets', 'bowlBestWickets', 'bowlBestRuns', 'catches', 'source', 'importBatch', 'seasonStartYear', 'createdAt', 'updatedAt',
   ],
   player_sync_runs: [
     'id', 'startedAt', 'finishedAt', 'status', 'playersCreated', 'seasonRows', 'matchesUpserted', 'matchesSkipped', 'matchMismatches', 'matchError',

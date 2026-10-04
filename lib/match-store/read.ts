@@ -1,4 +1,4 @@
-import { inArray } from '@payloadcms/db-postgres/drizzle'
+import { and, eq, inArray } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { matchTables } from './db'
 import type { BundleRows } from './aggregate'
@@ -23,14 +23,15 @@ export type StoredBundle = Omit<BundleRows, 'appearances'> & {
   appearances: (AppearanceRow & { player: number | null })[]
 }
 
-export async function readStoredBundles(payload: Payload, filter?: { gameIds?: string[] }): Promise<StoredBundle[]> {
+export async function readStoredBundles(payload: Payload, filter?: { gameIds?: string[]; /** Restrict to one origin: the sync and the reconciliation read `playhq` only. */ source?: 'playhq' | 'import' }): Promise<StoredBundle[]> {
   const t = matchTables(payload)
   const db = payload.db.drizzle
-  const matches: Row[] = await (filter?.gameIds ? db.select().from(t.matches).where(inArray(t.matches.gameId, filter.gameIds)) : db.select().from(t.matches))
+  const conds = [filter?.gameIds ? inArray(t.matches.gameId, filter.gameIds) : undefined, filter?.source ? eq(t.matches.source, filter.source) : undefined].filter(Boolean)
+  const matches: Row[] = await (conds.length ? db.select().from(t.matches).where(and(...conds)) : db.select().from(t.matches))
   const ids = matches.map((m) => Number(m.id))
-  if (filter?.gameIds && ids.length === 0) return []
+  if (conds.length && ids.length === 0) return []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const all = (table: any): Promise<Row[]> => (filter?.gameIds ? db.select().from(table).where(inArray(table.match, ids)) : db.select().from(table))
+  const all = (table: any): Promise<Row[]> => (conds.length ? db.select().from(table).where(inArray(table.match, ids)) : db.select().from(table))
   const [innings, appearances, batting, bowling, fielding] = await Promise.all([
     all(t.match_innings), all(t.match_appearances), all(t.match_batting), all(t.match_bowling), all(t.match_fielding),
   ])

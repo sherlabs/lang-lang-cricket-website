@@ -299,12 +299,14 @@ export async function syncPlayers(payload: Payload, now = new Date()): Promise<S
 
     // 6. Wipe guard. Every scorecard fetch failing is swallowed per game, which would yield zero
     //    rows and wipe all seasons below. Refuse instead: history never legitimately shrinks to nothing.
-    const [{ n: existing }] = await db.select({ n: count() }).from(t.player_seasons)
+    // Imported history is not PlayHQ data: only PlayHQ rows count, otherwise a club that imported history before its first sync would be refused forever.
+    const [{ n: existing }] = await db.select({ n: count() }).from(t.player_seasons).where(eq(t.player_seasons.source, 'playhq'))
     if (plan.seasonRows.length === 0 && Number(existing) > 0 && partial.size === 0) throw new Error('PlayHQ returned no player data; refusing to wipe seasons')
 
     const stamp = new Date().toISOString()
     const rows = plan.seasonRows.map(({ playerId, newNameKey, ...rest }) => ({
       ...rest,
+      source: 'playhq',
       player: playerId ?? idByKey.get(newNameKey!)!,
       createdAt: stamp,
       updatedAt: stamp,
@@ -317,9 +319,11 @@ export async function syncPlayers(payload: Payload, now = new Date()): Promise<S
     // From the visited pairs, not the aggregates: a pair whose every scorecard failed has no aggregate at all.
     const partialRows = data.visitedPairs.filter((v) => partial.has(pairKey(v.clubTeamId, v.seasonName)))
     await db.transaction(async (tx) => {
+      // Only PlayHQ rows are replaced; rows tagged `import` (historical CSV imports) are never deleted by the sync.
+      const playhqOnly = eq(t.player_seasons.source, 'playhq')
       await tx
         .delete(t.player_seasons)
-        .where(partialRows.length ? not(or(...partialRows.map((a) => and(eq(t.player_seasons.seasonName, a.seasonName), eq(t.player_seasons.teamId, a.clubTeamId))))!) : undefined)
+        .where(partialRows.length ? and(playhqOnly, not(or(...partialRows.map((a) => and(eq(t.player_seasons.seasonName, a.seasonName), eq(t.player_seasons.teamId, a.clubTeamId))))!)) : playhqOnly)
       for (const part of chunk(rows, 500)) await tx.insert(t.player_seasons).values(part)
       // With a partial pair the active flags are left as they were (a player seen only in that pair would flip off).
       if (partial.size === 0) await tx

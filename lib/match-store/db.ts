@@ -34,7 +34,7 @@ export const MATCH_COLUMN_KEYS: Record<keyof MatchTables, readonly string[]> = {
     'id', 'gameId', 'status', 'type', 'seasonName', 'seasonStartYear', 'competitionName', 'gradeId', 'gradeName', 'roundName', 'roundAbbr',
     'isFinalRound', 'startsAt', 'localDate', 'days', 'venueName', 'venueSuburb', 'clubTeamId', 'clubTeamName', 'opponentTeamId', 'opponentName',
     'opponentOrgId', 'opponentOrgName', 'isHome', 'tossWinnerTeamId', 'tossChoice', 'clubWonToss', 'clubOutcome', 'opponentOutcome', 'result',
-    'byForfeit', 'onFirstInnings', 'playhqUpdatedAt', 'sourceHash', 'syncedAt', ...stamps,
+    'byForfeit', 'onFirstInnings', 'playhqUpdatedAt', 'sourceHash', 'syncedAt', 'source', 'importBatch', ...stamps,
   ],
   match_innings: [
     'id', 'match', 'sequenceNo', 'periodName', 'battingTeamId', 'bowlingTeamId', 'isClubBatting', 'periodStatus', 'played', 'declared', 'allOut',

@@ -23,6 +23,8 @@ export async function storedMatchIndex(payload: Payload): Promise<StoredMatchInd
   const rows: { gameId: string; id: number; sourceHash: string | null; playhqUpdatedAt: string | null }[] = await payload.db.drizzle
     .select({ gameId: t.matches.gameId, id: t.matches.id, sourceHash: t.matches.sourceHash, playhqUpdatedAt: t.matches.playhqUpdatedAt })
     .from(t.matches)
+    // Imported games are not the sync's: they never feed its stored-game index.
+    .where(eq(t.matches.source, 'playhq'))
   return new Map(rows.map((r) => [r.gameId, { id: Number(r.id), sourceHash: r.sourceHash, playhqUpdatedAt: r.playhqUpdatedAt }]))
 }
 
@@ -54,45 +56,61 @@ export async function upsertMatchBundle(payload: Payload, bundle: MatchBundle, a
   }
 
   await db.transaction(async (tx) => {
-    const stamp = new Date().toISOString()
-    const values = { ...match, sourceHash: bundle.sourceHash, syncedAt: stamp, updatedAt: stamp }
-    const [row] = await tx
-      .insert(t.matches)
-      .values({ ...values, createdAt: stamp })
-      .onConflictDoUpdate({ target: t.matches.gameId, set: values })
-      .returning({ id: t.matches.id })
-    const matchId = row.id as number
-
-    // Children go in dependency order; the unique keys make a duplicate impossible.
-    for (const table of [t.match_batting, t.match_bowling, t.match_fielding, t.match_innings, t.match_appearances]) {
-      await tx.delete(table).where(eq(table.match, matchId))
-    }
-
-    const inningsIds = new Map<number, number>()
-    if (bundle.innings.length) {
-      const inserted: { id: number; sequenceNo: number }[] = await tx
-        .insert(t.match_innings)
-        .values(bundle.innings.map((i) => ({ ...i, match: matchId, createdAt: stamp, updatedAt: stamp })))
-        .returning({ id: t.match_innings.id, sequenceNo: t.match_innings.sequenceNo })
-      for (const r of inserted) inningsIds.set(Number(r.sequenceNo), r.id)
-    }
-    for (const part of chunk(bundle.appearances, 200)) {
-      await tx.insert(t.match_appearances).values(
-        part.map((a) => ({
-          ...a, match: matchId, player: a.isClubSide && a.nameKey ? (aliasMap.get(a.nameKey) ?? null) : null,
-          createdAt: stamp, updatedAt: stamp,
-        })),
-      )
-    }
-    const child = <R extends { inningsSeq: number }>(rows: R[]) =>
-      rows
-        .filter((r) => inningsIds.has(r.inningsSeq))
-        .map(({ inningsSeq, ...rest }) => ({ ...rest, innings: inningsIds.get(inningsSeq)!, match: matchId, createdAt: stamp, updatedAt: stamp }))
-    for (const [table, rows] of [[t.match_batting, bundle.batting], [t.match_bowling, bundle.bowling], [t.match_fielding, bundle.fielding]] as const) {
-      for (const part of chunk(child(rows as { inningsSeq: number }[]), 200)) await tx.insert(table).values(part)
-    }
+    await writeBundle(tx, t, bundle, aliasMap, { source: 'playhq' })
   })
   return existing ? 'updated' : 'created'
+}
+
+/**
+ * Upserts one game and replaces its children, inside the caller's transaction (`tx`). The sync passes `source: 'playhq'`; the
+ * historical import passes `source: 'import'` and its batch tag. Children go in dependency order; the unique keys make a duplicate impossible.
+ */
+export async function writeBundle(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: any,
+  t: ReturnType<typeof matchTables>,
+  bundle: MatchBundle,
+  aliasMap: AliasMap,
+  origin: { source: 'playhq' | 'import'; importBatch?: string | null },
+): Promise<number> {
+  const { match } = bundle
+  const stamp = new Date().toISOString()
+  const values = { ...match, source: origin.source, importBatch: origin.importBatch ?? null, sourceHash: bundle.sourceHash, syncedAt: stamp, updatedAt: stamp }
+  const [row] = await tx
+    .insert(t.matches)
+    .values({ ...values, createdAt: stamp })
+    .onConflictDoUpdate({ target: t.matches.gameId, set: values })
+    .returning({ id: t.matches.id })
+  const matchId = row.id as number
+
+  for (const table of [t.match_batting, t.match_bowling, t.match_fielding, t.match_innings, t.match_appearances]) {
+    await tx.delete(table).where(eq(table.match, matchId))
+  }
+
+  const inningsIds = new Map<number, number>()
+  if (bundle.innings.length) {
+    const inserted: { id: number; sequenceNo: number }[] = await tx
+      .insert(t.match_innings)
+      .values(bundle.innings.map((i) => ({ ...i, match: matchId, createdAt: stamp, updatedAt: stamp })))
+      .returning({ id: t.match_innings.id, sequenceNo: t.match_innings.sequenceNo })
+    for (const r of inserted) inningsIds.set(Number(r.sequenceNo), r.id)
+  }
+  for (const part of chunk(bundle.appearances, 200)) {
+    await tx.insert(t.match_appearances).values(
+      part.map((a) => ({
+        ...a, match: matchId, player: a.isClubSide && a.nameKey ? (aliasMap.get(a.nameKey) ?? null) : null,
+        createdAt: stamp, updatedAt: stamp,
+      })),
+    )
+  }
+  const child = <R extends { inningsSeq: number }>(rows: R[]) =>
+    rows
+      .filter((r) => inningsIds.has(r.inningsSeq))
+      .map(({ inningsSeq, ...rest }) => ({ ...rest, innings: inningsIds.get(inningsSeq)!, match: matchId, createdAt: stamp, updatedAt: stamp }))
+  for (const [table, rows] of [[t.match_batting, bundle.batting], [t.match_bowling, bundle.bowling], [t.match_fielding, bundle.fielding]] as const) {
+    for (const part of chunk(child(rows as { inningsSeq: number }[]), 200)) await tx.insert(table).values(part)
+  }
+  return matchId
 }
 
 /**
@@ -147,7 +165,9 @@ export async function pruneStaleMatches(
   if (!pairs.length) return 0
   const t = matchTables(payload)
   const inPair = or(...pairs.map((p) => and(eq(t.matches.clubTeamId, p.clubTeamId), eq(t.matches.seasonName, p.seasonName))))
-  const where = keepGameIds.length ? and(inPair, notInArray(t.matches.gameId, keepGameIds)) : inPair
+  // Never an imported game, whatever its synthetic team id.
+  const mine = and(inPair, eq(t.matches.source, 'playhq'))
+  const where = keepGameIds.length ? and(mine, notInArray(t.matches.gameId, keepGameIds)) : mine
   const removed: { id: number }[] = await payload.db.drizzle.transaction(async (tx) => tx.delete(t.matches).where(where).returning({ id: t.matches.id }))
   return removed.length
 }

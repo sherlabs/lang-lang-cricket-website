@@ -36,7 +36,8 @@ export async function reconcileMatchStore(
   payload: Payload,
   input: { aggregates: TeamAggregate[]; aliasMap: AliasMap; skipPairs: ReadonlySet<string> },
 ): Promise<ReconcileSummary> {
-  const stored = await readStoredBundles(payload)
+  // Imported games have no season-aggregate counterpart from the sync: reconcile only what PlayHQ wrote.
+  const stored = await readStoredBundles(payload, { source: 'playhq' })
   const byPair = new Map<string, typeof stored>()
   for (const b of stored) byPair.set(pairKey(b.match.clubTeamId, b.match.seasonName), [...(byPair.get(pairKey(b.match.clubTeamId, b.match.seasonName)) ?? []), b])
   const summary: ReconcileSummary = { pairsCompared: 0, pairsSkipped: 0, playersCompared: 0, mismatchedPlayers: 0, catchesSkippedSameName: 0, samples: [] }

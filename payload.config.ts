@@ -35,6 +35,7 @@ import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
+import { historyImportEndpoints } from './payload/endpoints/historyImport'
 import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
 import { SiteSettings } from './payload/globals/SiteSettings'
@@ -80,6 +81,7 @@ export default buildConfig({
   graphQL: { disable: true },
   collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports],
   globals: [Club, ClubApparel, SiteSettings, Theme],
+  endpoints: [...historyImportEndpoints],
   editor: lexicalEditor(),
   db: postgresAdapter({
     pool: {

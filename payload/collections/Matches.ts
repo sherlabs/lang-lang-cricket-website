@@ -52,5 +52,7 @@ export const Matches = internalCollection({
     text('playhqUpdatedAt'),
     text('sourceHash'),
     { name: 'syncedAt', type: 'date' },
+    { name: 'source', type: 'select', defaultValue: 'playhq', index: true, options: ['playhq', 'import'] },
+    text('importBatch', { index: true }),
   ],
 })
