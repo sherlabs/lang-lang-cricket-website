@@ -12,7 +12,7 @@ import { ALL_STATS_TAGS, STATS_TAG } from './tags'
 /**
  * The only Payload access for stats (spec 3.1). The Local API runs with `overrideAccess`, so
  * every public query states its own hidden-player filter. Cached values are slim and per
- * season (`['stat-rows', season]`) to stay far below the 2MB `unstable_cache` entry cap.
+ * season (`['stat-rows', 'v2', season]`; bump the version when the column layout changes) to stay far below the 2MB `unstable_cache` entry cap.
  */
 export { STATS_TAG }
 const REVALIDATE_SECONDS = 3600
@@ -114,7 +114,7 @@ export async function getVisibleStatData(): Promise<StatData> {
     cached(['stat-season-index'], loadIndex),
     cached(['stat-players'], () => loadPlayers(false)),
   ])
-  const perSeason = await Promise.all(seasons.map((s) => cached(['stat-rows', s.seasonName], () => loadSeason(s.seasonName))))
+  const perSeason = await Promise.all(seasons.map((s) => cached(['stat-rows', 'v2', s.seasonName], () => loadSeason(s.seasonName))))
   const lookup = new Map(players.map((p) => [p.id, p]))
   // Defensive join: a stats row whose player is not in the visible list is dropped.
   const rows = perSeason.flatMap(expand).filter((r) => lookup.has(r.playerId))

@@ -72,3 +72,14 @@ describe('match minimums settings', () => {
     expect(resolveStatsSettings(null).matchMinimums).toEqual(DEFAULT_MATCH_MINIMUMS)
   })
 })
+
+describe('small-sample note for run outs and stumpings (rule 0.7)', () => {
+  it('flags a board built on fewer than five recorded events, and only those boards', async () => {
+    const { smallEventSample, buildMatchBoard } = await import('@/lib/stats/match/board')
+    expect(smallEventSample({ key: 'runOuts' }, [c({ runOuts: 2 }), c({ stumpings: 1 })])).toBe(true)
+    expect(smallEventSample({ key: 'runOuts' }, [c({ runOuts: 5 })])).toBe(false)
+    expect(smallEventSample({ key: 'runOuts' }, [c()])).toBe(false)
+    expect(smallEventSample({ key: 'fifties' }, [c({ runOuts: 1 })])).toBe(false)
+    expect(typeof buildMatchBoard).toBe('function')
+  })
+})

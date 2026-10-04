@@ -1,5 +1,6 @@
 import { moreTied, take } from '../records'
 import { rankValues } from '../rank'
+import { smallEventSample } from './board'
 import { countsByPlayer } from './counts'
 import { coverageCaption, coverageOf, type MatchCoverage } from './coverage'
 import { getMatchMetric, rankMatchBy } from './metrics'
@@ -31,6 +32,8 @@ const detailOf = (h: MatchHeader | undefined, gradeLabel: (g: string | null) => 
 export type MatchRecords = {
   coverage: MatchCoverage
   caption: string
+  /** Fewer than five run outs and stumpings in the data: the page adds a small-sample note. */
+  smallEventSample: boolean
   counts: MatchRecordList[]
   ducks: MatchRecordList
   highestScores: MatchRecordList
@@ -59,6 +62,7 @@ export function buildMatchRecords(set: FactSet, min: MatchMinimums, gradeLabel: 
   return {
     coverage,
     caption: coverageCaption(coverage),
+    smallEventSample: smallEventSample({ key: 'runOuts' }, items.map((i) => i.counts)),
     counts: COUNT_LISTS.map(list),
     ducks: list(DUCKS),
     highestScores: {

@@ -156,7 +156,7 @@ export async function writeMatchStore(
     }
     if (outOfTime) console.warn('[matches] time budget reached; matches left for the next run:', outOfTime)
     counters.matchesDeferred = outOfTime
-    for (const w of warnings) console.warn('[matches] unknown_shape', w)
+    for (const w of warnings) console.warn(w.startsWith('fielding_mismatch') ? '[matches] fielding_mismatch' : '[matches] unknown_shape', w)
     // Drop stored games PlayHQ no longer reports (reclassified, abandoned, vanished) for the pairs synced
     // cleanly this run, so they cannot hold the reconciliation in permanent mismatch. The collection
     // throws on any PlayHQ failure, so reaching here means the fetch was complete; failed writes are skipped.

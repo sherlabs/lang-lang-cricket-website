@@ -120,7 +120,7 @@ export default async function RecordsPage() {
           <>
             <div className="space-y-2">
               <SubHeading title="From match data" />
-              <p className="text-sm text-brand-grey">{matchRecords.caption} These lists count recorded innings only, so they can differ from the season totals above.</p>
+              <p className="text-sm text-brand-grey">{matchRecords.caption} These lists count recorded innings only, so they can differ from the season totals above.{matchRecords.smallEventSample ? ' Run outs and stumpings are based on a small number of recorded events.' : ''}</p>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
               {matchRecords.counts.map((r) => <MatchRecordCard key={r.key} record={r} players={names} />)}

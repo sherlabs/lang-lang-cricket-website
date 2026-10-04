@@ -4,6 +4,18 @@ import { matchQualifierText, rankMatchBy, type MatchMetric } from './metrics'
 import type { MatchMinimums } from './minimums'
 import type { FactSet, MatchCounts } from './types'
 
+export const SMALL_SAMPLE_NOTE = 'Based on a small number of recorded events.'
+
+/**
+ * Run outs and stumpings have not yet been seen in real PlayHQ data (W2 spec rule 0.7), so a board built on
+ * fewer than five recorded events says so.
+ */
+export function smallEventSample(metric: { key: string }, counts: readonly MatchCounts[]): boolean {
+  if (metric.key !== 'runOuts' && metric.key !== 'stumpings') return false
+  const n = counts.reduce((s, c) => s + c.runOuts + c.stumpings, 0)
+  return n > 0 && n < 5
+}
+
 /** The extra column beside a match leaderboard value: innings for batting and bowling, games otherwise. */
 export function matchBoardContext(metric: MatchMetric): { label: string; text: (c: MatchCounts) => string } {
   if (metric.group === 'batting') return { label: 'Inns', text: (c) => String(c.battingInnings) }
@@ -33,6 +45,6 @@ export function buildMatchBoard(set: FactSet, metric: MatchMetric, min: MatchMin
     unqualified: unqualified.map((u) => ({ playerId: u.playerId, display: metric.format(u.counts) })),
     total: ranked.length,
     note: matchQualifierText(metric.qualifier, min),
-    source: `From match data. ${coverageCaption(coverageOf(set), need)} ${metric.help}`,
+    source: `From match data. ${coverageCaption(coverageOf(set), need)} ${metric.help}${smallEventSample(metric, items.map((i) => i.counts)) ? ` ${SMALL_SAMPLE_NOTE}` : ''}`,
   }
 }
