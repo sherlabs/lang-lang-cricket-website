@@ -49,6 +49,7 @@ Sections A–D happen before the window. E is the window. F is the smoke list, G
 | `BLOB_DELETE_DISABLED` | unset | `1` (the build refuses a preview without it) | [ ] |
 | `CRON_SECRET`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | unchanged | same values | [ ] / [ ] |
 | `PROD_DATABASE_HOST` | the production Neon hostname (not a secret) | same; set it for **all** environments: the build refuses when it is empty | [ ] |
+| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` (optional: the "Continue with Facebook" button is hidden and its routes 404 while either is unset), `FACEBOOK_GRAPH_VERSION`, `SELECTOR_INVITE_DAYS` | the club's Meta app id and secret (secret Sensitive; see A.5), `v25.0` (check the current version), `14` | the same app only if the preview alias is registered with Meta; otherwise leave unset (password sign-in only). Never pull the secret to a laptop | [ ] / [ ] |
 | `ENABLE_EXPERIMENTAL_COREPACK` | `1`, added in D (not before: it also applies to legacy builds of `main`) | `1` | [ ] / [ ] |
 
 Never on Vercel: `LEGACY_DATABASE_URL`, `PAYLOAD_ETL`, `ALLOW_REMOTE_DB`, `ALLOW_REMOTE_BLOB`, `INITIAL_ADMIN_*`, `PAYLOAD_PUSH`, `LEGACY_BLOBS_RELEASED` (until H).
@@ -68,6 +69,17 @@ The production values are unused until a deployment of the new app is promoted (
 - [ ] **Write freeze (prepared, DISABLED):** a custom rule that denies every `POST` whose host is `langlangcricketclub.com`, `www.langlangcricketclub.com` or `lang-lang-cricket-website.vercel.app`. Server actions are POSTs to page URLs, so this freezes RSVPs, story submits and edits, and photo submits on the legacy site. The cron is a GET and is **not** affected, which is why the window must end before 17:00 UTC (D). Match on those hostnames only, so the new deployment's own URL stays usable during E.8. Rule name: ________
 
 ---
+
+### A.5 Facebook app (optional, for selector sign-in)
+
+Steps are in `docs/features/selector-accounts.mdx` ("Setting up Facebook"). Checklist:
+
+- [ ] Meta app created with the use case "Authenticate and request data from users with Facebook Login", named after the club.
+- [ ] Facebook Login (Web): Client OAuth login, Web OAuth login, Enforce HTTPS and Strict Mode for redirect URIs on; Valid OAuth Redirect URIs exactly `https://<production host>/selector/facebook/callback` (and the stable preview alias used for rehearsal). Device login and embedded browser OAuth off.
+- [ ] App settings > Basic: app domain, Privacy Policy URL (a public page), User data deletion callback `https://<production host>/selector/facebook/data-deletion`, app icon, category.
+- [ ] Only `public_profile` is requested (no email). Rehearsal selectors added as Testers while in Development mode; app switched to Live when ready.
+- [ ] `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` set in Vercel (A.2). Skipping this whole section is fine: selectors use a password.
+- [ ] Rehearse the invite link inside Messenger, Facebook and WhatsApp on a phone: Facebook sign-in can fail in those in-app browsers; the password path must work.
 
 ## B. Preview rehearsal (WP7 acceptance)
 
@@ -257,6 +269,7 @@ Reports go to `../cutover-reports/`, outside the clone: step 8 deploys from the 
 | Admin: trigger player sync (Players → "Run sync now") | [ ] | [ ] |
 | Admin: Refresh PlayHQ data (dashboard) | [ ] | [ ] |
 | `sitemap.xml` lists events, stories and players with their original `lastModified` dates | [ ] | [ ] |
+| Selector can sign in with a password, and (if configured) with Facebook, from a phone browser and from the Messenger in-app browser; a Facebook account that was never invited is refused; a Facebook account carrying a selector's email is refused | [ ] | [ ] |
 | (Preview only) rejecting a legacy pending photo logs "legacy blob kept" and its production URL still returns 200 (B.4; cannot reach the production store from a preview) | [ ] | — |
 
 ---

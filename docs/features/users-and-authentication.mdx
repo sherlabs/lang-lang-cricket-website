@@ -5,7 +5,7 @@ routes: ["/admin/login", "/admin/collections/users", "/api/users"]
 collections: [users]
 admin: "Users (admin only)"
 owner: "Site admin"
-related: [committee-admin, safety-guards]
+related: [committee-admin, safety-guards, selector-accounts]
 added: feat/payload-cms
 ---
 
@@ -21,7 +21,8 @@ The first site used one shared admin password. The Payload migration replaced it
 ## What it does
 
 - Payload login at `/admin/login`; session cookie is Lax, `secure` in production, valid for 7 days (`tokenExpiration` 604800 s). Payload's default lockout applies after repeated failed attempts, and only an admin can unlock an account.
-- Roles: `admin` (looks after the site) and `editor` (committee member). Only an admin can create users, delete users, or change a role. An editor can read and update only their own user record.
+- Roles: `admin` (looks after the site), `editor` (committee member) and `selector` (picks the teams; see [Selector accounts and Facebook sign-in](./selector-accounts.mdx)). "Staff" means admin or editor only; a selector or a disabled user is never staff. Only an admin can create editors or admins, delete them, or change a role. An editor can read and update their own record, and can create, update and delete selectors only (a forced selector role; an attempt to set another role is a 403). A selector can update only their own name and password, and a password change needs the current one.
+- Every password must be at least 10 characters on every path. Disabling a user, a role change, an email change or a password change ends their other sessions.
 - The first admin is created by the `seed:admin` script from `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD`. "Create first user" registration is closed in code, so anonymous creation is refused.
 - Forgot-password is disabled because there is no email adapter and Payload would otherwise log the reset link; an admin sets a new password instead.
 - The Payload REST API is on; GraphQL is disabled. State-changing requests require an allowed `Origin` (CSRF list from the server URL). Public token flows (RSVP edit, story drafts) use unguessable UUID tokens and never use `where`-based writes.

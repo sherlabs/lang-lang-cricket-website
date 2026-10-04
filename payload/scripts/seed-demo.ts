@@ -22,9 +22,12 @@
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
 import config from '@payload-config'
+import { randomBytes } from 'node:crypto'
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { getPayload, type CollectionSlug, type Payload } from 'payload'
+import { SELECTOR_INVITE_DAYS, selectorPaths } from '../../config/site'
+import { hashInviteToken, inviteWindow, newInviteToken } from '../../lib/selector-invite'
 import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
 import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
@@ -254,6 +257,38 @@ async function seedDemoAdminTools(payload: Payload) {
   console.log('[seed-demo] admin tools: duplicate pair, same-game pair, one real merge, label rename, preferred name and season summary created')
 }
 
+/**
+ * Two demo selectors (announce-teams spec 3.10): one password-active (its demo password is printed, local use only) and one
+ * invited, whose one-time invite link is printed. Never a Facebook id. Idempotent: skipped when any selector exists.
+ */
+export const DEMO_SELECTOR_PASSWORD = 'demo-selector-pass-1'
+async function seedDemoSelectors(payload: Payload) {
+  const existing = await payload.count({ collection: 'users', where: { role: { equals: 'selector' } }, overrideAccess: true })
+  if (existing.totalDocs > 0) {
+    console.log('[seed-demo] selectors: already present, skipped')
+    return
+  }
+  const seed = { ...CTX, seedAdmin: true }
+  const active = await payload.create({
+    collection: 'users',
+    data: { email: 'sam.selector@example.com', name: 'Sam Selector', role: 'selector', password: DEMO_SELECTOR_PASSWORD },
+    overrideAccess: true,
+    context: seed,
+  })
+  await payload.db.updateOne({ collection: 'users', id: active.id, data: { lastLoginAt: new Date().toISOString(), lastLoginMethod: 'password' }, returning: false })
+  const token = newInviteToken()
+  const w = inviteWindow()
+  await payload.create({
+    collection: 'users',
+    data: { email: 'alex.invited@example.com', name: 'Alex Invited', role: 'selector', password: randomBytes(32).toString('base64url') },
+    overrideAccess: true,
+    context: { ...seed, selectorInvite: { hash: hashInviteToken(token), expiresAt: w.expiresAt, invitedAt: w.invitedAt } },
+  })
+  console.log('[seed-demo] selectors: 2 created')
+  console.log(`[seed-demo]   sam.selector@example.com signs in with the password ${DEMO_SELECTOR_PASSWORD} at /selector/login`)
+  console.log(`[seed-demo]   Alex Invited's one-time invite link (works for ${SELECTOR_INVITE_DAYS} days): ${payload.config.serverURL}${selectorPaths.invite(token)}`)
+}
+
 async function main() {
   await guard({ write: true })
   if (blobToken()) throw new Error('[seed-demo] refusing to run with a Blob token: demo files go to local disk only')
@@ -448,6 +483,7 @@ async function main() {
     await seedDemoMatches(payload)
     await seedDemoStatLab(payload)
     await seedDemoAdminTools(payload)
+    await seedDemoSelectors(payload)
   } finally {
     await payload.destroy()
   }

@@ -1,0 +1,59 @@
+---
+title: Selector accounts and Facebook sign-in
+status: shipped
+routes: ["/selector", "/selector/login", "/selector/invite/[token]", "/selector/account", "/selector/facebook/start", "/selector/facebook/callback", "/selector/facebook/data-deletion", "/selector/facebook/deauthorize", "/admin/selectors"]
+collections: [users, throttle-hits]
+admin: "Advanced > Selectors (admin and editor), and the Add a selector tile on Home"
+owner: "Committee (editors) and the site admin"
+related: [users-and-authentication, committee-admin, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector** (a coach or committee member who picks the team for a grade) who wants to open a phone, tap one button and get to the team selection tools without remembering a password.
+- **A committee member** who needs to give someone selector access, and take it away again, without asking the site admin.
+- **The site admin** who needs a third kind of login that can never open the admin or see anything the public cannot.
+
+## Why it was built
+
+Picking and announcing the teams is the weekly job that most needs a quick, private, phone-friendly login. The request was that selector logins are created from the admin panel and that the main website offers a Facebook login. This is the foundation (issue [#39](https://github.com/sherlabs/lang-lang-cricket-website/issues/39)); the availability, squad and team selection screens that fill the selector area arrive in later work (tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
+
+## What it does
+
+**A third role.** `users.role` is now `admin`, `editor` or `selector`. "Staff" now means admin or editor, never "any signed-in user": every access rule asks the helpers in `payload/access/index.ts` (disabled users count as nobody), and `tests/staff-guard.test.ts` fails the build if code asks "is there a user" any other way. A matrix test (`tests/int/selector-matrix.int.test.ts`) proves that for every collection and global, and for Payload's own edit-lock collection, a selector gets exactly what an anonymous visitor gets, apart from their own account row. A selector cannot open `/admin`, see hidden players or unpublished news, merge players, trigger a PlayHQ refresh, use the saved reports route or preview drafts.
+
+**Creating selectors (admin and editor).** Home > **Add a selector**, or Advanced > **Selectors**. Type a name and an email and press Add. The page shows an invite link once, with **Copy link**, **Share by text message** and **Share on WhatsApp**. The link works once and for 14 days (`SELECTOR_INVITE_DAYS`). Only a hash of the link is stored. An editor can create, update and delete selectors but can never create or change an admin or editor, change anyone's role, or see admins and other editors; an attempt is refused with a 403 rather than silently ignored. Per row: **New invite link**, **Unlink Facebook**, **Disable** and **Enable** (disabling signs them out straight away), **Set a password** (for people with no Facebook, at least 10 characters) and **Remove**. The list shows Invited, Active, Disabled or Invite expired, a Facebook linked marker and the last sign-in.
+
+**Signing in.** The footer has a **Selector login** link. `/selector/login` offers an email and password form (one message for every failure, "Email or password is not right.", including a disabled or locked account; five wrong tries lock the account for ten minutes) and, when Facebook is configured, **Continue with Facebook**. The invite link opens `/selector/invite/<token>`: "Hi <first name>", then **Continue with Facebook** or **Choose a password** (at least 10 characters). The invite is spent by one atomic database statement on either path, so two people racing on one link cannot both use it. Every password is checked for length on every path, and a selector changing their own password must give the current one. Sessions last 7 days like everyone's; signing out removes only that device.
+
+**Facebook sign-in is invite-only.** The only authority to link a Facebook account is a valid, unexpired, unused invite link, or a signed-in selector pressing **Link Facebook** on `/selector/account`. Facebook's email is never requested or compared, so a Facebook account that merely carries a selector's email gets nothing. Only `selector` accounts can use Facebook at all: an admin or editor keeps their password, so a Facebook match can never become a passwordless admin session. The flow never creates a user. After the first link, the selector taps **Continue with Facebook** on the login page. The unique Facebook id is all that is stored (not the name, email or token), and the Facebook sign-in can be removed by the committee (**Unlink Facebook**), by the selector (`/selector/account`) or by Facebook itself (the data-deletion and deauthorize callbacks).
+
+**Safety details.** The one-use OAuth cookie is signed, expires in 10 minutes, carries a nonce that exists only in the cookie (the `state` sent to Facebook is derived from it) and in production is named with the `__Host-` prefix. The `next` address after sign-in must be a plain path inside `/selector`. The page and Facebook routes are `no-store`, `no-referrer` and `noindex`, and `/selector` is disallowed in robots. Sign-in, invite and Facebook routes have a soft per-address rate limit that works on serverless (`throttle-hits`, one atomic statement per hit; it only applies on Vercel, where the client address can be trusted).
+
+**Club-neutral by design.** The Facebook app, the cookie prefix, the Graph version and the invite lifetime all come from environment settings (`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_GRAPH_VERSION`, `SELECTOR_INVITE_DAYS`, `COOKIE_PREFIX`); colours and the crest come from the theme. With the Facebook settings empty there is no button and every `/selector/facebook/*` route is a 404, so a club that does not want Facebook just leaves them unset.
+
+### Setting up Facebook (once, by the site admin)
+
+1. Sign in at developers.facebook.com with the club's Facebook account and **Create app**. Choose the use case "Authenticate and request data from users with Facebook Login", a Consumer or Business app, and name it `<club name>`.
+2. Add the **Facebook Login** product (Web). In its settings turn on Client OAuth login, Web OAuth login, Enforce HTTPS and Use Strict Mode for redirect URIs. Under **Valid OAuth Redirect URIs** add exactly `https://<production host>/selector/facebook/callback`, and the stable preview address if you rehearse there. Leave device login and embedded browser OAuth off.
+3. Under App settings > Basic fill in the app domain, a **Privacy Policy URL** (a public page on the club site) and **User data deletion** with the callback URL `https://<production host>/selector/facebook/data-deletion`. Copy the **App ID** and **App Secret** into the deployment settings `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` (mark the secret Sensitive; never put it in a local file).
+4. Ask only for the default `public_profile` permission. Do not add email. (Check on the day: Meta changes wording and review rules.)
+5. While the app is in Development mode only people with a role on the app can sign in, which is handy for a rehearsal: add two or three selectors as Testers. Switch the app to **Live** when ready.
+6. Smoke test: Add a selector, open the invite link on a phone, tap Continue with Facebook, approve and land on `/selector`; then unlink in the admin and confirm the same Facebook account is refused. Once a year check Meta's Graph version notice and update `FACEBOOK_GRAPH_VERSION`.
+
+Only the production host and one stable preview address can use Facebook (Meta needs every redirect address registered exactly); any other host shows the password form only.
+
+## How to use it
+
+1. Committee: Home > **Add a selector**. Type a name and email, press **Add selector**, copy the link and send it by message.
+2. The selector opens the link on their phone and either taps **Continue with Facebook** or chooses a password. Next time they use **Selector login** in the site footer.
+3. To stop someone, press **Disable** (or **Remove**). To let them link Facebook again, press **New invite link**.
+4. A selector can change their password or link or unlink Facebook at `/selector/account`.
+
+## Not included / deferred
+
+- **Honest limits.** Facebook sign-in can fail inside the Messenger, Facebook or WhatsApp in-app browser, where invite links are often opened; the invite page shows an "open in Safari or Chrome" hint there, and the password path always works. Facebook Live mode and any Meta review are outside our control, so the password path means selecting never depends on Meta.
+- There is no email invitation (the site has no email adapter): the committee shares the link. There is no password reset by email. Selector sessions last 7 days (a longer selector-only session needs a custom session writer). PKCE and a QR code for the invite are not included.
+- Only the frame of the selector area (overview and My account) is built here. Availability, squad boards, team selection and the lineup graphic are the next work packages; best-player votes, net sessions and auto-posting to Facebook are out of scope for this work. Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- An editor-set password is shown only while typing it; tell the person in person or by phone.
