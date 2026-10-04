@@ -36,7 +36,7 @@ describe('WinLossChart', () => {
     expect(html).not.toMatch(/style="[^"]*(color|fill|stroke)/)
   })
   it('describes each game in words and renders nothing for an empty series', () => {
-    expect(winLossDescription(prog)).toContain('Game 3 on 2025-10-25 against Rivals: Won by forfeit.')
+    expect(winLossDescription(prog)).toContain('Game 3 on 25 Oct 2025 against Rivals: Won by forfeit.')
     expect(renderToStaticMarkup(createElement(WinLossChart, { progression: { grade: 'x', cells: [] }, idPrefix: 'e' }))).toBe('')
   })
 })

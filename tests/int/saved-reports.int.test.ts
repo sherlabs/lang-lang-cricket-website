@@ -8,7 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { MAX_SAVED_REPORTS } from '@/lib/stats/saved-reports'
 import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn(), unstable_cache: <T extends (...a: never[]) => unknown>(fn: T) => fn }))
 
 let payload: Payload
 let admin: string
@@ -102,6 +102,18 @@ describe('the /statlab/saved route', () => {
     expect((await call(undefined)).status).toBe(401)
     expect((await call(editor)).status).toBe(403)
     expect((await call(editor, { method: 'POST', body: JSON.stringify({ title: 'x', query: 'cols=runs,avg' }) })).status).toBe(403)
+  })
+
+  it('answers an anonymous POST with no Origin 401, and a foreign Origin 403', async () => {
+    const { POST } = await import('@/app/(frontend)/statlab/saved/route')
+    const body = JSON.stringify({ title: 'x', query: 'cols=runs,avg' })
+    expect((await POST(new Request('http://localhost:3000/statlab/saved', { method: 'POST', body }))).status).toBe(401)
+    expect((await POST(new Request('http://localhost:3000/statlab/saved', { method: 'POST', body, headers: { origin: 'https://evil.example' } }))).status).toBe(403)
+  })
+
+  it('refuses a report naming an opposition, season or grade that does not exist', async () => {
+    const res = await call(admin, { method: 'POST', body: JSON.stringify({ title: 'Junk', query: 'cols=runs,fifties&opp=zzz' }) })
+    expect(res.status).toBe(400)
   })
 
   it('saves and lists for an admin, with the canonical share link', async () => {

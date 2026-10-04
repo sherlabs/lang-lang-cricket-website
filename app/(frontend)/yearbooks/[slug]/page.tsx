@@ -81,7 +81,7 @@ export default async function YearbookPage({ params }: Props) {
   // Match-data sections (W2 spec 5.5): only when the season has stored matches; otherwise the page is as before.
   const match = await getYearbookMatchData(book.seasonName, { cats, rules: settings.gradeRules })
   const hasMatches = !!match && match.lines.length > 0
-  const share = hasMatches ? storedShare(match.lines, results.status === 'ok' ? results.games : null) : null
+  const share = hasMatches ? storedShare(match.lines, results.status === 'ok' ? results.games : null, { cats, rules: settings.gradeRules }) : null
   const storedResults = hasMatches && share?.complete === true
   const labels = hasMatches ? buildLabelMap(match.lines.map((l) => ({ kind: 'grade' as const, label: l.grade }))) : null
   const gradeLabel = (g: string | null) => (g && labels ? canonicalGrade(g, labels) : g)

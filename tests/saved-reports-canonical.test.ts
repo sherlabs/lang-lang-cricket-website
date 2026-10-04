@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { droppedColumns, MAX_QUERY_LENGTH, canonicaliseReport, savedReportHref } from '@/lib/stats/saved-reports'
+import { unknownFilters, droppedColumns, MAX_QUERY_LENGTH, canonicaliseReport, savedReportHref } from '@/lib/stats/saved-reports'
 
 describe('canonicaliseReport (W2 spec 5.3)', () => {
   it('returns the canonical form: sorted keys, defaults omitted, no leading question mark', () => {
@@ -45,5 +45,13 @@ describe('droppedColumns', () => {
   })
   it('builds the share link from the query', () => {
     expect(savedReportHref('cols=runs')).toBe('/statlab?cols=runs')
+  })
+})
+
+describe('unknownFilters', () => {
+  const known = { seasons: ['2025/26'], grades: ['A Grade'], opps: ['o1'] }
+  it('reports values outside the real lists and accepts real ones', () => {
+    expect(unknownFilters('cols=runs&opp=zzz&season=1999&grade=Nope', known)).toEqual(['season "1999"', 'grade "Nope"', 'opposition "zzz"'])
+    expect(unknownFilters('cols=runs&opp=o1&season=2025/26&grade=A%20Grade', known)).toEqual([])
   })
 })

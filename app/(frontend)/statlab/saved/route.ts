@@ -1,7 +1,8 @@
 import { APIError } from 'payload'
 import { getPayloadClient } from '@/lib/payload/client'
 import { requireStaff } from '@/lib/payload/staff-route'
-import { droppedColumns, MAX_SAVED_REPORTS, savedReportHref } from '@/lib/stats/saved-reports'
+import { getStatLabKnown } from '@/lib/stats/statlab-queries'
+import { canonicaliseReport, droppedColumns, MAX_SAVED_REPORTS, savedReportHref, unknownFilters } from '@/lib/stats/saved-reports'
 
 // Admin-only bookmarks of StatLab tables (W2 spec 5.3). A route handler rather than page code keeps
 // `/statlab` itself static (ISR): the page asks this route who is looking. It never caches, never
@@ -29,6 +30,11 @@ export async function POST(request: Request): Promise<Response> {
   if (gate.user.role !== 'admin') return json({ error: 'Admins only' }, 403)
   const body = (await request.json().catch(() => null)) as { title?: unknown; query?: unknown; description?: unknown } | null
   if (!body || typeof body.title !== 'string' || typeof body.query !== 'string') return json({ error: 'A title and a report are needed.' }, 400)
+  const checked = canonicaliseReport(body.query)
+  if (checked.ok) {
+    const bad = unknownFilters(checked.query, await getStatLabKnown())
+    if (bad.length) return json({ error: `Not saved: unknown ${bad.join(', ')}. Pick them from the lists on the page.` }, 400)
+  }
   const payload = await getPayloadClient()
   try {
     const doc = await payload.create({

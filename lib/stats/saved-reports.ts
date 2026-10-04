@@ -37,6 +37,23 @@ export function canonicaliseReport(input: string): CanonicalResult {
   return { ok: true, query: canonical }
 }
 
+/**
+ * Season, grade and opposition values in a canonical query that are not in the real lists. A saved report
+ * with one of these would load as "all", a different table than the one saved, so the route refuses it.
+ */
+export function unknownFilters(query: string, known: { seasons: readonly string[]; grades: readonly string[]; opps: readonly string[] }): string[] {
+  const sp = new URLSearchParams(query)
+  const bad: string[] = []
+  const check = (key: string, label: string, list: readonly string[]) => {
+    const v = sp.get(key)
+    if (v && !list.includes(v)) bad.push(`${label} "${v}"`)
+  }
+  check('season', 'season', known.seasons)
+  check('grade', 'grade', known.grades)
+  check('opp', 'opposition', known.opps)
+  return bad
+}
+
 /** Column keys in a stored query that no longer exist (they are dropped when the report loads). */
 export function droppedColumns(query: string): string[] {
   const raw = new URLSearchParams(query).getAll('cols').flatMap((s) => s.split(',')).map((s) => s.trim()).filter(Boolean)

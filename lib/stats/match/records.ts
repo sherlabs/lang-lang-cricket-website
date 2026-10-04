@@ -2,7 +2,7 @@ import { moreTied, take } from '../records'
 import { rankValues } from '../rank'
 import { smallEventSample } from './board'
 import { countsByPlayer } from './counts'
-import { coverageCaption, coverageOf, type MatchCoverage } from './coverage'
+import { coverageCaption, coverageOf, formatCoverageDate, type MatchCoverage } from './coverage'
 import { getMatchMetric, rankMatchBy } from './metrics'
 import type { MatchMinimums } from './minimums'
 import { bestByWicket, topPartnerships, unavailableText } from './partnerships'
@@ -27,7 +27,7 @@ const COUNT_LISTS: { key: string; title: string; metric: string }[] = [
 const DUCKS = { key: 'ducks', title: 'Most ducks', metric: 'ducks' }
 
 const detailOf = (h: MatchHeader | undefined, gradeLabel: (g: string | null) => string | null): string | null =>
-  h ? [h.date, `v ${h.oppLabel}`, gradeLabel(h.grade)].filter(Boolean).join(' · ') : null
+  h ? [h.date ? formatCoverageDate(h.date) : null, `v ${h.oppLabel}`, gradeLabel(h.grade)].filter(Boolean).join(' · ') : null
 
 export type MatchRecords = {
   coverage: MatchCoverage

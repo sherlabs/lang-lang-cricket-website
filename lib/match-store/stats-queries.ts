@@ -1,7 +1,7 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
 import { cached, getVisibleStatData } from '@/lib/stats/queries'
-import { assembleFacts, deriveFacts, filterFacts, mergeFactSets, playerFacts } from '@/lib/stats/match/facts'
+import { assembleFacts, deriveFacts, mergeFactSets, playerFacts } from '@/lib/stats/match/facts'
 import { decodeFacts, encodeFacts, type SlimFacts } from '@/lib/stats/match/codec'
 import { coverageOf, type MatchCoverage } from '@/lib/stats/match/coverage'
 import { oppositionKey, oppositionLabel } from '@/lib/stats/match/opposition-key'

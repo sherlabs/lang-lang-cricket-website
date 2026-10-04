@@ -10,13 +10,14 @@ import { getPayloadClient } from './client'
  */
 export async function requireStaff(request: Request): Promise<{ user: TypedUser } | { response: Response }> {
   const payload = await getPayloadClient()
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    const origin = request.headers.get('origin')
-    if (!origin || !payload.config.csrf.includes(origin)) {
-      return { response: Response.json({ error: 'Forbidden' }, { status: 403 }) }
-    }
-  }
+  const forbidden = { response: Response.json({ error: 'Forbidden' }, { status: 403 }) }
+  const mutating = request.method !== 'GET' && request.method !== 'HEAD'
+  const origin = request.headers.get('origin')
+  // A foreign Origin is refused outright; a missing one is checked after authentication so an anonymous
+  // caller gets 401 (not signed in) rather than 403.
+  if (mutating && origin && !payload.config.csrf.includes(origin)) return forbidden
   const { user } = await payload.auth({ headers: request.headers })
   if (!user) return { response: Response.json({ error: 'Unauthorized' }, { status: 401 }) }
+  if (mutating && !origin) return forbidden
   return { user }
 }

@@ -1,3 +1,4 @@
+import { formatCoverageDate } from '@/lib/stats/match/coverage'
 import type { GradeProgression, ProgressionCell, ResultLetter } from '@/lib/stats/match/yearbook'
 
 const SLOT = 44, LEFT = 10, RIGHT = 10, STRIP_TOP = 8, CELL = 28, GAP = 14, PLOT_H = 86, BOTTOM = 20
@@ -12,7 +13,7 @@ const CELL_CLASS: Record<ResultLetter, { rect: string; text: string }> = {
 
 /** Text alternative of a series: one sentence per game. */
 export function winLossDescription(p: GradeProgression): string {
-  return p.cells.map((c, i) => `Game ${i + 1}${c.date ? ` on ${c.date}` : ''} against ${c.opponent}: ${c.word}. Wins minus losses ${c.net}.`).join(' ')
+  return p.cells.map((c, i) => `Game ${i + 1}${c.date ? ` on ${formatCoverageDate(c.date)}` : ''} against ${c.opponent}: ${c.word}. Wins minus losses ${c.net}.`).join(' ')
 }
 
 /**
@@ -83,7 +84,7 @@ export function WinLossChart({ progression, idPrefix }: { progression: GradeProg
           <tbody>
             {cells.map((c) => (
               <tr key={c.gameId} className="border-t border-brand-black/5">
-                <td className="py-1 pr-3">{c.date ?? '–'}</td>
+                <td className="py-1 pr-3">{c.date ? formatCoverageDate(c.date) : '–'}</td>
                 <td className="py-1 pr-3">{c.opponent}</td>
                 <td className="py-1 pr-3">{c.letter}<span className="sr-only"> ({c.word})</span> <span aria-hidden>{c.word}</span></td>
                 <td className="py-1 text-right tabular-nums">{c.net}</td>

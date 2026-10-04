@@ -83,6 +83,13 @@ describe('stored share (spec 5.5)', () => {
     expect(s.complete).toBe(false)
     expect(shareText(s)).toBe('1 of 2 finished games stored.')
   })
+  it('ignores live games outside the page categories (a junior game does not block the stored results)', () => {
+    const g = (id: string, gradeName: string) => ({ id, status: 'FINAL', isClubDerby: false, gradeName, club: { name: 'Team' } }) as unknown as Game
+    const scope = { cats: ['senior'] as const, rules: [] }
+    const s = storedShare([line({ gameId: 'a' })], [g('a', 'A Grade'), g('j', 'Under 14 Boys')], scope)
+    expect(s).toEqual({ stored: 1, live: 1, complete: true })
+    expect(storedShare([line({ gameId: 'a' })], [g('a', 'A Grade'), g('j', 'Under 14 Boys')]).complete).toBe(false)
+  })
   it('uses stored data when there is no live list, and nothing when nothing is stored', () => {
     expect(storedShare([line()], null)).toEqual({ stored: 1, live: null, complete: true })
     expect(storedShare([], null).complete).toBe(false)

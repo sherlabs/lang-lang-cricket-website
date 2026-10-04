@@ -2,6 +2,7 @@ import type { StoredBundle } from '@/lib/match-store/read'
 import type { MatchResult } from '@/lib/playhq/match-rows'
 import type { Game } from '@/lib/playhq/types'
 import { isFinished } from '@/lib/playhq/games'
+import { classifyGrade, type GradeCategory, type GradeRule } from '../categories'
 import { countsByPlayer } from './counts'
 import { ALLROUNDER_FORMULA, ALLROUNDER_MIN_RUNS, ALLROUNDER_MIN_WICKETS, ALLROUNDER_WICKET_WEIGHT } from '../yearbook'
 import type { FactSet } from './types'
@@ -120,9 +121,15 @@ export type StoredShare = { stored: number; live: number | null; complete: boole
  * non-derby live game is stored. With no live list (PlayHQ unreachable or no such season), stored data
  * is used as it is. The sources are never mixed in one section.
  */
-export function storedShare(stored: readonly ResultLine[], live: readonly Game[] | null): StoredShare {
+export function storedShare(
+  stored: readonly ResultLine[], live: readonly Game[] | null,
+  scope?: { cats: readonly GradeCategory[]; rules: readonly GradeRule[] | null | undefined },
+): StoredShare {
   if (live === null) return { stored: stored.length, live: null, complete: stored.length > 0 }
-  const liveFinished = live.filter((g) => isFinished(g) && g.status !== 'ABANDONED' && !g.isClubDerby)
+  // The store holds the same categories as the page (senior by default), so a junior or womens game in
+  // the live list must not stop the stored results replacing it.
+  const inScope = (g: Game) => !scope || scope.cats.includes(classifyGrade(g.gradeName, g.club.name, scope.rules))
+  const liveFinished = live.filter((g) => isFinished(g) && g.status !== 'ABANDONED' && !g.isClubDerby && inScope(g))
   const ids = new Set(stored.map((l) => l.gameId))
   return { stored: stored.length, live: liveFinished.length, complete: stored.length > 0 && liveFinished.every((g) => ids.has(g.id)) }
 }

@@ -29,6 +29,12 @@ export function statLabCaption(o: { mode: 'season' | 'match'; since: string; mat
   return (o.mode === 'season' ? `Season totals ${o.since}` : `From match data. ${o.matchCaption}`).replace(/\.$/, '')
 }
 
+/** The real season, grade and opposition lists a saved report is checked against. */
+export async function getStatLabKnown() {
+  const [data, opps] = await Promise.all([getVisibleStatData(), getOppositionOptions().catch((): OppositionOption[] => [])])
+  return { seasons: data.seasons.map((s) => s.seasonName), grades: gradeNames(data.rows), opps: opps.map((o) => o.key) }
+}
+
 export async function runStatLab(raw: Parameters<typeof parseStatLabParams>[0]) {
   const [settings, data, milestonePlayers, opps] = await Promise.all([
     getStatsSettings(), getVisibleStatData(), getMilestonePlayers(),

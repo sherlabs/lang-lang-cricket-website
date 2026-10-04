@@ -12,7 +12,7 @@ import { getClub } from '@/lib/club'
 import { canonicalFor, pageSeo } from '@/lib/site-metadata'
 import { filterRows, gradeNames } from '@/lib/stats/leaderboard'
 import { PRESETS, presetHref } from '@/lib/stats/presets'
-import { cellsOf, defaultDir, identityColumns, PAGE_ROWS, statLabHref } from '@/lib/stats/statlab'
+import { cellsOf, defaultDir, identityColumns, MAX_COLUMNS, PAGE_ROWS, statLabHref } from '@/lib/stats/statlab'
 import { runStatLab } from '@/lib/stats/statlab-queries'
 import { breadcrumbJsonLd } from '@/lib/structured-data'
 import { cn } from '@/lib/utils'
@@ -79,6 +79,7 @@ export default async function StatLabPage({ searchParams }: Props) {
           <SubHeading title="Your table" count={result.total} />
           <p className="text-sm text-brand-grey">
             {caption}. {result.mode === 'season' ? copy.coverageNote : `${modeNote ?? ''}${params.juniors ? ' Junior games are not in the match data.' : ''}`}
+            {params.cols.length >= MAX_COLUMNS ? ` The table shows at most ${MAX_COLUMNS} columns; any further ticked stats are left out.` : ''}
             {result.total > shown.length ? ` Showing the top ${shown.length} of ${result.total}; the download has up to 5,000.` : ''}
           </p>
           <div className="flex flex-wrap items-center gap-3">
