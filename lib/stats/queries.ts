@@ -7,20 +7,21 @@ import type { MilestonePlayer } from './milestones'
 import type { SeasonCounts } from '@/lib/players/season-math'
 import type { StatRow } from './aggregate'
 import { seasonIndex, type SeasonInfo } from './season-window'
+import { ALL_STATS_TAGS, STATS_TAG } from './tags'
 
 /**
  * The only Payload access for stats (spec 3.1). The Local API runs with `overrideAccess`, so
  * every public query states its own hidden-player filter. Cached values are slim and per
  * season (`['stat-rows', season]`) to stay far below the 2MB `unstable_cache` entry cap.
  */
-export const STATS_TAG = 'player-stats'
+export { STATS_TAG }
 const REVALIDATE_SECONDS = 3600
 
 export type PlayerLite = { id: number; name: string; slug: string }
 export type StatData = { rows: StatRow[]; seasons: SeasonInfo[]; players: Map<number, PlayerLite> }
 
 const COUNT_KEYS = [
-  'games', 'batInnings', 'batNotOuts', 'batRuns', 'batHighScore', 'batBalls', 'batFours', 'batSixes',
+  'games', 'batInnings', 'batNotOuts', 'batRuns', 'batHighScore', 'batBalls', 'batFours', 'batSixes', 'batRunsUnballed',
   'bowlBalls', 'bowlMaidens', 'bowlRuns', 'bowlWickets', 'bowlBestWickets', 'bowlBestRuns', 'catches',
 ] as const satisfies readonly (keyof SeasonCounts)[]
 
@@ -33,7 +34,7 @@ type SlimSeason = { seasonName: string; teams: string[]; grades: string[]; rows:
  */
 export async function cached<T>(keyParts: string[], loader: () => Promise<T>): Promise<T> {
   try {
-    return await unstable_cache(loader, keyParts, { tags: [STATS_TAG], revalidate: REVALIDATE_SECONDS })()
+    return await unstable_cache(loader, keyParts, { tags: [...ALL_STATS_TAGS], revalidate: REVALIDATE_SECONDS })()
   } catch (err) {
     if (err instanceof Error && /incrementalCache missing/.test(err.message)) return loader()
     throw err

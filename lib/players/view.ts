@@ -52,7 +52,7 @@ export const careerTotals = (rows: SeasonCounts[]) => rows.map(pickCounts).reduc
 const f = (v: number | null, dp: number) => (v == null ? '–' : v.toFixed(dp))
 
 export function battingView(c: SeasonCounts) {
-  const a = battingAverages({ runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, balls: c.batBalls })
+  const a = battingAverages({ runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, balls: c.batBalls, runsUnballed: c.batRunsUnballed })
   return {
     runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, fours: c.batFours, sixes: c.batSixes,
     highScore: c.batInnings ? `${c.batHighScore}${c.batHighScoreNotOut ? '*' : ''}` : '–',

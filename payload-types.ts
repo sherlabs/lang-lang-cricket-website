@@ -489,6 +489,7 @@ export interface PlayerSeason {
   batBalls: number;
   batFours: number;
   batSixes: number;
+  batRunsUnballed: number;
   bowlBalls: number;
   bowlMaidens: number;
   bowlRuns: number;
@@ -1616,6 +1617,7 @@ export interface PlayerSeasonsSelect<T extends boolean = true> {
   batBalls?: T;
   batFours?: T;
   batSixes?: T;
+  batRunsUnballed?: T;
   bowlBalls?: T;
   bowlMaidens?: T;
   bowlRuns?: T;
@@ -2163,6 +2165,18 @@ export interface SiteSetting {
         econBalls?: number | null;
       };
     };
+    /**
+     * How much match data a rate needs before it is shown (otherwise the page shows the counts and a dash). Used by the match analysis on profiles, opposition and leaderboards.
+     */
+    matchMinimums?: {
+      oppositionInnings?: number | null;
+      oppositionBalls?: number | null;
+      positionInnings?: number | null;
+      rateInnings?: number | null;
+      winGames?: number | null;
+      ballsForBoundary?: number | null;
+      partnershipPairGames?: number | null;
+    };
     milestoneThresholds?: {
       games?: number[] | null;
       runs?: number[] | null;
@@ -2497,6 +2511,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
                     bowlAvgWickets?: T;
                     econBalls?: T;
                   };
+            };
+        matchMinimums?:
+          | T
+          | {
+              oppositionInnings?: T;
+              oppositionBalls?: T;
+              positionInnings?: T;
+              rateInnings?: T;
+              winGames?: T;
+              ballsForBoundary?: T;
+              partnershipPairGames?: T;
             };
         milestoneThresholds?:
           | T

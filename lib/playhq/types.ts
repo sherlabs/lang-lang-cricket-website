@@ -42,7 +42,9 @@ export type Game = {
   club: GameSide; opponent: GameSide          // club = our club's side
   isClubDerby: boolean                         // both sides are club teams
 }
-export type BattingLine = { appearanceId: string; name: string; dismissal: string; runs: number; balls: number; fours: number; sixes: number; strikeRate: number; notOut: boolean }
+export type BattingLine = { appearanceId: string; name: string; dismissal: string; runs: number; balls: number; fours: number; sixes: number; strikeRate: number; notOut: boolean
+  /** True when the scorecard gave no balls, fours or sixes for this batter (the numbers above are then 0, not recorded). */
+  unballed?: boolean }
 export type BowlingLine = { appearanceId: string; name: string; overs: number; maidens: number; runs: number; wickets: number; economy: number }
 export type Innings = {
   sequenceNo: number; label: string            // "Nar Nar Goon B Grade — 1st innings"
@@ -62,7 +64,7 @@ export type Scorecard = {
 }
 export type PlayerSeasonStats = {
   key: string; name: string; firstName: string; lastName: string; games: number
-  batting: { innings: number; notOuts: number; runs: number; highScore: number; highScoreNotOut: boolean; balls: number; fours: number; sixes: number; average: number | null; strikeRate: number | null }
+  batting: { innings: number; notOuts: number; runs: number; highScore: number; highScoreNotOut: boolean; balls: number; fours: number; sixes: number; runsUnballed?: number; average: number | null; strikeRate: number | null }
   bowling: { balls: number; overs: string; maidens: number; runs: number; wickets: number; bestWickets: number; bestRuns: number; average: number | null; economy: number | null }
   catches: number
 }

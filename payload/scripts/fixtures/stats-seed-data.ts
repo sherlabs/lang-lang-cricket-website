@@ -18,7 +18,7 @@ export const SEED_SEASONS = [
 
 export type SeedCounts = {
   games: number; batInnings: number; batNotOuts: number; batRuns: number; batHighScore: number; batHighScoreNotOut: boolean
-  batBalls: number; batFours: number; batSixes: number; bowlBalls: number; bowlMaidens: number; bowlRuns: number
+  batBalls: number; batFours: number; batSixes: number; batRunsUnballed: number; bowlBalls: number; bowlMaidens: number; bowlRuns: number
   bowlWickets: number; bowlBestWickets: number; bowlBestRuns: number; catches: number
 }
 export type SeedRow = { seasonName: string; seasonOrder: number; teamId: string; teamName: string; gradeName: string } & SeedCounts
@@ -63,7 +63,7 @@ const GRADES = [
 ] as const
 
 const blank = (): SeedCounts => ({
-  games: 0, batInnings: 0, batNotOuts: 0, batRuns: 0, batHighScore: 0, batHighScoreNotOut: false, batBalls: 0, batFours: 0, batSixes: 0,
+  games: 0, batInnings: 0, batNotOuts: 0, batRuns: 0, batHighScore: 0, batHighScoreNotOut: false, batBalls: 0, batFours: 0, batSixes: 0, batRunsUnballed: 0,
   bowlBalls: 0, bowlMaidens: 0, bowlRuns: 0, bowlWickets: 0, bowlBestWickets: 0, bowlBestRuns: 0, catches: 0,
 })
 
@@ -78,6 +78,7 @@ function batting(r: Rng, games: number, runs: number, opts: { zeroBalls?: boolea
   return {
     batInnings: innings, batNotOuts: notOuts, batRuns: runs, batHighScore: hs, batHighScoreNotOut: r() < 0.25,
     batBalls: opts.zeroBalls ? 0 : Math.round(runs * (1.1 + r() * 0.6)),
+    batRunsUnballed: opts.zeroBalls ? runs : 0,
     batFours: Math.round(runs / 11), batSixes: Math.round(runs / (45 + r() * 40)),
   }
 }

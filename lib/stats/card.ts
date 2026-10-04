@@ -32,7 +32,7 @@ export type CardStat = { label: string; value: string }
 
 /** Rates (average, economy) show a dash until they meet the qualification minimums for the scope. */
 export function cardStats(c: SeasonCounts, role: CardRole, scope: QualScope): CardStat[] {
-  const bat = battingAverages({ runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, balls: c.batBalls })
+  const bat = battingAverages({ runs: c.batRuns, innings: c.batInnings, notOuts: c.batNotOuts, balls: c.batBalls, runsUnballed: c.batRunsUnballed })
   const bowl = bowlingAverages({ balls: c.bowlBalls, runs: c.bowlRuns, wickets: c.bowlWickets })
   const hs = c.batInnings > 0 ? `${c.batHighScore}${c.batHighScoreNotOut ? '*' : ''}` : '–'
   const avg = bat.average == null || !qualifies('batAvg', c, scope) ? '–' : bat.average.toFixed(2)

@@ -53,6 +53,7 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
         runs: stat(a.statistics, 'TOTAL_RUNS'), balls: stat(a.statistics, 'BALLS_FACED'),
         fours: stat(a.statistics, 'FOURS'), sixes: stat(a.statistics, 'SIXES'),
         strikeRate: stat(a.statistics, 'STRIKE_RATE'), notOut: a.status === 'NOT_OUT',
+        unballed: ['BALLS_FACED', 'FOURS', 'SIXES'].some((t) => !a.statistics.some((s) => s.type === t)),
       })
     }
     const bowling: BowlingLine[] = bowl.appearances

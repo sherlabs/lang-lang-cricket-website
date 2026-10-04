@@ -4,6 +4,7 @@
  */
 import { TIER_ORDER } from './sponsors'
 import { GRADE_CATEGORIES, compileRules, type GradeCategory, type GradeRule } from './stats/categories'
+import { DEFAULT_MATCH_MINIMUMS, resolveMatchMinimums, type MatchMinimums } from './stats/match/minimums'
 import { DEFAULT_QUALIFICATION, type QualConfig, type QualScope } from './stats/qualify'
 
 export const DEFAULT_SPONSOR_CAROUSEL_TIERS: readonly string[] = ['Platinum', 'Gold']
@@ -57,6 +58,8 @@ export type StatsSettings = {
   /** Admin grade rules, tried before the built-ins. */
   gradeRules: GradeRule[]
   qualification: QualConfig
+  /** Minimum sample sizes for match-derived rates. */
+  matchMinimums: MatchMinimums
   milestoneThresholds: Record<MilestoneKey, number[]>
   approachWindow: Record<MilestoneKey, number>
   honourCategories: HonourCategoryRule[]
@@ -84,6 +87,7 @@ export const DEFAULT_STATS_SETTINGS: StatsSettings = {
   defaultIncludedCategories: DEFAULT_INCLUDED_CATEGORIES,
   gradeRules: [],
   qualification: DEFAULT_QUALIFICATION,
+  matchMinimums: DEFAULT_MATCH_MINIMUMS,
   milestoneThresholds: DEFAULT_MILESTONE_THRESHOLDS,
   approachWindow: DEFAULT_APPROACH_WINDOW,
   honourCategories: DEFAULT_HONOUR_CATEGORIES,
@@ -142,6 +146,7 @@ export function resolveStatsSettings(raw: unknown): StatsSettings {
     defaultIncludedCategories: cats && cats.length ? cats : DEFAULT_INCLUDED_CATEGORIES,
     gradeRules: rules.filter((r) => compileRules([r]).length === 1),
     qualification: { career: scope(qual.career, DEFAULT_QUALIFICATION.career), season: scope(qual.season, DEFAULT_QUALIFICATION.season) },
+    matchMinimums: resolveMatchMinimums(o.matchMinimums),
     milestoneThresholds: Object.fromEntries(keys.map((k) => [k, thresholds(mt[k], DEFAULT_MILESTONE_THRESHOLDS[k])])) as Record<MilestoneKey, number[]>,
     approachWindow: Object.fromEntries(keys.map((k) => [k, nonNeg(aw[k], DEFAULT_APPROACH_WINDOW[k])])) as Record<MilestoneKey, number>,
     honourCategories: honours.length ? honours : DEFAULT_HONOUR_CATEGORIES,

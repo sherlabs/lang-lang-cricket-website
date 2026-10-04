@@ -11,6 +11,7 @@ const COUNT_FIELDS = [
   'batBalls',
   'batFours',
   'batSixes',
+  'batRunsUnballed',
   'bowlBalls',
   'bowlMaidens',
   'bowlRuns',

@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdminField, isStaff, isStaffField, nobodyField, staffOr } from '../access'
 import { adminOnlyCondition } from '../admin/visibility'
 import { mergePlayersEndpoint } from '../endpoints/mergePlayers'
+import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
 import { displayName, fullName } from '../hooks/displayName'
@@ -10,9 +11,8 @@ import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidat
 import { uniqueSlug } from '../hooks/slug'
 import { trimHonours, trimStrings } from '../hooks/trimStrings'
 
-// Hidden/name/honours changes also move the leaderboards and records, which read the `player-stats` cache tag.
-const STATS_PATHS = ['/stats', '/records', '/honours', '/players/compare']
-const STATS_TAGS = ['player-stats']
+// Hidden/name/honours changes also move the leaderboards and records, which read the stats cache tags (`ALL_STATS_TAGS`).
+const STATS_PATHS = ['/stats', '/records', '/honours', '/players/compare', '/stats/opposition', '/records/partnerships']
 const paths = (doc: Record<string, unknown>) =>
   doc.slug
     ? ['/players', `/players/${doc.slug}`, `/api/public/players/${doc.slug}/card`, ...STATS_PATHS]
@@ -67,8 +67,8 @@ export const Players: CollectionConfig = {
       ]),
       unlinkPeople,
     ],
-    afterChange: [revalidateAfterChange(paths, STATS_TAGS)],
-    afterDelete: [revalidateAfterDelete(paths, STATS_TAGS)],
+    afterChange: [revalidateAfterChange(paths, ALL_STATS_TAGS)],
+    afterDelete: [revalidateAfterDelete(paths, ALL_STATS_TAGS)],
   },
   endpoints: [mergePlayersEndpoint],
   timestamps: true,

@@ -167,6 +167,7 @@ export const toPlayerSeason = (d: PlayerSeasonDoc): PlayerSeason => ({
   batBalls: num(d.batBalls),
   batFours: num(d.batFours),
   batSixes: num(d.batSixes),
+  batRunsUnballed: num(d.batRunsUnballed),
   bowlBalls: num(d.bowlBalls),
   bowlMaidens: num(d.bowlMaidens),
   bowlRuns: num(d.bowlRuns),

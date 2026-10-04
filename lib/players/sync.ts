@@ -1,6 +1,7 @@
 import { and, count, desc, eq, inArray, not, notInArray, or, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { revalidatePlayerPages } from './revalidate'
+import { ALL_STATS_TAGS } from '@/lib/stats/tags'
 import { getClubTeams, getRawGameSummary, getSeasonGroups, getTeamGames, isJuniorGrade } from '@/lib/playhq/queries'
 import { PLAYHQ_ORG_ID, mapLimit } from '@/lib/playhq/client'
 import { isSkip, mapMatchBundle, seasonStartYearOf, type MatchBundle, type SkipReason } from '@/lib/playhq/match-rows'
@@ -172,7 +173,7 @@ export async function writeMatchStore(
     counters.matchMismatches = rec.mismatchedPlayers
     for (const m of rec.samples.slice(0, 5)) console.error('[matches] reconcile', m)
     // Corrected scorecards were fetched uncached: expire the cached copies and the match-store tag.
-    await revalidatePaths([], undefined, [...(data.refreshed ? ['playhq-game'] : []), 'match-store'])
+    await revalidatePaths([], undefined, [...(data.refreshed ? ['playhq-game'] : []), ...ALL_STATS_TAGS])
   } catch (err) {
     counters.matchError = Math.max(1, counters.matchError, data.matches.length)
     console.error('[matches] match-store step failed', err instanceof Error ? err.message : err)

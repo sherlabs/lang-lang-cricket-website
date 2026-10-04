@@ -226,6 +226,7 @@ export type PlayerSeason = {
   batBalls: number
   batFours: number
   batSixes: number
+  batRunsUnballed: number
   bowlBalls: number
   bowlMaidens: number
   bowlRuns: number

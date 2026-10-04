@@ -6,10 +6,12 @@ import {
   DEFAULT_MILESTONE_THRESHOLDS,
   DEFAULT_SPONSOR_CAROUSEL_TIERS,
 } from '../../lib/site-settings-core'
+import { DEFAULT_MATCH_MINIMUMS, MATCH_MINIMUM_LABELS, type MatchMinimums } from '../../lib/stats/match/minimums'
 import { DEFAULT_QUALIFICATION } from '../../lib/stats/qualify'
 import { CATEGORY_LABELS, GRADE_CATEGORIES, validateRulePattern } from '../../lib/stats/categories'
 import { anyone, isStaff } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
+import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { revalidatePaths } from '../hooks/revalidate'
 
 
@@ -91,6 +93,13 @@ const statsGroup: Field = {
       fields: [qualScope('career', 'Since the first stored season'), qualScope('season', 'Single season')],
     },
     {
+      name: 'matchMinimums',
+      label: 'Match-data minimums',
+      type: 'group',
+      admin: { description: 'How much match data a rate needs before it is shown (otherwise the page shows the counts and a dash). Used by the match analysis on profiles, opposition and leaderboards.' },
+      fields: (Object.keys(DEFAULT_MATCH_MINIMUMS) as (keyof MatchMinimums)[]).map((k) => num(k, DEFAULT_MATCH_MINIMUMS[k], MATCH_MINIMUM_LABELS[k])),
+    },
+    {
       name: 'milestoneThresholds',
       label: 'Milestone thresholds',
       type: 'group',
@@ -127,7 +136,7 @@ export const SiteSettings: GlobalConfig = {
     afterChange: [
       async ({ doc, req }) => {
         // Stats settings change classification, thresholds and milestones: refresh the stats pages too.
-        await revalidatePaths(['/', '/sponsors', '/stats', '/records', '/players'], req.context, ['player-stats'])
+        await revalidatePaths(['/', '/sponsors', '/stats', '/records', '/players', '/stats/opposition', '/records/partnerships'], req.context, ALL_STATS_TAGS)
         return doc
       },
     ],

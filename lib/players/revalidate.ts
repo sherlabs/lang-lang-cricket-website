@@ -1,12 +1,13 @@
+import { ALL_STATS_TAGS } from '@/lib/stats/tags'
 import { revalidatePaths } from '../../payload/hooks/revalidate'
 
 /**
- * `/players`, every `/players/[slug]` page and the stats pages (tag `player-stats`). The legacy
+ * `/players`, every `/players/[slug]` page and the stats pages (tags `player-stats` and `match-store`). The legacy
  * `/history` call is dropped (nothing there reads players). `revalidatePaths` swallows the
  * errors Next throws outside a request (`payload run`, ETL, tests).
  */
 export async function revalidatePlayerPages(): Promise<void> {
-  await revalidatePaths(['/players', '/stats', '/records', '/honours', '/players/compare'], undefined, ['player-stats'])
+  await revalidatePaths(['/players', '/stats', '/records', '/honours', '/players/compare', '/stats/opposition', '/records/partnerships'], undefined, ALL_STATS_TAGS)
   try {
     const { revalidatePath } = await import('next/cache')
     revalidatePath('/players/[slug]', 'page')
