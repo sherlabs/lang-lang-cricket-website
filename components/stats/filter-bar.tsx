@@ -1,7 +1,7 @@
 import { CategoryChecks } from '@/components/stats/category-checks'
 import type { GradeCategory } from '@/lib/stats/categories'
-import { GROUP_LABELS, GROUPS, leaderboardMetrics, type MetricGroup } from '@/lib/stats/metrics'
-import { ALL, type StatsParams } from '@/lib/stats/query-string'
+import { GROUP_LABELS, GROUPS, type MetricGroup } from '@/lib/stats/metrics'
+import { ALL, boardMetricsFor, type StatsParams } from '@/lib/stats/query-string'
 import { cn } from '@/lib/utils'
 
 const selectClass = 'min-h-11 w-full rounded-md border border-brand-black/15 bg-white px-3 text-sm text-brand-black'
@@ -29,7 +29,7 @@ export function FilterBar({
   categories: GradeCategory[]
   selected: GradeCategory[]
 }) {
-  const metrics = leaderboardMetrics(params.group)
+  const metrics = boardMetricsFor(params.group)
   return (
     <form method="get" action="/stats" className="flex flex-col gap-5">
       {/* DOM order matters (see above); `order-*` puts them back in reading order. */}
@@ -40,7 +40,7 @@ export function FilterBar({
               <button
                 type="submit"
                 name="metric"
-                value={leaderboardMetrics(g)[0].key}
+                value={boardMetricsFor(g)[0].key}
                 aria-current={g === params.group ? 'page' : undefined}
                 className={pill(g === params.group)}
               >
@@ -60,6 +60,7 @@ export function FilterBar({
                 <li key={m.key}>
                   <button type="submit" name="metric" value={m.key} aria-current={active ? 'page' : undefined} className={pill(active)}>
                     {m.label}
+                    {m.source === 'match' && <span className="ml-1.5 text-[11px] font-normal opacity-70">match data</span>}
                   </button>
                 </li>
               )
@@ -89,7 +90,7 @@ export function FilterBar({
             <label htmlFor="stats-metric" className="eyebrow">Stat</label>
             <select id="stats-metric" name="metric" defaultValue={params.metricGiven ? params.metric : ''} className={cn(selectClass, 'mt-2')}>
               <option value="">Overview (top 10 of each)</option>
-              {metrics.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+              {metrics.map((m) => <option key={m.key} value={m.key}>{m.label}{m.source === 'match' ? ' (match data)' : ''}</option>)}
             </select>
           </div>
         </div>

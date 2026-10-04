@@ -5,7 +5,7 @@ routes: ["/stats"]
 collections: [player-seasons, players, site-settings]
 admin: "Site settings, Stats tab (admin only): categories, grade rules, qualification minimums"
 owner: "Visitors (players, families); admin tunes the rules"
-related: [club-records, statlab-and-csv-export, players-directory-and-profiles, playhq-player-sync, milestones]
+related: [club-records, statlab-and-csv-export, players-directory-and-profiles, playhq-player-sync, milestones, match-stats]
 added: feat/payload-cms
 ---
 
@@ -35,5 +35,5 @@ Visitors: open **Stats** from the menu, pick a tab and filters. Admin: **Site se
 
 ## Not included / deferred
 
-- Leaderboards that need match-level data: fifties, hundreds, five-fors, ducks, run-outs, stumpings ([#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7)); batting position ([#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)); partnerships ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5)); per-match store ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)).
-- Known limit: a few legacy rows have runs but no balls, which inflates their strike rate. The profile page still computes league ranks per request. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Fifties, hundreds, golden ducks, ducks, five-fors, run outs and stumpings are now boards too, from the stored matches and labelled "from match data" (see [Match analysis](./match-stats.mdx)); they have their own caption and window. Still not built: batting position ([#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)); partnerships ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5)); per-match store ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)).
+- Strike rate and boundary share now leave out runs scored in innings with no balls recorded (`batRunsUnballed`), so partial scorecards no longer inflate them; rows stored before the nightly sync after this change still show the old figure until the next sync. Legacy rows imported without a balls figure are not marked and can still read high. The profile page still computes league ranks per request. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -11,8 +11,11 @@ import { getClub } from '@/lib/club'
 import { getStatsSettings } from '@/lib/site-settings'
 import { availableCategories, boardContext, buildLeaderboard, filterRows, gradeNames } from '@/lib/stats/leaderboard'
 import { milestoneBoard } from '@/lib/stats/milestone-board'
-import { GROUP_LABELS, getMetric, leaderboardMetrics } from '@/lib/stats/metrics'
-import { ALL, effectiveCategories, parseStatsParams, statsHref } from '@/lib/stats/query-string'
+import { GROUP_LABELS, getMetric } from '@/lib/stats/metrics'
+import { ALL, boardMetricsFor, effectiveCategories, isMatchBoardKey, parseStatsParams, statsHref } from '@/lib/stats/query-string'
+import { getMatchBoardFacts, getMatchMilestoneItems } from '@/lib/match-store/stats-board'
+import { buildMatchBoard, matchBoardContext } from '@/lib/stats/match/board'
+import { getMatchMetric } from '@/lib/stats/match/metrics'
 import { qualifierText } from '@/lib/stats/qualify'
 import { getLastSyncAt, getVisibleStatData, type PlayerLite } from '@/lib/stats/queries'
 import { sinceLabel } from '@/lib/stats/season-window'
@@ -45,7 +48,7 @@ const TOP_FULL = 50
 const formatAsOf = (d: Date) => new Intl.DateTimeFormat(CLUB_LOCALE, { dateStyle: 'medium', timeZone: CLUB_TIMEZONE }).format(d)
 
 export default async function StatsPage({ searchParams }: Props) {
-  const [club, settings, data, asOf, board] = await Promise.all([
+  const [club, settings, data, asOf, board, matchMilestones] = await Promise.all([
     getClub(),
     getStatsSettings(),
     getVisibleStatData(),
@@ -55,6 +58,7 @@ export default async function StatsPage({ searchParams }: Props) {
       console.warn('[stats] milestone strip unavailable:', (err as Error).message)
       return null
     }),
+    getStatsSettings().then((s) => getMatchMilestoneItems({ cats: s.defaultIncludedCategories, rules: s.gradeRules })),
   ])
   const copy = club.pageCopy.stats
   const rules = settings.gradeRules
@@ -69,10 +73,37 @@ export default async function StatsPage({ searchParams }: Props) {
   const scopeLabel = params.season === ALL ? sinceLabel(data.rows) : params.season
   const scopeText = `${scopeLabel}${params.grade !== ALL ? `, ${params.grade}` : ''}`
 
-  const metrics = params.metricGiven ? [getMetric(params.metric)!] : leaderboardMetrics(params.group)
+  const metricKeys = params.metricGiven ? [params.metric] : boardMetricsFor(params.group).map((m) => m.key)
   const limit = params.metricGiven ? TOP_FULL : TOP_HUB
+  // Match-data boards share one fact set per view; it is only read when such a board is shown.
+  const matchSet = metricKeys.some(isMatchBoardKey)
+    ? await getMatchBoardFacts({ season: params.season === ALL ? null : params.season, grade: params.grade === ALL ? null : params.grade, cats, rules })
+    : null
 
-  const boards = metrics.map((metric) => {
+  const matchBoards = metricKeys.filter(isMatchBoardKey).map((key) => {
+    const metric = getMatchMetric(key)!
+    const mb = matchSet ? buildMatchBoard(matchSet, metric, settings.matchMinimums) : null
+    const rows: LeaderboardRow[] = (mb?.ranked.slice(0, limit) ?? []).flatMap((r) => {
+      const p = data.players.get(r.playerId)
+      return p ? [{ key: r.playerId, rank: r.rank, name: p.name, slug: p.slug, value: r.display, context: r.context }] : []
+    })
+    const unqualified = (mb?.unqualified ?? []).flatMap((u) => {
+      const p = data.players.get(u.playerId)
+      return p ? [{ p, display: u.display }] : []
+    })
+    const juniorNote = cats.includes('junior') ? ' Junior games are not in the match data.' : ''
+    const source = mb ? `${mb.source}${juniorNote}` : 'Match data could not be read just now.'
+    return {
+      metric: { key: metric.key, label: metric.label, short: metric.short },
+      ctx: { label: matchBoardContext(metric).label },
+      note: mb?.note ?? null, rows, unqualified, total: mb?.total ?? 0, sourceNote: source,
+      // Match data has its own window (the stored matches), so the caption never borrows the season-total scope.
+      caption: `${metric.label}, ${params.season === ALL ? 'all stored matches' : params.season}${params.grade !== ALL ? `, ${params.grade}` : ''}. ${source} Ties share a rank.`.replace(/\s+/g, ' '),
+    }
+  })
+
+  const classicBoards = metricKeys.filter((k) => !isMatchBoardKey(k)).map((key) => {
+    const metric = getMetric(key)!
     const lb = buildLeaderboard(data.rows, { season: params.season, grade: params.grade, metric: metric.key }, cats, settings)
     const ctx = boardContext(metric)
     const scope = settings.qualification[lb.scope]
@@ -86,9 +117,18 @@ export default async function StatsPage({ searchParams }: Props) {
       const p = data.players.get(u.playerId)
       return p ? [{ p, display: metric.format(u.counts) }] : []
     })
-    return { metric, ctx, note, rows, unqualified, total: lb.result.ranked.length, caption: `${metric.label}, ${scopeText}. ${note ?? ''} Ties share a rank.`.replace(/\s+/g, ' ') }
+    return {
+      metric: { key: metric.key, label: metric.label, short: metric.short }, ctx: { label: ctx.label }, note, rows, unqualified, total: lb.result.ranked.length,
+      sourceNote: null as string | null, caption: `${metric.label}, ${scopeText}. ${note ?? ''} Ties share a rank.`.replace(/\s+/g, ' '),
+    }
   })
+  const byKey = new Map([...matchBoards, ...classicBoards].map((b) => [b.metric.key, b]))
+  const boards = metricKeys.map((k) => byKey.get(k)!)
 
+  const matchItems = matchMilestones.items.flatMap((m, i) => {
+    const p = data.players.get(m.playerId)
+    return p ? [{ key: `${m.playerId}-${i}`, name: p.name, slug: p.slug, label: m.label }] : []
+  })
   const anyRows = boards.some((b) => b.rows.length > 0)
   const top: PlayerLite[] = (boards[0]?.rows ?? []).map((r) => ({ id: Number(r.key), name: r.name, slug: r.slug }))
   const notes = [...new Set(boards.map((b) => b.note).filter((n): n is string => !!n))]
@@ -100,8 +140,11 @@ export default async function StatsPage({ searchParams }: Props) {
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
       <section className="container-site space-y-8 py-12 lg:py-16">
         <StatsSubNav current="/stats" />
-        {board && (
-          <MilestoneStrip heading={club.pageCopy.players.milestones.heading} note={board.note} approaching={board.approaching} achieved={board.achievedNow} windowLabel={board.windowLabel} />
+        {(board || matchItems.length > 0) && (
+          <MilestoneStrip
+            heading={club.pageCopy.players.milestones.heading} note={board?.note ?? ''} approaching={board?.approaching ?? []} achieved={board?.achievedNow ?? []}
+            windowLabel={board?.windowLabel ?? null} matchItems={matchItems} matchSince={matchMilestones.since}
+          />
         )}
         <FilterBar
           params={params}
@@ -134,6 +177,7 @@ export default async function StatsPage({ searchParams }: Props) {
                 rows={b.rows}
                 footer={
                   <div className="space-y-3 px-3 pb-3 pt-1 text-sm">
+                    {b.sourceNote && <p className="text-brand-grey">{b.sourceNote}</p>}
                     {!params.metricGiven && b.total > b.rows.length && (
                       <Link href={statsHref('/stats', { ...params, metric: b.metric.key })} className="font-semibold text-brand-gold-deep underline underline-offset-2 hover:text-brand-black">
                         View the full list<span className="sr-only"> for {b.metric.label}</span>

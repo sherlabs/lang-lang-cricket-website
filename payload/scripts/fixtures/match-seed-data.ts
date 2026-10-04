@@ -85,6 +85,12 @@ type InningsOpts = {
   seq: number; name: string; bat: Roster; bowl: Roster
   wickets?: number; declared?: boolean; fow?: boolean; bowlingData?: boolean; ballData?: boolean
   force?: string[]; retiredHurt?: boolean; oneDay?: boolean; target?: number
+  /** Skip a number in the fall-of-wickets sequence (1, 3, 4, ...), so partnerships reject the innings. Draws no randomness. */
+  fowGap?: boolean
+  /** Force the batter at this card index to a duck off `balls` balls (1 = golden). Draws no randomness. */
+  duckAt?: { idx: number; balls: number }
+  /** Credit every wicket to this bowler (index into the bowling side's five bowlers). Draws no extra randomness. */
+  soleBowler?: number
 }
 
 const stat = (type: string, value: number): RawStat => ({ type, value })
@@ -104,6 +110,7 @@ function playInnings(rng: () => number, o: InningsOpts): RawPeriod {
     const sixes = Math.min(Math.floor((runs - fours * 4) / 6), Math.floor(rng() * 2))
     rows.push({ app: o.bat.apps[i], runs, balls, fours, sixes, status: wk >= 10 ? (i < 10 ? 'OUT' : 'NOT_OUT') : i < wk ? 'OUT' : 'NOT_OUT' })
   }
+  if (o.duckAt && rows[o.duckAt.idx]) Object.assign(rows[o.duckAt.idx], { runs: 0, balls: o.duckAt.balls, fours: 0, sixes: 0 })
   if (o.target !== undefined) {
     // Chase: make the total exceed the target, trimming nothing: add runs to the not-out openers.
     const have = rows.reduce((s, r) => s + r.runs, 0)
@@ -121,7 +128,8 @@ function playInnings(rng: () => number, o: InningsOpts): RawPeriod {
   const outRows = rows.filter((r) => r.status === 'OUT')
   for (const [i, r] of outRows.entries()) {
     const type = types[i] ?? pick()
-    const bowler = bowlers[Math.floor(rng() * bowlers.length)]
+    const drawn = bowlers[Math.floor(rng() * bowlers.length)]
+    const bowler = o.soleBowler !== undefined ? bowlers[o.soleBowler] : drawn
     const others = o.bowl.apps.filter((a) => a.id !== bowler.id)
     const fielder = others[Math.floor(rng() * others.length)]
     const apps: { id: string; role: 'BATTING' | 'BOWLING' | 'FIELDING' }[] = [{ id: r.app.id, role: 'BATTING' }]
@@ -198,7 +206,7 @@ function playInnings(rng: () => number, o: InningsOpts): RawPeriod {
     const outs = rows.filter((r, i) => r.status === 'OUT' && events.some((e) => e.appearances.some((x) => x.id === o.bat.apps[i].id && x.role === 'BATTING')))
     return outs.map((r, k) => {
       acc = Math.min(total, acc + Math.max(1, Math.round(total / (outs.length + 1))))
-      return { sequenceNo: k + 1, appearanceId: r.app.id, runs: acc }
+      return { sequenceNo: k + 1 + (o.fowGap && k >= 1 ? 1 : 0), appearanceId: r.app.id, runs: acc }
     })
   })()
   const balls6 = ballsToOvers(ballsBowled)
@@ -290,6 +298,15 @@ const SPECS: Spec[] = [
   { season: 1, date: '2026-01-17', kind: 'oneDay', opp: 4, round: 'Round 12', club: squad(8), outcome: ['LOST', 'WON'] },
   { season: 1, date: '2026-01-31', kind: 'twoDay', opp: 5, round: 'Round 13', club: squad(9), outcome: ['LOST', 'WON'], inn: [{ wickets: 10 }, { declared: true, wickets: 4 }, { wickets: 9 }, { wickets: 10 }] },
   { season: 1, date: '2026-02-14', kind: 'twoDay', opp: 0, round: 'Grand Final', club: squad(10), outcome: ['WON', 'LOST'], twoInnings: true },
+  // Added for the W2 stats seed. They are appended so every game above is generated exactly as before.
+  { season: 1, date: '2026-02-21', kind: 'oneDay', opp: 0, round: 'Round 14', club: squad(11), outcome: ['WON', 'LOST'], inn: [{ duckAt: { idx: 2, balls: 1 } }, { duckAt: { idx: 3, balls: 1 } }], edge: 'golden ducks' },
+  { season: 1, date: '2026-02-28', kind: 'oneDay', opp: 1, round: 'Round 15', club: squad(12), outcome: ['LOST', 'WON'], inn: [{ fowGap: true }, { fowGap: true }], edge: 'gap in fall of wickets' },
+  { season: 1, date: '2026-03-07', kind: 'oneDay', opp: 2, round: 'Round 16', club: squad(13), outcome: ['WON', 'LOST'], inn: [{ fow: false, duckAt: { idx: 1, balls: 3 } }, { fow: false, ballData: false, bowlingData: false, duckAt: { idx: 2, balls: 0 } }], edge: 'no fall of wickets; a duck with no ball data' },
+  { season: 1, date: '2026-03-14', kind: 'twoDay', opp: 0, round: 'Round 17', club: squad(0), outcome: ['WON', 'LOST'], inn: [{ wickets: 6, force: Array(6).fill('BOWLED'), soleBowler: 0 }, { wickets: 5, force: Array(5).fill('BOWLED'), soleBowler: 0 }, { wickets: 5, force: Array(5).fill('BOWLED'), soleBowler: 0 }, { wickets: 6, force: Array(6).fill('BOWLED'), soleBowler: 0 }], edge: 'ten wickets in a two-day match by one bowler' },
+  { season: 1, date: '2026-03-21', kind: 'oneDay', opp: 1, round: 'Round 18', club: squad(1), outcome: ['WON', 'LOST'] },
+  { season: 1, date: '2026-03-28', kind: 'oneDay', opp: 2, round: 'Round 19', club: squad(2), outcome: ['LOST', 'WON'] },
+  { season: 1, date: '2026-04-04', kind: 'oneDay', opp: 0, round: 'Round 20', club: squad(3), outcome: ['WON', 'LOST'] },
+  { season: 1, date: '2026-04-11', kind: 'oneDay', opp: 1, round: 'Round 21', club: squad(4), outcome: ['LOST', 'WON'] },
 ]
 
 const GRADE = { id: uuid(5, 1), name: 'Seed A Grade' }

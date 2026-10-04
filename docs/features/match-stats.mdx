@@ -1,0 +1,66 @@
+---
+title: Match analysis and match-data statistics
+status: shipped
+routes: ["/players/[slug] (Match analysis)", "/stats/opposition", "/stats (match-data boards)", "/records (match-data lists)"]
+collections: [matches, match-innings, match-appearances, match-batting, match-bowling, match-fielding, player-seasons, site-settings]
+admin: "Site settings, Stats tab, Match-data minimums (admin only). Nothing else to do."
+owner: "Visitors (players, families, opponents' curious fans); the admin can tune the minimum sample sizes"
+related: [match-data-store, partnership-records, stats-leaderboards, club-records, milestones, players-directory-and-profiles, club-and-site-settings, playhq-player-sync]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A senior player** who wants to know how they do against each club, how they usually get out, how their wickets come and where they bat.
+- **A captain or selector** checking the head to head against next week's opponent.
+- **The club historian** looking for the most fifties, hundreds, run outs and the best stands.
+- **The site admin** who decides how much data a percentage needs before it is shown.
+
+## Why it was built
+
+Season totals could not answer anything about a single game. With every finished senior game stored innings by innings (see [Match data store](./match-data-store.mdx)), these pages show the questions players ask: against whom, how out, with whom, from where in the order (issues [#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#4](https://github.com/sherlabs/lang-lang-cricket-website/issues/4), [#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6), [#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7); tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). It is built for reuse by other clubs: nothing names a club, the colours, crest and club name come from the site settings and theme.
+
+## What it does
+
+**The honesty rules (they apply everywhere on this page).**
+
+- A figure is shown only when the rows behind it are complete enough. Otherwise the page shows **n/a** (or leaves the figure out) and says why. Nothing is estimated, and a value that was not recorded is never counted as zero.
+- Every match-data figure is labelled **From match data**, with a caption in one format: `From <date of the first stored game>, <N> games stored. <K> of <M> innings have <ball-by-ball totals | bowling figures | fall of wickets>.` The caption is worked out from the stored games, not from the season totals, because the two can cover different seasons (a game that could not be saved, or an earlier season that was never loaded, is missing from one and not the other).
+- Season totals are still the source of every existing leaderboard, record and profile figure. A table never mixes the two sources.
+- Forfeits count as games played (as in the season table) but add nothing to batting, bowling, fielding, partnerships or dismissals and are **never a win** for anyone. Win percentages therefore differ from the PlayHQ ladder, which counts forfeits. Drawn, tied and no-result games are reported separately.
+- Junior games are not stored, so the juniors toggle never has match data. The pages say so.
+- A hidden player appears nowhere, not even as a partner. Opposition individuals are never listed on any page.
+
+**Player profile, "Match analysis"** (after Season progression; only for players who have stored games):
+
+- **Against each opposition**: games, innings, runs, average, high score, 50s, 100s, ducks, wickets, best figures, economy and catches against each club, sortable by games, runs or wickets (works without JavaScript in the default order). An average needs 3 innings against that club, economy needs 12 overs; below that the counts show and the rate is n/a. Bowling columns count innings with bowling figures only.
+- **How out**: a stacked bar of how the player was dismissed (bowled, caught, caught and bowled, LBW, stumped, run out, hit wicket, retired out, other, not out, not recorded). Caught is one segment: there is no wicket-keeper flag. Shares use only dismissals with a recorded type, need 10 of them, and the caption says how many of the dismissals have a type. Run outs and stumpings show a note while there are fewer than 5 (the real PlayHQ summaries seen so far did not contain them). Retirements count as not out.
+- **How wickets came**: a bar of wickets by type. Run outs and retirements are never credited to a bowler. An innings is used only when the dismissals credited to the bowler equal his wickets on the scorecard; the caption says how many wicket-taking innings reconcile.
+- **Partnerships**: the player's best stands with a named partner, the partner with most runs together (from 2 shared stands), and one anonymous line, "Partnerships with other club players: N, best R", for stands with a partner who is hidden. See [Partnership records](./partnership-records.mdx) for how stands are inferred.
+- **Batting position**: innings, runs, average, not outs, high score and fifties for openers (1 to 2), middle order (3 to 5), lower middle (6 to 7) and tail (8 to 11), with the most common and average position. Positions are **as scored**: the scorer's card order, not proof of who walked in first. A group average needs 5 innings.
+- **Milestones from match data** appear as badges ("3 fifties, since the first stored match"). They are never added to the games, runs, wickets and catches milestones, because those can include a before-PlayHQ total and these cannot.
+
+**Head to head, `/stats/opposition`**: per club played, won, lost, drawn, tied, no result, forfeits (shown separately), win percentage (needs 10 games with a result; excludes forfeits), last meeting, highest score for and against. Click a club for its meeting list and the lowest *completed* innings for and against: only innings that ended all out count, because a winning chase, a declaration or a rain-shortened innings says nothing about a low score. A club is identified by its PlayHQ organisation id; history imported without one would be a separate row.
+
+**Leaderboards, `/stats`**: Fifties, Hundreds, Golden ducks, Ducks (batting), Five-wicket hauls (bowling, the "recorded" ones: only innings with bowling figures), Run outs and Stumpings (fielding; innings with no fielding record are left out, never counted as zero). Each shows "From match data" with its caption, and golden ducks are only decided for innings where balls faced were recorded. Ducks come last. The Overview page lists them next to the season-total boards, each as its own table.
+
+**Records, `/records`**: a "From match data" section with the same lists, the highest scores and best bowling figures with opposition and date, the lowest completed innings and the best partnership at each wicket. The stats page's milestone strip also lists match-data milestones crossed this season.
+
+**Strike rate is now honest over partial data.** The season totals gained one number, "runs scored in innings with no balls recorded". Strike rate and boundary share exclude those runs, so a player whose scorecards sometimes lack balls faced no longer gets an inflated strike rate (a player with no ball data at all shows a dash). The nightly sync fills it and the reconciliation compares it with zero tolerance. Seasons already stored show it after the next nightly sync.
+
+**Settings**: Site settings, Stats tab, "Match-data minimums" (admin only) holds the seven sample sizes above, with their defaults.
+
+## How to use it
+
+1. **Visitors:** open any player with stored games and scroll to Match analysis, or use the Opposition tab on the Stats pages.
+2. **Admin:** nothing is needed. The data fills from the nightly sync and the one-off backfill (see [Match data store](./match-data-store.mdx)). Change the minimums in Site settings if a club plays far more or fewer games.
+3. **Demo:** `pnpm seed:demo` adds about 32 invented games with fall of wickets, a retirement, a gap in the fall of wickets, a golden duck, a duck with no ball data, a hundred, five-wicket hauls, a ten-wicket two-day match, run outs, stumpings, forfeits and a hidden player, plus their season totals.
+
+## Not included / deferred
+
+- StatLab columns and the opponent and format filters, and the match-data yearbook sections: next work package ([#8](https://github.com/sherlabs/lang-lang-cricket-website/issues/8), [#13](https://github.com/sherlabs/lang-lang-cricket-website/issues/13)).
+- No caught-behind split (no keeper flag), no ball-by-ball, over-by-over or wagon-wheel analysis (not available from PlayHQ, [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- Run outs, stumpings and retirements have not yet been seen in real PlayHQ data; they are shown with a "small number of recorded events" note and are checked against the scorecard's fielding figures. A disagreement is written to the sync log as `fielding_mismatch`, never repaired.
+- Grade renames and the grade label tidy-up in the admin come with the admin tools ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11)); until then match pages show the most common spelling of a grade name.
+- Junior games, abandoned games and pre-PlayHQ history are not in the match data. Match milestones are "since the first stored game" and cannot be set per player.
+- Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -17,7 +17,11 @@ const b = (v: unknown) => v === true
 const s = (v: unknown) => (v == null ? null : String(v))
 
 /** Appearances as stored: the cached `player` link is kept (club side only), so a reader can resolve and filter names. */
-export type StoredBundle = Omit<BundleRows, 'appearances'> & { appearances: (AppearanceRow & { player: number | null })[] }
+export type StoredBundle = Omit<BundleRows, 'appearances'> & {
+  /** The stored `matches` row id (set by `readStoredBundles`; stats facts use it as the match key). */
+  id?: number
+  appearances: (AppearanceRow & { player: number | null })[]
+}
 
 export async function readStoredBundles(payload: Payload, filter?: { gameIds?: string[] }): Promise<StoredBundle[]> {
   const t = matchTables(payload)
@@ -58,6 +62,7 @@ export async function readStoredBundles(payload: Payload, filter?: { gameIds?: s
       byForfeit: b(m.byForfeit), onFirstInnings: b(m.onFirstInnings), playhqUpdatedAt: s(m.playhqUpdatedAt),
     }
     out.push({
+      id,
       match,
       innings: (inn.get(id) ?? []).map<InningsRow>((r) => ({
         sequenceNo: n(r.sequenceNo), periodName: s(r.periodName), battingTeamId: s(r.battingTeamId), bowlingTeamId: s(r.bowlingTeamId), isClubBatting: b(r.isClubBatting),

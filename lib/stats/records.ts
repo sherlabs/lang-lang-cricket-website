@@ -45,8 +45,8 @@ const TOP = 5
 const HARD_CAP = 10
 
 /** Rank <= 5 keeps ties together; the hard cap stops a pile of equal values flooding the page. */
-const take = <T extends { rank: number }>(xs: T[]) => xs.filter((x) => x.rank <= TOP).slice(0, HARD_CAP)
-const moreTied = <T extends { rank: number }>(xs: T[]) => Math.max(0, xs.filter((x) => x.rank <= TOP).length - HARD_CAP)
+export const take = <T extends { rank: number }>(xs: T[]) => xs.filter((x) => x.rank <= TOP).slice(0, HARD_CAP)
+export const moreTied = <T extends { rank: number }>(xs: T[]) => Math.max(0, xs.filter((x) => x.rank <= TOP).length - HARD_CAP)
 
 export function buildRecords(input: {
   career: readonly CareerRow[]

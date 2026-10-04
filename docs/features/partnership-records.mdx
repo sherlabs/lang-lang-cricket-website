@@ -1,0 +1,39 @@
+---
+title: Partnership records
+status: shipped
+routes: ["/records/partnerships", "/records (Partnerships section)", "/players/[slug] (Partnerships)"]
+collections: [matches, match-innings, match-appearances, match-batting, site-settings]
+admin: "None. Computed from the stored matches."
+owner: "Visitors (batters, historians); nothing for the committee to do"
+related: [match-stats, match-data-store, club-records]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A batter** who wants to know who they bat best with.
+- **The club historian** who wants the best stand for each wicket.
+
+## Why it was built
+
+Partnerships are the most asked-for record that season totals cannot give (issue [#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). PlayHQ does not say who batted with whom, so the site works it out, and says so.
+
+## What it does
+
+- **Inferred, never exact.** A stand is worked out from the scorer's batting order and the fall of wickets: the first two on the card open; when a wicket falls the dismissed batter's partner is the other one at the crease, and the next batter on the card comes in. Runs are the difference in the team score between wickets, so they include extras and no per-batter share is shown. An unbroken last stand (marked with an asterisk) is the team total minus the score at the last wicket, only in an innings that did not end all out with two not-out batters.
+- **Conservative.** An innings is used only if everything lines up: a fall of wickets entry for every dismissal and no gaps, runs that never go backwards, a wicket count equal to the innings total, every dismissed batter actually at the crease, a sensible batting order, and no retirement (a retirement leaves no wicket entry and breaks the pairing). Innings that fail are counted and the page says why, for example "3 of 35 innings unavailable (1 no fall of wickets, 1 retirement, 1 missing fall of wicket number)". Nothing is repaired or guessed. A nine-wicket all-out innings (a team with fewer than eleven batters) is handled, so only an innings that really ended all out has no unbroken stand.
+- **Records page**: `/records/partnerships` shows the best stand at each wicket (1 to 10) and the top 25 overall, with a season selector and the grade category checkboxes. `/records` carries the best at each wicket too.
+- **Hidden players.** A stand with a hidden partner is left out of every record and out of the other player's list of partners (a date, grade and wicket would show that the hidden player batted that day). The other player's profile has one anonymous line instead, "Partnerships with other club players: N, best R", which includes those stands.
+- **Imported history** (a later feature) carries no fall of wickets, so it never produces partnerships.
+
+## How to use it
+
+1. **Visitors:** Records, then "All partnership records", or the Partnerships part of a player's Match analysis.
+2. **Admin:** nothing. The caption always says how many innings could be paired.
+
+## Not included / deferred
+
+- No balls or minutes for a stand, and no share of the runs between the two batters: PlayHQ does not give them.
+- Innings with a retirement or a missing fall of wickets are not paired. If a scorer records order differently from arrival order, the check rejects most such innings, but a wrong pairing is possible, which is why every pair is labelled inferred.
+- Opposition partnerships are not computed.
+- Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

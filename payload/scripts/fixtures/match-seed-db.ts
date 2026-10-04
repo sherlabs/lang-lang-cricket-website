@@ -7,7 +7,7 @@ import { matchTables } from '../../../lib/match-store/db'
 import { isSkip, mapMatchBundle, nameKeyOf } from '../../../lib/playhq/match-rows'
 import { aggregatePlayers } from '../../../lib/playhq/players'
 import { mapScorecard } from '../../../lib/playhq/scorecard'
-import type { TeamAggregate } from '../../../lib/players/plan'
+import { buildSyncPlan, type TeamAggregate } from '../../../lib/players/plan'
 import { slugify } from '../../../lib/slugify'
 import { generateMatchSeed, MATCH_SEED_ALIAS, MATCH_SEED_CLUB_PLAYERS, MATCH_SEED_FILL_IN, MATCH_SEED_HIDDEN_KEY } from './match-seed-data'
 
@@ -95,4 +95,28 @@ export async function reconcileSeed(payload: Payload, clubOrgId: string): Promis
   const t = matchTables(payload)
   const aliases: { nameKey: string; player: number }[] = await payload.db.drizzle.select({ nameKey: t.player_aliases.nameKey, player: t.player_aliases.player }).from(t.player_aliases)
   return reconcileMatchStore(payload, { aggregates: seedAggregates(clubOrgId), aliasMap: new Map(aliases.map((a) => [a.nameKey, a.player])), skipPairs: new Set() })
+}
+
+/**
+ * Season totals for the seeded players, planned exactly like the sync would (`buildSyncPlan` over the
+ * seeded games), so the demo's leaderboards, records and profiles show the same people as the match
+ * analysis. Newest seeded season gets `seasonOrder` 1 (0 is the upcoming, empty group, like the real data).
+ * Only call it when `player_seasons` is empty. Returns the number of rows written.
+ */
+export async function seedMatchSeasonRows(payload: Payload, clubOrgId: string): Promise<number> {
+  const t = matchTables(payload)
+  const seasons = (payload.db.tables as Record<string, never>).player_seasons
+  const db = payload.db.drizzle
+  const aliases: { nameKey: string; player: number }[] = await db.select({ nameKey: t.player_aliases.nameKey, player: t.player_aliases.player }).from(t.player_aliases)
+  const years = new Map(generateMatchSeed(clubOrgId).map((g) => [g.seasonName, g.seasonStartYear]))
+  const order = new Map([...years].sort((a, b) => b[1] - a[1]).map(([name], i) => [name, i + 1]))
+  const plan = buildSyncPlan(seedAggregates(clubOrgId).map((a) => ({ ...a, seasonOrder: order.get(a.seasonName) ?? a.seasonOrder })), new Map(aliases.map((a) => [a.nameKey, a.player])), new Set())
+  if (plan.newPlayers.length) throw new Error('[seed] a seeded player has no alias: run the match seed first')
+  const stamp = new Date().toISOString()
+  const rows = plan.seasonRows.map(({ playerId, newNameKey, ...rest }) => {
+    void newNameKey
+    return { ...rest, player: playerId!, createdAt: stamp, updatedAt: stamp }
+  })
+  if (rows.length) await db.insert(seasons).values(rows)
+  return rows.length
 }

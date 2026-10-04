@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 const LINKS = [
   { href: '/stats', label: 'Leaderboards' },
   { href: '/records', label: 'Records' },
+  { href: '/stats/opposition', label: 'Opposition' },
   { href: '/honours', label: 'Honours' },
   { href: '/players/compare', label: 'Compare' },
   { href: '/statlab', label: 'StatLab' },

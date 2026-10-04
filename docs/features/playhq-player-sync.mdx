@@ -39,5 +39,6 @@ Career stats need every final scorecard of every senior season, which is hundred
 ## Not included / deferred
 
 - No merge suggestions or undo ([#10](https://github.com/sherlabs/lang-lang-cricket-website/issues/10)); no display-name overrides, grade rename tools or notification centre ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11)).
-- Season totals stay the source of every stats page. The sync now also stores each finished senior game in the per-match tables and checks them against the season totals ([Match data store](./match-data-store.mdx), [#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)); no page reads those rows yet.
+- Season totals now also carry "runs scored without recorded balls", filled by the sync and compared in the reconciliation, so strike rate stays honest when a scorecard lacks balls faced ([Match analysis](./match-stats.mdx)). Run out and stumping events are cross-checked against the fielding figures and any disagreement is logged as `fielding_mismatch`.
+- Season totals stay the source of every existing stats line. The sync now also stores each finished senior game in the per-match tables and checks them against the season totals ([Match data store](./match-data-store.mdx), [#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)); no page reads those rows yet.
 - No CSV import of pre-PlayHQ history ([#9](https://github.com/sherlabs/lang-lang-cricket-website/issues/9)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

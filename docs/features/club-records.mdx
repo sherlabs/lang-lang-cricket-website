@@ -5,7 +5,7 @@ routes: ["/records"]
 collections: [player-seasons, players]
 admin: "None; computed from synced player seasons (qualification rules in Site settings)"
 owner: "Visitors (players, families, historians)"
-related: [stats-leaderboards, honour-board, season-yearbooks]
+related: [stats-leaderboards, honour-board, season-yearbooks, match-stats, partnership-records]
 added: feat/payload-cms
 ---
 
@@ -33,5 +33,5 @@ Visit `/records`. Nothing to maintain; it updates after each nightly sync.
 
 ## Not included / deferred
 
-- No innings-level records (best innings figures beyond a personal best, 100s count) or partnership records ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7)); no team records such as highest total ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34)).
+- Innings-level records and partnership records now appear in a separate "From match data" section (see [Match analysis](./match-stats.mdx), [Partnership records](./partnership-records.mdx)). The season-total records above are unchanged. Not built: more of the original wish list ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7)); no team records such as highest total ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34)).
 - Records before PlayHQ cannot be entered ([#9](https://github.com/sherlabs/lang-lang-cricket-website/issues/9)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

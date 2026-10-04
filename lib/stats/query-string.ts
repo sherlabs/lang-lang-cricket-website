@@ -1,5 +1,16 @@
 import { GRADE_CATEGORIES, parseCategories, type GradeCategory } from './categories'
 import { GROUPS, LEADERBOARD_METRIC_KEYS, getMetric, leaderboardMetrics, type MetricGroup } from './metrics'
+import { MATCH_LEADERBOARD_KEYS, getMatchMetric, matchLeaderboardMetrics } from './match/metrics'
+
+/** Every metric key the leaderboard page accepts: the season-total ones, then the match-data ones. */
+export const BOARD_METRIC_KEYS: readonly string[] = [...LEADERBOARD_METRIC_KEYS, ...MATCH_LEADERBOARD_KEYS]
+export const isMatchBoardKey = (key: string): boolean => MATCH_LEADERBOARD_KEYS.includes(key)
+
+/** Metrics offered for a group, in page order: season totals first, match data after. */
+export const boardMetricsFor = (group: MetricGroup): { key: string; label: string; source: 'season' | 'match' }[] => [
+  ...leaderboardMetrics(group).map((m) => ({ key: m.key, label: m.label, source: 'season' as const })),
+  ...matchLeaderboardMetrics(group).map((m) => ({ key: m.key, label: m.label, source: 'match' as const })),
+]
 
 type Raw = Record<string, string | string[] | undefined>
 
@@ -46,10 +57,10 @@ export function parseStatsParams(raw: Raw, known: StatsKnown): StatsParams {
   const groupOk = (GROUPS as readonly string[]).includes(groupIn ?? '') ? (groupIn as MetricGroup) : null
   // A valid metric decides the group; otherwise a valid group picks its first metric.
   const metric =
-    metricIn && LEADERBOARD_METRIC_KEYS.includes(metricIn)
+    metricIn && BOARD_METRIC_KEYS.includes(metricIn)
       ? metricIn
       : groupOk
-        ? (leaderboardMetrics(groupOk)[0]?.key ?? DEFAULT_METRIC)
+        ? (boardMetricsFor(groupOk)[0]?.key ?? DEFAULT_METRIC)
         : DEFAULT_METRIC
   const cats = parseCategories(clean(catParam(raw.cat)))
   const juniors = first(raw.juniors) === '1'
@@ -59,8 +70,8 @@ export function parseStatsParams(raw: Raw, known: StatsKnown): StatsParams {
     cats: cats.length ? cats : null,
     juniors,
     metric,
-    metricGiven: !!metricIn && LEADERBOARD_METRIC_KEYS.includes(metricIn),
-    group: getMetric(metric)!.group,
+    metricGiven: !!metricIn && BOARD_METRIC_KEYS.includes(metricIn),
+    group: (getMetric(metric) ?? getMatchMetric(metric)!).group,
   }
 }
 

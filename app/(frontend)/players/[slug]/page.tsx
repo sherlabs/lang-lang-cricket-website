@@ -19,6 +19,10 @@ import { buildProfileExtras, splitJuniorSeasons } from '@/lib/players/profile-ex
 import { careerTotals } from '@/lib/players/view'
 import { getStatsSettings as loadStatsSettings } from '@/lib/site-settings'
 import { getVisibleStatData } from '@/lib/stats/queries'
+import { MatchAnalysis } from '@/components/stats/match/match-analysis'
+import { getPlayerMatchFacts } from '@/lib/match-store/stats-queries'
+import { buildLabelMap, canonicalGrade } from '@/lib/stats/labels'
+import { buildProfileMatchView } from '@/lib/stats/match/profile'
 import { describeAchieved, topAchieved } from '@/lib/stats/milestones'
 import { coverage, shortSeason, sinceLabel } from '@/lib/stats/season-window'
 
@@ -81,6 +85,20 @@ export default async function PlayerPage(props: Props) {
   const extras = buildProfileExtras({
     playerId: player.id, seasons: shownSeasons, career, leagueRows: data.rows, settings, manualYears: player.manualYears, baseline: profile.baseline,
   })
+  // Match analysis reads only tag-cached season blobs; if it cannot be built the profile still renders.
+  const matchView = await getPlayerMatchFacts(player.id)
+    .then((mf) => {
+      if (!mf) return null
+      const labels = buildLabelMap([...mf.player.matches.values()].map((h) => ({ kind: 'grade' as const, label: h.grade })))
+      return buildProfileMatchView({
+        player: mf.player, partnerships: mf.player.partnerships, playerId: player.id, names: data.players, minimums: settings.matchMinimums,
+        gradeLabel: (g) => (g ? canonicalGrade(g, labels) : null),
+      })
+    })
+    .catch((err) => {
+      console.warn('[players] match analysis unavailable:', (err as Error).message)
+      return null
+    })
   const windowStart = coverage(data.rows)?.from ?? null
   const windowLabel = windowStart ? shortSeason(windowStart) : null
   const since = sinceLabel(data.rows)
@@ -237,6 +255,8 @@ export default async function PlayerPage(props: Props) {
             </div>
           </section>
         )}
+
+        {matchView && <MatchAnalysis view={matchView} minimums={settings.matchMinimums} />}
 
         {career && (
           <div>

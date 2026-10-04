@@ -5,7 +5,7 @@ routes: ["/players", "/players/[slug]", "/history/players (308 to /players)"]
 collections: [players, player-seasons, player-aliases, people, player-sponsors]
 admin: "Players (everyday menu); player seasons, aliases and sync runs are admin-only"
 owner: "Committee (anyone who looks after player pages); visitors are players, families and former players"
-related: [playhq-player-sync, committee-and-contacts, player-sponsors, milestones, stat-cards, player-comparison, honour-board]
+related: [playhq-player-sync, committee-and-contacts, player-sponsors, milestones, stat-cards, player-comparison, honour-board, match-stats]
 added: feat/payload-cms
 ---
 
@@ -47,5 +47,5 @@ The club wanted a Players section with Active and Past players, each with a prof
 
 ## Not included / deferred
 
-- No per-match history, opposition splits or dismissal breakdowns on profiles ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#4](https://github.com/sherlabs/lang-lang-cricket-website/issues/4), [#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)).
+- Profiles of players with stored games have a Match analysis block (opposition splits, dismissals, partnerships, batting position; see [Match analysis](./match-stats.mdx)). Still no per-match history list or form chart ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#4](https://github.com/sherlabs/lang-lang-cricket-website/issues/4), [#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)).
 - No manually entered stats for pre-PlayHQ players; no player self-service editing; no player trends ([#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -3,6 +3,7 @@ import { CLUB_TIMEZONE } from '@/config/site'
 import { displayName } from './names'
 import { oversToBalls } from './players'
 import { isInningsPlayed } from './scorecard'
+import { fieldingMismatches } from '@/lib/stats/match/dismissals'
 import type { Game, RawGameSummary, RawPeriod, RawPeriodAppearance, RawPeriodTeam, RawStat } from './types'
 
 /**
@@ -287,5 +288,7 @@ export function mapMatchBundle(raw: RawGameSummary, ctx: MatchCtx): MatchBundle 
   fielding.sort((a, b) => a.inningsSeq - b.inningsSeq || a.appearanceId.localeCompare(b.appearanceId))
   appearances.sort((a, b) => a.appearanceId.localeCompare(b.appearanceId))
   const body = { match, innings, appearances, batting, bowling, fielding }
+  // Run-outs and stumpings come from the fielding rows; the events cross-check them (logged, never repaired).
+  warnings.push(...fieldingMismatches(body))
   return { ...body, sourceHash: hashBundle(body), warnings: [...new Set(warnings)] }
 }

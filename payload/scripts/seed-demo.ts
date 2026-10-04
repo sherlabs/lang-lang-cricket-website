@@ -32,7 +32,7 @@ import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
 import { guard } from './_guard'
-import { reconcileSeed, seedMatchStore } from './fixtures/match-seed-db'
+import { reconcileSeed, seedMatchSeasonRows, seedMatchStore } from './fixtures/match-seed-db'
 
 const PUBLIC = path.resolve(process.cwd(), 'public')
 const CTX = { disableRevalidate: true } as const
@@ -117,6 +117,9 @@ async function seedDemoMatches(payload: Payload) {
   }
   const r = await seedMatchStore(payload, { clubOrgId: PLAYHQ_ORG_ID })
   const rec = await reconcileSeed(payload, PLAYHQ_ORG_ID)
+  // Season totals for the same players, so leaderboards, records and profiles are populated too.
+  const seasonRows = (await isEmpty(payload, 'player-seasons')) ? await seedMatchSeasonRows(payload, PLAYHQ_ORG_ID) : 0
+  console.log(`[seed-demo] player-seasons: ${seasonRows} created for the seeded players`)
   console.log(`[seed-demo] matches: ${r.created} created, ${r.skipped} skipped by the mapper (abandoned), ${r.players} players and ${r.aliases} aliases created; reconcile: ${rec.mismatchedPlayers} mismatches over ${rec.playersCompared} players`)
 }
 
