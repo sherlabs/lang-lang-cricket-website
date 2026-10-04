@@ -12,12 +12,14 @@ import { SectionHeading } from '@/components/section-heading'
 import { PeopleGrid } from '@/components/person-card'
 import { SponsorStrip } from '@/components/sponsor-logos'
 import { SponsorCarousel, selectCarouselSponsors } from '@/components/sponsor-carousel'
+import { NewsStrip } from '@/components/news-strip'
 import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
 import { listGalleryPhotos, listSponsors } from '@/lib/content-queries'
 import { listPeople } from '@/lib/people-queries'
 import { getClubWithCrest } from '@/lib/theme'
 import { clubIcon } from '@/lib/club-icons'
+import { listLatestNews } from '@/lib/news-queries'
 import { getLatestAnnouncement } from '@/lib/announcements-queries'
 import { ANNOUNCEMENT_DISMISS_COOKIE, excerpt, shouldShowBanner } from '@/lib/announcements-format'
 
@@ -27,13 +29,15 @@ export const metadata = { alternates: canonicalFor('/') }
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [club, sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement] = await Promise.all([
+  const [club, sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement, latestNews] = await Promise.all([
     getClubWithCrest(),
     listSponsors(),
     listPeople(),
     listGalleryPhotos(6),
     getSponsorCarouselTiers(),
     getLatestAnnouncement(),
+    // A failed news read must not take the home page down: no news, no strip.
+    listLatestNews(3).catch(() => []),
   ])
   const { hero, highlights, about, galleryTeaser, committee, sponsors, joinCta } = club.home
   // Leadership and junior coaches have their own sections on /people; the home page shows the committee only.
@@ -150,6 +154,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Latest news (nothing when there are no published posts) */}
+      <NewsStrip posts={latestNews} />
 
       {/* Gallery teaser */}
       {photos.length > 0 && (

@@ -1,7 +1,7 @@
 /**
  * Payload doc → domain type (spec §14). Pure; no Payload runtime import.
  */
-import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, Person, Player, PlayerSeason, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
+import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, NavPage, NewsSummary, NewsView, PageBlock, PageView, Person, Player, PlayerSeason, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
 import type {
   Announcement as AnnouncementDoc,
   Document as DocumentDoc,
@@ -9,6 +9,8 @@ import type {
   EventRsvp as EventRsvpDoc,
   GalleryPhoto as GalleryPhotoDoc,
   Media,
+  News as NewsDoc,
+  Page as PageDoc,
   Person as PersonDoc,
   Player as PlayerDoc,
   PlayerSeason as PlayerSeasonDoc,
@@ -172,4 +174,62 @@ export const toPlayerSeason = (d: PlayerSeasonDoc): PlayerSeason => ({
   bowlBestWickets: num(d.bowlBestWickets),
   bowlBestRuns: num(d.bowlBestRuns),
   catches: num(d.catches),
+})
+
+const PAGE_PLACEMENTS = ['none', 'clubhouse', 'primary', 'footer']
+
+/** Page blocks → render shape. An image block whose picture is not populated (or has no file) is dropped. */
+function toPageBlocks(blocks: PageDoc['content']): PageBlock[] {
+  const out: PageBlock[] = []
+  for (const [i, b] of (blocks ?? []).entries()) {
+    const id = b.id ?? String(i)
+    if (b.blockType === 'text') out.push({ blockType: 'text', id, content: (b.richText as unknown as StoryContent | null) ?? null })
+    else if (b.blockType === 'image') {
+      const url = mediaUrl(b.image)
+      if (url) out.push({ blockType: 'image', id, url, alt: b.alt ?? '', caption: b.caption ?? '', width: b.width ?? 'wide' })
+    } else if (b.blockType === 'cta') {
+      out.push({ blockType: 'cta', id, label: b.label, url: b.url, style: b.style ?? 'primary', note: b.note ?? '' })
+    }
+  }
+  return out
+}
+
+export const toPageView = (d: PageDoc): PageView => ({
+  id: d.id,
+  slug: d.slug ?? '',
+  title: d.title,
+  status: d.status === 'published' ? 'published' : 'draft',
+  publishedAt: dateOrNull(d.publishedAt),
+  updatedAt: date(d.updatedAt),
+  blocks: toPageBlocks(d.content),
+  seoTitle: d.seoTitle ?? '',
+  seoDescription: d.seoDescription ?? '',
+  ogImageUrl: mediaUrl(d.ogImage),
+})
+
+export const toNavPage = (d: Pick<PageDoc, 'slug' | 'title' | 'navLabel' | 'showInNavigation' | 'navOrder'>): NavPage => ({
+  slug: d.slug ?? '',
+  title: d.title,
+  navLabel: d.navLabel ?? '',
+  showInNavigation: (PAGE_PLACEMENTS.includes(d.showInNavigation) ? d.showInNavigation : 'none') as NavPage['showInNavigation'],
+  navOrder: typeof d.navOrder === 'number' && Number.isFinite(d.navOrder) ? d.navOrder : 100,
+})
+
+/** `excerpt` is the saved summary; the caller derives one from the body when it is empty. */
+export const toNewsSummary = (d: NewsDoc, excerpt: string): NewsSummary => ({
+  id: d.id,
+  slug: d.slug ?? '',
+  title: d.title,
+  excerpt,
+  coverUrl: mediaUrl(d.cover),
+  publishedAt: new Date(d.publishedAt ?? d.createdAt),
+})
+
+export const toNewsView = (d: NewsDoc, excerpt: string): NewsView => ({
+  ...toNewsSummary(d, excerpt),
+  body: (d.body as unknown as StoryContent | null) ?? null,
+  author: d.author ?? '',
+  seoTitle: d.seoTitle ?? '',
+  seoDescription: d.seoDescription ?? '',
+  updatedAt: date(d.updatedAt),
 })

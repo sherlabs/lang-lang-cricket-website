@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeStyle } from "@/components/theme-style";
 import { getClub } from "@/lib/club";
+import { getNavigation } from "@/lib/navigation-queries";
 import { getTheme } from "@/lib/theme";
 import { HEADING_FONT_CLASSES, headingFontVar } from "@/lib/theme/font-faces";
 
@@ -15,8 +16,7 @@ const inter = Inter({
 });
 /** The public site's <html> shell, shared by the (frontend) root layout and app/global-not-found.tsx. */
 export async function FrontendShell({ children }: { children: React.ReactNode }) {
-  const [club, theme] = await Promise.all([getClub(), getTheme()]);
-  const nav = club.navigation;
+  const [club, theme, nav] = await Promise.all([getClub(), getTheme(), getNavigation()]);
   return (
     <html lang={club.locale}>
       <head>
@@ -30,14 +30,14 @@ export async function FrontendShell({ children }: { children: React.ReactNode })
       >
         <SiteNav
           club={{ name: club.name, tagline: club.tagline, logoUrl: theme.crest.url }}
-          primaryLinks={nav.primaryNav}
-          clubLinks={nav.clubhouseNav}
+          primaryLinks={nav.primary}
+          clubLinks={nav.clubhouse}
           clubLabel={nav.clubhouseLabel}
-          cta={nav.navCta}
+          cta={nav.cta}
           apparel={club.apparel}
         />
         <div className="flex-1">{children}</div>
-        <SiteFooter club={{ ...club, logoUrl: theme.crest.url }} />
+        <SiteFooter club={{ ...club, logoUrl: theme.crest.url }} footerNav={{ heading: nav.footerHeading, columns: nav.footerColumns }} />
       </body>
     </html>
   );

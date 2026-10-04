@@ -6,14 +6,17 @@ import { FacebookIcon } from '@/components/icons'
 import { agencyCreditHref, AGENCY_CREDIT } from '@/config/site'
 import { ApparelLink } from '@/components/apparel-link'
 import type { Club } from '@/lib/club'
+import type { Link as NavLink } from '@/payload/seed/club-defaults'
 
 // Desktop column template for the main footer grid.
 const columns = 'lg:grid-cols-[1.5fr_1fr_1fr]'
 
 type FooterClub = Pick<Club, 'name' | 'tagline' | 'logoUrl' | 'email' | 'address' | 'socials' | 'siteUrl' | 'navigation'> & Partial<Pick<Club, 'apparel'>>
 
-export function SiteFooter({ club }: { club: FooterClub }) {
+export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: { heading: string; columns: NavLink[][] } }) {
   const nav = club.navigation
+  // The shell passes the menu merged with published pages (lib/navigation.ts); the defaults apply without it.
+  const footer = footerNav ?? nav.footerNav
   const social = club.socials[0]
   const year = new Date().getFullYear()
   return (
@@ -44,10 +47,10 @@ export function SiteFooter({ club }: { club: FooterClub }) {
         </div>
 
         <nav aria-label="Footer">
-          <p className="display mb-4 text-lg text-brand-gold">{nav.footerNav.heading}</p>
+          <p className="display mb-4 text-lg text-brand-gold">{footer.heading}</p>
           {/* Two lists side by side, each reading top-to-bottom in nav order. */}
           <div className="grid grid-cols-2 gap-x-6 text-sm">
-            {nav.footerNav.columns.map((column, i) => (
+            {footer.columns.map((column, i) => (
               <ul key={i}>
                 {column.map((l) => (
                   <li key={l.href}>

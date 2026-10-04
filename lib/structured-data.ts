@@ -174,3 +174,43 @@ export function yearbookJsonLd(
     mainEntityOfPage: absoluteUrl(`/yearbooks/${book.slug}`, club.siteUrl),
   }
 }
+
+/** A news post as an Article: headline, dates, cover, author (falls back to the club) and the club as publisher. */
+export function newsArticleJsonLd(
+  post: { slug: string; title: string; coverUrl: string; author: string; publishedAt: Date; updatedAt: Date },
+  club: JsonLdClub,
+): JsonLd {
+  // dateModified is never earlier than datePublished (a scheduled post can be saved before its date).
+  const modified = post.updatedAt > post.publishedAt ? post.updatedAt : post.publishedAt
+  const url = absoluteUrl(`/news/${post.slug}`, club.siteUrl)
+  return {
+    '@context': CONTEXT,
+    '@type': 'Article',
+    headline: post.title,
+    image: [absoluteUrl(post.coverUrl || club.ogImage.url, club.siteUrl)],
+    datePublished: post.publishedAt.toISOString(),
+    dateModified: modified.toISOString(),
+    author: post.author ? { '@type': 'Person', name: post.author } : { '@type': 'SportsOrganization', name: club.name, url: club.siteUrl },
+    publisher: { '@type': 'SportsOrganization', name: club.name, url: club.siteUrl, logo: { '@type': 'ImageObject', url: absoluteUrl(club.logoUrl, club.siteUrl) } },
+    mainEntityOfPage: url,
+  }
+}
+
+/** An info page as a WebPage. */
+export function webPageJsonLd(
+  page: { slug: string; title: string; description: string; updatedAt: Date; publishedAt: Date | null },
+  club: JsonLdClub,
+): JsonLd {
+  const published = page.publishedAt
+  return {
+    '@context': CONTEXT,
+    '@type': 'WebPage',
+    name: page.title,
+    url: absoluteUrl(`/info/${page.slug}`, club.siteUrl),
+    ...(page.description ? { description: page.description } : {}),
+    ...(published ? { datePublished: published.toISOString() } : {}),
+    dateModified: (published && page.updatedAt < published ? published : page.updatedAt).toISOString(),
+    isPartOf: { '@type': 'WebSite', name: club.name, url: club.siteUrl },
+    publisher: clubRef(club),
+  }
+}

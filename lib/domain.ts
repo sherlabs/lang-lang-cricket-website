@@ -137,6 +137,52 @@ export type Story = {
   updatedAt: Date
 }
 
+/** One block of an info page (`pages.content`), already flattened for rendering. */
+export type PageBlock =
+  | { blockType: 'text'; id: string; content: StoryContent | null }
+  | { blockType: 'image'; id: string; url: string; alt: string; caption: string; width: 'narrow' | 'wide' | 'full' }
+  | { blockType: 'cta'; id: string; label: string; url: string; style: 'primary' | 'outline'; note: string }
+
+export type PagePlacement = 'none' | 'clubhouse' | 'primary' | 'footer'
+
+/** An info page as the public route renders it (`/info/[slug]`). */
+export type PageView = {
+  id: number
+  slug: string
+  title: string
+  status: 'draft' | 'published'
+  publishedAt: Date | null
+  updatedAt: Date
+  blocks: PageBlock[]
+  seoTitle: string
+  seoDescription: string
+  /** '' when the page has no share picture. */
+  ogImageUrl: string
+}
+
+/** What the menu needs of a published page. */
+export type NavPage = { slug: string; title: string; navLabel: string; showInNavigation: PagePlacement; navOrder: number }
+
+/** A news post in a list or the home strip. */
+export type NewsSummary = {
+  id: number
+  slug: string
+  title: string
+  /** The saved summary, or the start of the body when none was written. */
+  excerpt: string
+  /** '' when there is no cover. */
+  coverUrl: string
+  publishedAt: Date
+}
+
+export type NewsView = NewsSummary & {
+  body: StoryContent | null
+  author: string
+  seoTitle: string
+  seoDescription: string
+  updatedAt: Date
+}
+
 export type PlayerSource = 'playhq' | 'manual'
 
 export type PlayerHonour = {
