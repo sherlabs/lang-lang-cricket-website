@@ -45,7 +45,7 @@ describe('derived facts versus season counts', () => {
     let unballedTotal = 0
     for (const [id, set] of by) {
       const c = matchCountsOf(set)
-      const unballed = set.bat.filter((b) => b.balls === null || b.fours === null || b.sixes === null).reduce((n, b) => n + b.runs, 0)
+      const unballed = set.bat.filter((b) => b.balls === null).reduce((n, b) => n + b.runs, 0)
       unballedTotal += unballed
       expect(c.games, `games ${id}`).toBe(sum(id, 'games'))
       expect(c.runs, `runs ${id}`).toBe(sum(id, 'batRuns'))

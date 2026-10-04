@@ -20,13 +20,21 @@ import { readStoredBundles } from './read'
  * the season blobs and filters rows in memory, so there is no per-player cache and no per-request scan.
  */
 
+/**
+ * Key of the blob that holds FINAL matches whose season name has no four-digit year
+ * (`seasonStartYear` is null). It sorts after every real year and is never dropped by a season cap,
+ * so such a club (or a stray season) still gets its match data instead of silently losing it.
+ */
+export const NO_YEAR_SEASON = 0
+
 async function loadSeasonYears(): Promise<number[]> {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
-    collection: 'matches', where: { and: [{ status: { equals: 'FINAL' } }, { seasonStartYear: { exists: true } }] },
+    collection: 'matches', where: { status: { equals: 'FINAL' } },
     pagination: false, depth: 0, sort: 'id', select: { seasonStartYear: true },
   })
-  return [...new Set(docs.map((d) => Number(d.seasonStartYear)).filter(Number.isFinite))].sort((a, b) => b - a)
+  const years = docs.map((d) => (d.seasonStartYear == null ? NO_YEAR_SEASON : Number(d.seasonStartYear))).map((y) => (Number.isFinite(y) ? y : NO_YEAR_SEASON))
+  return [...new Set(years)].sort((a, b) => b - a)
 }
 
 /** Season start years that have stored FINAL matches, newest first. */
@@ -36,7 +44,7 @@ async function loadSeasonFacts(year: number): Promise<SlimFacts> {
   const payload = await getPayloadClient()
   const [matches, players] = await Promise.all([
     payload.find({
-      collection: 'matches', where: { and: [{ status: { equals: 'FINAL' } }, { seasonStartYear: { equals: year } }] },
+      collection: 'matches', where: { and: [{ status: { equals: 'FINAL' } }, (year === NO_YEAR_SEASON ? { seasonStartYear: { exists: false } } : { seasonStartYear: { equals: year } })] },
       pagination: false, depth: 0, sort: 'id', select: { gameId: true },
     }),
     payload.find({ collection: 'players', where: { hidden: { equals: false } }, pagination: false, depth: 0, joins: false, sort: 'id', select: { slug: true } }),
@@ -58,7 +66,8 @@ export async function getSeasonFacts(seasonStartYear: number): Promise<FactSet> 
 
 /** Facts for the given seasons, bounded to the newest `max` (the cap that keeps a wide request cheap). */
 export async function getFactsFor(seasonYears: readonly number[], max: number = STATLAB_MAX_SEASONS): Promise<FactSet> {
-  const years = [...new Set(seasonYears)].sort((a, b) => b - a).slice(0, max)
+  const unique = [...new Set(seasonYears)].sort((a, b) => b - a)
+  const years = [...unique.filter((y) => y !== NO_YEAR_SEASON).slice(0, max), ...unique.filter((y) => y === NO_YEAR_SEASON)]
   return mergeFactSets(await Promise.all(years.map(getSeasonFacts)))
 }
 

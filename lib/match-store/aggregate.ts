@@ -32,7 +32,8 @@ export function aggregateFromMatchRows(rows: PlayerRows): SeasonCounts {
     c.batBalls += b.balls ?? 0
     c.batFours += b.fours ?? 0
     c.batSixes += b.sixes ?? 0
-    if (b.balls == null || b.fours == null || b.sixes == null) c.batRunsUnballed += b.runs
+    // Only a missing ball count removes the runs from the strike rate (PlayHQ may omit FOURS/SIXES when zero).
+    if (b.balls == null) c.batRunsUnballed += b.runs
     if (b.runs > c.batHighScore || (b.runs === c.batHighScore && notOut)) {
       c.batHighScore = b.runs
       c.batHighScoreNotOut = notOut

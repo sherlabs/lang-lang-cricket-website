@@ -46,6 +46,20 @@ describe('getSeasonFacts / getAllFacts', () => {
     expect([...all.matches.values()].every((h) => h.oppKey && h.oppLabel)).toBe(true)
   })
 
+  it('a FINAL match with a null season year is still read, under the no-year bucket', async () => {
+    const { getAllFacts, getMatchSeasonYears, NO_YEAR_SEASON } = await import('@/lib/match-store/stats-queries')
+    const t = matchTables(payload)
+    const before = (await getAllFacts()).matches.size
+    const [m] = await payload.db.drizzle.select({ id: t.matches.id, year: t.matches.seasonStartYear }).from(t.matches).where(eq(t.matches.status, 'FINAL')).limit(1)
+    await payload.db.drizzle.update(t.matches).set({ seasonStartYear: null }).where(eq(t.matches.id, m.id))
+    try {
+      expect(await getMatchSeasonYears()).toEqual([2025, 2024, NO_YEAR_SEASON])
+      expect((await getAllFacts()).matches.size).toBe(before)
+    } finally {
+      await payload.db.drizzle.update(t.matches).set({ seasonStartYear: m.year }).where(eq(t.matches.id, m.id))
+    }
+  })
+
   it('never contains a hidden player: not as a row, an appearance, or a partner', async () => {
     const { getAllFacts } = await import('@/lib/match-store/stats-queries')
     const all = await getAllFacts()
