@@ -4,7 +4,6 @@ import seniorTeams from '../fixtures/playhq/teams-senior-2025-26.json'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
 import { findClubTeam, getGameSummary, getGameSummaryAuto, getRawGameSummary } from '@/lib/playhq/queries'
 
-const ORG = '484ced51-403a-466c-9a94-bd95eedf7319'
 const LL_B = '61e6c836-a80b-49f1-ae65-625bd0f55016'
 const GAME = twoDay.data.id
 const SENIOR_2526 = '04518c8e-79eb-4aeb-b126-3abc395c8902'

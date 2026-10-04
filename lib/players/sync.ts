@@ -8,7 +8,7 @@ import { aggregatePlayers } from '@/lib/playhq/players'
 import { mapScorecard } from '@/lib/playhq/scorecard'
 import type { RawGameSummary } from '@/lib/playhq/types'
 import { reconcileMatchStore, pairKey } from '@/lib/match-store/reconcile'
-import { relinkMatchPlayers, storedFixtureStamps, upsertMatchBundle } from '@/lib/match-store/write'
+import { pruneStaleMatches, relinkMatchPlayers, storedFixtureStamps, upsertMatchBundle } from '@/lib/match-store/write'
 import { revalidatePaths } from '../../payload/hooks/revalidate'
 import { chunk, playerTables } from './db'
 import { buildSyncPlan, type TeamAggregate } from './plan'
@@ -35,6 +35,8 @@ export type CollectedData = {
   matchAggregates: TeamAggregate[]
   matches: CollectedMatch[]
   skipped: { gameId: string; reason: SkipReason }[]
+  /** pairKeys of (team, season) pairs where a game summary fetch failed: never pruned or reconciled as complete. */
+  partialPairs: string[]
   /** Games whose summary was fetched uncached because the fixture stamp differed from the stored one. */
   refreshed: number
 }
@@ -49,7 +51,7 @@ export type CollectedData = {
  */
 export async function collectSeniorData(opts: { stored?: ReadonlyMap<string, string | null> } = {}): Promise<CollectedData> {
   const groups = (await getSeasonGroups()).filter((g) => g.seasons.some((s) => !s.isJunior))
-  const out: CollectedData = { aggregates: [], matchAggregates: [], matches: [], skipped: [], refreshed: 0 }
+  const out: CollectedData = { aggregates: [], matchAggregates: [], matches: [], skipped: [], partialPairs: [], refreshed: 0 }
   for (const [order, group] of groups.entries()) {
     const teams = await getClubTeams(group)
     const clubIds = new Set(teams.map((t) => t.id))
@@ -71,6 +73,7 @@ export async function collectSeniorData(opts: { stored?: ReadonlyMap<string, str
           return null
         }
       })
+      if (fetched.some((f) => f === null)) out.partialPairs.push(pairKey(team.id, group.name))
       const ok = fetched.filter((f): f is NonNullable<typeof f> => f !== null)
       out.refreshed += ok.filter((f) => f.refreshed).length
       const cards = ok.map((f) => ({ ...f, card: mapScorecard(f.raw, PLAYHQ_ORG_ID, false) }))
@@ -111,7 +114,7 @@ export type MatchStoreCounters = { matchesUpserted: number; matchesSkipped: numb
 export async function writeMatchStore(payload: Payload, data: CollectedData, aliasMap: ReadonlyMap<string, number>): Promise<MatchStoreCounters> {
   const counters: MatchStoreCounters = { matchesUpserted: 0, matchesSkipped: data.skipped.length, matchMismatches: 0, matchError: 0 }
   try {
-    const failed = new Set<string>()
+    const failed = new Set<string>(data.partialPairs)
     const warnings = new Set<string>()
     for (const m of data.matches) {
       for (const w of m.bundle.warnings) warnings.add(`${w} (game ${m.bundle.match.gameId})`)
@@ -124,6 +127,15 @@ export async function writeMatchStore(payload: Payload, data: CollectedData, ali
       }
     }
     for (const w of warnings) console.warn('[matches] unknown_shape', w)
+    // Drop stored games PlayHQ no longer reports (reclassified, abandoned, vanished) for the pairs synced
+    // cleanly this run, so they cannot hold the reconciliation in permanent mismatch. The collection
+    // throws on any PlayHQ failure, so reaching here means the fetch was complete; failed writes are skipped.
+    const pairs = new Map<string, { clubTeamId: string; seasonName: string }>()
+    for (const a of data.matchAggregates) pairs.set(pairKey(a.teamId, a.seasonName), { clubTeamId: a.teamId, seasonName: a.seasonName })
+    for (const m of data.matches) pairs.set(pairKey(m.teamId, m.seasonName), { clubTeamId: m.teamId, seasonName: m.seasonName })
+    const prunePairs = [...pairs.entries()].filter(([k]) => !failed.has(k)).map(([, v]) => v)
+    const pruned = await pruneStaleMatches(payload, prunePairs, data.matches.map((m) => m.bundle.match.gameId))
+    if (pruned) console.warn('[matches] removed stale stored matches', pruned)
     await relinkMatchPlayers(payload)
     const rec = await reconcileMatchStore(payload, { aggregates: data.matchAggregates, aliasMap, skipPairs: failed })
     counters.matchMismatches = rec.mismatchedPlayers

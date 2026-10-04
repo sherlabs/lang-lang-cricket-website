@@ -17,7 +17,6 @@ import { resetPlayers } from './players-helpers'
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('next/cache', () => cache)
 
-const ORG = '484ced51-403a-466c-9a94-bd95eedf7319'
 const B_GRADE = '61e6c836-a80b-49f1-ae65-625bd0f55016'
 const ONE_DAY = '4398ce96-6b78-48af-8623-c208f8ceca9f'
 

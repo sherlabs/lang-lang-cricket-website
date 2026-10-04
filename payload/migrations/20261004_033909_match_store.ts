@@ -1,5 +1,7 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
+// Child to parent keys are ON DELETE cascade (hand-edited from Payload's generated `set null`, which
+// contradicts the NOT NULL columns): deleting a match must remove its rows, not fail. player_id stays set null.
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    CREATE TYPE "payload"."enum_matches_toss_choice" AS ENUM('bat', 'bowl');
@@ -151,15 +153,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD COLUMN "match_batting_id" integer;
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD COLUMN "match_bowling_id" integer;
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD COLUMN "match_fielding_id" integer;
-  ALTER TABLE "payload"."match_innings" ADD CONSTRAINT "match_innings_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_appearances" ADD CONSTRAINT "match_appearances_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "payload"."match_innings" ADD CONSTRAINT "match_innings_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_appearances" ADD CONSTRAINT "match_appearances_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload"."match_appearances" ADD CONSTRAINT "match_appearances_player_id_players_id_fk" FOREIGN KEY ("player_id") REFERENCES "payload"."players"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_batting" ADD CONSTRAINT "match_batting_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_batting" ADD CONSTRAINT "match_batting_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_bowling" ADD CONSTRAINT "match_bowling_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_bowling" ADD CONSTRAINT "match_bowling_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_fielding" ADD CONSTRAINT "match_fielding_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload"."match_fielding" ADD CONSTRAINT "match_fielding_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "payload"."match_batting" ADD CONSTRAINT "match_batting_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_batting" ADD CONSTRAINT "match_batting_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_bowling" ADD CONSTRAINT "match_bowling_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_bowling" ADD CONSTRAINT "match_bowling_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_fielding" ADD CONSTRAINT "match_fielding_innings_id_match_innings_id_fk" FOREIGN KEY ("innings_id") REFERENCES "payload"."match_innings"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload"."match_fielding" ADD CONSTRAINT "match_fielding_match_id_matches_id_fk" FOREIGN KEY ("match_id") REFERENCES "payload"."matches"("id") ON DELETE cascade ON UPDATE no action;
   CREATE UNIQUE INDEX "matches_game_id_idx" ON "payload"."matches" USING btree ("game_id");
   CREATE INDEX "matches_starts_at_idx" ON "payload"."matches" USING btree ("starts_at");
   CREATE INDEX "matches_updated_at_idx" ON "payload"."matches" USING btree ("updated_at");

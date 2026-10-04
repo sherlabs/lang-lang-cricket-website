@@ -1,4 +1,4 @@
-import { count, eq, max, sql } from '@payloadcms/db-postgres/drizzle'
+import { and, count, eq, max, notInArray, or, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { chunk } from '@/lib/players/db'
 import type { MatchBundle } from '@/lib/playhq/match-rows'
@@ -115,4 +115,22 @@ export async function storedFixtureStamps(payload: Payload): Promise<Map<string,
     .select({ gameId: t.matches.gameId, playhqUpdatedAt: t.matches.playhqUpdatedAt })
     .from(t.matches)
   return new Map(rows.map((r) => [r.gameId, r.playhqUpdatedAt]))
+}
+
+/**
+ * Removes stored matches that PlayHQ no longer reports for the synced (team, season) pairs (a game that
+ * went club-vs-club, non-FINAL, abandoned or vanished). `pairs` are `{ clubTeamId, seasonName }`; only
+ * games absent from `keepGameIds` are deleted, children go via ON DELETE cascade. Returns the count removed.
+ */
+export async function pruneStaleMatches(
+  payload: Payload,
+  pairs: { clubTeamId: string; seasonName: string }[],
+  keepGameIds: string[],
+): Promise<number> {
+  if (!pairs.length) return 0
+  const t = matchTables(payload)
+  const inPair = or(...pairs.map((p) => and(eq(t.matches.clubTeamId, p.clubTeamId), eq(t.matches.seasonName, p.seasonName))))
+  const where = keepGameIds.length ? and(inPair, notInArray(t.matches.gameId, keepGameIds)) : inPair
+  const removed: { id: number }[] = await payload.db.drizzle.transaction(async (tx) => tx.delete(t.matches).where(where).returning({ id: t.matches.id }))
+  return removed.length
 }

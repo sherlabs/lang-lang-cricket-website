@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
 import { MATCH_COLUMN_KEYS, matchTables, type MatchTables } from '@/lib/match-store/db'
 import { getMatchByGameId } from '@/lib/match-store/queries'
-import { matchStoreStats, relinkMatchPlayers, upsertMatchBundle } from '@/lib/match-store/write'
+import { matchStoreStats, pruneStaleMatches, relinkMatchPlayers, upsertMatchBundle } from '@/lib/match-store/write'
 import { isSkip, mapMatchBundle, type MatchBundle } from '@/lib/playhq/match-rows'
 import type { RawGameSummary } from '@/lib/playhq/types'
 import { generateMatchSeed, MATCH_SEED_HIDDEN_KEY } from '../../payload/scripts/fixtures/match-seed-data'
@@ -167,6 +167,26 @@ describe('match store tables', () => {
     await expect(db().insert(t.match_appearances).values({ match: m.id, appearanceId: app.appearanceId, createdAt: stamp, updatedAt: stamp })).rejects.toThrow()
     await expect(db().insert(t.match_batting).values({ innings: bat.innings, match: m.id, appearanceId: bat.appearanceId, createdAt: stamp, updatedAt: stamp })).rejects.toThrow()
     expect(await snapshot()).toEqual(before)
+  })
+
+  it('pruneStaleMatches deletes dropped games of the synced pair with all children, and keeps other pairs and kept games', async () => {
+    const bundle = oneDayBundle()
+    await upsertMatchBundle(payload, bundle, new Map())
+    const { clubTeamId, seasonName, gameId } = bundle.match
+    expect(await pruneStaleMatches(payload, [], [])).toBe(0)
+    expect(await pruneStaleMatches(payload, [{ clubTeamId, seasonName: 'Other season' }], [])).toBe(0)
+    expect(await pruneStaleMatches(payload, [{ clubTeamId, seasonName }], [gameId])).toBe(0)
+    expect((await snapshot()).matches).toHaveLength(1)
+    expect(await pruneStaleMatches(payload, [{ clubTeamId, seasonName }], ['some-other-game'])).toBe(1)
+    const after = await snapshot()
+    for (const name of TABLES) expect(after[name]).toHaveLength(0)
+  })
+
+  it('a raw delete of a match cascades to every child row', async () => {
+    await upsertMatchBundle(payload, oneDayBundle(), new Map())
+    await db().delete(t.matches)
+    const after = await snapshot()
+    for (const name of TABLES) expect(after[name]).toHaveLength(0)
   })
 
   it('stats count every table', async () => {
