@@ -39,7 +39,8 @@ describe('navigation', () => {
     const nav = navFor('editor')
     expect(nav.advanced).toEqual([])
     // 12 -> 14: Player sponsors and Club apparel link each need an everyday entry (editors must reach them).
-    expect(nav.everyday.length).toBeLessThanOrEqual(14)
+    // 14 -> 16: Pages and News are committee-run content (WP-P); hiding them under Advanced was rejected.
+    expect(nav.everyday.length).toBeLessThanOrEqual(16)
     expect(nav.everyday.map((e) => e.path)).not.toContain('/collections/users')
   })
 
@@ -67,7 +68,8 @@ describe('navigation', () => {
   it('every job tile links under the admin', () => {
     for (const t of jobTiles) expect(t.path.startsWith('/')).toBe(true)
     // 8 -> 10: Add a player sponsor and Change the apparel link.
-    expect(jobTiles.length).toBeLessThanOrEqual(10)
+    // 10 -> 12: Add a page and Post news (WP-P).
+    expect(jobTiles.length).toBeLessThanOrEqual(12)
   })
 
   it('help content has steps in every section', () => {

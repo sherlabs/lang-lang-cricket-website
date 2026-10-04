@@ -30,6 +30,8 @@ export const everydayNav: NavEntry[] = [
   { key: 'sponsors', label: 'Sponsors', path: '/collections/sponsors' },
   { key: 'people', label: 'Committee & contacts', path: '/collections/people' },
   { key: 'documents', label: 'Documents', path: '/collections/documents' },
+  { key: 'pages', label: 'Pages', path: '/collections/pages' },
+  { key: 'news', label: 'News', path: '/collections/news' },
   { key: 'stories', label: 'Club history stories', path: '/collections/stories' },
   { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks' },
   { key: 'players', label: 'Players', path: '/collections/players' },
@@ -75,6 +77,8 @@ export const jobTiles: JobTile[] = [
   { key: 'apparel', title: 'Change the apparel link', hint: 'Where the Club apparel button goes', path: '/globals/club-apparel' },
   { key: 'contact', title: 'Update a contact', hint: 'Change a phone number, email or role', path: '/collections/people' },
   { key: 'document', title: 'Upload a document', hint: 'Forms, policies and newsletters (PDF)', path: '/collections/documents/create' },
+  { key: 'page', title: 'Add a page', hint: 'An info page such as About or Join us', path: '/collections/pages/create' },
+  { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create' },
   { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create' },
   { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help' },
 ]

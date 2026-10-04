@@ -16,10 +16,11 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set(['submit', 'drafts', 
 /** Appends -2, -3, ... to the base slug until `isTaken` reports one that's free. */
 export async function makeUniqueSlug(
   title: string,
-  isTaken: (slug: string) => Promise<boolean>
+  isTaken: (slug: string) => Promise<boolean>,
+  reserved: ReadonlySet<string> = RESERVED_SLUGS,
 ): Promise<string> {
   const base = slugify(title)
-  const baseIsTaken = async (slug: string) => RESERVED_SLUGS.has(slug) || (await isTaken(slug))
+  const baseIsTaken = async (slug: string) => reserved.has(slug) || (await isTaken(slug))
   let slug = base
   let n = 2
   while (await baseIsTaken(slug)) {

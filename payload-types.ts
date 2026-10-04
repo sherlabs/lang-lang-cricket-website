@@ -84,6 +84,8 @@ export interface Config {
     'player-sync-runs': PlayerSyncRun;
     'player-sponsors': PlayerSponsor;
     yearbooks: Yearbook;
+    pages: Page;
+    news: News;
     matches: Match;
     'match-innings': MatchInning;
     'match-appearances': MatchAppearance;
@@ -124,6 +126,8 @@ export interface Config {
     'player-sync-runs': PlayerSyncRunsSelect<false> | PlayerSyncRunsSelect<true>;
     'player-sponsors': PlayerSponsorsSelect<false> | PlayerSponsorsSelect<true>;
     yearbooks: YearbooksSelect<false> | YearbooksSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    news: NewsSelect<false> | NewsSelect<true>;
     matches: MatchesSelect<false> | MatchesSelect<true>;
     'match-innings': MatchInningsSelect<false> | MatchInningsSelect<true>;
     'match-appearances': MatchAppearancesSelect<false> | MatchAppearancesSelect<true>;
@@ -818,6 +822,167 @@ export interface Yearbook {
   createdAt: string;
 }
 /**
+ * Information pages such as About the club or Join us. Add text, pictures and buttons, then choose where the link goes in the menu. For dated news use News; for short banners use Announcements.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * The page address, /info/<this>. Set from the title when the page is created. Changing it breaks links to the old address.
+   */
+  slug?: string | null;
+  /**
+   * Keep it as Draft while you work. Use the Preview button to see it first.
+   */
+  status: 'draft' | 'published';
+  /**
+   * Filled in the first time you publish.
+   */
+  publishedAt?: string | null;
+  /**
+   * A draft page never shows in the menu.
+   */
+  showInNavigation: 'none' | 'clubhouse' | 'primary' | 'footer';
+  /**
+   * A shorter name for the menu. Leave empty to use the page title.
+   */
+  navLabel?: string | null;
+  /**
+   * Smaller numbers come first. Leave as it is to go last.
+   */
+  navOrder?: number | null;
+  /**
+   * Add text, pictures and buttons, and drag them into the order you want.
+   */
+  content?:
+    | (
+        | {
+            richText: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'text';
+          }
+        | {
+            /**
+             * Click the button, then drop the picture in.
+             */
+            image: number | Media;
+            /**
+             * A few words for people who cannot see it, for example "Under 12s with the premiership cup". Filled in from the picture’s own description when it has one.
+             */
+            alt: string;
+            caption?: string | null;
+            width: 'narrow' | 'wide' | 'full';
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'image';
+          }
+        | {
+            label: string;
+            /**
+             * A page on this site such as /contact, or a full web address starting with https://.
+             */
+            url: string;
+            style: 'primary' | 'outline';
+            note?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'cta';
+          }
+      )[]
+    | null;
+  /**
+   * Up to 60 characters. Leave empty to use the page title.
+   */
+  seoTitle?: string | null;
+  /**
+   * Up to 160 characters. Leave empty to use the start of the first text block.
+   */
+  seoDescription?: string | null;
+  /**
+   * Shown when the page is shared on Facebook and similar. Leave empty to use the club picture.
+   */
+  ogImage?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Dated club news with a picture, such as a result, a signing or a thank-you. For a short banner on the home page use Announcements; for the club’s long-lived history use Club history stories.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news".
+ */
+export interface News {
+  id: number;
+  title: string;
+  /**
+   * The post address, /news/<this>. Set from the headline when the post is created.
+   */
+  slug?: string | null;
+  /**
+   * Keep it as Draft while you work. Use the Preview button to see it first.
+   */
+  status: 'draft' | 'published';
+  /**
+   * Filled in with now when you publish. Pick a later date and time to schedule the post: it appears on the website by itself (it can take up to five minutes after that time).
+   */
+  publishedAt?: string | null;
+  /**
+   * Shown at the top of the post and on the news list. Click the button, then drop the picture in.
+   */
+  cover?: (number | null) | Media;
+  /**
+   * Up to 280 characters, shown on the news list. Leave empty and the start of the post is used.
+   */
+  excerpt?: string | null;
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Shown as "By …". Leave empty to credit the club.
+   */
+  author?: string | null;
+  /**
+   * Up to 60 characters. Leave empty to use the headline.
+   */
+  seoTitle?: string | null;
+  /**
+   * Up to 160 characters. Leave empty to use the summary.
+   */
+  seoDescription?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * One row per finished senior game, written by the PlayHQ sync. Read only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1087,6 +1252,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'yearbooks';
         value: number | Yearbook;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'news';
+        value: number | News;
       } | null)
     | ({
         relationTo: 'matches';
@@ -1509,6 +1682,73 @@ export interface YearbooksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  status?: T;
+  publishedAt?: T;
+  showInNavigation?: T;
+  navLabel?: T;
+  navOrder?: T;
+  content?:
+    | T
+    | {
+        text?:
+          | T
+          | {
+              richText?: T;
+              id?: T;
+              blockName?: T;
+            };
+        image?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              caption?: T;
+              width?: T;
+              id?: T;
+              blockName?: T;
+            };
+        cta?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              style?: T;
+              note?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  seoTitle?: T;
+  seoDescription?: T;
+  ogImage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news_select".
+ */
+export interface NewsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  status?: T;
+  publishedAt?: T;
+  cover?: T;
+  excerpt?: T;
+  body?: T;
+  author?: T;
+  seoTitle?: T;
+  seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "matches_select".
  */
 export interface MatchesSelect<T extends boolean = true> {
@@ -1828,6 +2068,10 @@ export interface Club {
       description?: string | null;
     };
     matches?: {
+      title?: string | null;
+      description?: string | null;
+    };
+    news?: {
       title?: string | null;
       description?: string | null;
     };
@@ -2172,6 +2416,12 @@ export interface ClubSelect<T extends boolean = true> {
               description?: T;
             };
         matches?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        news?:
           | T
           | {
               title?: T;

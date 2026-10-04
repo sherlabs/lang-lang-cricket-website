@@ -59,3 +59,28 @@ export const timeOrEmpty = (value: unknown, ctx?: Ctx): true | string =>
   isEtl(ctx) || value == null || value === '' || (typeof value === 'string' && HH_MM.test(value))
     ? true
     : 'Use 24-hour time, e.g. 18:00, or leave it empty.'
+
+const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+
+/** Lowercase letters, digits and single hyphens; `index` is refused (it is reserved for the section root). */
+export function isValidSlug(value: unknown): boolean {
+  return typeof value === 'string' && SLUG_RE.test(value) && value !== 'index'
+}
+
+/** A page or news slug. Empty passes: the slug is generated from the title on create. */
+export const slugValidator = (value: unknown, ctx?: Ctx): true | string =>
+  isEtl(ctx) || value == null || value === '' || isValidSlug(value)
+    ? true
+    : 'Use lowercase letters, numbers and single hyphens only (for example "join-the-club"). "index" is not allowed.'
+
+/** A full http(s) link, or a path on this site that starts with a single slash (`/contact`). */
+export function isHttpUrlOrPath(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  const v = value.trim()
+  if (/^\/(?![/\\])\S*$/.test(v)) return true
+  return v !== '' && isHttpUrlOrEmpty(v)
+}
+
+/** Required button link: http(s) or a site-relative path. */
+export const httpUrlOrPath = (value: unknown, ctx?: Ctx): true | string =>
+  isEtl(ctx) || isHttpUrlOrPath(value) ? true : 'Enter a full link starting with http:// or https://, or a page on this site such as /contact.'

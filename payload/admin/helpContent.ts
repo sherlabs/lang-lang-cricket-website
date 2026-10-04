@@ -26,6 +26,28 @@ export const helpSections: HelpSection[] = [
       'Write a headline and your message. The first line shows in the banner on the home page.',
       'Switch on "Show on the website" when you are ready for everyone to see it, then click Save.',
       'To take it down later, open it, switch "Show on the website" off and Save.',
+      'An announcement is a short banner for something urgent. For a dated article with a picture use "Post news", and for the club\u2019s long-lived history use Club history stories.',
+    ],
+  },
+  {
+    id: 'page',
+    title: 'Add a page',
+    steps: [
+      'Click "Add a page" on the Home page (or Pages, then "Create new").',
+      'Type the page title, for example "Join the club".',
+      'Under "Page content" click "Add Text", "Add Picture" or "Add Button". Drag them into the order you want.',
+      'Under "Where should a link to this page appear?" choose the Clubhouse menu, the main menu or the footer.',
+      'Leave the status as Draft and use the Preview button to see it first. When you are happy, set the status to Published and Save. The link appears in the menu within a few minutes.',
+    ],
+  },
+  {
+    id: 'news',
+    title: 'Post news',
+    steps: [
+      'Click "Post news" on the Home page (or News, then "Create new").',
+      'Type a headline, add a picture if you have one, and write the post.',
+      'Use the Preview button to see it as visitors will, then set the status to Published and Save.',
+      'It shows on the News page and the home page. Choose a later date under "Show from" to have it appear by itself on that day.',
     ],
   },
   {

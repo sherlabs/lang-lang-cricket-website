@@ -24,15 +24,20 @@ const PAGE_LABELS: Record<SeoPage, string> = {
   statlab: 'StatLab',
   yearbooks: 'Yearbooks',
   matches: 'Match archive',
+  news: 'News',
 }
+
+const FUNCTION_DEFAULTS: ReadonlySet<SeoPage> = new Set<SeoPage>(['news'])
 
 const pageSeoFields: Field[] = SEO_PAGES.map((key) => ({
   name: key,
   label: PAGE_LABELS[key],
   type: 'group',
   fields: [
-    { name: 'title', type: 'text', defaultValue: d.pages[key].title },
-    { name: 'description', type: 'textarea', defaultValue: d.pages[key].description },
+    // `news` (and any key added after it) uses function defaults, so no club copy lands in a SQL DEFAULT.
+    // The keys before it keep their static defaults: switching them would rewrite existing columns.
+    { name: 'title', type: 'text', defaultValue: FUNCTION_DEFAULTS.has(key) ? () => d.pages[key].title : d.pages[key].title },
+    { name: 'description', type: 'textarea', defaultValue: FUNCTION_DEFAULTS.has(key) ? () => d.pages[key].description : d.pages[key].description },
   ],
 }))
 

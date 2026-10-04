@@ -14,6 +14,7 @@ import * as migration_20261003_214142_people_sponsors_apparel from './20261003_2
 import * as migration_20261003_223515_people_more_roles from './20261003_223515_people_more_roles';
 import * as migration_20261004_031119_theme_global from './20261004_031119_theme_global';
 import * as migration_20261004_033909_match_store from './20261004_033909_match_store';
+import * as migration_20261004_041815_pages_news from './20261004_041815_pages_news';
 
 export const migrations = [
   {
@@ -94,6 +95,11 @@ export const migrations = [
   {
     up: migration_20261004_033909_match_store.up,
     down: migration_20261004_033909_match_store.down,
-    name: '20261004_033909_match_store'
+    name: '20261004_033909_match_store',
+  },
+  {
+    up: migration_20261004_041815_pages_news.up,
+    down: migration_20261004_041815_pages_news.down,
+    name: '20261004_041815_pages_news'
   },
 ];

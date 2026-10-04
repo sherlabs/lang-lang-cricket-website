@@ -56,6 +56,7 @@ export const SEO_PAGES = [
   'statlab',
   'yearbooks',
   'matches',
+  'news',
 ] as const
 export type SeoPage = (typeof SEO_PAGES)[number]
 
@@ -288,6 +289,10 @@ export const clubDefaults: ClubDefaults = {
     yearbooks: {
       title: 'Season Yearbooks',
       description: 'Season-by-season yearbooks for Lang Lang Cricket Club: messages from the club, the stats leaders, results and photos.',
+    },
+    news: {
+      title: 'News',
+      description: 'The latest news from Lang Lang Cricket Club in Caldermeade, Victoria: results, announcements and club stories.',
     },
     matches: {
       title: 'Match Archive',
