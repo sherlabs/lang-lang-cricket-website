@@ -1,0 +1,39 @@
+---
+title: Duplicate players and merge undo
+status: shipped
+routes: ["/admin/player-data-tools"]
+collections: [players, player-aliases, player-seasons, match-appearances, merge-log, people, player-sponsors]
+admin: "Advanced, Player data tools, section Duplicate players (admins only); the Merge field on a player"
+owner: "The person who looks after the site (admin role)"
+related: [playhq-player-sync, history-import-export, players-directory-and-profiles, committee-admin, match-data-store]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who finds the same person twice (a nickname, a spelling, a surname typo) and wants to tidy it up without fear.
+
+## Why it was built
+
+PlayHQ has no player id, so one person can appear under two spellings and one name can be two people ([#10](https://github.com/sherlabs/lang-lang-cricket-website/issues/10)). The merge tool existed but offered no help finding duplicates and no way back.
+
+## What it does
+
+- **Ranked suggestions.** Players are only compared when they share a block key (the same last name, the same-sounding last name, or the same two names swapped), which keeps a club of a thousand players fast. A pair scores 0 to 100 from name similarity (same name, names swapped, an initial for the first name, one letter different, similar spelling) and how much their seasons overlap (same team in the same or a neighbouring season). Two players who were in the same grade and season on different teams are marked down. Pairs under 60 are not listed; at most 50 are shown, each with its reason in plain English. Hidden players are included.
+- **Never suggested:** two players who appeared in the same game (they cannot be one person), and pairs marked "Not the same person".
+- **Merge into ...** keeps the profile with more games by default; *Swap* changes which side is kept. Seasons, aliases, honours, committee links, player sponsors and stored match appearances move to the kept profile.
+- **Same-game refusal.** A merge of two players who appeared in the same game is refused (HTTP 409, also for the Merge field on a player page) and names the shared games. It can be forced only after two explicit confirmations; the colliding appearances are then left unlinked, and a later PlayHQ update relinks them by name.
+- **Undo.** Every merge writes a log row (with a small snapshot of the source player's identity) in the same transaction. *Undo* puts the player back with the original profile address, aliases (so the next update routes the name to them again), honours, committee entry and sponsor links. The kept profile's photo, bio and active flag revert only if nobody has changed them since. **Season totals are rebuilt, not restored:** until the next PlayHQ update (or *Update now*) the restored player shows no season totals, and stored match appearances relink by name immediately. Undo is refused when the player it was merged into has since been merged away (undo that later merge first) and when it was already undone. The log keeps one year of history.
+- Undo, dismiss and the list are admin only. The merge itself stays available to staff as before.
+
+## How to use it
+
+1. Open **Advanced, Player data tools** and scroll to **Duplicate players**.
+2. Read the reason for a pair. If they are the same person press **Merge A into B**; if not, **Not the same person**.
+3. Changed your mind? Under **Recent merges** press **Undo**. Then run the PlayHQ update from Home so the restored player's totals come back.
+
+## Not included / deferred
+
+- No nickname dictionary: "Bill" and "William" are not matched by name alone.
+- Undo does not restore season rows or appearance links from before the merge (they are rebuilt from PlayHQ, so nothing stale is written back).
+- The list is cached for an hour and refreshed by every merge, undo, dismissal and sync. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

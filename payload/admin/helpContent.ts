@@ -30,6 +30,25 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'nickname',
+    title: 'Show a nickname for a player',
+    steps: [
+      'Open Players and click the player.',
+      'Type the name you want shown on the website under "Preferred name", for example a nickname.',
+      'Click Save. The website shows that name everywhere. The address of their page does not change, and clearing the box brings the full name back.',
+    ],
+  },
+  {
+    id: 'season-summary',
+    title: 'Check a season summary before it goes live',
+    steps: [
+      'Open Season yearbooks and click the season. The "Season summary" box can be written by hand.',
+      'If the site administrator asked the AI for a draft, the box says "AI-assisted draft, please check". The AI can be wrong, so read all of it and correct anything that is not true.',
+      'Tick "I have read and corrected this text", then set the status to Published and Save.',
+      'If you change the words afterwards, the tick clears and you tick it again. Clearing the whole box removes the AI mark.',
+    ],
+  },
+  {
     id: 'page',
     title: 'Add a page',
     steps: [

@@ -1,0 +1,38 @@
+---
+title: Preferred names and grade label renames
+status: shipped
+routes: ["/stats", "/records", "/statlab", "/players/[slug]", "/yearbooks/[slug]"]
+collections: [players, site-settings, player-seasons, matches]
+admin: "Players (Preferred name, everyday menu); Advanced, Site settings, Grade and team names (admins only)"
+owner: "Committee for nicknames; the site admin for label renames"
+related: [players-directory-and-profiles, club-and-site-settings, stats-leaderboards, statlab-and-csv-export, season-yearbooks, history-import-export]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A committee member** who wants "Chook" shown instead of "Jonathan Smith" on the site.
+- **The site admin** who sees "Senior Men B Grade" and "Senior Men B grade", or "2. District" and "District", as separate grades.
+
+## Why it was built
+
+PlayHQ spells things inconsistently and the nightly update rewrites its data, so a fix made in the data would not last ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11)).
+
+## What it does
+
+- **Preferred name.** An optional field on a player (up to 100 characters) shown on the site instead of the PlayHQ name: directory, profile, leaderboards, records, milestones, match scorecards, share cards. It is display only: the profile address, the PlayHQ matching (aliases, name keys), merges and the sync never see it. Clearing it brings the full name back. A name edit made on the player (first or last name) already survived syncs; the preferred name is for a nickname.
+- **One tidy-up everywhere.** Grade and team labels that differ only in capital letters, spacing or a leading number ("2. ") are read as one. The most common original spelling is shown (a tie goes to the alphabetically first).
+- **Admin renames.** Site settings has *Grade and team names*: rows of kind (grade, team or opposition), the name as it is in the data, and what to show instead. The list under the rows shows the names that exist now, how many rows use each, what the site shows and **which category it counts as**. Renaming a grade can change its category (a grade renamed to include "Under 14" becomes a junior grade), because the shown name is what the category rules read. Do not chain renames (A to B, then B to C).
+- **Read time only.** The stored rows are never rewritten, so renames survive every PlayHQ update, and removing a rename brings the old tidy-up back. The label map is applied once where the season rows, the stored match headers and the yearbook result lines are read, so leaderboards, grade filters, records, StatLab (both modes), profiles, opposition pages and yearbooks agree.
+- **Old links keep working.** A shared `?grade=` link that uses an old spelling resolves to the grade it became (also in saved reports).
+- **Opposition renames** map an opposition's name (or key) to another opposition key, which joins imported history to a PlayHQ club; they are marked advanced.
+
+## How to use it
+
+1. Nickname: open the player, fill **Preferred name**, Save.
+2. Grade names: **Advanced, Site settings, Stats and leaderboards, Grade and team names**, add a row, pick the name from the list below it, type what to show, Save. Check the "Counts as" column first.
+
+## Not included / deferred
+
+- No bulk rename tool and no rename history. Renames apply to grade, team and opposition names only, not to competitions or seasons.
+- Match pages from the PlayHQ fixtures list show PlayHQ's own grade names. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

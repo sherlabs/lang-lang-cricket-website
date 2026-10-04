@@ -28,6 +28,8 @@ BetterStats feature A9. The club wanted a yearbook per season that mixes the com
   - *Win and loss progression*: one inline SVG per grade, a strip of result letters (W won, L lost, D drawn, T tied, N no result, f for a forfeit; never colour alone) above a stepped line of wins minus losses, with a text description and the same numbers in a table behind "Show the numbers".
   - *Partnership records*: the best pair at each wicket and the top five of the season, inferred from batting order and fall of wickets, with a line saying how many innings could not be paired.
   - *Season highlights* (stat leaders, not honours): highest score with opposition and date, best bowling figures, most fifties and best partnership, each from match data. A second "Top all-rounders, from match data" table (same rule as below) appears only when the stored results are complete. It sits beside the existing all-rounder table, which is now titled "from season totals"; the two are never combined on one line.
+- **Season summary**: an optional text field shown as "The season in review". It can be written by hand or drafted by an admin with AI, in which case it is marked, cannot be published until ticked as read, and shows a note on the public page ([AI-assisted season summary](./ai-season-summary.mdx)).
+- Grade names on the page follow the club's label renames ([Preferred names and grade label renames](./name-and-grade-labels.mdx)).
 - A print stylesheet hides the menu and forces a light page; a "Print / save as PDF" button calls the browser print dialog.
 - Structured data is `CreativeWork`; the page is in the sitemap. Saving revalidates `/yearbooks` and the page.
 - Draft assets are not private: gallery photos and media are readable by direct URL, so do not upload unreleased pictures until the day you publish.
@@ -40,5 +42,5 @@ BetterStats feature A9. The club wanted a yearbook per season that mixes the com
 
 ## Not included / deferred
 
-- All-rounder *honours* stay committee-entered. AI-written narrative ([#12](https://github.com/sherlabs/lang-lang-cricket-website/issues/12)).
+- All-rounder *honours* stay committee-entered.
 - Seasons before PlayHQ have editorial content only. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,0 +1,49 @@
+---
+title: Historical data import and export
+status: shipped
+routes: ["/admin/player-data-tools"]
+collections: [player-seasons, matches, match-innings, match-appearances, match-batting, match-bowling, players, player-aliases]
+admin: "Advanced, Player data tools, section Import and export history (admins only)"
+owner: "The person who looks after the site (admin role)"
+related: [playhq-player-sync, match-data-store, statlab-and-csv-export, stats-leaderboards, duplicate-players-and-undo, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who has older spreadsheets or scorebook totals from before PlayHQ and wants them in the club history next to the live data.
+- **The club historian** who exports what the site holds to check it or to keep a copy.
+
+## Why it was built
+
+PlayHQ only holds recent seasons, so careers, records and leaderboards started in 2023/24. Older numbers lived in spreadsheets ([#9](https://github.com/sherlabs/lang-lang-cricket-website/issues/9)). Importing them has to be safe: a typo must be caught before anything is written, the nightly PlayHQ update must never overwrite or delete them, and nothing may be counted twice.
+
+## What it does
+
+- **Two templates** (download from the page): *season totals* (one row per player per team per season: games, batting, bowling, best figures, catches) and *match rows* (one row per player per game: date, grade, team, opponent, result, team totals and the player's batting and bowling). Each template has two clearly fake "Example Player" rows; the importer refuses them ("remove the example rows"). Blank means "not recorded", never zero.
+- **Strike rate stays honest.** A season row with no balls, fours and sixes is stored with every run marked as unballed, so strike rate shows n/a for that season instead of a wrong number. Match rows leave unrecorded balls, fours and sixes empty in the same way.
+- **Preview, then import.** *Preview* reads the file and writes nothing. It shows how many rows are new, changed or unchanged and lists every problem by row number, column and plain-English reason (bad season shape, high score above runs, more not-outs than innings, an unknown "how out", a junior grade, a date in the future, overs written like 12.7, the same player listed twice, and so on). *Import* is offered only when there are no problems and runs in one database transaction: either everything is saved or nothing.
+- **Re-importing is safe.** Season rows are matched on player, team and season; games on a fingerprint of date, grade, team, opponent and the optional `game_ref` (so a double-header is two games). The same file again reports "unchanged".
+- **Players.** Names are matched through the same name keys as PlayHQ. An unknown name is an error that lists the closest existing players ("Did you mean ..."); tick *Create new players for names that are not on the site yet* to add them (as manually added players, never hidden).
+- **Never double counted.** A season PlayHQ already has for that player, or a game on the same date against the same opponent that PlayHQ already stored, is refused. Juniors are refused with the same grade rule as the rest of the site.
+- **Imported rows are tagged** `import` with the import's batch id. The nightly PlayHQ update replaces and prunes only PlayHQ rows, its safety check counts only PlayHQ rows, and the reconciliation ignores imports, so imported history survives every update. Imported seasons sort below the PlayHQ seasons (newest imported year first) and are never the "current" season or a reason a player counts as active.
+- **Match rows carry no opposition people.** Bowler and fielder names are not importable (club people are never stored as text), so imported games have no fall of wickets, no ball-by-ball detail and no fielding credits; match-mode fielding for those games is n/a. A team total left blank is stored as "not recorded", not 0. Batting position is "no data" for imported rows.
+- **Spreadsheet safety.** Text that starts with `=`, `+`, `-`, `@` or `|` (after the leading apostrophe an export adds is removed) is refused so a formula cannot be stored; the same rule protects every CSV download.
+- **Undo an import.** The list "Imports on the site" shows each import (when, season rows, games) with *Undo this import*, which removes the rows that import brought in. Players it created are kept.
+- **Export.** Both layouts can be exported with a `source` column (`playhq` or `import`) and a `hidden` column. Hidden players are included because the export is admin only; opposition players are never exported. An export re-imports as a no-op: PlayHQ rows are skipped and imported rows come back unchanged.
+- Limits: 2 MB, 5,000 rows, 40 columns per file. Everything is admin only (the endpoints answer 401 or 403 to anyone else).
+
+## How to use it
+
+1. Sign in as an admin and open **Advanced, Player data tools**.
+2. Download a template, fill it in from your records and save as CSV.
+3. Choose what the file holds, pick the file and press **Preview**. Fix any problems it lists in the spreadsheet and preview again.
+4. Press **Import**. Check a player's profile or StatLab to see the new seasons.
+5. Made a mistake? Press **Undo this import** in the list below, correct the file and import again.
+
+## Not included / deferred
+
+- No per-ball or scorecard-level import (no bowler or fielder names, fall of wickets or partnerships for imported games).
+- A match-rows file has no season column: the season comes from the date (July starts a season). Season-totals files carry the season explicitly.
+- Imported opponents have no PlayHQ organisation id, so they appear as separate oppositions unless an admin maps them with an opposition rename in Site settings ([name and grade labels](./name-and-grade-labels.mdx)).
+- Undo removes an import's rows but not the players it created. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -32,6 +32,8 @@ import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
 import { PRESETS, presetHref } from '../../lib/stats/presets'
+import { mergePlayerInto } from '../../lib/players/merge-core'
+import { playerTables } from '../../lib/players/db'
 import { guard } from './_guard'
 import { reconcileSeed, seedMatchSeasonRows, seedMatchStore } from './fixtures/match-seed-db'
 import { MATCH_SEED_SEASONS } from './fixtures/match-seed-data'
@@ -163,6 +165,83 @@ async function seedDemoStatLab(payload: Payload) {
     })
   }
   console.log('[seed-demo] saved-reports: 2 created')
+}
+
+
+/**
+ * W2 admin-tools demo data (invented names, idempotent via the "jon-sample" player): grade spelling variants and one label rename,
+ * a near-duplicate pair that was never in one game (suggested), a same-game pair (never suggested, and a manual merge is refused), one
+ * merge made through the real merge code (so Recent merges has an undoable entry), a preferred name, and a hand-written season summary.
+ */
+async function seedDemoAdminTools(payload: Payload) {
+  const season = MATCH_SEED_SEASONS[MATCH_SEED_SEASONS.length - 1]
+  if ((await payload.count({ collection: 'matches', overrideAccess: true })).totalDocs === 0) {
+    console.log('[seed-demo] admin tools: no stored matches, skipped')
+    return
+  }
+  const have = await payload.count({ collection: 'players', where: { slug: { equals: 'jon-sample' } }, overrideAccess: true })
+  if (have.totalDocs > 0) {
+    console.log('[seed-demo] admin tools: already present, skipped')
+    return
+  }
+  const t = playerTables(payload)
+  const db = payload.db.drizzle
+  const stamp = new Date().toISOString()
+  const order = 1 // the newest seeded season (the demo season rows number it 1)
+  const person = async (first: string, last: string) => {
+    const [p] = await db.insert(t.players).values({ slug: `${first}-${last}`.toLowerCase(), firstName: first, lastName: last, displayName: `${first} ${last}`, source: 'playhq', bio: '', manualYears: '', isActiveDerived: true, hidden: false, createdAt: stamp, updatedAt: stamp }).returning({ id: t.players.id })
+    await db.insert(t.player_aliases).values({ nameKey: `${first}|${last}`.toLowerCase(), player: p.id, createdAt: stamp, updatedAt: stamp })
+    return p.id as number
+  }
+  const row = (player: number, teamId: string, teamName: string, gradeName: string, games = 6) =>
+    db.insert(t.player_seasons).values({ player, seasonName: season.name, seasonOrder: order, teamId, teamName, gradeName, games, batInnings: games, batRuns: games * 18, batHighScore: 44, batBalls: games * 30, createdAt: stamp, updatedAt: stamp })
+
+  // Near-duplicate pair: different spellings, same team, never in one game. The grade is spelled two ways ("2. " numbering).
+  const jon = await person('Jon', 'Sample')
+  const john = await person('John', 'Sample')
+  await row(jon, 'demo-district', 'Demo District', '2. Demo District')
+  await row(john, 'demo-district', 'Demo District', 'Demo District', 8)
+  // More spelling variants: "Demo B Grade" (most common) and "Demo B grade", plus a grade the club calls the same thing.
+  const bees = [await person('Bea', 'Sample'), await person('Ben', 'Sample'), await person('Bo', 'Sample')]
+  await row(bees[0], 'demo-b', 'Demo B', 'Demo B Grade')
+  await row(bees[1], 'demo-b', 'Demo B', 'Demo B Grade')
+  await row(bees[2], 'demo-b', 'Demo B', 'Demo B grade')
+  // Same-game pair: both listed in one imported game, so they are never suggested and a manual merge is refused.
+  const pat = await person('Pat', 'Twin')
+  const patrick = await person('Patrick', 'Twin')
+  await row(pat, 'demo-seconds', 'Demo Seconds', 'Demo Seconds')
+  await row(patrick, 'demo-seconds', 'Demo Seconds', 'Demo Seconds')
+  const [m] = await db.insert(t.matches).values({
+    gameId: 'imp:demo-twin-game', status: 'FINAL', type: 'oneDay', seasonName: season.name, seasonStartYear: season.startYear, competitionName: '', gradeName: 'Demo Seconds', localDate: `${season.startYear}-11-08`,
+    startsAt: `${season.startYear}-11-08T12:00:00.000Z`, days: 1, clubTeamId: 'import:demo-seconds', clubTeamName: 'Demo Seconds', opponentName: 'Demo Rovers', result: 'won', source: 'import', importBatch: 'imp-demo', sourceHash: 'demo', createdAt: stamp, updatedAt: stamp,
+  }).returning({ id: t.matches.id })
+  for (const [i, [id, key]] of ([[pat, 'pat|twin'], [patrick, 'patrick|twin']] as const).entries()) {
+    await db.insert(t.match_appearances).values({ match: m.id, appearanceId: `i${i + 1}`, teamId: 'import:demo-seconds', isClubSide: true, player: id, nameKey: key, createdAt: stamp, updatedAt: stamp })
+  }
+  // A merge done through the real code: the merge log (and its Undo) comes from it.
+  const mergeTarget = await person('Sam', 'Mergeable')
+  const mergeSource = await person('Sammy', 'Mergeable')
+  await row(mergeTarget, 'demo-b', 'Demo B', 'Demo B Grade', 5)
+  await row(mergeSource, 'demo-b', 'Demo B', 'Demo B Grade', 3)
+  const merged = await mergePlayerInto(payload, { sourceId: mergeSource, targetId: mergeTarget, userId: null })
+  if (!merged.ok) throw new Error(`[seed-demo] demo merge failed: ${merged.message}`)
+
+  // One label rename: the Seconds are shown as Demo B Grade everywhere.
+  const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
+  if (!settings?.stats?.labelRenames?.length) {
+    await payload.updateGlobal({ slug: 'site-settings', data: { stats: { ...(settings?.stats ?? {}), labelRenames: [{ kind: 'grade', from: 'Demo Seconds', to: 'Demo B Grade' }] } } as never, context: CTX })
+  }
+  // A preferred name (a nickname) on a demo player, and a hand-written (not AI) season summary.
+  const alex = await payload.find({ collection: 'players', where: { and: [{ firstName: { equals: 'Alex' } }, { lastName: { equals: 'Turner' } }] }, limit: 1, depth: 0, overrideAccess: true })
+  if (alex.docs[0] && !alex.docs[0].preferredName) await payload.update({ collection: 'players', id: alex.docs[0].id, data: { preferredName: 'Turbo' }, overrideAccess: true, context: CTX })
+  const book = await payload.find({ collection: 'yearbooks', where: { seasonName: { equals: season.name } }, limit: 1, depth: 0, overrideAccess: true })
+  if (book.docs[0] && !book.docs[0].seasonSummary) {
+    await payload.update({
+      collection: 'yearbooks', id: book.docs[0].id, overrideAccess: true, context: CTX,
+      data: { seasonSummary: 'A season of steady progress. The first grade side finished strongly and the seconds were the surprise of the year.\n\nThanks to every volunteer who kept the club running.' },
+    })
+  }
+  console.log('[seed-demo] admin tools: duplicate pair, same-game pair, one real merge, label rename, preferred name and season summary created')
 }
 
 async function main() {
@@ -358,6 +437,7 @@ async function main() {
 
     await seedDemoMatches(payload)
     await seedDemoStatLab(payload)
+    await seedDemoAdminTools(payload)
   } finally {
     await payload.destroy()
   }
