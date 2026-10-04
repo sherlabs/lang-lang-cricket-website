@@ -43,7 +43,7 @@ export function dateParts(localDate: string): { day: string; month: string } {
 }
 
 /** ISO instant → full date in the club's timezone (CLUB_TIMEZONE). */
-export function formatIsoMelbourne(iso: string): string {
+export function formatIsoClubTime(iso: string): string {
   return assemble(new Date(iso), CLUB_TIMEZONE, true)
 }
 

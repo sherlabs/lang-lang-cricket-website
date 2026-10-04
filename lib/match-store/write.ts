@@ -15,18 +15,36 @@ export type UpsertAction = 'created' | 'updated' | 'unchanged'
 /** `nameKey` to player id, as read from `player_aliases` after the sync's new-player insert. */
 export type AliasMap = ReadonlyMap<string, number>
 
-export async function upsertMatchBundle(payload: Payload, bundle: MatchBundle, aliasMap: AliasMap): Promise<UpsertAction> {
+/** `gameId` to the stored identity, hash and fixture stamp of each match: one query instead of a SELECT per game. */
+export type StoredMatchIndex = Map<string, { id: number; sourceHash: string | null; playhqUpdatedAt: string | null }>
+
+export async function storedMatchIndex(payload: Payload): Promise<StoredMatchIndex> {
+  const t = matchTables(payload)
+  const rows: { gameId: string; id: number; sourceHash: string | null; playhqUpdatedAt: string | null }[] = await payload.db.drizzle
+    .select({ gameId: t.matches.gameId, id: t.matches.id, sourceHash: t.matches.sourceHash, playhqUpdatedAt: t.matches.playhqUpdatedAt })
+    .from(t.matches)
+  return new Map(rows.map((r) => [r.gameId, { id: Number(r.id), sourceHash: r.sourceHash, playhqUpdatedAt: r.playhqUpdatedAt }]))
+}
+
+/**
+ * `index` (from `storedMatchIndex`, read once per run) replaces the per-game SELECT. It is only a cache of what was
+ * stored when the run began: a game missing from it is simply written (the upsert is on `gameId`, so a row stored in
+ * the meantime is updated, not duplicated).
+ */
+export async function upsertMatchBundle(payload: Payload, bundle: MatchBundle, aliasMap: AliasMap, index?: StoredMatchIndex): Promise<UpsertAction> {
   const t = matchTables(payload)
   const db = payload.db.drizzle
   const { match } = bundle
 
   // Unchanged rows: no transaction and no write (a changed fixture stamp alone only touches two columns,
   // so the nightly sync does not refetch an unchanged scorecard every night).
-  const [existing] = await db
-    .select({ id: t.matches.id, sourceHash: t.matches.sourceHash, playhqUpdatedAt: t.matches.playhqUpdatedAt })
-    .from(t.matches)
-    .where(eq(t.matches.gameId, match.gameId))
-    .limit(1)
+  const [existing] = index
+    ? [index.get(match.gameId)].filter((e): e is NonNullable<typeof e> => Boolean(e))
+    : await db
+        .select({ id: t.matches.id, sourceHash: t.matches.sourceHash, playhqUpdatedAt: t.matches.playhqUpdatedAt })
+        .from(t.matches)
+        .where(eq(t.matches.gameId, match.gameId))
+        .limit(1)
   if (existing && existing.sourceHash === bundle.sourceHash) {
     if (match.playhqUpdatedAt && existing.playhqUpdatedAt !== match.playhqUpdatedAt) {
       const stamp = new Date().toISOString()
@@ -80,7 +98,7 @@ export async function upsertMatchBundle(payload: Payload, bundle: MatchBundle, a
 /**
  * Makes every club-side appearance follow `player_aliases` (one UPDATE, one table). Runs after the
  * alias heal step of every sync: it links rows whose alias was added later, restores rows whose
- * player was deleted (`ON DELETE SET NULL`), and follows a hand-edited alias. Returns the rows changed.
+ * player was deleted (`ON DELETE SET NULL`), and follows a hand-edited alias, and clears a link whose alias was deleted. Returns the rows changed.
  */
 export async function relinkMatchPlayers(payload: Payload): Promise<number> {
   const stamp = new Date().toISOString()
@@ -90,7 +108,15 @@ export async function relinkMatchPlayers(payload: Payload): Promise<number> {
         `FROM "${MATCH_SCHEMA}"."player_aliases" pa WHERE ma."name_key" = pa."name_key" AND ma."is_club_side" = true AND ma."player_id" IS DISTINCT FROM pa."player_id"`,
     ),
   )
-  return Number((res as { rowCount?: number }).rowCount ?? 0)
+  // A hand-deleted alias: the club-side row keeps a link that nothing backs any more, so clear it.
+  const cleared = await payload.db.drizzle.execute(
+    sql.raw(
+      `UPDATE "${MATCH_SCHEMA}"."match_appearances" ma SET "player_id" = NULL, "updated_at" = '${stamp}' ` +
+        `WHERE ma."is_club_side" = true AND ma."player_id" IS NOT NULL AND ma."name_key" IS NOT NULL ` +
+        `AND NOT EXISTS (SELECT 1 FROM "${MATCH_SCHEMA}"."player_aliases" pa WHERE pa."name_key" = ma."name_key")`,
+    ),
+  )
+  return Number((res as { rowCount?: number }).rowCount ?? 0) + Number((cleared as { rowCount?: number }).rowCount ?? 0)
 }
 
 export type MatchStoreStats = { matches: number; innings: number; appearances: number; batting: number; bowling: number; fielding: number; lastSyncedAt: string | null }
@@ -106,15 +132,6 @@ export async function matchStoreStats(payload: Payload): Promise<MatchStoreStats
     batting: await n(t.match_batting), bowling: await n(t.match_bowling), fielding: await n(t.match_fielding),
     lastSyncedAt: (last?.at as string | null) ?? null,
   }
-}
-
-/** gameId to the fixture `updatedAt` stored with it, for the stale-cache rule (a differing stamp means the scorecard was corrected). */
-export async function storedFixtureStamps(payload: Payload): Promise<Map<string, string | null>> {
-  const t = matchTables(payload)
-  const rows: { gameId: string; playhqUpdatedAt: string | null }[] = await payload.db.drizzle
-    .select({ gameId: t.matches.gameId, playhqUpdatedAt: t.matches.playhqUpdatedAt })
-    .from(t.matches)
-  return new Map(rows.map((r) => [r.gameId, r.playhqUpdatedAt]))
 }
 
 /**

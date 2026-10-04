@@ -77,7 +77,7 @@ export const Club: GlobalConfig = {
               name: 'siteUrl',
               type: 'text',
               defaultValue: d.siteUrl,
-              admin: { description: 'Canonical site URL (no trailing slash). Drives canonical links, the sitemap and structured data.' },
+              admin: { description: 'Canonical site URL (no trailing slash). Drives canonical links, the sitemap and structured data. When the CANONICAL_HOST environment variable is set (always, in production) that host is used instead of this value.' },
             },
             { name: 'logo', type: 'upload', relationTo: 'media', admin: { description: `Falls back to ${d.assets.logo}.` } },
             { name: 'locale', type: 'text', defaultValue: d.locale },

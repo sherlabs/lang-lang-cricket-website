@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatLocalDate, formatLocalTime, dateParts, formatIsoMelbourne, seasonHref } from '@/lib/playhq/format'
+import { formatLocalDate, formatLocalTime, dateParts, formatIsoClubTime, seasonHref } from '@/lib/playhq/format'
 
 describe('format', () => {
   it('local date', () => {
@@ -12,7 +12,7 @@ describe('format', () => {
     expect(formatLocalTime('09:30:00')).toBe('9:30 am')
     expect(formatLocalTime(null)).toBeNull()
   })
-  it('iso → Melbourne', () => expect(formatIsoMelbourne('2025-10-25T02:00:00.000Z')).toBe('Sat 25 Oct 2025'))
+  it('iso → club time', () => expect(formatIsoClubTime('2025-10-25T02:00:00.000Z')).toBe('Sat 25 Oct 2025'))
   it('hrefs', () => {
     expect(seasonHref('/fixtures', 'Summer 2026/27')).toBe('/fixtures?season=Summer%202026%2F27')
     expect(seasonHref('/fixtures', 'Summer 2026/27', 'abc')).toBe('/fixtures?season=Summer%202026%2F27&team=abc')

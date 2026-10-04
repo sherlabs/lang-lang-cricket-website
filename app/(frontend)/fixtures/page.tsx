@@ -11,7 +11,7 @@ import { LadderTable } from '@/components/playhq/ladder-table'
 import { PlayerStatsTables } from '@/components/playhq/player-stats-tables'
 import { PlayHQUnavailable } from '@/components/playhq/playhq-unavailable'
 import { resolveSeason, getClubGames, getLadder, getTeamPlayerStats, isFinished, mapLimit, sortResults, sortUpcoming } from '@/lib/playhq'
-import { todayMelbourne } from '@/lib/playhq/games'
+import { todayClubTime } from '@/lib/playhq/games'
 import { groupByDate, latestResultsWindow, nextRoundWindow } from '@/lib/playhq/rounds'
 import type { ClubTeam, Game, Ladder, SeasonGroup } from '@/lib/playhq/types'
 import { formatLocalDate, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
@@ -124,7 +124,7 @@ async function loadLadders(teams: ClubTeam[]) {
 
 async function HubView({ season, teams, games }: { season: string; teams: ClubTeam[]; games: Game[] }) {
   const club = await getClub()
-  const today = todayMelbourne()
+  const today = todayClubTime()
   const nextUp = nextRoundWindow(games, today)
   const remaining = sortUpcoming(games.filter((g) => !isFinished(g) && (g.localDate ?? '9999-12-31') >= today))
   const latest = latestResultsWindow(games, today)

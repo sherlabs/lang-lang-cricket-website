@@ -36,7 +36,9 @@ async function main() {
     const club = await payload.findGlobal({ slug: 'club', depth: 0 })
     const host = new URL(club.siteUrl || clubDefaults.siteUrl).host
     if (host !== canonical) {
-      console.warn(`[seed-club] warning: club.siteUrl host "${host}" differs from CANONICAL_HOST "${canonical}" (redirects use CANONICAL_HOST)`)
+      throw new Error(
+        `[seed-club] club.siteUrl host "${host}" differs from CANONICAL_HOST "${canonical}". The site uses CANONICAL_HOST for canonical links; fix Club details > Site URL or the env so they agree.`,
+      )
     }
   } finally {
     await payload.destroy()

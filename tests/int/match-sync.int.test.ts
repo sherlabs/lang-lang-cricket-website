@@ -26,6 +26,7 @@ const phq = vi.hoisted(() => ({
   stamps: {} as Record<string, string>,
   raw: {} as Record<string, unknown>,
   calls: [] as { id: string; fresh: boolean | undefined }[],
+  fail: new Set<string>(),
 }))
 
 vi.mock('@/lib/playhq/queries', async () => {
@@ -45,6 +46,7 @@ vi.mock('@/lib/playhq/queries', async () => {
     }),
     getRawGameSummary: vi.fn(async (id: string, opts?: { fresh?: boolean }) => {
       phq.calls.push({ id, fresh: opts?.fresh })
+      if (phq.fail.has(id)) throw new Error('PlayHQ timeout')
       return phq.raw[id]
     }),
     isJuniorGrade: vi.fn(() => false),
@@ -65,6 +67,7 @@ beforeEach(async () => {
   phq.stamps = { [twoDay.data.id]: '2025-11-02T00:00:00.000Z', [oneDay.data.id]: '2025-10-26T00:00:00.000Z' }
   phq.raw = { [twoDay.data.id]: clone(twoDay.data), [oneDay.data.id]: clone(oneDay.data) }
   phq.calls = []
+  phq.fail = new Set()
   cache.revalidateTag.mockClear()
   await resetPlayers(payload)
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -171,5 +174,51 @@ describe('players sync writes the match store', () => {
     await syncPlayers(payload)
     expect(await count('matches')).toBe(2)
     expect(await latestRun()).toMatchObject({ matchError: 0, matchesUpserted: 2 })
+  })
+
+  it('a scorecard that fails to fetch keeps that team-season\'s previous season rows and notes the partial run', async () => {
+    const { syncPlayers } = await import('@/lib/players/sync')
+    await syncPlayers(payload)
+    const t = playerTables(payload)
+    const before = (await payload.db.drizzle.select().from(t.player_seasons)) as R[]
+    expect(before.some((r) => r.teamId === B_GRADE)).toBe(true)
+    phq.fail.add(twoDay.data.id)
+    expect((await syncPlayers(payload)).status).toBe('ok')
+    const after = (await payload.db.drizzle.select().from(t.player_seasons)) as R[]
+    expect(after).toHaveLength(before.length)
+    expect(after.filter((r) => r.teamId === B_GRADE).map((r) => r.batRuns).sort()).toEqual(before.filter((r) => r.teamId === B_GRADE).map((r) => r.batRuns).sort())
+    const run = await latestRun()
+    expect(run.status).toBe('ok')
+    expect(run.error).toMatch(/Partial run/)
+  })
+
+  it('a team-season whose every listed game became club-versus-club is pruned from the store', async () => {
+    const { syncPlayers } = await import('@/lib/players/sync')
+    await syncPlayers(payload)
+    expect(await count('matches')).toBe(2)
+    ;(phq.raw[oneDay.data.id] as typeof oneDay.data).teams[0].organisation.id = ORG
+    await syncPlayers(payload)
+    expect((await matchRows()).map((r) => r.gameId)).toEqual([twoDay.data.id])
+  })
+
+  it('a run row left running past the lock window (killed by the platform) is closed as an error by the next run', async () => {
+    const { syncPlayers } = await import('@/lib/players/sync')
+    const old = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const t = playerTables(payload)
+    await payload.db.drizzle.insert(t.player_sync_runs).values({ status: 'running', startedAt: old, playersCreated: 0, seasonRows: 0, createdAt: old, updatedAt: old })
+    expect((await syncPlayers(payload)).status).toBe('ok')
+    const rows = (await payload.db.drizzle.select().from(t.player_sync_runs)) as R[]
+    const stale = rows.find((r) => new Date(r.startedAt).toISOString() === old)!
+    expect(stale.status).toBe('error')
+    expect(stale.error).toMatch(/did not finish/)
+  })
+
+  it('past the collect deadline unstored scorecards are not fetched and their pairs are partial', async () => {
+    const { collectSeniorData } = await import('@/lib/players/sync')
+    const data = await collectSeniorData({ stored: new Map(), deadlineAt: 0 })
+    expect(data.deferred).toBe(2)
+    expect(data.partialPairs).toHaveLength(2)
+    expect(data.matches).toHaveLength(0)
+    expect(phq.calls).toHaveLength(0)
   })
 })

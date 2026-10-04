@@ -32,7 +32,12 @@ export async function readStoredBundles(payload: Payload, filter?: { gameIds?: s
   ])
   const group = (rows: Row[]) => {
     const out = new Map<number, Row[]>()
-    for (const r of rows) out.set(Number(r.match), [...(out.get(Number(r.match)) ?? []), r])
+    for (const r of rows) {
+      const k = Number(r.match)
+      const list = out.get(k)
+      if (list) list.push(r)
+      else out.set(k, [r])
+    }
     return out
   }
   const inn = group(innings), app = group(appearances), bat = group(batting), bowl = group(bowling), fld = group(fielding)

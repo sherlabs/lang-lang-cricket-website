@@ -59,3 +59,14 @@ describe('resolveClub (spec §4.1: the global merged over the defaults module)',
     expect(mergeOver({ a: 'x', n: 1 }, { a: 5, n: 2, extra: true })).toEqual({ a: 'x', n: 2 })
   })
 })
+
+describe('siteUrl follows CANONICAL_HOST', () => {
+  it('an explicit canonical host wins over the saved or seeded Club details URL', () => {
+    expect(resolveClub(null, undefined, null, 'newclub.example').siteUrl).toBe('https://newclub.example')
+    expect(resolveClub({ updatedAt: 'x', siteUrl: 'https://old.example/' }, undefined, null, 'https://newclub.example/').siteUrl).toBe('https://newclub.example')
+  })
+  it('with no canonical host the Club details value is used, without a trailing slash', () => {
+    expect(resolveClub({ updatedAt: 'x', siteUrl: 'https://old.example/' }, undefined, null, undefined).siteUrl).toBe('https://old.example')
+    expect(resolveClub({ updatedAt: 'x', siteUrl: 'https://old.example/' }, undefined, null, '  ').siteUrl).toBe('https://old.example')
+  })
+})

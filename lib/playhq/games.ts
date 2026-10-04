@@ -60,7 +60,7 @@ export function dedupeGames(games: Game[]): Game[] {
 }
 
 /** `YYYY-MM-DD` for today in the club's timezone ('en-CA' formats as ISO). */
-export function todayMelbourne(now = new Date()): string {
+export function todayClubTime(now = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: CLUB_TIMEZONE }).format(now)
 }
 

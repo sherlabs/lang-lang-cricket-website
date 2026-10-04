@@ -32,8 +32,8 @@ function offsetMs(instant: Date): number {
 }
 
 /**
- * Event dates are Melbourne wall-clock values stored as UTC (see lib/event-occurrences.ts).
- * Returns ISO 8601 with the correct Melbourne offset for that wall-clock moment (+10:00 / +11:00).
+ * Event dates are club-timezone wall-clock values stored as UTC (see lib/event-occurrences.ts).
+ * Returns ISO 8601 with the correct club-timezone offset (CLUB_TIMEZONE) for that wall-clock moment (+10:00 / +11:00).
  */
 export function melbourneIso(wall: Date): string {
   const first = new Date(wall.getTime() - offsetMs(wall))

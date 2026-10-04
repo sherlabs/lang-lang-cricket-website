@@ -14,7 +14,10 @@
 import config from '@payload-config'
 import { appendFileSync, writeFileSync } from 'node:fs'
 import { getPayload } from 'payload'
+import { desc } from '@payloadcms/db-postgres/drizzle'
 import { matchTables } from '../../lib/match-store/db'
+import { isLocked } from '../../lib/players/lock'
+import { playerTables } from '../../lib/players/db'
 import { estimateSeconds, parseBackfillArgs, planBackfill, selectSeasons, type FixtureGame, type StoredStamp } from '../../lib/match-store/backfill'
 import { pairKey, reconcileMatchStore } from '../../lib/match-store/reconcile'
 import { relinkMatchPlayers, upsertMatchBundle } from '../../lib/match-store/write'
@@ -79,6 +82,14 @@ async function main() {
   const t = matchTables(payload)
   const db = payload.db.drizzle
   try {
+    if (args.apply) {
+      // The nightly sync replaces the same match rows; two writers on one game can collide on the unique keys.
+      const runs = playerTables(payload).player_sync_runs
+      const [latest] = await db.select().from(runs).orderBy(desc(runs.startedAt)).limit(1)
+      if (latest && isLocked({ status: latest.status, startedAt: new Date(latest.startedAt) }, new Date())) {
+        throw new Error('A player sync is running right now (started ' + new Date(latest.startedAt).toISOString() + '). Wait for it to finish (it ends within minutes), then run this again. The nightly cron is at 17:00 UTC.')
+      }
+    }
     // 1. Seasons, teams and team fixtures (no summary calls).
     const groups = (await getSeasonGroups()).filter((s) => s.seasons.some((x) => !x.isJunior))
     const names = selectSeasons(groups.map((s) => s.name), args.seasons)

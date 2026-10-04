@@ -33,6 +33,14 @@ describe('checkTheme', () => {
     expect(fails.map((x) => x.id)).toContain('text-white')
     expect(fails.find((x) => x.id === 'text-white')!.fields).toContain('palette.text')
   })
+  it('errors on low-contrast pairs the site really uses (muted/charcoal on card fill, white on ink, deep accent on band)', () => {
+    const bad = colorsFromForm(
+      { palette: { muted: '#9A9A9A', surface: '#D8D2B0' }, shades: { ink: '#FFFFFF', surfaceMuted: '#9A9A9A' } },
+      seed,
+    )
+    const ids = checkTheme(bad).filter((x) => x.level === 'error' && !x.pass).map((x) => x.id)
+    expect(ids).toEqual(expect.arrayContaining(['muted-stone', 'white-ink', 'deep-surface', 'deep-stone']))
+  })
   it('ignores invalid hex in the form value (falls back to the base)', () => {
     expect(colorsFromForm({ palette: { text: 'nope' } }, seed).charcoal).toBe(seed.charcoal)
   })

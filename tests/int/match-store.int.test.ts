@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
 import { MATCH_COLUMN_KEYS, matchTables, type MatchTables } from '@/lib/match-store/db'
 import { getMatchByGameId } from '@/lib/match-store/queries'
-import { matchStoreStats, pruneStaleMatches, relinkMatchPlayers, upsertMatchBundle } from '@/lib/match-store/write'
+import { matchStoreStats, pruneStaleMatches, relinkMatchPlayers, storedMatchIndex, upsertMatchBundle } from '@/lib/match-store/write'
 import { isSkip, mapMatchBundle, type MatchBundle } from '@/lib/playhq/match-rows'
 import type { RawGameSummary } from '@/lib/playhq/types'
 import { generateMatchSeed, MATCH_SEED_HIDDEN_KEY } from '../../payload/scripts/fixtures/match-seed-data'
@@ -152,6 +152,28 @@ describe('match store tables', () => {
     const newId = await addPlayer(first, last, { slug: 'replacement' })
     await relinkMatchPlayers(payload)
     expect((await db().select().from(t.match_appearances)).filter((a: R) => a.player === newId)).toHaveLength(1)
+  })
+
+  it('relink clears a link whose alias was deleted by hand while the player stays', async () => {
+    const b = oneDayBundle()
+    const key = b.appearances.find((a) => a.isClubSide)!.nameKey!
+    const [first, last] = key.split('|')
+    const id = await addPlayer(first, last)
+    await upsertMatchBundle(payload, b, new Map([[key, id]]))
+    await db().execute(sql.raw(`DELETE FROM "payload"."player_aliases" WHERE player_id = ${id}`))
+    expect((await db().select().from(t.match_appearances)).filter((a: R) => a.player === id)).toHaveLength(1)
+    expect(await relinkMatchPlayers(payload)).toBe(1)
+    expect((await db().select().from(t.match_appearances)).filter((a: R) => a.player === id)).toHaveLength(0)
+  })
+
+  it('an index read once replaces the per-game SELECT: unchanged is detected, and a game missing from it is still written', async () => {
+    const bundle = oneDayBundle()
+    await upsertMatchBundle(payload, bundle, new Map())
+    const index = await storedMatchIndex(payload)
+    expect(index.get(bundle.match.gameId)).toMatchObject({ sourceHash: bundle.sourceHash })
+    expect(await upsertMatchBundle(payload, bundle, new Map(), index)).toBe('unchanged')
+    expect(await upsertMatchBundle(payload, bundle, new Map(), new Map())).toBe('created') // stale index: upsert on gameId, no duplicate
+    expect(await db().select().from(t.matches)).toHaveLength(1)
   })
 
   it('the unique keys reject duplicates', async () => {

@@ -1953,7 +1953,7 @@ export interface Club {
   tagline?: string | null;
   sport?: string | null;
   /**
-   * Canonical site URL (no trailing slash). Drives canonical links, the sitemap and structured data.
+   * Canonical site URL (no trailing slash). Drives canonical links, the sitemap and structured data. When the CANONICAL_HOST environment variable is set (always, in production) that host is used instead of this value.
    */
   siteUrl?: string | null;
   /**
@@ -2256,7 +2256,7 @@ export interface Theme {
     mutedLight: string;
   };
   /**
-   * A PNG with a transparent background, at least 512 pixels tall. It is shown on a white tile in the menu, footer and admin sign-in, and on the stat cards. If empty, the logo in Club details is used, then the bundled crest.
+   * A PNG (or JPEG; no SVG or WebP) with a transparent background, at least 512 pixels tall. It is shown on a white tile in the menu, footer and admin sign-in, and on the stat cards. If empty, the logo in Club details is used, then the bundled crest.
    */
   crest?: (number | null) | Media;
   /**

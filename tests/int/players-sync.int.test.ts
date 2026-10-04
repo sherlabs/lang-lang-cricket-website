@@ -195,15 +195,16 @@ describe('players sync', () => {
     expect(latest).toMatchObject({ status: 'error', error: 'PlayHQ 503' })
   })
 
-  it('the wipe guard refuses to replace existing seasons with nothing', async () => {
+  it('when every scorecard fails the existing seasons are kept untouched and the run notes it was partial', async () => {
     const { syncPlayers } = await import('@/lib/players/sync')
     await syncPlayers(payload)
     const before = await snapshot()
     phq.summariesFail = true
     const r = await syncPlayers(payload)
-    expect(r.status).toBe('error')
-    expect(r.error).toMatch(/refusing to wipe seasons/)
+    expect(r.status).toBe('ok')
     expect(await snapshot()).toEqual(before)
+    const latest = (await payload.find({ collection: 'player-sync-runs', sort: '-startedAt', limit: 1, depth: 0 })).docs[0]
+    expect(latest.error).toMatch(/Partial run/)
   })
 
   it('heals a PlayHQ player whose alias is missing instead of creating a duplicate', async () => {

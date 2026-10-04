@@ -57,14 +57,17 @@ export const PLAYHQ_DEFAULTS = {
  */
 export const BRANDING = { logo: '/assets/branding/logo.png' } as const
 
-/** Throws, on Vercel production and preview, when a value with no fallback there is unset. Called from instrumentation.ts (not at build). */
+/**
+ * Throws, outside development and test (Vercel production and preview, or any self-hosted `next start`),
+ * when a value with no fallback there is unset. Called from instrumentation.ts (not at build).
+ */
 export function assertClubEnv(e: Record<string, string | undefined> = process.env): void {
-  if (e.VERCEL_ENV !== 'production' && e.VERCEL_ENV !== 'preview') return
-  const required = ['PLAYHQ_ORG_ID', 'PLAYHQ_TEAM_PREFIX', 'CANONICAL_HOST']
+  if (allowSeedFallbacks(e)) return
+  const required = ['PLAYHQ_ORG_ID', 'PLAYHQ_TEAM_PREFIX', 'CANONICAL_HOST', 'COOKIE_PREFIX']
   const missing = required.filter((k) => !e[k]?.trim())
   if (missing.length) {
     throw new Error(
-      `Club settings are missing: ${missing.join(', ')}. Set them in the Vercel environment (production and preview) (see .env.example). ` +
+      `Club settings are missing: ${missing.join(', ')}. Set them in the deployment environment (see .env.example). ` +
         'They have no default in production so that one club never shows another club\'s data.',
     )
   }

@@ -24,13 +24,14 @@ async function loadCrestUncached(crestUrl: string): Promise<string | null> {
       const res = await fetch(crestUrl, { signal: AbortSignal.timeout(LOGO_TIMEOUT_MS) })
       const type = res.headers.get('content-type')
       if (res.ok && isDrawableImageType(type)) return asDataUri(Buffer.from(await res.arrayBuffer()), type!.split(';')[0])
+      console.warn(`[og] crest ${crestUrl} is not a drawable PNG/JPEG (status ${res.status}, type ${type}); using the bundled crest`)
     } else if (/\.(png|jpe?g)$/i.test(crestUrl)) {
       const publicDir = path.join(process.cwd(), 'public')
       const file = path.join(publicDir, crestUrl.replace(/^\/+/, ''))
-      if (file.startsWith(publicDir)) return asDataUri(await readFile(file), /\.png$/i.test(file) ? 'image/png' : 'image/jpeg')
+      if (file.startsWith(publicDir + path.sep)) return asDataUri(await readFile(file), /\.png$/i.test(file) ? 'image/png' : 'image/jpeg')
     }
-  } catch {
-    // fall through to the bundled crest
+  } catch (err) {
+    console.warn(`[og] crest ${crestUrl} could not be loaded (${err instanceof Error ? err.message : err}); using the bundled crest`)
   }
   try {
     return asDataUri(await readFile(path.join(process.cwd(), 'public', BRANDING.logo)), 'image/png')

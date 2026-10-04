@@ -10,7 +10,7 @@ import { getGameSummaryAuto, isInningsPlayed as played, PlayHQError } from '@/li
 import type { Scorecard } from '@/lib/playhq/types'
 import { truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
-import { formatIsoMelbourne, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
+import { formatIsoClubTime, PLAYHQ_CLUB_URL, seasonHref } from '@/lib/playhq/format'
 
 export const revalidate = 900
 
@@ -91,7 +91,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (loaded.kind !== 'ok') return { title: titleWithSuffix(site, 'Scorecard') }
   const { club, opp } = sides(loaded.sc)
   const { sc } = loaded
-  const date = sc.startsAt ? formatIsoMelbourne(sc.startsAt) : null
+  const date = sc.startsAt ? formatIsoClubTime(sc.startsAt) : null
   const result = buildResult(sc)
   const description = result
     ? `${result}${sc.gradeName ? ` (${sc.gradeName})` : ''}.`
@@ -125,7 +125,7 @@ export default async function GamePage(props: Props) {
 
   const { club, opp } = sides(sc)
   const result = buildResult(sc)
-  const date = sc.startsAt ? formatIsoMelbourne(sc.startsAt) : null
+  const date = sc.startsAt ? formatIsoClubTime(sc.startsAt) : null
   const eyebrow = [sc.gradeName, sc.roundName].filter(Boolean).join(' · ')
   const innings = sc.innings.filter(played)
   const pending = innings.length === 0

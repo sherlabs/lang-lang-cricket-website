@@ -54,7 +54,7 @@ export const Theme: GlobalConfig = {
             global: 'theme',
             errors: failing.map((r) => ({
               path: r.fields[0],
-              message: `${r.label}: contrast ${r.ratio.toFixed(2)} to 1, needs at least ${r.min} to 1. Pick colours that are further apart in lightness.`,
+              message: `${r.label}: contrast ${r.ratio.toFixed(2)} to 1, needs at least ${r.min} to 1. Make the lighter colour lighter or the darker colour darker. Colours involved: ${r.fields.map((f) => f.split('.')[1]).join(', ')}.`,
             })),
           })
         }
@@ -108,9 +108,11 @@ export const Theme: GlobalConfig = {
       label: 'Club crest',
       type: 'upload',
       relationTo: 'media',
+      // The stat cards can only draw PNG and JPEG; any other type would silently fall back to the bundled crest.
+      filterOptions: { mimeType: { in: ['image/png', 'image/jpeg'] } },
       admin: {
         description:
-          'A PNG with a transparent background, at least 512 pixels tall. It is shown on a white tile in the menu, footer and admin sign-in, and on the stat cards. If empty, the logo in Club details is used, then the bundled crest.',
+          'A PNG (or JPEG; no SVG or WebP) with a transparent background, at least 512 pixels tall. It is shown on a white tile in the menu, footer and admin sign-in, and on the stat cards. If empty, the logo in Club details is used, then the bundled crest.',
       },
     },
     {

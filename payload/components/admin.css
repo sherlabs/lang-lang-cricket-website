@@ -784,3 +784,54 @@ a[href$='/forgot'] {
   color: var(--club-grey);
   font-variant-numeric: tabular-nums;
 }
+
+/* ===== Site look: live sample, swatches and helper buttons (payload/components/ThemeContrast.tsx) ===== */
+.theme-sample {
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.theme-sample__note {
+  margin: 0;
+  color: var(--club-grey);
+  font-size: 0.875rem;
+}
+.theme-sample__band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.1);
+}
+.theme-sample__button,
+.theme-sample__chip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.theme-sample__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.theme-sample__swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.theme-sample__swatch > span {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.25);
+}
+.theme-sample__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

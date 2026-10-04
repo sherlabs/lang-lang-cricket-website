@@ -12,7 +12,9 @@ import { hexToChannels } from '../lib/theme/tokens'
 const root = path.resolve(__dirname, '..')
 
 /** Scanned roots. The seed file `payload/seed/theme-defaults.ts` is the ONLY place allowed to hold brand hex, and it is outside these roots. */
-const ROOTS = ['app', 'components', 'lib', 'payload/components', 'payload/globals', 'config', 'tailwind.config.ts']
+const ROOTS = ['app', 'components', 'lib', 'payload', 'config', 'tailwind.config.ts']
+/** Seed data, one-off scripts and migrations legitimately hold Lang Lang values (the preset), so they are never scanned. */
+const SKIP_DIRS = ['payload/seed', 'payload/scripts', 'payload/migrations']
 const EXT = /\.(ts|tsx|css|scss|mjs|js)$/
 /** Neutral constants (not theme values), named once in lib/theme/og.tsx. Three-digit #fff and #000 are always legal. */
 const NEUTRAL_HEX = /^#(ffffff|000000)([0-9a-f]{2})?$/i
@@ -22,7 +24,9 @@ function walk(p: string, out: string[] = []): string[] {
   if (statSync(full).isDirectory()) {
     for (const e of readdirSync(full)) {
       if (e === 'node_modules' || e === '.next' || e === 'importMap.js') continue
-      walk(path.join(p, e), out)
+      const child = path.join(p, e)
+      if (SKIP_DIRS.includes(child)) continue
+      walk(child, out)
     }
   } else if (EXT.test(p)) out.push(p)
   return out
@@ -30,6 +34,13 @@ function walk(p: string, out: string[] = []): string[] {
 
 const files = ROOTS.flatMap((r) => walk(r))
 const stripped = (rel: string) => readFileSync(path.join(root, rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+
+/** Code with comments removed (block and line), for the club-name guard: names in comments are harmless. */
+const code = (rel: string) =>
+  stripped(rel)
+    .split('\n')
+    .map((l) => l.replace(/(^|[^:])\/\/.*$/, '$1'))
+    .join('\n')
 
 const seed = Object.values(resolveTheme(null).colors)
 const triples = seed.map((h) => hexToChannels(h).split(' '))
@@ -59,6 +70,18 @@ describe('no brand hex in code', () => {
         if (!NEUTRAL_HEX.test(m[0])) bad.push(`${f}: ${m[0]}`)
       }
     }
+    expect(bad).toEqual([])
+  })
+})
+
+/** The only non-seed files that may name the club: the per-club build file (env defaults for dev and test). */
+const NAME_ALLOWLIST = ['config/site.ts']
+const CLUB_NAME = /lang ?lang|caldermeade|llcc/i
+
+describe('no club name in code', () => {
+  it('Lang Lang, Caldermeade and llcc appear only in seeds, scripts, migrations and config/site.ts', () => {
+    const scanned = [...files, 'next.config.ts', 'payload.config.ts', 'instrumentation.ts']
+    const bad = scanned.filter((f) => !NAME_ALLOWLIST.includes(f) && CLUB_NAME.test(code(f)))
     expect(bad).toEqual([])
   })
 })

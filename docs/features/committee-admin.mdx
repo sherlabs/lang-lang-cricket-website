@@ -35,4 +35,5 @@ Sign in at `/admin`. Use Home for the common jobs, the left menu for lists, and 
 ## Not included / deferred
 
 - No notification centre, display-name overrides or grade renames ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11)); no member directory, fees, rosters, meeting minutes or bulk email ([#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24) to [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29)).
+- The committee sidebar is at its cap of 16 entries (`tests/admin-visibility.test.ts` records each raise and why). The next committee-run feature must group entries (for example one "Website content" entry for Pages and News) or move a rarely used one, such as Season yearbooks or Club history stories, under Advanced. Pages still shows editors the "Published on" and "Menu order" fields; they are plain helper-texted fields, not hidden.
 - Upload fields still offer both "Add new" and "Choose from existing" (a Payload limit). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

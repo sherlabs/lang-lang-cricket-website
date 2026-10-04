@@ -61,6 +61,16 @@ export function mergeOver<T>(base: T, over: unknown): T {
 const mediaUrl = (m: MediaLike): string | null => (m && typeof m === 'object' && m.url ? m.url : null)
 
 /**
+ * The public site URL. An explicit `CANONICAL_HOST` env wins (it is required in production and already drives the
+ * redirects), so a club that sets it can never publish canonicals, sitemap entries or structured data pointing at the
+ * seeded domain. With no env (local dev) the Club details value is used.
+ */
+export function siteUrlFor(canonicalHost: string | undefined, fromClub: string): string {
+  const host = canonicalHost?.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '')
+  return host ? `https://${host}` : fromClub.replace(/\/+$/, '')
+}
+
+/**
  * `doc` is the `findGlobal('club', depth 1)` result. A never-saved global (no `updatedAt`)
  * yields the defaults verbatim, so an unseeded site renders exactly as before.
  */
@@ -68,6 +78,7 @@ export function resolveClub(
   doc: Record<string, unknown> | null | undefined,
   defaults: ClubDefaults = clubDefaults,
   apparelDoc: Record<string, unknown> | null | undefined = null,
+  canonicalHost: string | undefined = process.env.CANONICAL_HOST,
 ): ResolvedClub {
   const saved = Boolean(doc && doc.updatedAt)
   const merged = saved ? mergeOver(defaults, doc) : defaults
@@ -77,7 +88,7 @@ export function resolveClub(
   return {
     ...merged,
     apparel: resolveApparel(apparelDoc),
-    siteUrl: merged.siteUrl.replace(/\/+$/, ''),
+    siteUrl: siteUrlFor(canonicalHost, merged.siteUrl),
     logoUrl: mediaUrl(logo) ?? defaults.assets.logo,
     ogImage:
       ogUrl && og && typeof og === 'object'
