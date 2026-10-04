@@ -308,9 +308,13 @@ describe('seeded games', () => {
   it('merging two players repoints their appearances with one update and the names still resolve', async () => {
     await seedMatchStore(payload, { clubOrgId: ORG })
     const players = await db().select().from(t.players)
-    const byName = (n: string) => players.find((p: R) => p.displayName === n)!
-    const source = byName('Corey Ashby'), target = byName('Evan Brennan')
+    const apps = (await db().select().from(t.match_appearances)) as R[]
     const count = async (id: number) => (await db().select().from(t.match_appearances)).filter((a: R) => a.player === id).length
+    // Two players who never played the same game (the merge refuses a shared game), the first with several appearances.
+    const gamesOf = (id: number) => new Set(apps.filter((a) => a.player === id).map((a) => a.match))
+    const pair = players.flatMap((a: R) => players.filter((b: R) => b.id !== a.id).map((b: R) => [a, b])).find(([a, b]: R[]) => gamesOf(a.id).size > 3 && gamesOf(b.id).size > 0 && ![...gamesOf(a.id)].some((m) => gamesOf(b.id).has(m)))
+    expect(pair).toBeTruthy()
+    const [source, target] = pair as R[]
     const [s0, t0] = [await count(source.id), await count(target.id)]
     expect(s0).toBeGreaterThan(3)
     const gameId = generateMatchSeed(ORG).find((g) => g.raw.status === 'FINAL')!.raw.id
@@ -320,6 +324,6 @@ describe('seeded games', () => {
     expect(await count(source.id)).toBe(0)
     expect(await count(target.id)).toBe(s0 + t0)
     const afterText = JSON.stringify(await getMatchByGameId(gameId))
-    expect(afterText).toBe(beforeText.replaceAll('Corey Ashby', 'Evan Brennan'))
+    expect(afterText).toBe(beforeText.replaceAll(source.displayName, target.displayName))
   })
 })

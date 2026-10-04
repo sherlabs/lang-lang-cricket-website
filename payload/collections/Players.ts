@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isAdminField, isStaff, isStaffField, nobodyField, staffOr } from '../access'
 import { adminOnlyCondition } from '../admin/visibility'
-import { mergePlayersEndpoint } from '../endpoints/mergePlayers'
+import { dismissDuplicateEndpoint, mergePlayersEndpoint, undoMergeEndpoint } from '../endpoints/mergePlayers'
 import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
@@ -70,7 +70,7 @@ export const Players: CollectionConfig = {
     afterChange: [revalidateAfterChange(paths, ALL_STATS_TAGS)],
     afterDelete: [revalidateAfterDelete(paths, ALL_STATS_TAGS)],
   },
-  endpoints: [mergePlayersEndpoint],
+  endpoints: [mergePlayersEndpoint, undoMergeEndpoint, dismissDuplicateEndpoint],
   timestamps: true,
   fields: [
     {

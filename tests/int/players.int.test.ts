@@ -186,7 +186,7 @@ describe('players: merge endpoint', () => {
     const { target, sourceId, mediaId, tB, sB, sD } = await setup()
     const res = await rest('POST', `/players/${sourceId}/merge`, { token: editor, body: { targetId: target.id } })
     expect(res.status).toBe(200)
-    expect(res.json).toEqual({ ok: true, targetId: target.id })
+    expect(res.json).toMatchObject({ ok: true, targetId: target.id })
 
     expect(await payload.count({ collection: 'players', where: { id: { equals: sourceId } } })).toEqual({ totalDocs: 0 })
     const merged = await payload.findByID({ collection: 'players', id: target.id, depth: 0, joins: false })

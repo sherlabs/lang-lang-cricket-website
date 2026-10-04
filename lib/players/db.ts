@@ -24,11 +24,13 @@ export type PlayerTables = {
   people: Table
   player_sponsors: Table
   match_appearances: Table
+  merge_log: Table
+  matches: Table
 }
 
 export function playerTables(payload: Payload): PlayerTables {
-  const { players, player_aliases, player_seasons, player_sync_runs, players_honours, people, player_sponsors, match_appearances } = payload.db.tables as Record<string, Table>
-  return { players, player_aliases, player_seasons, player_sync_runs, players_honours, people, player_sponsors, match_appearances }
+  const { players, player_aliases, player_seasons, player_sync_runs, players_honours, people, player_sponsors, match_appearances, merge_log, matches } = payload.db.tables as Record<string, Table>
+  return { players, player_aliases, player_seasons, player_sync_runs, players_honours, people, player_sponsors, match_appearances, merge_log, matches }
 }
 
 /** Every column key `lib/players` and the merge endpoint read or write, per table. */
@@ -47,7 +49,9 @@ export const PLAYER_COLUMN_KEYS: Record<keyof PlayerTables, readonly string[]> =
   players_honours: ['id', '_parentID', '_order', 'years', 'title'],
   people: ['id', 'player', 'updatedAt'],
   player_sponsors: ['id', 'player', 'updatedAt'],
-  match_appearances: ['id', 'player', 'updatedAt'],
+  match_appearances: ['id', 'match', 'player', 'updatedAt'],
+  merge_log: ['id', 'kind', 'status', 'sourcePlayerId', 'sourceName', 'targetPlayer', 'snapshot', 'createdBy', 'undoneAt', 'undoneBy', 'createdAt', 'updatedAt'],
+  matches: ['id', 'localDate', 'opponentName', 'opponentOrgName'],
 }
 
 export const chunk = <T,>(xs: T[], n: number): T[][] =>

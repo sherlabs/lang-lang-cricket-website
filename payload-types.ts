@@ -93,6 +93,7 @@ export interface Config {
     'match-bowling': MatchBowling;
     'match-fielding': MatchFielding;
     'saved-reports': SavedReport;
+    'merge-log': MergeLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -136,6 +137,7 @@ export interface Config {
     'match-bowling': MatchBowlingSelect<false> | MatchBowlingSelect<true>;
     'match-fielding': MatchFieldingSelect<false> | MatchFieldingSelect<true>;
     'saved-reports': SavedReportsSelect<false> | SavedReportsSelect<true>;
+    'merge-log': MergeLogSelect<false> | MergeLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1207,6 +1209,34 @@ export interface SavedReport {
   createdAt: string;
 }
 /**
+ * Player merges that can be undone, and pairs marked as different people. Written by the site; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "merge-log".
+ */
+export interface MergeLog {
+  id: number;
+  kind: 'merge' | 'dismissed';
+  status: 'applied' | 'undone' | 'dismissed';
+  sourcePlayerId: number;
+  sourceName?: string | null;
+  targetPlayer?: (number | null) | Player;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  createdBy?: (number | null) | User;
+  undoneAt?: string | null;
+  undoneBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1333,6 +1363,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'saved-reports';
         value: number | SavedReport;
+      } | null)
+    | ({
+        relationTo: 'merge-log';
+        value: number | MergeLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1959,6 +1993,23 @@ export interface SavedReportsSelect<T extends boolean = true> {
   owner?: T;
   query?: T;
   description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "merge-log_select".
+ */
+export interface MergeLogSelect<T extends boolean = true> {
+  kind?: T;
+  status?: T;
+  sourcePlayerId?: T;
+  sourceName?: T;
+  targetPlayer?: T;
+  snapshot?: T;
+  createdBy?: T;
+  undoneAt?: T;
+  undoneBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
