@@ -116,4 +116,14 @@ describe('pages', () => {
     expect((await getPublishedPage(pub.slug!))?.blocks).toHaveLength(1)
     expect(await getPublishedPage(draft.slug!)).toBeNull()
   })
+
+  it('deleting a picture a page uses succeeds and the public page drops that block instead of failing', async () => {
+    const m = await payload.create({ collection: 'media', data: { alt: 'Gone soon' }, file: { data: PNG, mimetype: 'image/png', name: 'gone-soon.png', size: PNG.length }, context: ctx })
+    mediaIds.push(m.id)
+    const page = await make({ title: 'Has a picture', status: 'published', content: [text('kept'), { blockType: 'image', image: m.id, alt: 'Gone soon', width: 'wide' }] })
+    await expect(payload.delete({ collection: 'media', id: m.id, context: ctx })).resolves.toBeTruthy()
+    const after = await payload.findByID({ collection: 'pages', id: page.id, depth: 1 })
+    const img = (after.content ?? []).find((b) => b.blockType === 'image') as { image?: unknown } | undefined
+    expect(img?.image ?? null).toBeNull()
+  })
 })

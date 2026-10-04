@@ -883,7 +883,7 @@ export interface Page {
             /**
              * Click the button, then drop the picture in.
              */
-            image: number | Media;
+            image?: (number | null) | Media;
             /**
              * A few words for people who cannot see it, for example "Under 12s with the premiership cup". Filled in from the picture’s own description when it has one.
              */

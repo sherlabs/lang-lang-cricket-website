@@ -9,14 +9,15 @@ import type { Link } from '@/payload/seed/club-defaults'
 /** At most this many pages may take a place in the main (top bar) menu; the rest fall into Clubhouse. */
 export const MAX_PRIMARY_PAGES = 2
 
-/** The link added to the Clubhouse group and the footer once there is a published news post. */
-export const NEWS_LINK: Link = { href: '/news', label: 'News' }
+/** Address of the link added to the Clubhouse group and the footer once there is a published news post (its label is `navigation.newsLabel`). */
+export const NEWS_HREF = '/news'
 
 export type NavBase = {
   primaryNav: Link[]
   clubhouseLabel: string
   clubhouseNav: Link[]
   navCta: Link
+  newsLabel: string
   footerNav: { heading: string; columns: Link[][] }
 }
 
@@ -42,7 +43,7 @@ export function buildNavigation({ base, pages, hasNews }: { base: NavBase; pages
   const clubhousePages = [...usable.filter((p) => p.showInNavigation === 'clubhouse'), ...primaryPages.slice(MAX_PRIMARY_PAGES)].sort(byOrder)
   const footerPages = usable.filter((p) => p.showInNavigation === 'footer')
 
-  const newsLink = hasNews ? [NEWS_LINK] : []
+  const newsLink: Link[] = hasNews ? [{ href: NEWS_HREF, label: base.newsLabel }] : []
   const columns = base.footerNav.columns.map((c) => [...c])
   if (columns.length === 0) columns.push([])
   const b = columns.length > 1 ? 1 : 0

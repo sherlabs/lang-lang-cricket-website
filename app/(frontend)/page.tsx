@@ -156,7 +156,7 @@ export default async function HomePage() {
       </section>
 
       {/* Latest news (nothing when there are no published posts) */}
-      <NewsStrip posts={latestNews} />
+      <NewsStrip posts={latestNews} copy={club.pageCopy.news.strip} />
 
       {/* Gallery teaser */}
       {photos.length > 0 && (

@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NavPage } from '../lib/domain'
-import { buildNavigation, MAX_PRIMARY_PAGES, NEWS_LINK } from '../lib/navigation'
+import { buildNavigation, MAX_PRIMARY_PAGES, NEWS_HREF } from '../lib/navigation'
 import { clubDefaults } from '../payload/seed/club-defaults'
 import { createPayloadFake, type PayloadFake } from './helpers/payload-fake'
 
 const base = clubDefaults.navigation
+const NEWS_LINK = { href: NEWS_HREF, label: base.newsLabel }
 const page = (slug: string, over: Partial<NavPage> = {}): NavPage => ({ slug, title: slug.toUpperCase(), navLabel: '', showInNavigation: 'clubhouse', navOrder: 100, ...over })
 
 describe('buildNavigation', () => {

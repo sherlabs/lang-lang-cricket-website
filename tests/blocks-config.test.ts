@@ -30,7 +30,11 @@ describe('page blocks', () => {
 
   it('the image block requires a picture and alt text, and the text block is a rich text field', () => {
     const image = pageBlocks.find((b) => b.slug === 'image')!
-    expect(field(image.fields as never, 'image').required).toBe(true)
+    const pic = field(image.fields as never, 'image')
+    // Nullable column (a deleted picture must not break the delete), but saving still needs one.
+    expect(pic.required).toBeFalsy()
+    expect((pic.validate as (v: unknown) => unknown)(null)).toEqual(expect.stringContaining('Choose a picture'))
+    expect((pic.validate as (v: unknown) => unknown)(3)).toBe(true)
     expect(field(image.fields as never, 'alt').required).toBe(true)
     expect(field(image.fields as never, 'width').defaultValue).toBe('wide')
     const text = pageBlocks.find((b) => b.slug === 'text')!

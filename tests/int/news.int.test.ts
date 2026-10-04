@@ -76,4 +76,18 @@ describe('news', () => {
     expect((await rest('PATCH', `/news/${a.id}`, { token: admin, body: { slug: 'Not OK!' } })).status).toBe(400)
     expect((await rest('POST', '/news', { token: editor, body: { title: 'No body' } })).status).toBe(400)
   })
+
+  it('previous and next posts break a shared publishedAt by id, matching the list order', async () => {
+    const { getAdjacentPosts, getPublishedPost, listPublishedNews } = await import('@/lib/news-queries')
+    const when = at(-2)
+    await make({ title: 'Tie A', status: 'published', publishedAt: when, body: body('a') })
+    await make({ title: 'Tie B', status: 'published', publishedAt: when, body: body('b') })
+    await make({ title: 'Tie C', status: 'published', publishedAt: when, body: body('c') })
+    const order = (await listPublishedNews(1, 50)).items.map((p) => p.title).filter((t) => t.startsWith('Tie'))
+    expect(order).toEqual(['Tie C', 'Tie B', 'Tie A'])
+    const b = (await getPublishedPost('tie-b'))!
+    const { older, newer } = await getAdjacentPosts(b)
+    expect(older?.title).toBe('Tie A')
+    expect(newer?.title).toBe('Tie C')
+  })
 })

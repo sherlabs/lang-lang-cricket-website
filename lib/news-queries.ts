@@ -59,15 +59,24 @@ export async function getPublishedPost(slug: string): Promise<NewsView | null> {
   return docs[0] ? toNewsView(docs[0], docs[0].excerpt?.trim() || excerptFromContent(docs[0].body)) : null
 }
 
-/** The post before (older) and after (newer) `post`, among visible posts. */
+/**
+ * The post before (older) and after (newer) `post`, among visible posts. Ordering matches the list view
+ * (`-publishedAt`, `-id`), so posts sharing a `publishedAt` are still neighbours of each other.
+ */
 export async function getAdjacentPosts(post: Pick<NewsView, 'id' | 'publishedAt'>): Promise<{ older: NewsSummary | null; newer: NewsSummary | null }> {
   const payload = await getPayloadClient()
   const at = post.publishedAt.toISOString()
-  const find = async (cmp: 'less_than' | 'greater_than', sort: string) => {
+  const find = async (dir: 'older' | 'newer') => {
+    const cmp = dir === 'older' ? 'less_than' : 'greater_than'
     const { docs } = await payload.find({
       collection: 'news',
-      where: { and: [...publishedNow().and, { publishedAt: { [cmp]: at } }] },
-      sort,
+      where: {
+        and: [
+          ...publishedNow().and,
+          { or: [{ publishedAt: { [cmp]: at } }, { and: [{ publishedAt: { equals: at } }, { id: { [cmp]: post.id } }] }] },
+        ],
+      },
+      sort: dir === 'older' ? ['-publishedAt', '-id'] : ['publishedAt', 'id'],
       limit: 1,
       pagination: false,
       depth: 0,
@@ -75,7 +84,7 @@ export async function getAdjacentPosts(post: Pick<NewsView, 'id' | 'publishedAt'
     })
     return docs[0] ? toNewsSummary(docs[0] as NewsDoc, '') : null
   }
-  const [older, newer] = await Promise.all([find('less_than', '-publishedAt'), find('greater_than', 'publishedAt')])
+  const [older, newer] = await Promise.all([find('older'), find('newer')])
   return { older, newer }
 }
 

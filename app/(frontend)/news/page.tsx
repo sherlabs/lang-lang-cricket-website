@@ -21,10 +21,10 @@ export default async function NewsPage({ searchParams }: Props) {
   const [club, { items, totalPages, page }] = await Promise.all([getClub(), listPublishedNews(Number.isFinite(requested) ? requested : 1)])
   return (
     <main>
-      <PageHeader eyebrow={club.name} title="News" intro={club.pages.news.description} />
+      <PageHeader eyebrow={club.name} title={club.pageCopy.news.title} intro={club.pages.news.description} />
       <section className="container-site py-16 lg:py-20">
         {items.length === 0 ? (
-          <p className="text-brand-grey">No news yet. Check back soon.</p>
+          <p className="text-brand-grey">{club.pageCopy.news.empty}</p>
         ) : (
           <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((post) => (

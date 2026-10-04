@@ -20,7 +20,18 @@ export const imageBlock: Block = {
   slug: 'image',
   labels: { singular: 'Picture', plural: 'Pictures' },
   fields: [
-    { name: 'image', label: 'Picture', type: 'upload', relationTo: 'media', required: true, admin: { description: 'Click the button, then drop the picture in.' } },
+    {
+      name: 'image',
+      label: 'Picture',
+      type: 'upload',
+      relationTo: 'media',
+      // Not `required: true`: that makes the column NOT NULL, and deleting a picture a page uses (FK ON DELETE set null)
+      // would then fail with a raw database error. The column is nullable; this check still insists on a picture when
+      // the page is saved, and the public page skips a block whose picture is gone (`mapPageBlocks`).
+      validate: (value: unknown, ctx?: { req?: { context?: { etl?: boolean } } }) =>
+        ctx?.req?.context?.etl === true || (value !== null && value !== undefined && value !== '') ? true : 'Choose a picture. (If it was deleted, pick another or remove this block.)',
+      admin: { description: 'Click the button, then drop the picture in.' },
+    },
     {
       name: 'alt',
       label: 'Describe the picture',

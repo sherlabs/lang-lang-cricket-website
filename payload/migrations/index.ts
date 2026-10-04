@@ -15,6 +15,7 @@ import * as migration_20261003_223515_people_more_roles from './20261003_223515_
 import * as migration_20261004_031119_theme_global from './20261004_031119_theme_global';
 import * as migration_20261004_033909_match_store from './20261004_033909_match_store';
 import * as migration_20261004_041815_pages_news from './20261004_041815_pages_news';
+import * as migration_20261004_044729_image_block_nullable from './20261004_044729_image_block_nullable';
 
 export const migrations = [
   {
@@ -100,6 +101,11 @@ export const migrations = [
   {
     up: migration_20261004_041815_pages_news.up,
     down: migration_20261004_041815_pages_news.down,
-    name: '20261004_041815_pages_news'
+    name: '20261004_041815_pages_news',
+  },
+  {
+    up: migration_20261004_044729_image_block_nullable.up,
+    down: migration_20261004_044729_image_block_nullable.down,
+    name: '20261004_044729_image_block_nullable'
   },
 ];

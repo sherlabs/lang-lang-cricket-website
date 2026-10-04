@@ -152,6 +152,14 @@ export type ClubDefaults = ClubGlobalDefaults & {
     history: { header: HeaderCopy; image: string; imageAlt: string }
     fixtures: { intro: string; noTeams: string }
     events: { header: HeaderCopy }
+    /** News list, home strip and not-found titles (WP-P). `pageNotFoundTitle` is the tab title for an unknown /info page. */
+    news: {
+      title: string
+      empty: string
+      notFoundTitle: string
+      pageNotFoundTitle: string
+      strip: { eyebrow: string; title: string; ctaLabel: string }
+    }
     rsvp: {
       /** Header intro on /events/[id]/rsvp; the title is the event's. */
       eyebrow: string
@@ -181,6 +189,8 @@ export type ClubDefaults = ClubGlobalDefaults & {
     clubhouseLabel: string
     clubhouseNav: Link[]
     navCta: Link
+    /** Label of the /news link that appears in Clubhouse and the footer once a post is published. */
+    newsLabel: string
     footerNav: { heading: string; columns: Link[][] }
     findUsHeading: string
     /** Appended to the first social's label in the footer. */
@@ -538,6 +548,13 @@ export const clubDefaults: ClubDefaults = {
       intro: 'The next round, the latest results and every Lang Lang side — straight from PlayHQ.',
       noTeams: 'No Lang Lang sides have been entered for this season yet.',
     },
+    news: {
+      title: 'News',
+      empty: 'No news yet. Check back soon.',
+      notFoundTitle: 'News not found',
+      pageNotFoundTitle: 'Page not found',
+      strip: { eyebrow: 'Club news', title: 'Latest news', ctaLabel: 'All news' },
+    },
     events: {
       header: {
         eyebrow: 'Events',
@@ -670,6 +687,7 @@ export const clubDefaults: ClubDefaults = {
       { href: '/documents', label: 'Documents' },
     ],
     navCta: { label: 'Get in touch', href: '/contact' },
+    newsLabel: 'News',
     // Column 1 mirrors the main nav + Contact, column 2 the Clubhouse group — five links each.
     footerNav: {
       heading: 'Explore',

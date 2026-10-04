@@ -16,7 +16,7 @@ type Props = { params: Promise<{ slug: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const [club, page] = await Promise.all([getClub(), getPublishedPage(slug)])
-  if (!page) return { title: 'Page not found' }
+  if (!page) return { title: club.pageCopy.news.pageNotFoundTitle }
   const og = baseOpenGraph(club)
   const description = truncateDescription(pageDescription(page), 160) || club.defaultDescription
   return {
