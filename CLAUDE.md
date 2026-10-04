@@ -6,6 +6,7 @@ Public site and committee admin for a community cricket club. Branch `feat/paylo
 
 - Next 16 (App Router, React 19), Payload 3 with Postgres (`payload` schema), Tailwind, Vercel Blob for files, PlayHQ public API for fixtures and stats.
 - `app/(frontend)` public pages, `app/(payload)` admin, `payload/` collections, globals, hooks, admin views and scripts, `lib/` queries and pure logic (`lib/*-queries.ts` is the only data layer pages use), `tests/` (unit) and `tests/int/` (integration).
+- Club values (colours, crest, display font, names, copy, hosts) come from the `theme`/`club` globals or env (`config/site.ts`), never hex or club names in app, component or OG code; `tests/no-brand-hex.test.ts` enforces it. Use Tailwind `bg-brand-*` classes, `getTheme()` and `themedImageResponse()` (`lib/theme/og.tsx`).
 - Individuals (committee, coaches) come only from `lib/people-queries.ts` and `components/person-card.tsx`; never type a person into a global.
 
 ## Commands

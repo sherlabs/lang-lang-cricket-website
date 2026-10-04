@@ -14,7 +14,9 @@ stack:
   dark_mode: none               # darkMode ["class"] is configured, but nothing ever sets .dark
 
 colors:
-  # Brand palette: hex literals at tailwind.config.ts:13-28 (not CSS variables)
+  # Brand palette: the Lang Lang SEED values (payload/seed/theme-defaults.ts). At runtime they come from the `theme`
+  # global as --brand-<key> CSS variables (channel triples); Tailwind maps them with rgb(var(--brand-x) / <alpha-value>).
+  # tests/theme-seed.test.ts checks these twelve lines against the seed, so edit both together.
   brand-black:      "#0B0B0D"   # main dark surface, headings, primary dark button
   brand-ink:        "#17171A"   # raised dark surface (mobile menu, dropdown, Player sponsor badge)
   brand-charcoal:   "#26262B"   # body text on light, hover for black buttons
@@ -27,11 +29,8 @@ colors:
   brand-stone:      "#F3F1EA"   # card fills, empty states, admin page background
   brand-grey:       "#5A5A62"   # muted body and intro copy
   brand-grey-light: "#6E6E76"   # captions, placeholders, empty-state text
-  # Hard-coded duplicates outside the config (they leak through theming)
-  focus-outline:    "#f5b700"   # globals.css :focus-visible and * outline-color
-  selection-bg:     "#f5b700"   # globals.css ::selection
-  selection-fg:     "#0b0b0d"
-  placeholder-art:  ["#F5B700", "#C99400", "#FFD966", "#0B0B0D"]  # components/events/event-placeholder-art.tsx
+  # Former hard-coded duplicates: now rgb(var(--brand-gold)) / rgb(var(--brand-black)) (globals.css focus ring and
+  # selection, event-placeholder-art.tsx, box shadows). tests/no-brand-hex.test.ts stops new ones.
   # Non-brand Tailwind colours
   error-text:       red-700     # also red-800
   error-surface:    red-50      # with ring-red-200
@@ -58,8 +57,8 @@ colors:
 typography:
   families:
     font-body:    { family: Inter, weights: [400, 500, 600, 700], css_var: --font-body, tailwind: font-sans }
-    font-heading: { family: Barlow Condensed, weights: [500, 600, 700], css_var: --font-heading, tailwind: font-heading }
-    loading: next/font/google, subsets [latin], display swap, variables set on <body>; fallback "system-ui, sans-serif"
+    font-heading: { family: "chosen in the theme global; default Barlow Condensed 500/600/700", css_var: --font-heading, tailwind: font-heading }
+    loading: next/font/local from assets/fonts (five bundled faces, see section 13), variables set on <body>; fallback "system-ui, sans-serif"
   utilities:
     display: "font-heading font-bold uppercase leading-none tracking-wide"
     eyebrow: "text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-deep"   # text-brand-gold on dark
@@ -183,7 +182,7 @@ This document records the visual system that is live on langlangcricketclub.com 
 
 ## 1. Overview and brand personality
 
-The site reads as a **local sporting club with a premium edge**. Large black bands with a single warm gold accent come from the club's crest colours. The headlines use a condensed, uppercase athletic face (Barlow Condensed), and the body text is a calm, neutral sans (Inter). The page alternates between bright reading surfaces (white, cream, stone) and dark brand bands (nav, page headers, hero, CTA panels, footer).
+The site reads as a **local sporting club with a premium edge**. Large black bands with a single warm gold accent come from the club's crest colours (Lang Lang's seed theme; another club picks its own). The headlines use a condensed, uppercase athletic face (Barlow Condensed by default), and the body text is a calm, neutral sans (Inter). The page alternates between bright reading surfaces (white, cream, stone) and dark brand bands (nav, page headers, hero, CTA panels, footer).
 
 Personality:
 - **Community first.** The copy and imagery are warm and plain, and the site is organised around people, events and sponsors.
@@ -220,12 +219,13 @@ There are **no success or warning tokens**. Errors use stock Tailwind red: `text
 
 `app/globals.css :root` holds the stock shadcn neutral oklch set (`--primary oklch(0.205 0 0)`, `--ring oklch(0.708 0 0)`, `--border oklch(0.922 0 0)`, `--destructive oklch(0.577 0.245 27.325)` and so on, plus chart and sidebar variables). **None of them map to the brand.** They only show in `components/ui/*`: the default, outline and ghost Buttons, the shadcn Input and Card, the Dialog, and the base hover of Table rows. As a result the admin primitives look neutral grey next to the brand. A `.dark` block exists but is never activated.
 
-### 2.4 Hard-coded colour leaks
+### 2.4 Hard-coded colour leaks (resolved)
 
-These bypass the token system and have to be included when re-theming:
-- `globals.css`: `* { outline-color: #f5b700 }`, `:focus-visible { outline: 2px solid #f5b700 }`, `::selection { background: #f5b700; color: #0b0b0d }`.
-- `components/events/event-placeholder-art.tsx`: `GOLD = ['#F5B700','#C99400','#FFD966']` and `#0B0B0D` literals.
-- Shadow rgba values use `rgba(11,11,13,…)`, which is brand-black hard-coded into `boxShadow`.
+These used to bypass the token system. All now read the theme variables, and `tests/no-brand-hex.test.ts` fails on any new brand hex, brand channel triple or stray six-digit hex:
+- `globals.css` focus ring, outline and selection use `rgb(var(--brand-gold))` and `rgb(var(--brand-black))`.
+- `event-placeholder-art.tsx` fills shapes through `style` with the same variables.
+- `boxShadow.card` and `card-hover` use `rgb(var(--brand-black) / x)`.
+- The stat card route, the admin stylesheet and the admin logo read `getTheme()` or the variables.
 
 ## 3. Typography
 
@@ -234,7 +234,7 @@ These bypass the token system and have to be included when re-theming:
 | Body / UI | **Inter** | 400, 500, 600, 700 | `--font-body` and `font-sans` (applied to `html`) |
 | Display / headings | **Barlow Condensed** | 500, 600, 700 | `--font-heading` and `font-heading`, mostly through `.display` |
 
-Both are loaded with `next/font/google` (`subsets: ['latin']`, `display: 'swap'`). The fallback for both is `system-ui, sans-serif`.
+Inter is loaded with `next/font/google` (`subsets: ['latin']`, `display: 'swap'`); the heading face is one of five bundled faces loaded with `next/font/local`. The fallback for both is `system-ui, sans-serif`.
 
 **Two type utilities carry the identity:**
 - `.display` (`font-heading font-bold uppercase leading-none tracking-wide`) is used for every hero, page and section title, the wordmark, footer column headings, DateTile numerals and initials fallbacks.
@@ -554,12 +554,12 @@ Props are `eyebrow`, `title`, `intro`, `align: left|center` and `tone: light|dar
 | PageHeader, SectionHeading, DateTile, CommitteeCards, PlayerCard, marquee, AnnouncementBanner, nav disclosure behaviour | components | **Structural** | Keep |
 | Motion defaults, focus and tap-target rules, Hugeicons conventions | config | **Structural** | Keep |
 
-### 13.2 Proposed token mapping (CSS variables)
+### 13.2 Token mapping (CSS variables)
 
-**Proposed, not implemented.** The 12 `brand.*` keys become CSS variables in rgb channel form. Tailwind keeps the current names, so no markup changes, and `/opacity` modifiers keep working:
+**Implemented (WP-T, issue #14).** The CSS variables and the Tailwind mapping below are built. The values are emitted at request time by `<ThemeStyle>` from the `theme` global (`lib/theme/css.ts`); the role names in the comments are admin labels only, and the Tailwind keys keep the `brand-*` names (about 900 class usages are unchanged). Role to key: Dark colour = `black`, Accent colour = `gold`, Light section colour = `cream`, Body text colour = `charcoal`, Secondary text colour = `grey`; the other seven are the "Other shades" group. The 12 `brand.*` keys become CSS variables in rgb channel form. Tailwind keeps the current names, so no markup changes, and `/opacity` modifiers keep working:
 
 ```css
-/* app/(frontend)/globals.css, emitted at request time from the Payload theme global */
+/* emitted at request time from the Payload theme global (components/theme-style.tsx) */
 :root {
   --brand-black: 11 11 13;      /* #0B0B0D  role: surface-dark / text-strong */
   --brand-ink: 23 23 26;        /* #17171A  role: surface-dark-raised */
@@ -577,21 +577,18 @@ Props are `eyebrow`, `title`, `intro`, `align: left|center` and `tone: light|dar
 /* tailwind: brand.gold = "rgb(var(--brand-gold) / <alpha-value>)", and so on */
 ```
 
-Follow-ups this enables:
+Done: the `globals.css` hex literals, the placeholder art and the shadows now read the variables. Still open follow-ups:
 - Point the shadcn `--primary`, `--ring`, `--border` and `--input` variables at the brand variables, so `components/ui/*` stop rendering neutral grey.
-- Replace the hex literals in `globals.css` with `rgb(var(--brand-gold))`.
-- Have the placeholder art read `var(--brand-*)`.
-- Build the shadows from `rgb(var(--brand-black) / .04)`.
 - The role names in the comments (`accent`, `accent-text`, `surface-alt`…) are candidate aliases for the template. **[ambiguous]** It is undecided whether to rename the Tailwind keys or keep the `brand-*` names as aliases. Keeping `brand-*` avoids touching 900+ class usages.
 
-### 13.3 Proposed Payload globals
+### 13.3 Payload globals
 
-**Proposed.** The `site_settings` table today holds only `sponsorCarouselTiers`.
+**`theme` is built (WP-T); the rest is proposed.** As built, `theme` (Advanced, "Site look (colours and fonts)", admin-write, public-read) has a `palette` group (primary, accent, surface, text, muted), a `shades` group (ink, accentDark, accentLight, accentPale, accentDeep, surfaceMuted, mutedLight), a `crest` upload (falling back to the Club details logo, then the bundled crest), a `headingFont` select over five bundled faces (Barlow Condensed, Oswald, Bebas Neue, Anton, Playfair Display) and a live contrast report; a failing required pair (WCAG 4.5:1, see `lib/theme/contrast.ts`) blocks saving. There is no derive mode, no light/dark finish and no `fontPair` (the body stays Inter). See [Site look](docs/features/theme-editor.mdx). The `site_settings` table today holds only the stats and carousel settings.
 
 | Global | Fields (design-relevant) |
 |---|---|
 | `club` | `name`, `shortName`, `tagline`, `location`, `email`, `socials[] {platform, url}`, `supportedBy`, `siteUrl`, `locale`, `timezone`, `sport`, `logo` (upload), `ogImage`, `favicon` |
-| `theme` (or a `theme` group inside `club`) | `colors` group: the 12 tokens above as hex text with validation. Optionally an "accent only" mode that derives dark/light/pale/deep and **checks the derived gold-deep against white and the pale tint (≥4.5:1)**. Also `fontPair` (select over pre-bundled `next/font` pairs; default `barlow-condensed+inter`) and `heroOverlayStrength` (**[ambiguous]**, not in the current code; omit unless needed). |
+| `theme` (built, see above; the rest of this row is the original proposal) | `colors` group: the 12 tokens above as hex text with validation. Optionally an "accent only" mode that derives dark/light/pale/deep and **checks the derived gold-deep against white and the pale tint (≥4.5:1)**. Also `fontPair` (select over pre-bundled `next/font` pairs; default `barlow-condensed+inter`) and `heroOverlayStrength` (**[ambiguous]**, not in the current code; omit unless needed). |
 | `siteSettings` | `sponsorCarouselTiers` (hasMany select; `[]` hides the carousel), feature flags (`playhq`, `players`, `history`, `events`), sponsor tier labels/blurbs, people section labels, document categories |
 | `navigation` | `header.primary[]`, `header.groupLabel` ("Clubhouse"), `header.group[]`, `footer.columns[]` |
 | `homePage` | hero image, title, highlighted phrase, intro, CTAs, `highlights[] {icon (Hugeicons whitelist select), title, body}`, section headings/intros, join CTA |

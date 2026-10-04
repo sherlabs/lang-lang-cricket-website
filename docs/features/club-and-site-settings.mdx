@@ -24,7 +24,8 @@ Club identity was scattered through components and copy. The Payload migration (
 - `getClub()` merges the saved global over `payload/seed/club-defaults.ts`, so the site renders correctly before anything is saved. It also merges the apparel link as `club.apparel`. Home copy, page headers and the menu stay in the defaults module in this version.
 - **`site-settings` (Site settings, admin only)**: the Site tab sets which sponsor tiers scroll on the home page (default Platinum and Gold). The Stats tab sets default categories, grade rules (regular expressions), qualification minimums, milestone thresholds and honour categories. Reads fall back to code defaults before the global is saved.
 - Saving the club global revalidates the whole site layout.
-- Build-time constants (timezone, locale, cookie prefix `llcc`, PlayHQ defaults, agency credit) are in `config/site.ts` and cannot be edited in the admin.
+- Build-time constants (timezone, locale, cookie prefix, canonical host, PlayHQ organisation and team prefix, export file name prefix, agency credit) are in `config/site.ts`, read from environment variables with Lang Lang defaults outside production, and cannot be edited in the admin. In production the PlayHQ organisation, team prefix and canonical host have no default and the server refuses to start without them.
+- The club crest, colours and heading font moved to the **Site look** global ([Site look](./theme-editor.mdx)). The logo field here is now only a fallback for the crest.
 
 ## How to use it
 
@@ -32,4 +33,4 @@ An admin opens **Club details** or **Site settings** from the Advanced section, 
 
 ## Not included / deferred
 
-- No theme editor for crest, palette and fonts ([#14](https://github.com/sherlabs/lang-lang-cricket-website/issues/14)); no block-based pages ([#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22)); navigation and page copy are not editable in the admin yet. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- No block-based pages ([#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22)); navigation and page copy are not editable in the admin yet. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -131,9 +131,11 @@ See `.env.example` for the full list with comments. In short:
 | `BLOB_READ_WRITE_TOKEN` | Vercel only (Production store; Preview has its own store). Never local. |
 | `BLOB_DELETE_DISABLED` | Preview: `1` (required by the preview build). Every plugin blob delete becomes a logged no-op. |
 | `LEGACY_BLOBS_RELEASED` | Unset until the decommission PR sets it to `yes` (blob deletes for imported rows resume). |
-| `CRON_SECRET`, `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | App + cron. |
-| `PLAYHQ_CLUB_URL` | Optional: the club's public PlayHQ page (fixtures links). Defaults to `PLAYHQ_DEFAULTS` in `config/site.ts`. |
-| `CANONICAL_HOST`, `REDIRECT_HOSTS` | Host redirects and canonical URLs. |
+| `CRON_SECRET`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | App + cron. |
+| `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX` | The club's PlayHQ organisation and the team-name prefix stripped for display. Required in production (no default there). |
+| `PLAYHQ_CLUB_URL` | Optional: the club's public PlayHQ page (fixtures links). Defaults in `config/site.ts`. |
+| `CANONICAL_HOST`, `REDIRECT_HOSTS` | Host redirects and canonical URLs. `CANONICAL_HOST` is required in production; `REDIRECT_HOSTS` defaults to `www.<CANONICAL_HOST>`. |
+| `EXPORT_FILENAME_PREFIX`, `COOKIE_PREFIX`, `CLUB_TIMEZONE`, `CLUB_LOCALE` | Per-club values read before the database exists (defaults: Lang Lang's, except the file prefix, which defaults to the club short name). |
 | `PROD_DATABASE_HOST` | Vercel, all environments: the preview build refuses to run against this host, and every build refuses when it is empty. |
 | `ENABLE_EXPERIMENTAL_COREPACK` | Vercel: `1`, so the build uses the pnpm pinned in `package.json`. |
 | `ALLOW_REMOTE_DB`, `ALLOW_REMOTE_BLOB` | Operator shell only (cutover): `yes` lets the guards accept a remote DB / a Blob token. Never in a file. |
@@ -263,10 +265,15 @@ a **Refresh PlayHQ data** action that invalidates the `playhq` cache tag.
 ## Template notes
 
 The app is groundwork for other clubs (spec §16). Club-specific content is
-confined to `payload/seed/club-defaults.ts`, `config/site.ts`,
-`public/assets/branding`, the env (`CANONICAL_HOST`, `REDIRECT_HOSTS`,
-`PLAYHQ_*`) and the colours in `tailwind.config.ts`. A new club forks those,
-then runs `payload migrate`, `seed:admin`, `seed:club` (or `seed:demo`), and
-never runs the ETL. Sport-specific vocabulary (sponsor tiers, people
-sections, document categories) is in `lib/` constants. Cookie names keep the
-`llcc_` prefix from `config/site.ts`.
+confined to `payload/seed/club-defaults.ts` (names, copy),
+`payload/seed/theme-defaults.ts` (seed colours and heading font; the only file
+allowed to hold brand hex), `config/site.ts`, `public/assets/branding` and the
+env (`CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX`,
+`EXPORT_FILENAME_PREFIX`, `COOKIE_PREFIX`, `CLUB_TIMEZONE`, `CLUB_LOCALE`; see
+`.env.example`; in production the first three have no default and the server
+refuses to start without them). After the first deploy the colours, crest and
+heading font are edited in the admin under Advanced, Site look. A new club forks
+those, then runs `payload migrate`, `seed:admin`, `seed:club` (or `seed:demo`),
+and never runs the ETL. Sport-specific vocabulary (sponsor tiers, people
+sections, document categories) is in `lib/` constants. Cookie names default to
+the `llcc_` prefix.

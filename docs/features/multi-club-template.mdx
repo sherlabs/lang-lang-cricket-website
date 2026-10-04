@@ -5,7 +5,7 @@ routes: []
 collections: [club, site-settings]
 admin: "None; developer groundwork"
 owner: "Developers; future beneficiaries are other community sports clubs"
-related: [club-and-site-settings, legacy-etl-and-cutover, safety-guards]
+related: [theme-editor, club-and-site-settings, legacy-etl-and-cutover, safety-guards]
 added: feat/payload-cms
 ---
 
@@ -20,8 +20,9 @@ The Payload migration spec (section 16) records the intent to keep the code reus
 
 ## What it does
 
-- Club-specific content is confined to `payload/seed/club-defaults.ts`, `config/site.ts`, `public/assets/branding`, the environment (`CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_*`) and the brand colours in `tailwind.config.ts`.
-- Sport-specific vocabulary (sponsor tiers, people sections, document categories) sits in `lib/` constants. The cookie prefix `llcc_` is in `config/site.ts`.
+- Club-specific content is confined to `payload/seed/club-defaults.ts` (names and copy), `payload/seed/theme-defaults.ts` (the seed colours and heading font, the only place brand hex may appear), `config/site.ts`, `public/assets/branding`, `assets/fonts` and the environment. Colours, crest and heading font are edited in the admin under Advanced, Site look ([Site look](./theme-editor.mdx)); `tests/no-brand-hex.test.ts` fails if a hex colour or club name is hard-coded in app, component or image code.
+- Environment per club: `CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX`, optional `PLAYHQ_CLUB_URL`, `EXPORT_FILENAME_PREFIX`, `COOKIE_PREFIX`, `CLUB_TIMEZONE`, `CLUB_LOCALE` (see `.env.example`). In production `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX` and `CANONICAL_HOST` are required: `instrumentation.ts` stops the server when any is missing, so a new club can never show Lang Lang's data. The Lang Lang values are development and test defaults only.
+- Sport-specific vocabulary (sponsor tiers, people sections, document categories) sits in `lib/` constants. Cookie names use `COOKIE_PREFIX` (Lang Lang keeps `llcc`).
 - The `club` global merges its saved values over the defaults, so a new club sees a working site before anything is saved.
 - A new club forks those files, runs `payload migrate`, `seed:admin` and `seed:club` (or `seed:demo`), and never runs the ETL. The README "Template notes" section lists the steps.
 
@@ -31,4 +32,4 @@ Treat the README "Template notes" section as the checklist. Do not copy this rep
 
 ## Not included / deferred
 
-- No club-selection at runtime, no multi-tenancy, no theme editor ([#14](https://github.com/sherlabs/lang-lang-cricket-website/issues/14)), no feature flags for clubs without PlayHQ, and no extraction into a separate template repository ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- No club-selection at runtime, no multi-tenancy, no light/dark finish switch, no feature flags for clubs without PlayHQ, and no extraction into a separate template repository ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
