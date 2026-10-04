@@ -1,7 +1,7 @@
 /* Payload admin brand layer (spec §9). Uses Payload's CSS variables, not Tailwind.
    --theme-elevation-* is untouched; success and the primary button go gold on black. */
 :root {
-  /* The theme variables (--brand-*) are rendered by <ThemeStyle> in app/(payload)/layout.tsx. */
+  /* The theme variables (--brand-*) are set as an inline style on <html> by app/(payload)/layout.tsx. */
   --club-gold: rgb(var(--brand-gold));
   --club-gold-light: rgb(var(--brand-gold-light));
   --club-black: rgb(var(--brand-black));

@@ -7,6 +7,9 @@
 import localFont from 'next/font/local'
 import type { FontKey } from './tokens'
 
+// Only Barlow Condensed (the seed default and Lang Lang's face) is preloaded. next/font decides preloading
+// statically per module at build time, so the chosen face cannot be picked from the saved theme; the other
+// four load on demand when a club selects them (display: swap, system fallback until then).
 const barlowCondensed = localFont({
   src: [
     { path: '../../assets/fonts/BarlowCondensed-500.woff2', weight: '500', style: 'normal' },

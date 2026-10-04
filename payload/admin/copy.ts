@@ -1,7 +1,8 @@
-import { clubDefaults } from '../seed/club-defaults'
-
-/** Browser tab title: "Events — Lang Lang Cricket Club Website Admin". */
-export const adminTitleSuffix = ` — ${clubDefaults.name} Website Admin`
+/**
+ * Browser tab title: "Events — Website Admin". Payload reads the suffix when the config loads, before any
+ * database read, so it stays club-neutral (the club's name is shown by the admin logo and dashboard).
+ */
+export const adminTitleSuffix = ' — Website Admin'
 
 /**
  * Plain-English overrides for Payload's built-in wording (English only). Placeholders such as

@@ -14,8 +14,7 @@ export const WHITE = '#ffffff'
 export const WHITE_75 = '#ffffffbf'
 
 const LOGO_TIMEOUT_MS = 2000
-const CREST_TTL_MS = 10 * 60 * 1000
-let crestCache: { key: string; at: number; value: string | null } | null = null
+let crestCache: { key: string; value: string | null } | null = null
 
 const asDataUri = (buf: Buffer, type: string) => `data:${type};base64,${buf.toString('base64')}`
 
@@ -40,11 +39,16 @@ async function loadCrestUncached(crestUrl: string): Promise<string | null> {
   }
 }
 
-/** The crest as a data URI satori can draw (PNG/JPEG): the themed crest, else the bundled PNG, else null. Cached 10 minutes. */
-export async function loadCrest(crestUrl: string): Promise<string | null> {
-  if (crestCache && crestCache.key === crestUrl && Date.now() - crestCache.at < CREST_TTL_MS) return crestCache.value
+/**
+ * The crest as a data URI satori can draw (PNG/JPEG): the themed crest, else the bundled PNG, else null.
+ * Cached per process, keyed on the URL and the theme `version` (the theme and crest `updatedAt`), so saving the
+ * theme or re-uploading the crest (even at the same URL) shows the new crest on the next card.
+ */
+export async function loadCrest(crestUrl: string, version = ''): Promise<string | null> {
+  const key = `${crestUrl}|${version}`
+  if (crestCache && crestCache.key === key) return crestCache.value
   const value = await loadCrestUncached(crestUrl)
-  crestCache = { key: crestUrl, at: Date.now(), value }
+  crestCache = { key, value }
   return value
 }
 
@@ -58,6 +62,6 @@ export async function themedImageResponse(
   opts: { width: number; height: number; headers?: Record<string, string> },
 ): Promise<ImageResponse> {
   const theme = await getTheme()
-  const [fonts, crestDataUri] = await Promise.all([loadThemeFonts(theme), loadCrest(theme.crest.url)])
+  const [fonts, crestDataUri] = await Promise.all([loadThemeFonts(theme), loadCrest(theme.crest.url, theme.version)])
   return new ImageResponse(render({ theme, crestDataUri }), { width: opts.width, height: opts.height, headers: opts.headers, fonts })
 }

@@ -5,8 +5,14 @@
  */
 
 const env = process.env
-/** Production has NO Lang Lang fallback for the three club-identity values (see `assertClubEnv`). */
-const isProduction = env.VERCEL_ENV === 'production'
+/**
+ * Lang Lang fallbacks for the three club-identity values apply ONLY to local development and tests
+ * (NODE_ENV development or test). Anything else (a production build, a Vercel preview, a self-hosted
+ * `next start`) must set them, so another club's deployment can never call Lang Lang's live PlayHQ.
+ */
+export const allowSeedFallbacks = (e: Record<string, string | undefined> = process.env): boolean =>
+  e.NODE_ENV === 'development' || e.NODE_ENV === 'test'
+const isProduction = !allowSeedFallbacks(env)
 const LL = { host: 'langlangcricketclub.com', orgId: '484ced51-403a-466c-9a94-bd95eedf7319', teamPrefix: 'Lang Lang' } as const
 
 /**
@@ -23,7 +29,7 @@ export const CLUB_LOCALE = env.CLUB_LOCALE || 'en-AU'
 
 /**
  * The canonical host (next.config redirects, seed-club's siteUrl check). Env `CANONICAL_HOST`.
- * The Lang Lang value is a non-production default only.
+ * The Lang Lang value is a development and test default only.
  */
 export const CANONICAL_HOST = env.CANONICAL_HOST || (isProduction ? '' : LL.host)
 
@@ -33,7 +39,7 @@ export const EXPORT_FILENAME_PREFIX = env.EXPORT_FILENAME_PREFIX || ''
 /**
  * PlayHQ identity; env `PLAYHQ_ORG_ID` / `PLAYHQ_CLUB_URL` / `PLAYHQ_TEAM_PREFIX` win. `teamNamePrefix`
  * is stripped from PlayHQ team names for display ("Lang Lang B Grade" to "B Grade"). Lang Lang values are
- * non-production defaults only: in production an unset org or prefix stays empty and `assertClubEnv()`
+ * development and test defaults only: anywhere else an unset org or prefix stays empty and `assertClubEnv()`
  * throws at server start, so a new club can never silently serve Lang Lang's live PlayHQ data.
  */
 export const PLAYHQ_DEFAULTS = {
@@ -51,14 +57,14 @@ export const PLAYHQ_DEFAULTS = {
  */
 export const BRANDING = { logo: '/assets/branding/logo.png' } as const
 
-/** Throws, in production only, when a value with no production fallback is unset. Called from instrumentation.ts (not at build). */
+/** Throws, on Vercel production and preview, when a value with no fallback there is unset. Called from instrumentation.ts (not at build). */
 export function assertClubEnv(e: Record<string, string | undefined> = process.env): void {
-  if (e.VERCEL_ENV !== 'production') return
+  if (e.VERCEL_ENV !== 'production' && e.VERCEL_ENV !== 'preview') return
   const required = ['PLAYHQ_ORG_ID', 'PLAYHQ_TEAM_PREFIX', 'CANONICAL_HOST']
   const missing = required.filter((k) => !e[k]?.trim())
   if (missing.length) {
     throw new Error(
-      `Club settings are missing: ${missing.join(', ')}. Set them in the Vercel production environment (see .env.example). ` +
+      `Club settings are missing: ${missing.join(', ')}. Set them in the Vercel environment (production and preview) (see .env.example). ` +
         'They have no default in production so that one club never shows another club\'s data.',
     )
   }

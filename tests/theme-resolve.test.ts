@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { themeCss } from '../lib/theme/css'
+import { themeCss, themeCssVars } from '../lib/theme/css'
+import { themeReadFailureIsFatal } from '../lib/theme/read-failure'
 import { resolveTheme } from '../lib/theme/resolve'
 import { BRAND_KEYS, hexToChannels, normalizeHex } from '../lib/theme/tokens'
 import { BRANDING } from '../config/site'
@@ -66,5 +67,32 @@ describe('themeCss', () => {
   })
   it('refuses a malformed channel triple', () => {
     expect(() => themeCss({ channels: { ...resolveTheme(null).channels, black: '1;}x' } })).toThrow()
+  })
+})
+
+describe('themeReadFailureIsFatal', () => {
+  it('is fatal on Vercel production only', () => {
+    expect(themeReadFailureIsFatal({ VERCEL_ENV: 'production' })).toBe(true)
+    for (const e of [{}, { VERCEL_ENV: 'preview' }, { VERCEL_ENV: 'development' }, { NODE_ENV: 'production' }]) {
+      expect(themeReadFailureIsFatal(e)).toBe(false)
+    }
+  })
+})
+
+describe('resolveTheme version', () => {
+  it('is empty for the seed and changes with the theme or crest updatedAt', () => {
+    expect(resolveTheme(null).version).toBe('')
+    const a = resolveTheme({ updatedAt: '2026-01-01', crest: { url: '/a.png', updatedAt: '2026-01-02' } }).version
+    const b = resolveTheme({ updatedAt: '2026-01-01', crest: { url: '/a.png', updatedAt: '2026-01-03' } }).version
+    expect(a).not.toBe(b)
+  })
+})
+
+describe('themeCssVars', () => {
+  it('carries the same twelve variables as themeCss', () => {
+    const theme = resolveTheme(null)
+    const vars = themeCssVars(theme)
+    expect(Object.keys(vars)).toHaveLength(BRAND_KEYS.length)
+    expect(themeCss(theme)).toBe(`:root{${Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';')}}`)
   })
 })

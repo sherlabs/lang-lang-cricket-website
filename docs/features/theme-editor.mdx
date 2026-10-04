@@ -36,7 +36,7 @@ This repository is reused for other cricket clubs, so no club-specific colour ma
 2. Type the five main colours, then the other shades (leave them if you only changed the accent a little).
 3. Read the readability list; fix any row marked "Too low" (they stop the save).
 4. Upload a transparent PNG crest, at least 512 pixels tall, and choose a heading font.
-5. Save, then reload the home page and the admin. To go back, set the Lang Lang values again or ask a developer to run `pnpm seed:club --force`.
+5. Save, then reload the home page and the admin. To go back, set the Lang Lang values again or ask a developer to run `pnpm seed:club --only theme --force`. That resets the colours and the heading font only; plain `--force` would also overwrite Club details (name, copy, SEO, links) with the seed.
 6. Local preview of a second look: `pnpm seed:demo --target 127.0.0.1/langlang_dev --confirm --theme-sample blue` (writes a blue palette, overwriting a saved theme).
 
 **How to verify (developers).** Capture before and after screenshots with headless Chrome against a seeded local database and compare them:

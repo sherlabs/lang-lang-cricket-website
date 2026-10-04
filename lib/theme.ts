@@ -2,6 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { getClub, type Club } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
+import { themeReadFailureIsFatal } from '@/lib/theme/read-failure'
 import { resolveTheme, type ResolvedTheme } from '@/lib/theme/resolve'
 
 export type { ResolvedTheme } from '@/lib/theme/resolve'
@@ -11,7 +12,9 @@ let warned = false
 /**
  * The club's colours, display font and crest: the `theme` global resolved over the seed
  * (`payload/seed/theme-defaults.ts`). Cached per request. Falls back to the seed when the database is
- * unreachable or the table does not exist yet, so pages always render. The crest chain is
+ * unreachable or the table does not exist yet, so pages render in development, tests and previews. On Vercel
+ * production a failed read throws instead (`themeReadFailureIsFatal`), so ISR keeps the last good page rather
+ * than caching one in the wrong club's colours. A missing row is not a failure: it resolves to the seed. The crest chain is
  * theme.crest, then the legacy Club details logo, then the bundled crest (resolved in `resolveTheme`).
  */
 export const getTheme = cache(async (): Promise<ResolvedTheme> => {
@@ -20,6 +23,7 @@ export const getTheme = cache(async (): Promise<ResolvedTheme> => {
     const doc = await payload.findGlobal({ slug: 'theme', depth: 1 })
     return resolveTheme(doc, { clubLogoUrl: club.logoUrl })
   } catch (err) {
+    if (themeReadFailureIsFatal()) throw err
     if (!warned) {
       warned = true
       console.warn('[theme] could not read the theme global, using the seed:', (err as Error).message)

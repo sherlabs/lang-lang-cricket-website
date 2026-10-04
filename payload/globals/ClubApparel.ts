@@ -34,7 +34,7 @@ export const ClubApparel: GlobalConfig = {
       validate: httpUrlOrEmpty,
       admin: {
         description: 'Paste the full web address of the shop, starting with https://. Leave empty to hide the apparel button everywhere on the website.',
-        placeholder: 'https://shop.example.com.au/lang-lang-cricket-club',
+        placeholder: 'https://shop.example.com/your-club',
       },
     },
     {

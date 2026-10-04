@@ -16,6 +16,8 @@ export type ResolvedTheme = {
   font: { key: FontKey; label: string; family: string; ogWeight: number }
   /** theme.crest, else the legacy club.logo, else BRANDING.logo. */
   crest: { url: string }
+  /** Changes whenever the theme or the crest file is saved ('' for the seed). Cache key for derived crest data. */
+  version: string
 }
 
 type MediaLike = { url?: string | null } | number | string | null | undefined
@@ -42,5 +44,14 @@ export function resolveTheme(doc: unknown, opts: { clubLogoUrl?: string | null }
   const menu = FONT_MENU[fontKey]
 
   const crestUrl = mediaUrl(saved.crest as MediaLike) ?? (opts.clubLogoUrl?.trim() || null) ?? BRANDING.logo
-  return { colors, channels, font: { key: fontKey, label: menu.label, family: menu.family, ogWeight: menu.ogWeight }, crest: { url: crestUrl } }
+  const crestDoc = isObj(saved.crest) ? saved.crest : {}
+  const stamp = (v: unknown) => (typeof v === 'string' ? v : '')
+  const version = saved.updatedAt || crestDoc.updatedAt ? `${stamp(saved.updatedAt)}|${stamp(crestDoc.updatedAt)}` : ''
+  return {
+    colors,
+    channels,
+    font: { key: fontKey, label: menu.label, family: menu.family, ogWeight: menu.ogWeight },
+    crest: { url: crestUrl },
+    version,
+  }
 }

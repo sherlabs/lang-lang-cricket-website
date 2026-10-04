@@ -1,9 +1,9 @@
 import { Gutter } from '@payloadcms/ui'
+import { getClub } from '@/lib/club'
 import type { BeforeListServerProps, Payload } from 'payload'
 import { getPendingCounts } from '../admin/approvals'
 import { jobTiles } from '../admin/navigation'
 import { isAdminUser } from '../admin/visibility'
-import { clubDefaults } from '../seed/club-defaults'
 import { dashboardCards } from './dashboardCards'
 import { MilestonesWidget } from './MilestonesWidget'
 import { PlayerSyncPanel } from './PlayerSyncPanel'
@@ -23,12 +23,12 @@ function firstName(user: User): string {
  */
 export async function Dashboard({ payload, user }: { payload: Payload; user?: User }) {
   const adminRoute = payload.config.routes.admin
-  const pending = await getPendingCounts(payload)
+  const [pending, club] = await Promise.all([getPendingCounts(payload), getClub()])
   const name = firstName(user)
   const admin = isAdminUser(user)
 
   return (
-    <Gutter><section className="club-home" aria-label={`${clubDefaults.name} website admin`}>
+    <Gutter><section className="club-home" aria-label={`${club.name} website admin`}>
       <h1 className="club-home__title">{name ? `Hello, ${name}` : 'Hello'}</h1>
       <p className="club-home__lead">What would you like to do today?</p>
 

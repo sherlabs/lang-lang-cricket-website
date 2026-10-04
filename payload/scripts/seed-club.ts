@@ -1,8 +1,9 @@
 /**
  * Seeds the `club` global from payload/seed/club-defaults.ts (spec §4.1) and the `theme` global from
  * payload/seed/theme-defaults.ts.
- *   pnpm seed:club --target 127.0.0.1/langlang_dev --confirm [--force]
- * A saved global is left alone unless --force. Logo and OG image stay unset, so the site
+ *   pnpm seed:club --target 127.0.0.1/langlang_dev --confirm [--force] [--only theme]
+ * A saved global is left alone unless --force. `--only theme` touches the theme global and nothing else,
+ * so `--only theme --force` resets the colours and font without overwriting Club details. Logo and OG image stay unset, so the site
  * keeps its static fallbacks until an admin uploads replacements.
  */
 import config from '@payload-config'
@@ -17,14 +18,20 @@ async function main() {
   await guard({ write: true })
   const payload = await getPayload({ config })
   try {
-    const result = await seedClubGlobal(payload, { force: process.argv.includes('--force') })
-    console.log(
-      result === 'skipped'
-        ? '[seed-club] the club global is already saved; nothing to do (pass --force to overwrite it with the defaults)'
-        : `[seed-club] club global ${result} from the defaults`,
-    )
     const force = process.argv.includes('--force')
+    const onlyIdx = process.argv.indexOf('--only')
+    const only = onlyIdx >= 0 ? process.argv[onlyIdx + 1] : undefined
+    if (only !== undefined && only !== 'theme') throw new Error(`[seed-club] unknown --only value "${only}" (the only supported value is "theme")`)
+    if (only !== 'theme') {
+      const result = await seedClubGlobal(payload, { force })
+      console.log(
+        result === 'skipped'
+          ? '[seed-club] the club global is already saved; nothing to do (pass --force to overwrite it with the defaults)'
+          : `[seed-club] club global ${result} from the defaults`,
+      )
+    }
     console.log(`[seed-club] theme global ${await seedThemeGlobal(payload, { force })} (Lang Lang colours and font; the crest falls back to the Club details logo)`)
+    if (only === 'theme') return
     const canonical = CANONICAL_HOST
     const club = await payload.findGlobal({ slug: 'club', depth: 0 })
     const host = new URL(club.siteUrl || clubDefaults.siteUrl).host
