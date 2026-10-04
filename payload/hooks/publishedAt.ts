@@ -9,7 +9,8 @@ export const stampPublishedAt: CollectionBeforeValidateHook = ({ data, originalD
   if (!data || req.context?.etl) return data
   const status = data.status ?? (originalDoc as { status?: string } | undefined)?.status
   if (status !== 'published') return data
-  const has = data.publishedAt ?? (originalDoc as { publishedAt?: string | null } | undefined)?.publishedAt
+  // A value in the submitted data wins, even an emptied one (then it is stamped now); otherwise keep the stored date.
+  const has = 'publishedAt' in data ? data.publishedAt : (originalDoc as { publishedAt?: string | null } | undefined)?.publishedAt
   if (!has) data.publishedAt = new Date().toISOString()
   return data
 }

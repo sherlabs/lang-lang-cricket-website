@@ -74,3 +74,15 @@ describe('collection access', () => {
     }
   })
 })
+
+describe('stampPublishedAt', () => {
+  it('stamps a published document that has no date, keeps a chosen date, and re-stamps an emptied one', async () => {
+    const { stampPublishedAt } = await import('../payload/hooks/publishedAt')
+    const run = (data: Record<string, unknown>, originalDoc?: Record<string, unknown>) => (stampPublishedAt as (a: unknown) => Record<string, unknown>)({ data, originalDoc, req: { context: {} } })
+    expect(run({ status: 'published' }).publishedAt).toBeTruthy()
+    expect(run({ status: 'draft' }).publishedAt).toBeUndefined()
+    expect(run({ status: 'published', publishedAt: '2030-01-01T00:00:00.000Z' }).publishedAt).toBe('2030-01-01T00:00:00.000Z')
+    expect(run({ status: 'published' }, { publishedAt: '2026-01-01T00:00:00.000Z' }).publishedAt).toBeUndefined()
+    expect(run({ status: 'published', publishedAt: null }, { publishedAt: '2026-01-01T00:00:00.000Z' }).publishedAt).toBeTruthy()
+  })
+})
