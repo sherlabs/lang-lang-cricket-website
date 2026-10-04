@@ -107,7 +107,12 @@ describe('every collection and global is classified (new ones fail here until th
     const uploadTargets = new Set(['media', 'event-photos'])
     for (const entry of advancedNav) {
       const slug = entry.path.split('/').pop()!
-      const e = entities.find((x) => x.slug === slug)!
+      const e = entities.find((x) => x.slug === slug)
+      if (!e) {
+        // A custom admin view (not a collection or global): it refuses non-admins itself (checked in the int tests) and sits in Advanced only.
+        expect(/^\/(collections|globals)\//.test(entry.path), `${entry.key} points at a collection or global that does not exist`).toBe(false)
+        continue
+      }
       if (uploadTargets.has(slug)) continue
       expect(typeof e.admin.hidden, `${slug} should use hiddenFromEditors`).toBe('function')
       expect((e.admin.hidden as (a: { user: unknown }) => boolean)({ user: editor })).toBe(true)
