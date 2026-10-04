@@ -1,5 +1,5 @@
 import type { Event, Story } from '@/lib/domain'
-import { CLUB_TIMEZONE } from '@/config/site'
+import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { absoluteUrl } from './site-metadata'
 
 const MELBOURNE = CLUB_TIMEZONE
@@ -22,7 +22,7 @@ export type JsonLdClub = {
 const clubRef = (club: JsonLdClub) => ({ '@type': 'SportsOrganization', name: club.name, url: club.siteUrl })
 
 function offsetMs(instant: Date): number {
-  const p = new Intl.DateTimeFormat('en-AU', {
+  const p = new Intl.DateTimeFormat(CLUB_LOCALE, {
     timeZone: MELBOURNE, year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
   }).formatToParts(instant)

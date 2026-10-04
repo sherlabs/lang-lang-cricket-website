@@ -120,7 +120,7 @@ export const Events: CollectionConfig = {
       validate: timeOrEmpty,
       admin: { description: 'Type the time using the 24-hour clock, for example 18:00 for 6pm.', placeholder: '18:00' },
     },
-    { name: 'location', label: 'Where', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. Lang Lang Recreation Reserve' } },
+    { name: 'location', label: 'Where', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. the clubrooms' } },
     {
       name: 'description',
       label: 'What is happening',

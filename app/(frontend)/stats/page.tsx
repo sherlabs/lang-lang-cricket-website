@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { JsonLd } from '@/components/json-ld'
 import { PageHeader } from '@/components/page-header'
 import { MilestoneStrip } from '@/components/stats/milestone-strip'
@@ -41,7 +42,7 @@ export async function generateMetadata({ searchParams }: Props) {
 const TOP_HUB = 10
 const TOP_FULL = 50
 
-const formatAsOf = (d: Date) => new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium', timeZone: 'Australia/Melbourne' }).format(d)
+const formatAsOf = (d: Date) => new Intl.DateTimeFormat(CLUB_LOCALE, { dateStyle: 'medium', timeZone: CLUB_TIMEZONE }).format(d)
 
 export default async function StatsPage({ searchParams }: Props) {
   const [club, settings, data, asOf, board] = await Promise.all([

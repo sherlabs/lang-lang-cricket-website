@@ -11,7 +11,7 @@ export const seasonYears = (name: string) => /\d{4}(\/\d{2})?/.exec(name)?.[0] ?
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /**
- * "Lang Lang B Grade" → "B Grade": strips the club's PlayHQ team-name prefix. Callers pass
+ * "<Club> B Grade" → "B Grade": strips the club's PlayHQ team-name prefix. Callers pass
  * `club.teamNamePrefix`; omitted, it falls back to the config default.
  */
 export const teamLabel = (teamName: string, prefix: string = PLAYHQ_DEFAULTS.teamNamePrefix) =>

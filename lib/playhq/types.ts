@@ -36,7 +36,7 @@ export type Game = {
   roundName: string | null; roundAbbr: string | null; isFinalRound: boolean
   localDate: string | null; localTime: string | null; sortKey: string   // `${date}T${time ?? '00:00:00'}`
   venueName: string | null; venueSuburb: string | null
-  club: GameSide; opponent: GameSide          // club = the Lang Lang side
+  club: GameSide; opponent: GameSide          // club = our club's side
   isClubDerby: boolean                         // both sides are club teams
 }
 export type BattingLine = { appearanceId: string; name: string; dismissal: string; runs: number; balls: number; fours: number; sixes: number; strikeRate: number; notOut: boolean }
@@ -53,7 +53,7 @@ export type Scorecard = {
   id: string; status: string; type: string; gradeName: string; roundName: string | null
   venueName: string | null; startsAt: string | null   // ISO from schedule[0].dateTime
   teams: { id: string; name: string; isHome: boolean; outcome: string | null; isClub: boolean }[]
-  toss: string | null                                  // "Lang Lang B Grade won the toss and elected to bowl"
+  toss: string | null                                  // "<Club> B Grade won the toss and elected to bowl"
   innings: Innings[]
   players: Record<string, { firstName: string; lastName: string; teamId: string }>   // appearanceId → player; visible Players only (no coaches)
 }

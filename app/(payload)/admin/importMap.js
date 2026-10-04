@@ -27,6 +27,7 @@ import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997e
 import { StoryLinksField as StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4 } from '../../../payload/components/StoryLinksField'
 import { StoryModerationControls as StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad } from '../../../payload/components/StoryModerationControls'
 import { MergePlayerField as MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb } from '../../../payload/components/MergePlayerField'
+import { ThemeContrast as ThemeContrast_f54b9521d639809a058a047c647eb38a } from '../../../payload/components/ThemeContrast'
 import { Icon as Icon_25a5cf3faf5e08eebe54818d469bcd19 } from '../../../payload/components/Icon'
 import { Logo as Logo_c7b97bbbec2f12a09b3a4e5bba180831 } from '../../../payload/components/Logo'
 import { AdminNav as AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0 } from '../../../payload/components/AdminNav'
@@ -67,6 +68,7 @@ export const importMap = {
   "/payload/components/StoryLinksField#StoryLinksField": StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4,
   "/payload/components/StoryModerationControls#StoryModerationControls": StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad,
   "/payload/components/MergePlayerField#MergePlayerField": MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb,
+  "/payload/components/ThemeContrast#ThemeContrast": ThemeContrast_f54b9521d639809a058a047c647eb38a,
   "/payload/components/Icon#Icon": Icon_25a5cf3faf5e08eebe54818d469bcd19,
   "/payload/components/Logo#Logo": Logo_c7b97bbbec2f12a09b3a4e5bba180831,
   "/payload/components/AdminNav#AdminNav": AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0,

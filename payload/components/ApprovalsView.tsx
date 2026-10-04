@@ -1,9 +1,10 @@
 import type { AdminViewServerProps } from 'payload'
+import { CLUB_LOCALE } from '@/config/site'
 import { SetStepNav } from '@payloadcms/ui'
 import { AdminPage, requireUser } from './AdminPage'
 import { ApprovalPhotos, type PendingPhotoItem } from './ApprovalPhotos'
 
-const when = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 
 /** `/admin/approvals` (custom view): everything members sent in that is waiting for a decision. */
 export async function ApprovalsView(view: AdminViewServerProps) {

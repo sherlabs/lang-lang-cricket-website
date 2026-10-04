@@ -27,6 +27,8 @@ export function intTestEnv(): Record<string, string> {
     PAYLOAD_SECRET: process.env.PAYLOAD_SECRET ?? fileEnv.PAYLOAD_SECRET ?? 'int-test-secret',
     NEXT_PUBLIC_SERVER_URL: 'http://localhost:3000',
     PAYLOAD_PUSH: 'false',
+    // The statlab export filename test expects Lang Lang's prefix (config/site.ts).
+    EXPORT_FILENAME_PREFIX: 'langlang',
     // Never a real token in tests; files the plugin would store go through PAYLOAD_BLOB_FAKE + mocks.
     BLOB_READ_WRITE_TOKEN: '',
   }

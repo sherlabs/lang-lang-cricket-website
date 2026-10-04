@@ -34,7 +34,7 @@ export const Sponsors: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'name', label: 'Sponsor name', type: 'text', required: true, admin: { placeholder: 'e.g. Lang Lang Hardware' } },
+    { name: 'name', label: 'Sponsor name', type: 'text', required: true, admin: { placeholder: 'e.g. Smith\'s Hardware' } },
     {
       name: 'tier',
       label: 'Sponsor level',

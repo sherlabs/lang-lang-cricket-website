@@ -2,7 +2,7 @@ import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DEFAULT_CANONICAL_HOST } from './config/site'
+import { BRANDING, CANONICAL_HOST } from './config/site'
 import { assertSafeEnv } from './payload/env'
 
 // Refuse to start `next dev/start/build` at all with a remote DB or a Blob token
@@ -11,8 +11,9 @@ assertSafeEnv()
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const canonical = process.env.CANONICAL_HOST ?? DEFAULT_CANONICAL_HOST
-const redirectHosts = (process.env.REDIRECT_HOSTS ?? 'www.langlangcricketclub.com,lang-lang-cricket-website.vercel.app')
+const canonical = CANONICAL_HOST
+// Default: only the www alias. Production sets REDIRECT_HOSTS (cutover checklist blocker) to add the vercel.app alias.
+const redirectHosts = (process.env.REDIRECT_HOSTS ?? (canonical ? `www.${canonical}` : ''))
   .split(',')
   .map((h) => h.trim())
   .filter(Boolean)
@@ -24,15 +25,16 @@ const nextConfig: NextConfig = {
   // Next writes AGENTS.md/CLAUDE.md on dev start otherwise.
   agentRules: false,
   experimental: { globalNotFound: true },
-  // The stat card reads the bundled crest from disk at render time (the font ships inside next/og).
-  outputFileTracingIncludes: { '/api/public/players/[slug]/card': ['./public/assets/branding/logo.png'] },
+  // OG routes (the stat card is the reference) read the bundled crest and the bundled fonts from disk at render
+  // time. Any new OG route adds itself here (docs/features/theme-editor.mdx).
+  outputFileTracingIncludes: { '/api/public/players/[slug]/card': [`./public${BRANDING.logo}`, './assets/fonts/**'] },
   async redirects() {
     return [
       // One canonical host for search engines: www and the production vercel.app
       // alias 308 to the apex domain. Preview deployments use other hosts, so they're untouched.
       // /api/* is excluded: Vercel Cron and Blob upload callbacks may hit the vercel.app host
       // and must not be bounced through a redirect.
-      ...redirectHosts.map((host) => ({
+      ...(canonical ? redirectHosts : []).map((host) => ({
         source: '/:path((?!api/).*)',
         has: [{ type: 'host' as const, value: host }],
         destination: `https://${canonical}/:path`,

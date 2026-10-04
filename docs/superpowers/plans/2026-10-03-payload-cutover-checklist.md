@@ -41,10 +41,13 @@ Sections A–D happen before the window. E is the window. F is the smoke list, G
 | `PAYLOAD_SECRET` | 32+ random bytes (`openssl rand -hex 32`) | a different random value | [ ] / [ ] |
 | `NEXT_PUBLIC_SERVER_URL` | `https://langlangcricketclub.com` | not needed (derived from `VERCEL_BRANCH_URL`) | [ ] |
 | `CANONICAL_HOST` | `langlangcricketclub.com` | same | [ ] / [ ] |
-| `REDIRECT_HOSTS` | `www.langlangcricketclub.com,lang-lang-cricket-website.vercel.app` | same | [ ] / [ ] |
+| `REDIRECT_HOSTS` | **BLOCKER:** `www.langlangcricketclub.com,lang-lang-cricket-website.vercel.app`. Set before deploying: the code default is now only `www.<CANONICAL_HOST>`, so without this the vercel.app 308 is lost | same | [ ] / [ ] |
+| `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX` | **BLOCKER:** `484ced51-403a-466c-9a94-bd95eedf7319` and `Lang Lang`. No fallback in production: with either unset (or `CANONICAL_HOST` unset above) the server refuses to start (`instrumentation.ts`, `assertClubEnv`) | same values (Preview is not `VERCEL_ENV=production`, so the Lang Lang defaults apply, but set them anyway) | [ ] / [ ] |
+| `EXPORT_FILENAME_PREFIX` | `langlang` (keeps the StatLab download named `langlang-statlab-<scope>.csv`) | same | [ ] / [ ] |
+| `COOKIE_PREFIX` | `llcc` (the default; set it only if you want it explicit, a different value resets visitors' saved RSVPs and dismissed banners) | same | [ ] |
 | `BLOB_READ_WRITE_TOKEN` | the existing production store token (unchanged) | the **preview** store's token (A.3) | [ ] / [ ] |
 | `BLOB_DELETE_DISABLED` | unset | `1` (the build refuses a preview without it) | [ ] |
-| `CRON_SECRET`, `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | unchanged | same values | [ ] / [ ] |
+| `CRON_SECRET`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT` | unchanged | same values | [ ] / [ ] |
 | `PROD_DATABASE_HOST` | the production Neon hostname (not a secret) | same; set it for **all** environments: the build refuses when it is empty | [ ] |
 | `ENABLE_EXPERIMENTAL_COREPACK` | `1`, added in D (not before: it also applies to legacy builds of `main`) | `1` | [ ] / [ ] |
 

@@ -1,4 +1,4 @@
-import { CLUB_TIMEZONE } from '@/config/site'
+import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 function parseHHmm(t: string): { h: number; m: number } {
   const [h, m] = t.split(':').map(Number)
   return { h: Number.isFinite(h) ? h : 0, m: Number.isFinite(m) ? m : 0 }
@@ -55,7 +55,7 @@ export function getOneTimeEventDateTime(event: { eventDate: Date; eventTime: str
  */
 export function nowAsEventClock(now: Date = new Date()): Date {
   // A fixed locale on purpose: these parts are parsed as numbers, not displayed.
-  const parts = new Intl.DateTimeFormat('en-AU', {
+  const parts = new Intl.DateTimeFormat(CLUB_LOCALE, {
     timeZone: CLUB_TIMEZONE,
     year: 'numeric',
     month: '2-digit',

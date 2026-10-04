@@ -1,3 +1,4 @@
+import { CLUB_LOCALE } from '@/config/site'
 import type { SeasonCounts } from '@/lib/players/season-math'
 import { mergeBySeason, type StatRow } from './aggregate'
 import { shortSeason } from './season-window'
@@ -139,11 +140,11 @@ const UNITS: Record<MilestoneKey, [string, string]> = { games: ['game', 'games']
 export const unitOf = (key: MilestoneKey, n: number): string => UNITS[key][n === 1 ? 0 : 1]
 
 /** "100 games", "1,000 runs". */
-export const milestoneName = (key: MilestoneKey, threshold: number): string => `${threshold.toLocaleString('en-AU')} ${unitOf(key, threshold)}`
+export const milestoneName = (key: MilestoneKey, threshold: number): string => `${threshold.toLocaleString(CLUB_LOCALE)} ${unitOf(key, threshold)}`
 
 /** "1 game to go for 100 games". */
 export const describeApproaching = (a: Pick<Approaching, 'key' | 'threshold' | 'remaining'>): string =>
-  `${a.remaining.toLocaleString('en-AU')} ${unitOf(a.key, a.remaining)} to go for ${milestoneName(a.key, a.threshold)}`
+  `${a.remaining.toLocaleString(CLUB_LOCALE)} ${unitOf(a.key, a.remaining)} to go for ${milestoneName(a.key, a.threshold)}`
 
 /** "100 games, reached in 2024/25" or "100 games, since 2023/24" (windowLabel is e.g. "2023/24"). */
 export function describeAchieved(a: Achieved, windowLabel: string | null): string {

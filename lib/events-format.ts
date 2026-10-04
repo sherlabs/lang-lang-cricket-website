@@ -1,8 +1,9 @@
+import { CLUB_LOCALE } from '@/config/site'
 // Event dates are UTC-midnight calendar dates with the local time-of-day merged in
 // as UTC hours (see lib/event-occurrences.ts), so every formatter here must read
 // them in UTC or a non-UTC server would shift the displayed day.
 function parts(d: Date, opts: Intl.DateTimeFormatOptions) {
-  const list = new Intl.DateTimeFormat('en-AU', { ...opts, timeZone: 'UTC' }).formatToParts(d)
+  const list = new Intl.DateTimeFormat(CLUB_LOCALE, { ...opts, timeZone: 'UTC' }).formatToParts(d)
   return (t: Intl.DateTimeFormatPartTypes) => list.find((p) => p.type === t)?.value ?? ''
 }
 

@@ -131,11 +131,13 @@ export interface Config {
     club: Club;
     'club-apparel': ClubApparel;
     'site-settings': SiteSetting;
+    theme: Theme;
   };
   globalsSelect: {
     club: ClubSelect<false> | ClubSelect<true>;
     'club-apparel': ClubApparelSelect<false> | ClubApparelSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    theme: ThemeSelect<false> | ThemeSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1562,6 +1564,83 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * The colours, crest and heading font of the whole website and this admin. Saving changes the live site within seconds.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme".
+ */
+export interface Theme {
+  id: number;
+  /**
+   * The five colours a designer chooses. Type a hex code as a # followed by six hex digits.
+   */
+  palette: {
+    /**
+     * Dark backgrounds, headings and dark buttons.
+     */
+    primary: string;
+    /**
+     * Buttons, the current menu item, the keyboard focus ring and highlighted text.
+     */
+    accent: string;
+    /**
+     * The alternate light band between page sections.
+     */
+    surface: string;
+    /**
+     * Normal reading text on light backgrounds.
+     */
+    text: string;
+    /**
+     * Introductions and less important text.
+     */
+    muted: string;
+  };
+  /**
+   * Supporting shades. Leave them alone unless you changed the accent or dark colour; each one is edited directly.
+   */
+  shades: {
+    /**
+     * A slightly lighter dark for menus and badges on the dark colour.
+     */
+    ink: string;
+    /**
+     * The start of the thin gradient line under headings.
+     */
+    accentDark: string;
+    /**
+     * Button hover and labels on dark backgrounds.
+     */
+    accentLight: string;
+    /**
+     * Tinted chips, callouts and date tiles.
+     */
+    accentPale: string;
+    /**
+     * Small accent-coloured text on light backgrounds. Must be dark enough to read.
+     */
+    accentDeep: string;
+    /**
+     * Card backgrounds and empty states.
+     */
+    surfaceMuted: string;
+    /**
+     * Captions and placeholders.
+     */
+    mutedLight: string;
+  };
+  /**
+   * A PNG with a transparent background, at least 512 pixels tall. It is shown on a white tile in the menu, footer and admin sign-in, and on the stat cards. If empty, the logo in Club details is used, then the bundled crest.
+   */
+  crest?: (number | null) | Media;
+  /**
+   * The display face for headings, numbers and the stat cards. The body text stays Inter.
+   */
+  headingFont: 'barlow-condensed' | 'oswald' | 'bebas-neue' | 'anton' | 'playfair-display';
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "club_select".
  */
@@ -1811,6 +1890,37 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme_select".
+ */
+export interface ThemeSelect<T extends boolean = true> {
+  palette?:
+    | T
+    | {
+        primary?: T;
+        accent?: T;
+        surface?: T;
+        text?: T;
+        muted?: T;
+      };
+  shades?:
+    | T
+    | {
+        ink?: T;
+        accentDark?: T;
+        accentLight?: T;
+        accentPale?: T;
+        accentDeep?: T;
+        surfaceMuted?: T;
+        mutedLight?: T;
+      };
+  crest?: T;
+  headingFont?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
