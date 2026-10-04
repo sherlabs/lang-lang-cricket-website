@@ -521,7 +521,7 @@ describe('access: every collection and global (WP6)', () => {
   let payload: Payload
   let before: Record<string, number>
 
-  const PUBLIC_READ = new Set(['media', 'documents', 'gallery-photos', 'sponsors', 'people', 'announcements', 'events', 'event-photos', 'stories', 'players', 'player-seasons', 'player-sponsors', 'yearbooks'])
+  const PUBLIC_READ = new Set(['media', 'documents', 'gallery-photos', 'sponsors', 'people', 'announcements', 'events', 'event-photos', 'stories', 'players', 'player-seasons', 'player-sponsors', 'yearbooks', 'pages', 'news'])
   const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs', 'matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding'])
   const INTERNAL = /^payload-/
 

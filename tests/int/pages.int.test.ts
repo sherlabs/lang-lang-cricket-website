@@ -9,6 +9,8 @@ describe('pages', () => {
   let payload: Payload
   let editor: string
   let admin: string
+  const mediaIds: number[] = []
+  const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64')
   const ctx = { disableRevalidate: true }
   // Loosely typed: required-with-default fields (status, placement) are not optional in the generated create type.
   const make = (data: Record<string, unknown>) => payload.create({ collection: 'pages', data: data as never, context: ctx })
@@ -25,6 +27,8 @@ describe('pages', () => {
     admin = await tokenFor(payload, 'admin')
   })
   afterAll(async () => {
+    for (const id of mediaIds) await payload.delete({ collection: 'media', id, context: ctx }).catch(() => {})
+    await clearCollection(payload, 'pages')
     await destroyTestPayload(payload)
   })
 
@@ -81,11 +85,16 @@ describe('pages', () => {
     expect(bad.status).toBe(400)
     const many = await rest('POST', '/pages', { token: editor, body: { title: 'Too many', content: Array.from({ length: 41 }, () => ({ blockType: 'cta', label: 'x', url: '/a', style: 'primary' })) } })
     expect(many.status).toBe(400)
-    // A file-less media row (as the ETL writes them) is enough for the alt default.
-    const media = await payload.create({ collection: 'media', data: { filename: 'alt-default.jpg', mimeType: 'image/jpeg', alt: 'From the library' }, context: { etl: true, disableRevalidate: true } })
-    const defaulted = await make({ title: 'Alt from media', content: [{ blockType: 'image', image: media.id, alt: '', width: 'wide' }] })
+    // Real (1x1 PNG) uploads, removed in afterAll so the shared media table is left as found.
+    const upload = async (name: string, alt: string) => {
+      const m = await payload.create({ collection: 'media', data: { alt }, file: { data: PNG, mimetype: 'image/png', name, size: PNG.length }, context: ctx })
+      mediaIds.push(m.id)
+      return m
+    }
+    const withAlt = await upload('wpp-alt-default.png', 'From the library')
+    const defaulted = await make({ title: 'Alt from media', content: [{ blockType: 'image', image: withAlt.id, alt: '', width: 'wide' }] })
     expect(defaulted.content?.[0]).toMatchObject({ blockType: 'image', alt: 'From the library' })
-    const noAlt = await payload.create({ collection: 'media', data: { filename: 'no-alt.jpg', mimeType: 'image/jpeg', alt: '' }, context: { etl: true, disableRevalidate: true } })
+    const noAlt = await upload('wpp-no-alt.png', '')
     const refused = await rest('POST', '/pages', { token: editor, body: { title: 'No alt anywhere', content: [{ blockType: 'image', image: noAlt.id, alt: '', width: 'wide' }] } })
     expect(refused.status).toBe(400)
   })

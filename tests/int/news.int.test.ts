@@ -23,6 +23,7 @@ describe('news', () => {
     await make({ title: 'Future post', status: 'published', publishedAt: at(3), body: body('Future body') })
   })
   afterAll(async () => {
+    await clearCollection(payload, 'news')
     await destroyTestPayload(payload)
   })
 
