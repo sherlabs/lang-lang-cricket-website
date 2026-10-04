@@ -1,19 +1,22 @@
 /* Payload admin brand layer (spec §9). Uses Payload's CSS variables, not Tailwind.
    --theme-elevation-* is untouched; success and the primary button go gold on black. */
 :root {
-  --club-gold: #f5b700;
-  --club-gold-light: #ffd966;
-  --club-black: #0b0b0d;
-  --color-success-50: #fff4cc;
-  --color-success-100: #ffeaa3;
-  --color-success-150: #ffe27f;
-  --color-success-200: #ffd966;
-  --color-success-250: #fcc933;
-  --color-success-300: #f5b700;
-  --color-success-350: #e0a800;
-  --color-success-400: #c99400;
-  --color-success-450: #a87b00;
-  --color-success-500: #8a6500;
+  /* The theme variables (--brand-*) are rendered by <ThemeStyle> in app/(payload)/layout.tsx. */
+  --club-gold: rgb(var(--brand-gold));
+  --club-gold-light: rgb(var(--brand-gold-light));
+  --club-black: rgb(var(--brand-black));
+  /* Success ramp: five exact anchors from the theme, five in-between steps mixed from their neighbours.
+     Percentages are fitted so the Lang Lang seed lands within 2 per channel of the previous hex ramp. */
+  --color-success-50: rgb(var(--brand-gold-pale));
+  --color-success-100: color-mix(in srgb, rgb(var(--brand-gold-pale)) 61%, rgb(var(--brand-gold-light)) 39%);
+  --color-success-150: color-mix(in srgb, rgb(var(--brand-gold-pale)) 26%, rgb(var(--brand-gold-light)) 74%);
+  --color-success-200: rgb(var(--brand-gold-light));
+  --color-success-250: color-mix(in srgb, rgb(var(--brand-gold-light)) 52%, rgb(var(--brand-gold)) 48%);
+  --color-success-300: rgb(var(--brand-gold));
+  --color-success-350: color-mix(in srgb, rgb(var(--brand-gold)) 55%, rgb(var(--brand-gold-dark)) 45%);
+  --color-success-400: rgb(var(--brand-gold-dark));
+  --color-success-450: color-mix(in srgb, rgb(var(--brand-gold-dark)) 47%, rgb(var(--brand-gold-deep)) 53%);
+  --color-success-500: rgb(var(--brand-gold-deep));
 }
 
 .btn--style-primary {
@@ -42,7 +45,7 @@
   justify-content: center;
   background: #fff;
   border-radius: 0.5rem;
-  box-shadow: 0 0 0 1px rgb(11 11 13 / 0.1);
+  box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.1);
 }
 .club-logo__tile {
   width: 3.5rem;
@@ -426,14 +429,14 @@
 }
 
 /* ===== Simple admin theme (spec 2026-10-03-simple-admin-design.md) =====
-   Light, roomy, high contrast. Brand tokens from DESIGN.md: cream #FAF7EF, stone #F3F1EA,
-   charcoal #26262B, grey #5A5A62, gold #F5B700, gold-deep #8A6500. */
+   Light, roomy, high contrast. The cream, stone, charcoal, grey and gold-deep variables below read
+   the club theme (Advanced > Site look), so the admin matches the website. */
 :root {
-  --club-cream: #faf7ef;
-  --club-stone: #f3f1ea;
-  --club-charcoal: #26262b;
-  --club-grey: #5a5a62;
-  --club-gold-deep: #8a6500;
+  --club-cream: rgb(var(--brand-cream));
+  --club-stone: rgb(var(--brand-stone));
+  --club-charcoal: rgb(var(--brand-charcoal));
+  --club-grey: rgb(var(--brand-grey));
+  --club-gold-deep: rgb(var(--brand-gold-deep));
 }
 html[data-theme='light'] {
   --theme-bg: var(--club-cream);
@@ -596,7 +599,7 @@ a[href$='/forgot'] {
 }
 .club-tile:hover,
 .club-tile:focus-visible {
-  box-shadow: 0 6px 18px rgb(11 11 13 / 0.12);
+  box-shadow: 0 6px 18px rgb(var(--brand-black) / 0.12);
   transform: translateY(-1px);
 }
 .club-tile__title {
@@ -732,4 +735,52 @@ a[href$='/forgot'] {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ===== Site look: readability report (payload/components/ThemeContrast.tsx) ===== */
+.theme-contrast {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.1);
+}
+.theme-contrast__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+}
+.theme-contrast__summary {
+  margin: 0 0 0.75rem;
+  color: var(--club-grey);
+}
+.theme-contrast__list {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.theme-contrast__row {
+  display: grid;
+  grid-template-columns: 5rem 1fr auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.9375rem;
+}
+.theme-contrast__mark {
+  font-weight: 700;
+}
+.theme-contrast__row--pass .theme-contrast__mark {
+  color: var(--club-gold-deep);
+}
+.theme-contrast__row--warn .theme-contrast__mark {
+  color: var(--club-charcoal);
+  text-decoration: underline dotted;
+}
+.theme-contrast__row--error .theme-contrast__mark {
+  color: var(--theme-error-600, currentColor);
+}
+.theme-contrast__ratio {
+  color: var(--club-grey);
+  font-variant-numeric: tabular-nums;
 }

@@ -16,7 +16,7 @@ import { AnnouncementBanner } from '@/components/announcement-banner'
 import { getSponsorCarouselTiers } from '@/lib/site-settings'
 import { listGalleryPhotos, listSponsors } from '@/lib/content-queries'
 import { listPeople } from '@/lib/people-queries'
-import { getClub } from '@/lib/club'
+import { getClubWithCrest } from '@/lib/theme'
 import { clubIcon } from '@/lib/club-icons'
 import { getLatestAnnouncement } from '@/lib/announcements-queries'
 import { ANNOUNCEMENT_DISMISS_COOKIE, excerpt, shouldShowBanner } from '@/lib/announcements-format'
@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [club, sponsorRows, allContacts, photos, carouselTiers, latestAnnouncement] = await Promise.all([
-    getClub(),
+    getClubWithCrest(),
     listSponsors(),
     listPeople(),
     listGalleryPhotos(6),

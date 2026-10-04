@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { clubDefaults } from '../../../seed/club-defaults'
 import { seedClubGlobal } from '../../../seed/seed-club-global'
+import { seedThemeGlobal } from '../../../seed/seed-theme-global'
 import { ETL_CONTEXT, type EtlContext } from '../media'
 import type { EtlStep } from './types'
 
@@ -69,6 +70,8 @@ export const clubStep: EtlStep = {
       return
     }
     let result = await seedClubGlobal(payload)
+    // Theme (colours, font) is club configuration too: seeded only when never saved.
+    await seedThemeGlobal(payload)
 
     const current = await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })
     const ext = (p: string) => path.extname(p).toLowerCase()

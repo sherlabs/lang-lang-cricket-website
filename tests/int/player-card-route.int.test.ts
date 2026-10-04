@@ -38,6 +38,24 @@ describe('GET /api/public/players/[slug]/card', () => {
     expect(size(Buffer.from(await res.arrayBuffer()))).toEqual({ width: 1200, height: 630 })
   }, 60_000)
 
+  it('renders with an accent override saved, with a different heading font, and with no theme row', async () => {
+    const { sql } = await import('@payloadcms/db-postgres/drizzle')
+    const reset = () => payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."theme"'))
+    try {
+      await payload.updateGlobal({ slug: 'theme', data: { palette: { accent: '#4B96F0' }, headingFont: 'playfair-display' } as never, overrideAccess: true, context: { disableRevalidate: true } })
+      const themed = await call(PLANTED.careerLeader.slug)
+      expect(themed.status).toBe(200)
+      expect(themed.headers.get('content-type')).toBe('image/png')
+      expect(size(Buffer.from(await themed.arrayBuffer()))).toEqual({ width: 1200, height: 630 })
+      await reset()
+      const seeded = await call(PLANTED.careerLeader.slug)
+      expect(seeded.status).toBe(200)
+      expect(size(Buffer.from(await seeded.arrayBuffer()))).toEqual({ width: 1200, height: 630 })
+    } finally {
+      await reset()
+    }
+  }, 60_000)
+
   it('?format=square is a different size', async () => {
     const res = await call(PLANTED.careerLeader.slug, '?format=square')
     expect(res.status).toBe(200)

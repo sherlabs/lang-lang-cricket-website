@@ -4,7 +4,12 @@
  * the Payload Local API, so files land on local disk (`./media`, `./documents`,
  * `./gallery-photos`). It refuses to run with a Blob token, so it never writes to Blob.
  *
- *   pnpm seed:demo --target 127.0.0.1/langlang_dev --confirm
+ *   pnpm seed:demo --target 127.0.0.1/langlang_dev --confirm [--theme-sample blue]
+ *
+ * This is Lang Lang demo content (sponsors, people, emails, ground): a new club replaces the arrays
+ * below. `--theme-sample blue` writes a blue palette to the `theme` global (overwriting a saved theme)
+ * so a second club look can be eyeballed locally; without it the Lang Lang seed is written only when
+ * the theme was never saved.
  *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
@@ -16,6 +21,7 @@ import { getPayload, type CollectionSlug, type Payload } from 'payload'
 import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
 import { seedClubGlobal } from '../seed/seed-club-global'
+import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { guard } from './_guard'
 
 const PUBLIC = path.resolve(process.cwd(), 'public')
@@ -111,6 +117,9 @@ async function main() {
 
   try {
     console.log(`[seed-demo] club global: ${await seedClubGlobal(payload)}`)
+    const sample = process.argv.includes('--theme-sample') ? process.argv[process.argv.indexOf('--theme-sample') + 1] : undefined
+    if (sample && sample !== 'blue') throw new Error(`Unknown --theme-sample "${sample}" (only "blue" exists)`)
+    console.log(`[seed-demo] theme global: ${await seedThemeGlobal(payload, sample === 'blue' ? { sample: 'blue', force: true } : {})}`)
 
     await seedCollection(payload, 'documents', async () => {
       let n = 0

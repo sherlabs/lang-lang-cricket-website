@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { getPlayerProfile as loadPlayerProfile } from '@/lib/players/queries'
 import { baseOpenGraph, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
+import { getClubWithCrest } from '@/lib/theme'
 import { battingView, bowlingView } from '@/lib/players/view'
 import { Avatar } from '@/components/avatar'
 import { SponsoredBy } from '@/components/players/player-sponsors'
@@ -65,7 +66,7 @@ export async function generateMetadata(props: Props) {
 export default async function PlayerPage(props: Props) {
   const params = await props.params;
   const includeJuniors = (await props.searchParams).juniors === '1'
-  const [club, settings, data] = await Promise.all([getClub(), getStatsSettings(), getVisibleStatData()])
+  const [club, settings, data] = await Promise.all([getClubWithCrest(), getStatsSettings(), getVisibleStatData()])
   const profile = await getPlayerProfile(params.slug, club.teamNamePrefix)
   if (!profile) notFound()
   const { player } = profile

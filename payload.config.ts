@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
+import { BRANDING } from './config/site'
 import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { Announcements } from './payload/collections/Announcements'
@@ -28,6 +29,7 @@ import { Yearbooks } from './payload/collections/Yearbooks'
 import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
 import { SiteSettings } from './payload/globals/SiteSettings'
+import { Theme } from './payload/globals/Theme'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
 
 // First statement: every entry point (next dev/start/build, the payload CLI incl.
@@ -52,7 +54,7 @@ export default buildConfig({
     theme: 'light',
     meta: {
       titleSuffix: adminTitleSuffix,
-      icons: [{ rel: 'icon', type: 'image/png', url: '/assets/branding/logo.png' }],
+      icons: [{ rel: 'icon', type: 'image/png', url: BRANDING.logo }],
     },
     components: {
       graphics: { Logo: '/payload/components/Logo#Logo', Icon: '/payload/components/Icon#Icon' },
@@ -68,7 +70,7 @@ export default buildConfig({
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
   collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks],
-  globals: [Club, ClubApparel, SiteSettings],
+  globals: [Club, ClubApparel, SiteSettings, Theme],
   editor: lexicalEditor(),
   db: postgresAdapter({
     pool: {

@@ -43,6 +43,7 @@ export const advancedNav: NavEntry[] = [
   { key: 'users', label: 'Users', path: '/collections/users' },
   { key: 'club', label: 'Club details', path: '/globals/club' },
   { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
+  { key: 'theme', label: 'Site look (colours and fonts)', path: '/globals/theme' },
   { key: 'media', label: 'Media library', path: '/collections/media' },
   { key: 'event-photos', label: 'Event photos', path: '/collections/event-photos' },
   { key: 'event-rsvps', label: 'RSVPs', path: '/collections/event-rsvps' },

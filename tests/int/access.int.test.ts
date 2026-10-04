@@ -538,7 +538,7 @@ describe('access: every collection and global (WP6)', () => {
   it('the collection list is the one this file classifies', () => {
     const slugs = payload.config.collections.map((c) => c.slug).filter((s) => !INTERNAL.test(s)).sort()
     expect(slugs).toEqual([...PUBLIC_READ, ...PRIVATE_READ].sort())
-    expect(payload.config.globals.map((g) => g.slug).sort()).toEqual(['club', 'club-apparel', 'site-settings'])
+    expect(payload.config.globals.map((g) => g.slug).sort()).toEqual(['club', 'club-apparel', 'site-settings', 'theme'])
   })
 
   it('anonymous REST cannot create, update or delete in any collection (bulk or by id)', async () => {
@@ -560,7 +560,7 @@ describe('access: every collection and global (WP6)', () => {
   })
 
   it('anonymous REST cannot update any global', async () => {
-    for (const g of ['club', 'club-apparel', 'site-settings']) expect((await rest('POST', `/globals/${g}`, { body: {} })).status).toBe(403)
+    for (const g of ['club', 'club-apparel', 'site-settings', 'theme']) expect((await rest('POST', `/globals/${g}`, { body: {} })).status).toBe(403)
   })
 
   it('anonymous REST reads only the public collections', async () => {

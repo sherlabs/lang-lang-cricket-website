@@ -8,6 +8,7 @@ import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { getPublishedStoryBySlug } from '@/lib/stories-queries'
 import { baseOpenGraph, truncateDescription, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
 import { getClub } from '@/lib/club'
+import { getClubWithCrest } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
 
 export default async function StoryDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
-  const [club, story] = await Promise.all([getClub(), getPublishedStoryBySlug(params.slug)])
+  const [club, story] = await Promise.all([getClubWithCrest(), getPublishedStoryBySlug(params.slug)])
   if (!story) notFound()
 
   return (

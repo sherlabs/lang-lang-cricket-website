@@ -12,6 +12,7 @@ import * as migration_20261003_120047_profile_extras from './20261003_120047_pro
 import * as migration_20261003_123438_yearbooks from './20261003_123438_yearbooks';
 import * as migration_20261003_214142_people_sponsors_apparel from './20261003_214142_people_sponsors_apparel';
 import * as migration_20261003_223515_people_more_roles from './20261003_223515_people_more_roles';
+import * as migration_20261004_031119_theme_global from './20261004_031119_theme_global';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20261003_223515_people_more_roles.up,
     down: migration_20261003_223515_people_more_roles.down,
-    name: '20261003_223515_people_more_roles'
+    name: '20261003_223515_people_more_roles',
+  },
+  {
+    up: migration_20261004_031119_theme_global.up,
+    down: migration_20261004_031119_theme_global.down,
+    name: '20261004_031119_theme_global'
   },
 ];

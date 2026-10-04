@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
-import { BRAND } from "./config/brand";
+import { BRAND_TW } from "./config/brand";
 
 const config: Config = {
   darkMode: ["class"],
@@ -13,7 +13,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: BRAND,
+        brand: BRAND_TW,
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -77,8 +77,8 @@ const config: Config = {
         DEFAULT: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(11,11,13,0.04), 0 8px 24px -12px rgba(11,11,13,0.18)",
-        "card-hover": "0 2px 4px rgba(11,11,13,0.06), 0 18px 40px -16px rgba(11,11,13,0.28)",
+        card: "0 1px 2px rgb(var(--brand-black) / 0.04), 0 8px 24px -12px rgb(var(--brand-black) / 0.18)",
+        "card-hover": "0 2px 4px rgb(var(--brand-black) / 0.06), 0 18px 40px -16px rgb(var(--brand-black) / 0.28)",
       },
       borderRadius: {
         lg: "var(--radius)",

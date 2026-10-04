@@ -80,11 +80,11 @@
   }
   * {
     @apply border-border;
-    outline-color: #f5b700;
+    outline-color: rgb(var(--brand-gold));
   }
   /* Visible, brand-coloured keyboard focus ring on every focusable element. */
   :focus-visible {
-    outline: 2px solid #f5b700;
+    outline: 2px solid rgb(var(--brand-gold));
     outline-offset: 3px;
     border-radius: 0.25rem;
   }
@@ -94,9 +94,13 @@
   html {
     @apply scroll-smooth font-sans;
   }
+  /* Single-weight display faces (Bebas Neue, Anton) must never be faux-bolded by `font-bold`. */
+  .font-heading {
+    font-synthesis-weight: none;
+  }
   ::selection {
-    background: #f5b700;
-    color: #0b0b0d;
+    background: rgb(var(--brand-gold));
+    color: rgb(var(--brand-black));
   }
 }
 
