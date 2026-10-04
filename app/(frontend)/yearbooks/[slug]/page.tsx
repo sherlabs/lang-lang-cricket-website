@@ -16,6 +16,7 @@ import {
   YearbookPhotos,
   YearbookResults,
   YearbookSponsors,
+  YearbookSummary,
 } from '@/components/stats/yearbook-sections'
 import { getClub } from '@/lib/club'
 import { getYearbookMatchData } from '@/lib/match-store/yearbook-queries'
@@ -143,6 +144,8 @@ export default async function YearbookPage({ params }: Props) {
             { title: 'Our sponsors', text: book.sponsorMessage },
           ]}
         />
+
+        <YearbookSummary text={book.seasonSummary} aiNote={book.seasonSummaryAi ? copy.aiNote : null} />
 
         {results.status === 'ok' && <YearbookOverview summary={summariseResults(results.games)} />}
 

@@ -21,6 +21,7 @@ import * as migration_20261004_063722_w2_s2_saved_reports from './20261004_06372
 import * as migration_20261004_071554_w2_s3_import_tags from './20261004_071554_w2_s3_import_tags';
 import * as migration_20261004_072946_w2_s3_merge_log from './20261004_072946_w2_s3_merge_log';
 import * as migration_20261004_073717_w2_s3_labels_names from './20261004_073717_w2_s3_labels_names';
+import * as migration_20261004_074421_w2_s3_yearbook_ai from './20261004_074421_w2_s3_yearbook_ai';
 
 export const migrations = [
   {
@@ -136,6 +137,11 @@ export const migrations = [
   {
     up: migration_20261004_073717_w2_s3_labels_names.up,
     down: migration_20261004_073717_w2_s3_labels_names.down,
-    name: '20261004_073717_w2_s3_labels_names'
+    name: '20261004_073717_w2_s3_labels_names',
+  },
+  {
+    up: migration_20261004_074421_w2_s3_yearbook_ai.up,
+    down: migration_20261004_074421_w2_s3_yearbook_ai.down,
+    name: '20261004_074421_w2_s3_yearbook_ai'
   },
 ];

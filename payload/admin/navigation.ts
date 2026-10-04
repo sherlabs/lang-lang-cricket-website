@@ -59,7 +59,7 @@ export const advancedNav: NavEntry[] = [
  * Collections written only by code (sync, scripts, seed), with no admin UI at all: hidden for every
  * role and never writable through REST. `tests/admin-visibility.test.ts` enforces both.
  */
-export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log']
+export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter']
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {

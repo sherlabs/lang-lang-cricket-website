@@ -48,6 +48,7 @@
     "@tiptap/starter-kit": "^2",
     "@types/jsdom": "^30.0.0",
     "@vercel/blob": "^2.8.0",
+    "ai": "^7.0.127",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "graphql": "^16.8.1",

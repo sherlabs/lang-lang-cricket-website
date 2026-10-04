@@ -25,6 +25,9 @@ export type Yearbook = YearbookSummary & {
   presidentMessage: string
   coachMessage: string
   sponsorMessage: string
+  /** The season summary, and whether it came from the AI draft button (shown with a note). */
+  seasonSummary: string
+  seasonSummaryAi: boolean
   photos: GalleryPhoto[]
   sponsors: Sponsor[]
 }
@@ -74,6 +77,8 @@ export async function getPublishedYearbookBySlug(slug: string): Promise<Yearbook
     presidentMessage: d.presidentMessage ?? '',
     coachMessage: d.coachMessage ?? '',
     sponsorMessage: d.sponsorMessage ?? '',
+    seasonSummary: d.seasonSummary ?? '',
+    seasonSummaryAi: Boolean(d.seasonSummaryAi) && Boolean(d.seasonSummary?.trim()),
     photos: populated(d.photos).map(toGalleryPhoto).sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id),
     sponsors: populated(d.featuredSponsors).map(toSponsor),
   }

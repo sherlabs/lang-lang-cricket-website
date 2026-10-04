@@ -94,6 +94,7 @@ export interface Config {
     'match-fielding': MatchFielding;
     'saved-reports': SavedReport;
     'merge-log': MergeLog;
+    'ai-draft-counter': AiDraftCounter;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -138,6 +139,7 @@ export interface Config {
     'match-fielding': MatchFieldingSelect<false> | MatchFieldingSelect<true>;
     'saved-reports': SavedReportsSelect<false> | SavedReportsSelect<true>;
     'merge-log': MergeLogSelect<false> | MergeLogSelect<true>;
+    'ai-draft-counter': AiDraftCounterSelect<false> | AiDraftCounterSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -837,6 +839,22 @@ export interface Yearbook {
    * Leave a blank line between paragraphs.
    */
   sponsorMessage?: string | null;
+  /**
+   * A short look back at the season: the record, standout performers, turning points. Leave a blank line between paragraphs. The site administrator can ask AI for a first draft with the button below; you then read it, correct it and tick the box.
+   */
+  seasonSummary?: string | null;
+  /**
+   * Set when the summary came from the AI draft button.
+   */
+  seasonSummaryAi?: boolean | null;
+  /**
+   * Needed before an AI-drafted summary can be published. Tick it only after reading the whole summary.
+   */
+  seasonSummaryChecked?: boolean | null;
+  /**
+   * Who ticked the box (kept for the record).
+   */
+  seasonSummaryCheckedBy?: (number | null) | User;
   photos?: (number | GalleryPhoto)[] | null;
   featuredSponsors?: (number | Sponsor)[] | null;
   updatedAt: string;
@@ -1241,6 +1259,19 @@ export interface MergeLog {
   createdAt: string;
 }
 /**
+ * How many AI yearbook drafts were asked for each day. Written by the site; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-draft-counter".
+ */
+export interface AiDraftCounter {
+  id: number;
+  day: string;
+  count: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1371,6 +1402,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'merge-log';
         value: number | MergeLog;
+      } | null)
+    | ({
+        relationTo: 'ai-draft-counter';
+        value: number | AiDraftCounter;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1767,6 +1802,10 @@ export interface YearbooksSelect<T extends boolean = true> {
   presidentMessage?: T;
   coachMessage?: T;
   sponsorMessage?: T;
+  seasonSummary?: T;
+  seasonSummaryAi?: T;
+  seasonSummaryChecked?: T;
+  seasonSummaryCheckedBy?: T;
   photos?: T;
   featuredSponsors?: T;
   updatedAt?: T;
@@ -2015,6 +2054,16 @@ export interface MergeLogSelect<T extends boolean = true> {
   createdBy?: T;
   undoneAt?: T;
   undoneBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-draft-counter_select".
+ */
+export interface AiDraftCounterSelect<T extends boolean = true> {
+  day?: T;
+  count?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -1,5 +1,8 @@
-import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
-import { isStaff, nobodyField, staffOr } from '../access'
+import { APIError, type CollectionBeforeChangeHook, type CollectionConfig } from 'payload'
+import { nextSummaryState } from '../../lib/ai/summary-state'
+import { adminOnlyCondition } from '../admin/visibility'
+import { yearbookDraftEndpoint } from '../endpoints/yearbookDraft'
+import { isAdminField, isStaff, nobodyField, staffOr } from '../access'
 import { maxChars } from '../fields/validators'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { uniqueSlug } from '../hooks/slug'
@@ -22,6 +25,22 @@ const stampPublishedAt: CollectionBeforeChangeHook = ({ data, originalDoc }) => 
   if (data.status === 'published' && !(originalDoc as { publishedAt?: string | null } | undefined)?.publishedAt && !data.publishedAt) {
     data.publishedAt = new Date().toISOString()
   }
+  return data
+}
+
+/**
+ * The AI-summary lifecycle (W2 spec 6.5): clears the flag when the summary is empty, resets the tick when the text changes,
+ * records who ticked it, and refuses to publish an AI-drafted summary nobody has ticked as read. Skipped for the ETL.
+ */
+const summaryState: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
+  if (req.context?.etl) return data
+  const userId = typeof req.user?.id === 'number' ? req.user.id : null
+  const original = originalDoc as Parameters<typeof nextSummaryState>[1]
+  const next = nextSummaryState(data, original, userId)
+  if (next.error) throw new APIError(next.error, 400, undefined, true)
+  data.seasonSummaryAi = next.seasonSummaryAi
+  data.seasonSummaryChecked = next.seasonSummaryChecked
+  data.seasonSummaryCheckedBy = next.seasonSummaryCheckedBy
   return data
 }
 
@@ -57,10 +76,11 @@ export const Yearbooks: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [trimStrings(['title', 'seasonName', 'premiership'])],
-    beforeChange: [stampPublishedAt],
+    beforeChange: [summaryState, stampPublishedAt],
     afterChange: [revalidateAfterChange(paths)],
     afterDelete: [revalidateAfterDelete(paths)],
   },
+  endpoints: [yearbookDraftEndpoint],
   timestamps: true,
   fields: [
     { name: 'title', type: 'text', required: true, validate: maxChars(200, { required: true }), admin: { description: 'For example "2025/26 Yearbook".' } },
@@ -113,6 +133,43 @@ export const Yearbooks: CollectionConfig = {
     { name: 'presidentMessage', type: 'textarea', defaultValue: '', validate: maxChars(MESSAGE_MAX), admin: { description: 'Leave a blank line between paragraphs.' } },
     { name: 'coachMessage', type: 'textarea', defaultValue: '', validate: maxChars(MESSAGE_MAX), admin: { description: 'Leave a blank line between paragraphs.' } },
     { name: 'sponsorMessage', type: 'textarea', defaultValue: '', validate: maxChars(MESSAGE_MAX), admin: { description: 'Leave a blank line between paragraphs.' } },
+    {
+      name: 'seasonSummary',
+      label: 'Season summary',
+      type: 'textarea',
+      defaultValue: '',
+      validate: maxChars(MESSAGE_MAX),
+      admin: {
+        description: 'A short look back at the season: the record, standout performers, turning points. Leave a blank line between paragraphs. The site administrator can ask AI for a first draft with the button below; you then read it, correct it and tick the box.',
+      },
+    },
+    {
+      name: 'seasonSummaryAi',
+      type: 'checkbox',
+      defaultValue: false,
+      // Set by the draft button (admin only), cleared by the hook when the summary is empty. Editors never see or send it.
+      access: { create: isAdminField, update: isAdminField },
+      admin: { condition: adminOnlyCondition(), readOnly: true, description: 'Set when the summary came from the AI draft button.' },
+    },
+    {
+      name: 'seasonSummaryDraft',
+      type: 'ui',
+      admin: { condition: adminOnlyCondition(), components: { Field: '/payload/components/YearbookDraftButton#YearbookDraftButton' } },
+    },
+    {
+      name: 'seasonSummaryChecked',
+      label: 'I have read and corrected this text',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Needed before an AI-drafted summary can be published. Tick it only after reading the whole summary.' },
+    },
+    {
+      name: 'seasonSummaryCheckedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      access: hookOwned,
+      admin: { readOnly: true, condition: adminOnlyCondition(), description: 'Who ticked the box (kept for the record).' },
+    },
     { name: 'photos', type: 'relationship', relationTo: 'gallery-photos', hasMany: true },
     { name: 'featuredSponsors', type: 'relationship', relationTo: 'sponsors', hasMany: true },
   ],

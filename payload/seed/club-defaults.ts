@@ -179,7 +179,7 @@ export type ClubDefaults = ClubGlobalDefaults & {
       sameLabel: string
     }
     statlab: { header: HeaderCopy; empty: string; presetsHeading: string; coverageNote: string }
-    yearbooks: { header: HeaderCopy; empty: string; printLabel: string; statsHeading: string }
+    yearbooks: { header: HeaderCopy; empty: string; printLabel: string; statsHeading: string; aiNote: string }
     matches: { header: HeaderCopy; empty: string; coverageNote: string; narrowHint: string }
     storyDraftEdit: { header: HeaderCopy }
     emptyStates: { sponsors: string; documents: string; announcements: string }
@@ -643,6 +643,7 @@ export const clubDefaults: ClubDefaults = {
       empty: 'No yearbooks have been published yet.',
       printLabel: 'Print or save as PDF',
       statsHeading: 'The numbers',
+      aiNote: 'Written with AI assistance',
     },
     matches: {
       header: {

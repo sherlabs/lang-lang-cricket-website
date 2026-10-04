@@ -89,3 +89,13 @@ export function agencyCreditHref(siteUrl: string): string {
   }
   return `${AGENCY_CREDIT.url}?utm_source=${host}&utm_medium=referral&utm_campaign=footer_credit`
 }
+
+/**
+ * AI-assisted yearbook summary (W2 spec 6.5). The model id is a plain Vercel AI Gateway `provider/model` string and the only
+ * place one appears in code; env `YEARBOOK_AI_MODEL` wins. `dailyDraftLimit` is the site-wide cap on drafts per day (env
+ * `AI_DAILY_DRAFT_LIMIT`). Drafting is off until `AI_GATEWAY_API_KEY` (or a Vercel OIDC token) is set.
+ */
+export const AI_DEFAULTS = {
+  yearbookModel: 'anthropic/claude-sonnet-4.6',
+  dailyDraftLimit: 20,
+} as const

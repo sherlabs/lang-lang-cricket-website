@@ -17,3 +17,6 @@ export const DELETE = REST_DELETE(config)
 export const PATCH = REST_PATCH(config)
 export const PUT = REST_PUT(config)
 export const OPTIONS = REST_OPTIONS(config)
+
+// Added by hand: the AI yearbook draft endpoint waits on a model, so allow it more than the platform default.
+export const maxDuration = 60

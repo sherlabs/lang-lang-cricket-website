@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { BRANDING } from './config/site'
 import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
+import { AiDraftCounter } from './payload/collections/AiDraftCounter'
 import { Announcements } from './payload/collections/Announcements'
 import { Documents } from './payload/collections/Documents'
 import { EventPhotos } from './payload/collections/EventPhotos'
@@ -80,7 +81,7 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter],
   globals: [Club, ClubApparel, SiteSettings, Theme],
   endpoints: [...historyImportEndpoints],
   editor: lexicalEditor(),

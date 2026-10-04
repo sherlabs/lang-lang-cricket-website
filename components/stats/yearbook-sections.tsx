@@ -28,6 +28,26 @@ export function YearbookMessages({ items }: { items: { title: string; text: stri
   )
 }
 
+/**
+ * The season summary (W2 spec 6.5): plain paragraphs as text (never HTML). `aiNote` is shown under an AI-assisted summary; it
+ * says only that AI helped and makes no claim about who read it.
+ */
+export function YearbookSummary({ text, aiNote }: { text: string; aiNote: string | null }) {
+  const paragraphs = messageParagraphs(text)
+  if (!paragraphs.length) return null
+  return (
+    <section aria-labelledby="yb-summary" className="print-section space-y-6">
+      <SubHeading id="yb-summary" title="The season in review" />
+      <article className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-brand-black/5 sm:p-8">
+        <div className="space-y-3 text-base leading-relaxed text-brand-charcoal">
+          {paragraphs.map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
+        </div>
+        {aiNote && <p className="mt-4 text-sm italic text-brand-grey">{aiNote}</p>}
+      </article>
+    </section>
+  )
+}
+
 export function YearbookOverview({ summary }: { summary: ResultSummary }) {
   const tiles = [
     { label: 'Played', value: summary.played },
