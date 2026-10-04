@@ -31,8 +31,10 @@ import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
+import { PRESETS, presetHref } from '../../lib/stats/presets'
 import { guard } from './_guard'
 import { reconcileSeed, seedMatchSeasonRows, seedMatchStore } from './fixtures/match-seed-db'
+import { MATCH_SEED_SEASONS } from './fixtures/match-seed-data'
 
 const PUBLIC = path.resolve(process.cwd(), 'public')
 const CTX = { disableRevalidate: true } as const
@@ -121,6 +123,46 @@ async function seedDemoMatches(payload: Payload) {
   const seasonRows = (await isEmpty(payload, 'player-seasons')) ? await seedMatchSeasonRows(payload, PLAYHQ_ORG_ID) : 0
   console.log(`[seed-demo] player-seasons: ${seasonRows} created for the seeded players`)
   console.log(`[seed-demo] matches: ${r.created} created, ${r.skipped} skipped by the mapper (abandoned), ${r.players} players and ${r.aliases} aliases created; reconcile: ${rec.mismatchedPlayers} mismatches over ${rec.playersCompared} players`)
+}
+
+/**
+ * W2 StatLab demo data: a published yearbook for the newest seeded season (so the match-data sections
+ * render in the preview) and two admin-only saved reports built from presets. Idempotent.
+ */
+async function seedDemoStatLab(payload: Payload) {
+  const season = MATCH_SEED_SEASONS[MATCH_SEED_SEASONS.length - 1].name
+  if ((await payload.count({ collection: 'matches', overrideAccess: true })).totalDocs === 0) {
+    console.log('[seed-demo] yearbook and saved reports: no stored matches, skipped')
+    return
+  }
+  const have = await payload.count({ collection: 'yearbooks', where: { seasonName: { equals: season } }, overrideAccess: true })
+  if (have.totalDocs === 0) {
+    await payload.create({
+      collection: 'yearbooks',
+      data: { title: `${season.replace(/^[A-Za-z]+ /, '')} Yearbook`, seasonName: season, status: 'published', presidentMessage: '', coachMessage: '', sponsorMessage: '' },
+      overrideAccess: true, context: CTX,
+    })
+    console.log(`[seed-demo] yearbooks: published ${season}`)
+  } else console.log('[seed-demo] yearbooks: already present, skipped')
+  if (!(await isEmpty(payload, 'saved-reports'))) {
+    console.log('[seed-demo] saved-reports: not empty, skipped')
+    return
+  }
+  const owner = (await payload.find({ collection: 'users', where: { role: { equals: 'admin' } }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+  if (!owner) {
+    console.log('[seed-demo] saved-reports: no admin user (run seed:admin first), skipped')
+    return
+  }
+  for (const key of ['fifty-makers', 'best-partnerships']) {
+    const preset = PRESETS.find((p) => p.key === key)!
+    const href = presetHref(preset)
+    await payload.create({
+      collection: 'saved-reports',
+      data: { title: preset.label, query: href.slice(href.indexOf('?') + 1), description: preset.blurb, owner: owner.id },
+      overrideAccess: true, context: CTX,
+    })
+  }
+  console.log('[seed-demo] saved-reports: 2 created')
 }
 
 async function main() {
@@ -315,6 +357,7 @@ async function main() {
     })
 
     await seedDemoMatches(payload)
+    await seedDemoStatLab(payload)
   } finally {
     await payload.destroy()
   }

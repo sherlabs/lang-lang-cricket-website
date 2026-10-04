@@ -2,10 +2,10 @@
 title: Season yearbooks
 status: shipped
 routes: ["/yearbooks", "/yearbooks/[slug]"]
-collections: [yearbooks, player-seasons, gallery-photos, sponsors]
+collections: [yearbooks, player-seasons, gallery-photos, sponsors, matches]
 admin: "Season yearbooks (everyday menu)"
 owner: "Committee (president, secretary); readers are members, sponsors and families"
-related: [honour-board, stats-leaderboards, sponsors, gallery, match-archive]
+related: [honour-board, stats-leaderboards, sponsors, gallery, match-archive, match-data-store, statlab-and-csv-export]
 added: feat/payload-cms
 ---
 
@@ -23,6 +23,11 @@ BetterStats feature A9. The club wanted a yearbook per season that mixes the com
 - Collection `yearbooks`: title, season name (unique, for example "Summer 2025/26"), slug (from the season, never changes), status (draft or published), cover, optional premiership headline, three plain-text messages (president, coach, sponsors; blank line between paragraphs), photos picked from the gallery and featured sponsors.
 - `/yearbooks` lists published yearbooks, newest first. `/yearbooks/[slug]` renders one; drafts return 404. Every query states `status: published` itself because the Local API ignores access rules; the sitemap does too.
 - Auto-filled, computed at request time and never stored: results overview (games, wins, losses, draws, win rate; abandoned games are not counted as played) and results by grade from PlayHQ (omitted with a note if PlayHQ is unavailable or the season is older than PlayHQ), top batters, bowlers and fielders for the season, most games, a neutral "Top all-rounders" ranking (runs plus 20 times wickets, minimum 100 runs and 8 wickets, formula printed on the page and not presented as an award), and the honours whose years mention the season.
+- **Match-data sections** (W2, [#13](https://github.com/sherlabs/lang-lang-cricket-website/issues/13)), shown only when the season has stored matches (otherwise the page is exactly as above), each with the coverage caption and "N of M finished games stored" (M from the live fixtures list when PlayHQ answers):
+  - *Results by grade with scores*: date, round, opposition, our score and their score as `runs/wickets (overs)` (a two-day game shows both innings, `d` marks a declaration), the result letter and word (forfeits and first-innings results are spelled out). It replaces the fixtures-list results only when every finished, non-abandoned, non-derby game of the season in PlayHQ is also stored (or when PlayHQ is unavailable or does not list the season); otherwise the fixtures list stays and the section says it is the source and how many games are stored. The two sources are never mixed in one list.
+  - *Win and loss progression*: one inline SVG per grade, a strip of result letters (W won, L lost, D drawn, T tied, N no result, f for a forfeit; never colour alone) above a stepped line of wins minus losses, with a text description and the same numbers in a table behind "Show the numbers".
+  - *Partnership records*: the best pair at each wicket and the top five of the season, inferred from batting order and fall of wickets, with a line saying how many innings could not be paired.
+  - *Season highlights* (stat leaders, not honours): highest score with opposition and date, best bowling figures, most fifties and best partnership, each from match data. A second "Top all-rounders, from match data" table (same rule as below) appears only when the stored results are complete. It sits beside the existing all-rounder table, which is now titled "from season totals"; the two are never combined on one line.
 - A print stylesheet hides the menu and forces a light page; a "Print / save as PDF" button calls the browser print dialog.
 - Structured data is `CreativeWork`; the page is in the sitemap. Saving revalidates `/yearbooks` and the page.
 - Draft assets are not private: gallery photos and media are readable by direct URL, so do not upload unreleased pictures until the day you publish.
@@ -35,5 +40,5 @@ BetterStats feature A9. The club wanted a yearbook per season that mixes the com
 
 ## Not included / deferred
 
-- Sections that need match data: results by grade with progression chart, partnerships, all-rounder honours ([#13](https://github.com/sherlabs/lang-lang-cricket-website/issues/13)). AI-written narrative ([#12](https://github.com/sherlabs/lang-lang-cricket-website/issues/12)).
+- All-rounder *honours* stay committee-entered. AI-written narrative ([#12](https://github.com/sherlabs/lang-lang-cricket-website/issues/12)).
 - Seasons before PlayHQ have editorial content only. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,11 +1,11 @@
 ---
 title: StatLab and CSV export
 status: shipped
-routes: ["/statlab", "/statlab/export"]
-collections: [player-seasons, players, site-settings]
-admin: "None; qualification and category rules are in Site settings"
+routes: ["/statlab", "/statlab/export", "/statlab/export/caption", "/statlab/saved"]
+collections: [player-seasons, players, site-settings, matches, saved-reports]
+admin: "None for visitors; qualification, category rules and the match minimums are in Site settings; saved reports are under Advanced"
 owner: "Visitors who like numbers (selectors, coaches, statisticians); the treasurer or secretary for exports"
-related: [stats-leaderboards, club-records, players-directory-and-profiles]
+related: [stats-leaderboards, club-records, players-directory-and-profiles, match-data-store, saved-reports]
 added: feat/payload-cms
 ---
 
@@ -16,24 +16,28 @@ added: feat/payload-cms
 
 ## Why it was built
 
-Leaderboards answer fixed questions. StatLab-lite (BetterStats feature A11) lets people choose columns, filters, sorting and minimum thresholds, and download the result, without a database of saved reports.
+Leaderboards answer fixed questions. StatLab (BetterStats feature A11, extended in W2 by [#8](https://github.com/sherlabs/lang-lang-cricket-website/issues/8)) lets people choose columns, filters, sorting and minimum thresholds, and download the result. Once matches are stored one by one it can also answer "against whom?" and "in which format?", and count things a season total cannot (fifties, ducks, run outs, partnerships).
 
 ## What it does
 
-- `/statlab` is a report builder driven entirely by the URL: `scope` (career since 2023/24, one row per player per season, or one row per player-season-team row), season, grade, categories, columns (`cols`, at most 12 from the 26 metrics), sort (`sort=runs.desc`), per-metric minimums (`min.runs=100`), name search and an "active players only" option.
-- 12 presets (each just a query string): Top run scorers, Best batting averages, Hard hitters, Strike bowlers, Economical bowlers, Maiden makers, Best seasons, All-rounders, Catching machines, Most capped, Rising stars, Active squad snapshot.
-- "Save report" is the URL; there is no stored report. Unknown parameters are dropped and values clamped.
-- The page shows up to 500 rows. `/statlab/export?...` with the same parameters downloads a CSV of up to 5,000 rows (a first-line `# truncated to 5000 of N rows` and `X-Export-Truncated: 1` if cut). Non-canonical query strings get a 308 redirect to the canonical form so each report is one cache entry.
-- CSV safety: text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading apostrophe; overs and best bowling are written as text so spreadsheets do not turn them into dates. The filename uses only the whitelisted scope.
-- Caching and privacy: export is `Cache-Control: public, s-maxage=60` (short, because hiding a player is a privacy action), `X-Robots-Tag: noindex`; robots.txt disallows the export, the sitemap lists `/statlab` only. Hidden players are excluded from both.
-- Known quirks: the overs minimum is in true decimal overs (balls divided by 6); minimums are rounded to 0.1.
+- `/statlab` is a report builder driven entirely by the URL: `scope` (career since the first stored season, one row per player per season, or one row per player-season-team row), season, grade, categories, **opposition** (`opp`, a known opposition from the stored matches) and **format** (`fmt`, one day or two day), columns (`cols`, at most 12 from about 45), sort (`sort=runs.desc`), per-column minimums (`min.runs=100`), name search and an "active players only" option. Unknown parameters are dropped and values clamped. A decade filter is not offered: selecting seasons covers it.
+- **Mode rule.** A table is worked out either from the season totals (as before) or wholly from stored match rows, never from a mix. Choosing an opposition, a format, a column marked "match data", or a minimum on such a column puts the whole table in match mode, and the page says so in one line. In match mode the 26 classic columns come from the same match rows, so they exist for any opponent. The caption under the heading says which: "Season totals since ..." or "From match data. From <date>, N games stored. K of M innings have <ball-by-ball totals | bowling figures | fall of wickets>." (the same caption function as the stats pages and the yearbook).
+- **Columns.** The 26 classic ones plus 19 match-only: fifties, hundreds, ducks, golden ducks, five-wicket hauls, three-wicket hauls, run outs, stumpings, bowled / caught / LBW share of dismissals, not-out share, average batting position (as scored), best partnership, fifty partnerships, wins, win percentage, balls per boundary and fifty conversion. Each states its rule in the column picker. Rates have a minimum sample (set in Site settings, "Match-data minimums"); below it the cell is a dash, never zero. Run outs and stumpings need a fielding record for the innings; five-wicket hauls are "recorded" only; partnership columns are inferred from batting order and fall of wickets and are a dash when no stand could be derived.
+- **18 presets** (each just a query string): the 12 original ones (Top run scorers, Best batting averages, Hard hitters, Strike bowlers, Economical bowlers, Maiden makers, Best seasons, All-rounders, Catching machines, Most capped, Rising stars, Active squad snapshot) plus six match-data ones: Fifty makers, Century makers, Five-for club, Run-out specialists, Boundary hitters and Best partnerships. There are no opposition-specific presets; an opposition is data, not code.
+- **Reports.** The report is the URL, so the copy-link button is the share link. Admins can also keep a bookmark list (see [Saved reports](./saved-reports.mdx)); there is no public list of reports.
+- The page shows up to 500 rows. `/statlab/export?...` with the same parameters downloads a CSV of up to 5,000 rows. Non-canonical query strings get a 308 redirect to the canonical form so each report is one cache entry. A cut-off export is flagged by the `X-Export-Truncated: 1` response header only.
+- **CSV.** The body is a header and data rows, nothing else: there are no `#` comment lines (spreadsheets show them as data), which replaces the old first-line truncation note. In match mode a final `Source` column reads "Match data". `GET /statlab/export/caption?<same query>` returns the coverage caption as plain text for anyone who wants it with the file. Text cells that a spreadsheet could read as a formula are prefixed with an apostrophe: those starting (after any spaces) with `=`, `+`, `-`, `@`, `|`, a tab or carriage return, the full-width forms of `= + - @`, and a literal leading apostrophe in front of such a character. Numbers, including negatives, are written as numbers; overs and best figures are written as text so spreadsheets do not turn them into dates. The filename uses only the whitelisted scope.
+- Caching and privacy: export is `Cache-Control: public, s-maxage=60` (short, because hiding a player is a privacy action), `X-Robots-Tag: noindex`; robots.txt disallows the export and the saved-reports route, the sitemap lists `/statlab` only. Hidden players are excluded from both modes. The match store is senior games only, so the juniors toggle has no match data and the page says so. Public CSV contains only what the public table shows.
+- Match mode reads at most the newest eight stored seasons per request (a bounded constant), from the same cached season blobs the stats pages use, so a wide request cannot grow the cache.
+- Known quirks: the overs minimum is in true decimal overs (balls divided by 6); minimums are rounded to 0.1. The season filter lists the seasons of the season totals; a stored match from a season that has no season-totals row can be reached through the opposition or format filter but not selected by name.
 
 ## How to use it
 
-1. Open **StatLab** from the stats sub-navigation, pick a preset or choose columns and thresholds, press apply.
+1. Open **StatLab** from the stats sub-navigation, pick a preset or choose columns and thresholds, press apply. Pick an opposition or a format to work from match data.
 2. Press the export button for a CSV, or copy the page address to share the report.
+3. Admins: name the table under "Saved reports" and press **Save this report**.
 
 ## Not included / deferred
 
-- No saved or named reports, filters by opponent, format or decade, or a preset library beyond the 12 ([#8](https://github.com/sherlabs/lang-lang-cricket-website/issues/8)). Opponent filters need per-match data ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)).
-- No in-app rate limiter; CDN caching and row/column caps bound the cost (a firewall rule is a deployment setting). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- A decade filter and public (non-admin) saved reports or a report share card: presets and canonical URLs already make reports shareable.
+- No in-app rate limiter; CDN caching and row/column caps bound the cost (a firewall rule is a deployment setting). The match columns fall back to dashes where PlayHQ did not record the data (balls, bowling figures, fall of wickets). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

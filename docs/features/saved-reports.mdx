@@ -1,0 +1,36 @@
+---
+title: Saved reports
+status: shipped
+routes: ["/statlab", "/statlab/saved"]
+collections: [saved-reports, users]
+admin: "Advanced, Saved reports (admins only)"
+owner: "The person who looks after the site (admin role)"
+related: [statlab-and-csv-export, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who builds the same StatLab tables every season (for example "Fifty makers, one day games") and wants a one-click list instead of rebuilding them or hunting for the link.
+
+## Why it was built
+
+StatLab reports are already shareable: a preset or a table is just a canonical address. What was missing ([#8](https://github.com/sherlabs/lang-lang-cricket-website/issues/8)) was a place to keep your own. This is deliberately small: a private bookmark list, not a public report gallery.
+
+## What it does
+
+- Collection `saved-reports`: a title (80 characters), an optional note (300), the report itself as the StatLab query string (for example `cols=runs,fifties&fmt=oneDay`), the owner and a slug. The owner and slug are set by the site, never by the form or by REST input.
+- On every save the query is parsed with the same whitelist parser StatLab uses and rewritten in canonical form: unknown parameters and unknown columns are dropped, keys are sorted and defaults omitted. A save is refused (with a plain message) when the text is not a query string, when none of the chosen columns exist, when nothing differs from the default table, or when it is longer than 2,000 characters. A pasted StatLab address is accepted. There is no JSON, no expression and no code in a saved report.
+- Room for 200 reports; at the limit the form asks you to delete one.
+- Only admins can read, create, edit or delete (REST and admin). Committee editors and visitors get nothing. The menu entry is under Advanced.
+- On `/statlab`, an admin sees a "Saved reports" panel under the filters: name the current table and press **Save this report**; the list links to each report's StatLab address, which is also the share link. The page stays static for everyone: the panel asks `/statlab/saved` who is looking, and a signed-out visitor or an editor gets no panel at all. If a column in an old report no longer exists, the report still opens (the column is dropped) and the list says so.
+
+## How to use it
+
+1. Sign in to the admin, open **StatLab** on the public site, build a table.
+2. Under "Saved reports", type a name and press **Save this report**.
+3. Open the report later from the same list, or manage the list in the admin under Advanced, **Saved reports**.
+
+## Not included / deferred
+
+- No public reports, per-report URLs (`/statlab/r/<slug>`) or share cards; use the StatLab address. Renaming or deleting is done in the admin list. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
