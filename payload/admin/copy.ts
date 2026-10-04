@@ -27,3 +27,29 @@ export const adminTranslations = {
     },
   },
 }
+
+/**
+ * Notification centre wording (W2 spec 6.4). The committee gets plain sentences and never raw error text; the technical
+ * counts are for the site administrator. Everything the Home page says about the PlayHQ update lives here.
+ */
+export const notificationCopy = {
+  committee: {
+    syncOk: 'Player stats were updated last night.',
+    syncOkOlder: (when: string) => `Player stats were last updated ${when}.`,
+    syncRunning: 'Player stats are being updated right now.',
+    syncFailed: "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator.",
+    stories: (n: number) => `${n} ${n === 1 ? 'story is' : 'stories are'} waiting for approval`,
+    photos: (n: number) => `${n} ${n === 1 ? 'photo is' : 'photos are'} waiting for approval`,
+    caughtUp: 'Nothing is waiting. You are all caught up.',
+  },
+  admin: {
+    syncCounts: (c: { matchesUpserted: number; matchError: number; matchMismatches: number }) =>
+      `Matches saved: ${c.matchesUpserted}. Matches that did not save: ${c.matchError}. Players whose match totals disagree with their season totals: ${c.matchMismatches}.`,
+    syncError: (message: string) => `Update error: ${message}`,
+    syncRuns: 'Open the sync runs',
+    duplicates: (n: number) => `${n} possible duplicate ${n === 1 ? 'player' : 'players'} to look at`,
+    imports: (count: number, when: string, seasons: number, matches: number) =>
+      `${count} import${count === 1 ? '' : 's'} in the history. The latest was ${when} (${seasons} season ${seasons === 1 ? 'row' : 'rows'}, ${matches} ${matches === 1 ? 'game' : 'games'}).`,
+    importsOpen: 'Open Player data tools',
+  },
+} as const

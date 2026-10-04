@@ -1,11 +1,11 @@
 import { Gutter } from '@payloadcms/ui'
 import { getClub } from '@/lib/club'
 import type { BeforeListServerProps, Payload } from 'payload'
-import { getPendingCounts } from '../admin/approvals'
 import { jobTiles } from '../admin/navigation'
 import { isAdminUser } from '../admin/visibility'
 import { dashboardCards } from './dashboardCards'
 import { MilestonesWidget } from './MilestonesWidget'
+import { NotificationCentre } from './NotificationCentre'
 import { PlayerSyncPanel } from './PlayerSyncPanel'
 import { PlayHQRefreshButton } from './PlayHQRefreshButton'
 
@@ -23,7 +23,7 @@ function firstName(user: User): string {
  */
 export async function Dashboard({ payload, user }: { payload: Payload; user?: User }) {
   const adminRoute = payload.config.routes.admin
-  const [pending, club] = await Promise.all([getPendingCounts(payload), getClub()])
+  const club = await getClub()
   const name = firstName(user)
   const admin = isAdminUser(user)
 
@@ -43,29 +43,7 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
         ))}
       </ul>
 
-      <div className="club-attention" aria-label="Needs your attention">
-        <h2 className="club-attention__title">Needs your attention</h2>
-        {pending.total === 0 ? (
-          <p className="club-attention__none">Nothing is waiting. You are all caught up.</p>
-        ) : (
-          <ul className="club-attention__list">
-            {pending.stories > 0 && (
-              <li>
-                <a href={`${adminRoute}/collections/stories?where[status][equals]=pending`}>
-                  <strong>{pending.stories}</strong> {pending.stories === 1 ? 'story is' : 'stories are'} waiting for approval
-                </a>
-              </li>
-            )}
-            {pending.photos > 0 && (
-              <li>
-                <a href={`${adminRoute}/approvals`}>
-                  <strong>{pending.photos}</strong> {pending.photos === 1 ? 'photo is' : 'photos are'} waiting for approval
-                </a>
-              </li>
-            )}
-          </ul>
-        )}
-      </div>
+      <NotificationCentre payload={payload} isAdmin={admin} />
 
       <MilestonesWidget payload={payload} />
 
