@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import bGrade from '../fixtures/playhq/team-fixture-b-grade-2025-26.json'
 import oneDay from '../fixtures/playhq/team-fixture-one-day-2025-26.json'
 import upcoming from '../fixtures/playhq/team-fixture-b-grade-2026-27.json'
-import { mapGame, resultSentence, isFinished, sortUpcoming, sortResults, dedupeGames, nextGame, todayMelbourne } from '@/lib/playhq/games'
+import { mapGame, resultSentence, isFinished, sortUpcoming, sortResults, dedupeGames, nextGame, todayClubTime } from '@/lib/playhq/games'
 import type { RawFixtureGame } from '@/lib/playhq/types'
 
 const B = '61e6c836-a80b-49f1-ae65-625bd0f55016'
@@ -24,6 +24,11 @@ describe('mapGame', () => {
     expect(g.venueName).toBe('Nar Nar Goon Recreation Reserve'); expect(g.venueSuburb).toBe('NAR NAR GOON')
     expect(g.gradeName).toBe('4. Senior Men B Grade'); expect(g.roundAbbr).toBe('R4')
     expect(g.isClubDerby).toBe(false)
+  })
+  it('keeps the fixture updatedAt (the match store uses it to detect corrected scorecards)', () => {
+    const raw = (bGrade.data as RawFixtureGame[])[0]
+    expect(mapGame(raw, ids)!.updatedAt).toBe(raw.updatedAt)
+    expect(mapGame({ ...raw, updatedAt: undefined as never }, ids)!.updatedAt).toBeNull()
   })
   it('handles upcoming games with no outcome/score', () => {
     const g = mapGame(upcoming.data[0] as RawFixtureGame, ids)!
@@ -89,8 +94,8 @@ describe('nextGame', () => {
     const tbc = { ...bGames[0], id: 'tbc', status: 'UPCOMING', localDate: null, sortKey: '9999-12-31T00:00:00' }
     expect(nextGame([...bGames, tbc], '2026-06-01')?.id).toBe('tbc')
   })
-  it('todayMelbourne is YYYY-MM-DD in Melbourne time', () => {
-    expect(todayMelbourne(new Date('2025-10-24T15:00:00Z'))).toBe('2025-10-25')   // 02:00 AEDT next day
-    expect(todayMelbourne(new Date('2025-10-24T12:00:00Z'))).toBe('2025-10-24')
+  it('todayClubTime is YYYY-MM-DD in the club timezone', () => {
+    expect(todayClubTime(new Date('2025-10-24T15:00:00Z'))).toBe('2025-10-25')   // 02:00 AEDT next day
+    expect(todayClubTime(new Date('2025-10-24T12:00:00Z'))).toBe('2025-10-24')
   })
 })

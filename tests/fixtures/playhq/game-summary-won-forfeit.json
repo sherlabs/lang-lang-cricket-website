@@ -1,0 +1,284 @@
+{
+  "data": {
+    "id": "537ba518-0a87-4d5c-928d-952477875c84",
+    "gradeId": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+    "grade": {
+      "id": "3a34ef95-ad42-485e-bc94-3e000089a8f4",
+      "name": "9. Senior Men 1 Day Comp"
+    },
+    "organisation": {
+      "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+      "name": "Casey Cardinia Cricket Association"
+    },
+    "round": {
+      "id": "0ae51522-68e0-437c-83e4-7956399d264f",
+      "name": "Round 8",
+      "abbreviatedName": "R8",
+      "isFinalRound": false
+    },
+    "status": "FINAL",
+    "type": "oneDay",
+    "schedule": [
+      {
+        "day": null,
+        "dateTime": "2025-12-13T02:00:00.000Z",
+        "playingSurfaceId": "64352f31-507f-449d-a8b9-27740773a5a7"
+      }
+    ],
+    "appearances": [
+      {
+        "id": "2aba49d9-1dec-4d58-99f2-d8db1cda2bc6",
+        "firstName": "Player",
+        "lastName": "W01",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "b4890cfd-47ef-4895-95fc-6d3556d1422c",
+        "firstName": "Player",
+        "lastName": "W02",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "2ac66df5-065b-40a5-9bfb-f228671161f9",
+        "firstName": "Player",
+        "lastName": "W03",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "8eedd087-7643-437a-997c-b74150c32d41",
+        "firstName": "Player",
+        "lastName": "W04",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "6093fe49-26d5-4b83-a1ae-b1d40d883f32",
+        "firstName": "Player",
+        "lastName": "W05",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "01fc40cd-0df7-445e-a9d7-3f44e657b3d1",
+        "firstName": "Player",
+        "lastName": "W06",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "d29e4bdc-51ec-4837-a577-22d4fe1c64ef",
+        "firstName": "Player",
+        "lastName": "W07",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "390caa86-e04a-4447-956a-c718455d6f89",
+        "firstName": "Player",
+        "lastName": "W08",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "1a661865-bd71-4283-8180-1a41912fc6ec",
+        "firstName": "Player",
+        "lastName": "W09",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "2c85bcb9-5418-4b8e-95ec-7c920d7f30ac",
+        "firstName": "Player",
+        "lastName": "W10",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "c69d7831-d830-481f-b5e9-af7dc3f69d11",
+        "firstName": "Player",
+        "lastName": "W11",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      },
+      {
+        "id": "99454f30-8dc2-4bbd-8e7e-a0d650ab3496",
+        "firstName": "Player",
+        "lastName": "W12",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "playerPosition": null
+      }
+    ],
+    "teams": [
+      {
+        "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+        "name": "Lang Lang One Day",
+        "isHomeTeam": true,
+        "outcome": "WON_BY_FORFEIT",
+        "organisation": {
+          "id": "484ced51-403a-466c-9a94-bd95eedf7319",
+          "name": "Lang Lang Cricket Club"
+        }
+      },
+      {
+        "id": "08432d92-4049-42e2-8bc8-03714e5858d4",
+        "name": "Clyde Cougars One Day Green",
+        "isHomeTeam": false,
+        "outcome": "LOST_BY_FORFEIT",
+        "organisation": {
+          "id": "51af29a7-ba48-4a9a-a4cd-b61f66d42f93",
+          "name": "Clyde Cricket Club"
+        }
+      }
+    ],
+    "coinToss": null,
+    "periods": [
+      {
+        "id": "6db59509-f6fa-40ad-b3af-9817ce46d401",
+        "name": "FIRST_INNINGS",
+        "sequenceNo": 1,
+        "teams": [
+          {
+            "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+            "discipline": "BATTING",
+            "status": null,
+            "statistics": [
+              {
+                "type": "OVER_LIMIT",
+                "value": 35
+              }
+            ],
+            "appearances": [],
+            "fallOfWickets": null
+          },
+          {
+            "id": "08432d92-4049-42e2-8bc8-03714e5858d4",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [],
+            "fallOfWickets": null
+          }
+        ],
+        "sharedStatistics": []
+      },
+      {
+        "id": "36a71da4-81f6-4a58-8c05-87e52e037b4c",
+        "name": "FIRST_INNINGS",
+        "sequenceNo": 2,
+        "teams": [
+          {
+            "id": "4398ce96-6b78-48af-8623-c208f8ceca9f",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [],
+            "fallOfWickets": null
+          },
+          {
+            "id": "08432d92-4049-42e2-8bc8-03714e5858d4",
+            "discipline": "BATTING",
+            "status": null,
+            "statistics": [
+              {
+                "type": "OVER_LIMIT",
+                "value": 35
+              }
+            ],
+            "appearances": [],
+            "fallOfWickets": null
+          }
+        ],
+        "sharedStatistics": []
+      }
+    ],
+    "playingSurfaces": [
+      {
+        "id": "64352f31-507f-449d-a8b9-27740773a5a7",
+        "name": "Lang Lang Recreational Reserve 2 (West)",
+        "abbreviatedName": "LLRR2",
+        "longitude": "145.55831297647353",
+        "latitude": "-38.239043044390336",
+        "venue": {
+          "id": "d37ecfe2-a529-449b-ac25-421d38cc7e2f",
+          "name": "Lang Lang Community Recreation Reserve",
+          "timezone": "Australia/Melbourne"
+        }
+      }
+    ]
+  }
+}

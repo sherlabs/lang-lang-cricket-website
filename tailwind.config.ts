@@ -1,31 +1,19 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import { BRAND_TW } from "./config/brand";
 
 const config: Config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // Public site only: the Payload admin (app/(payload), payload/components) has its own CSS.
+    "./app/(frontend)/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        brand: {
-          black: "#0B0B0D",
-          ink: "#17171A",
-          charcoal: "#26262B",
-          gold: "#F5B700",
-          "gold-dark": "#C99400",
-          "gold-light": "#FFD966",
-          "gold-pale": "#FFF4CC",
-          // Darkened gold for small text on light backgrounds (>= 4.5:1 on white and gold-pale).
-          "gold-deep": "#8A6500",
-          cream: "#FAF7EF",
-          stone: "#F3F1EA",
-          // Warm neutrals for body/muted copy so we never reach for Tailwind's default greys.
-          grey: "#5A5A62",
-          "grey-light": "#6E6E76",
-        },
+        brand: BRAND_TW,
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -89,8 +77,8 @@ const config: Config = {
         DEFAULT: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(11,11,13,0.04), 0 8px 24px -12px rgba(11,11,13,0.18)",
-        "card-hover": "0 2px 4px rgba(11,11,13,0.06), 0 18px 40px -16px rgba(11,11,13,0.28)",
+        card: "0 1px 2px rgb(var(--brand-black) / 0.04), 0 8px 24px -12px rgb(var(--brand-black) / 0.18)",
+        "card-hover": "0 2px 4px rgb(var(--brand-black) / 0.06), 0 18px 40px -16px rgb(var(--brand-black) / 0.28)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -99,6 +87,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 };
 export default config;

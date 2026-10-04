@@ -1,0 +1,47 @@
+---
+title: Club history stories
+status: shipped
+routes: ["/history", "/history/[slug]", "/history/submit", "/history/drafts/[token]", "/history/drafts/[token]/edit", "/api/public/stories/upload"]
+collections: [stories, media]
+admin: "Club history stories (everyday menu) and Waiting for approval"
+owner: "Committee (approver and author); public users are members and former players"
+related: [approvals-inbox, uploads-and-media, seo, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A life member** who has an old photo and a story about the 1978 premiership and wants to put it on the club site, no account needed.
+- **The secretary** who writes official articles and approves what members send in.
+
+## Why it was built
+
+`/history` ended with a dead-end "Got old photos or stories? Contact the club" callout. The stories spec (`2026-09-23-stories-blog-design.md`) replaced that with a real publishing flow: a rich editor, public submissions held for review, and committee-authored stories that publish immediately.
+
+## What it does
+
+**Public**
+- `/history` lists published stories (cover, excerpt, date) under the club narrative. `/history/[slug]` renders one story; it 404s unless the story is published.
+- `/history/submit` is a no-login form: your name, optional email, title, optional cover picture, optional summary and the body in a rich editor (Tiptap: headings, bold, italic, lists, quote, links, inline images). A hidden honeypot field silently swallows bots (there is no CAPTCHA).
+- Images go to Blob under `stories/pending/` (JPEG, PNG, WebP, 8 MB max) via `/api/public/stories/upload`, which answers 503 without a Blob token.
+- Each submission gets two secret tokens. The submitter's browser stores them in a cookie (`llcc_story_draft`, 180 days). `/history/drafts/[token]` (view token) previews the pending story privately and `/history/drafts/[token]/edit` (edit token) changes it. Draft pages are `noindex`, 404 on a bad token and are disallowed in robots.txt.
+- A public edit can never publish: the collection hook strips protected fields (status, slug, tokens, timestamps) and forces the story back to `pending`.
+- Story pages emit `Article` structured data and are in the sitemap.
+
+**Admin**
+- Editors write stories in Payload's Lexical editor, limited to the same features as the public editor so HTML and Lexical convert both ways (`lib/stories-convert.ts`, `payload/editor/storyLexical.ts`). A story created in the admin is published immediately, authored by the club unless a name is typed.
+- Statuses: Waiting for approval (`pending`), On the website (`published`), Not shown (`rejected`). Buttons on the story: Approve and publish, Say no, Take off the website, Put back to review. Timestamps (`publishedAt`, `reviewedAt`) are set by hooks and cannot be set by hand.
+- Pending stories show as a banner on the list and in the Waiting for approval inbox. The submitter's email is staff-only.
+- The slug is generated once from the title and never changes. An empty excerpt is derived from the body.
+
+## How to use it
+
+1. **Club history stories**, then **Add new** to write one; save and it is live.
+2. To approve a member's story: open it from **Waiting for approval**, read it, press **Approve and publish** (or **Say no**).
+3. To pull a story down later, open it and press **Take off the website**.
+
+## Not included / deferred
+
+- No emails to submitters on approve or reject; submitters rely on their saved link.
+- No comments or likes; no scheduled posting ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)); generic news/pages are [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22).
+- Orphaned images from rejected submissions are not cleaned up automatically. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

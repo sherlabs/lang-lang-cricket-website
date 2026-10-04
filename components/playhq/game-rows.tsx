@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 type Props = {
   games: Game[]
   variant: 'upcoming' | 'result'
-  /** Show the Lang Lang side as the first column (club-wide lists). */
+  /** Show the club's own side as the first column (club-wide lists). */
   showTeam?: boolean
   /** Season group name; carried to the scorecard so it can resolve the club team cheaply. */
   season: string

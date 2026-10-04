@@ -1,7 +1,8 @@
 import type { RawSeason, SeasonGroup } from './types'
+import { JUNIOR_COMPETITION_RE } from './junior-rules'
 
 export function isJuniorCompetition(name: string): boolean {
-  return /junior|u1\d|girls|winter/i.test(name)
+  return JUNIOR_COMPETITION_RE.test(name)
 }
 
 function sortKey(name: string): number {

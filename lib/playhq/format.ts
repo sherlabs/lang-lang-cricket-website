@@ -1,10 +1,12 @@
-export const PLAYHQ_CLUB_URL = 'https://www.playhq.com/cricket-australia/org/lang-lang-cricket-club/484ced51'
+import { CLUB_LOCALE, CLUB_TIMEZONE, PLAYHQ_DEFAULTS } from '@/config/site'
+
+export const PLAYHQ_CLUB_URL = process.env.PLAYHQ_CLUB_URL || PLAYHQ_DEFAULTS.clubUrl
 
 type DateOpts = { weekday?: boolean }
 
 /** Assemble `Sat 25 Oct 2025` from parts so ICU comma differences can't leak in. */
 function assemble(d: Date, timeZone: string, weekday: boolean) {
-  const parts = new Intl.DateTimeFormat('en-AU', {
+  const parts = new Intl.DateTimeFormat(CLUB_LOCALE, {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone,
   }).formatToParts(d)
   const get = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)?.value ?? ''
@@ -35,14 +37,14 @@ export function formatLocalTime(localTime: string | null): string | null {
 
 export function dateParts(localDate: string): { day: string; month: string } {
   const d = localToDate(localDate)
-  const parts = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', timeZone: 'UTC' }).formatToParts(d)
+  const parts = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' }).formatToParts(d)
   const get = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)?.value ?? ''
   return { day: get('day'), month: get('month') }
 }
 
-/** ISO instant → full date in Melbourne time. */
-export function formatIsoMelbourne(iso: string): string {
-  return assemble(new Date(iso), 'Australia/Melbourne', true)
+/** ISO instant → full date in the club's timezone (CLUB_TIMEZONE). */
+export function formatIsoClubTime(iso: string): string {
+  return assemble(new Date(iso), CLUB_TIMEZONE, true)
 }
 
 export function seasonHref(base: string, season: string | null, team?: string | null): string {

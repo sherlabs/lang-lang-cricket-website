@@ -1,0 +1,40 @@
+---
+title: News
+status: shipped
+routes: ["/news", "/news/[slug]", "/", "/preview/news/[id]"]
+collections: [news, media, club]
+admin: "News (everyday menu, 'Post news' tile)"
+owner: "Committee (secretary or president); readers are members, parents and fans"
+related: [pages, announcements, club-history-stories, home-page, seo, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The president** who wants to post "Under 12s win a thriller" or "Thank you, working bee" with a photo.
+- **A parent** who wants a feed of what the club has been up to.
+
+## Why it was built
+
+Issue [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22). Announcements are short banners and stories are long-lived history, so there was no dated, chronological place for club news with a picture.
+
+## What it does
+
+- Collection `news`: headline, status (draft or published, default draft), "Show from" date, optional picture, optional summary (280 characters), the post (rich text with pictures: headings, bold, italic, links, lists, quotes), optional author (the club is credited when empty) and optional search-engine title and description. The slug is made from the headline when the post is created and never changes when the headline is edited; only an admin can change it.
+- **Scheduling**: publishing stamps "Show from" with now if it is empty. A later date schedules the post: until then it is not on the news page, the home page, the sitemap or the menu, and anonymous REST cannot read it. Public queries and the REST rule both require `status = published` and `publishedAt <= now`, evaluated on each request. The news list and the home page are read on each request and show a scheduled post as soon as its time comes; a post's own page and the menu's News link are cached, so they can take up to five minutes to follow.
+- `/news` is the feed, newest first, 12 per page (`?page=2`), each card with cover, date and summary (derived from the start of the post when none is written). `/news/<slug>` is the article with older and newer links, `Article` structured data (headline, published and modified dates, cover, author, the club as publisher with its logo) and a share image.
+- The home page shows the latest three posts below the About section, and nothing at all when there are no published posts.
+- The menu gets a **News** link in the Clubhouse group and the footer once at least one post is visible, so there is never a dead link.
+- Preview: the Preview button opens `/preview/news/<id>` for signed-in staff only (see [Info pages](./pages.mdx)); it shows drafts and scheduled posts.
+- SEO: the `news` entry in the Club details SEO tab gives the list its title and description; `/news` and each visible post are in the sitemap with their last-modified date.
+- Compared with others: [Announcements](./announcements.mdx) are short banners, [Club history stories](./club-history-stories.mdx) are long-lived history that members can send in and [Info pages](./pages.mdx) are lasting information.
+
+## How to use it
+
+1. Admin: click **Post news** on Home (or **News**, **Create new**).
+2. Write a headline, add a picture if you have one, and write the post.
+3. Use **Preview**, then set the status to **Published** and save. Choose a later date under **Show from** to schedule it.
+
+## Not included / deferred
+
+- Categories or tags, comments, an RSS feed, email or social posting, related posts and search within news. These stay open under issue [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,0 +1,35 @@
+---
+title: Waiting for approval inbox
+status: shipped
+routes: ["/admin/approvals"]
+collections: [stories, event-photos]
+admin: "Waiting for approval (everyday menu, with a count badge); banners on the stories list"
+owner: "Committee (secretary or moderator)"
+related: [club-history-stories, event-photos, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The moderator** who checks the site once a week and wants one list of everything members have sent in.
+
+## Why it was built
+
+Two public forms (history stories and event photos) hold content until a committee member approves it. Without one list, pending items sit unseen in separate collections. The simple admin design (`2026-10-03-simple-admin-design.md`) added this inbox so approval is a single, obvious job.
+
+## What it does
+
+- One page lists pending stories (oldest first, up to 50) and pending event photos (up to 100) with a thumbnail, who sent them and when.
+- Photos have **Approve** (sets approved, shows on the event page) and **Say no** (deletes the photo after a confirmation). Stories open in their editor with Approve and publish, Say no and Put back to review buttons.
+- The menu shows a badge with the combined count (`getPendingCounts` in `payload/admin/approvals.ts`), the Home page shows "needs your attention", and the stories list shows a banner when stories are waiting.
+- Nothing is public until approved; staff-only fields (submitter email and name) are visible to staff only.
+- If nothing is waiting it says "Nothing is waiting. You are all caught up."
+
+## How to use it
+
+1. Click **Waiting for approval**.
+2. Read each item. Approve it or say no. A "no" on a story keeps it, hidden, so you can bring it back; a "no" on a photo deletes it.
+
+## Not included / deferred
+
+- No email to the submitter or to the committee when something arrives; no bulk approve; no spam scoring (honeypot only). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

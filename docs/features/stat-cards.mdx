@@ -1,0 +1,38 @@
+---
+title: Shareable stat cards
+status: shipped
+routes: ["/api/public/players/[slug]/card"]
+collections: [players, player-seasons, club]
+admin: "Site look (Advanced): colours, crest and heading font; the crest otherwise comes from Club details"
+owner: "Visitors (players who want to post their numbers); social posts and link previews"
+related: [theme-editor, players-directory-and-profiles, player-comparison, seo]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player** who just took 5 wickets and wants a picture of their season numbers for Instagram.
+- **A parent** pasting a profile link into a group chat and expecting a good preview.
+
+## Why it was built
+
+BetterStats feature A6: a share card per player, which also serves as the Open Graph image for profiles that have no photo, so shared links look good.
+
+## What it does
+
+- `GET /api/public/players/[slug]/card` returns a PNG made at request time with `next/og`: crest, name, four headline stats chosen by role (batter, bowler or all-rounder) and a top rank badge if there is one.
+- Sizes: default 1200x630 (Open Graph), `?format=square` for 1080x1080. `?format` and `?season` are whitelisted; unknown values are ignored, which bounds the cache key space.
+- Colours come from the `theme` global (Advanced, Site look) through `themedImageResponse()` in `lib/theme/og.tsx`, which also loads the fonts: the theme's heading face for the name and the numbers, bundled Inter for labels. The crest is the themed crest, else the Club details logo, else the bundled PNG, when it is a PNG or JPEG that loads within 2 seconds. With no saved theme the Lang Lang colours and Barlow Condensed are used. This is the reference implementation for any future image route.
+- Changed from before the theme work: the card used to render in next/og's default font; it now uses the heading face and Inter, which matches the site.
+- Caching: 200 responses `public, s-maxage=300`; 404 for hidden or unknown players `s-maxage=60`; `X-Robots-Tag: noindex`. Hiding a player revalidates the card path so it stops being served quickly. Non-canonical URLs get a 308.
+- robots.txt allows `/api/public/players/` explicitly (longest match beats the `/api` block) so link-preview crawlers can fetch the card.
+- The profile page's Share button and Open Graph image use it.
+
+## How to use it
+
+Open a player profile and press **Share**, or paste the profile link anywhere that shows link previews.
+
+## Not included / deferred
+
+- Only player cards; lineup, toss, score and player of the match graphics are [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21).
+- Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

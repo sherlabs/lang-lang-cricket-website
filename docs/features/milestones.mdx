@@ -1,0 +1,38 @@
+---
+title: Milestones
+status: shipped
+routes: ["/players", "/stats", "/players/[slug]"]
+collections: [players, player-seasons, site-settings]
+admin: "Milestones widget on admin Home; thresholds in Site settings (Stats tab); 'Before PlayHQ' numbers on each player"
+owner: "Committee (presentation night organiser); visitors are players and families"
+related: [players-directory-and-profiles, stats-leaderboards, committee-admin, match-stats]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The presentation night organiser** who wants to know who is about to play their 100th game so a cap can be ready.
+- **A player** a few wickets short of 100, who sees the badge on their profile.
+
+## Why it was built
+
+BetterStats feature A8. Milestones add warmth to raw numbers and give the committee notice of occasions to celebrate.
+
+## What it does
+
+- Thresholds (editable, defaults): games 50, 100, 150, 200, 250; runs 500, 1000, 2000, 3000, 5000; wickets 25, 50, 100, 150, 200; catches 25, 50, 100. "Approaching" windows: 5 games, 100 runs, 10 wickets, 5 catches.
+- A strip on `/players` and `/stats` lists players approaching a milestone and recent achievements. Profiles show achieved milestone badges (with "reached in <season>" where the data allows), plus "Centurion" (a score of 100 or more) and "Five-wicket haul" (best figures of five or more).
+- The admin Home shows a Milestones widget so the committee sees upcoming milestones privately.
+- Coverage guard: stored totals only cover seasons since 2023/24, so a veteran's totals are undercounts. An admin-only "Before PlayHQ" group on each player (games, runs, wickets, catches) is added to the totals before milestone maths; "reached in" is only given when it is accurate, and players whose recorded years suggest earlier history without a baseline are shown as partial instead of guessed.
+- Hidden players are excluded from the public strip.
+
+## How to use it
+
+1. Look at **Home** in the admin for the milestone widget.
+2. For long-serving players, open the player and fill in "Before PlayHQ" numbers if you know them.
+3. Admin: **Site settings**, Stats tab to change thresholds.
+
+## Not included / deferred
+
+- No milestone forecasts or trend detection ([#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)); no automatic notification or social post when a milestone is reached ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11), [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21)).
+- Milestones depend on the sync. Fifties (1, 5, 10, 25), hundreds (1, 2, 5) and five-wicket hauls (1, 3, 5) now show as separate "from match data" badges and strip cards, counted only since the first stored game and never merged into the games, runs, wickets and catches milestones (thresholds are fixed, not editable yet). Hat-tricks are not available. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

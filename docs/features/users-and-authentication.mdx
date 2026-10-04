@@ -1,0 +1,38 @@
+---
+title: Users and authentication
+status: shipped
+routes: ["/admin/login", "/admin/collections/users", "/api/users"]
+collections: [users]
+admin: "Users (admin only)"
+owner: "Site admin"
+related: [committee-admin, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who invites a new secretary and later removes a former committee member.
+- **An editor** who signs in to post an announcement and must not be able to see or change anyone else's account.
+
+## Why it was built
+
+The first site used one shared admin password. The Payload migration replaced it with individual accounts and two roles, so access can be revoked per person and committee members cannot change site-wide settings or other users.
+
+## What it does
+
+- Payload login at `/admin/login`; session cookie is Lax, `secure` in production, valid for 7 days (`tokenExpiration` 604800 s). Payload's default lockout applies after repeated failed attempts, and only an admin can unlock an account.
+- Roles: `admin` (looks after the site) and `editor` (committee member). Only an admin can create users, delete users, or change a role. An editor can read and update only their own user record.
+- The first admin is created by the `seed:admin` script from `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD`. "Create first user" registration is closed in code, so anonymous creation is refused.
+- Forgot-password is disabled because there is no email adapter and Payload would otherwise log the reset link; an admin sets a new password instead.
+- The Payload REST API is on; GraphQL is disabled. State-changing requests require an allowed `Origin` (CSRF list from the server URL). Public token flows (RSVP edit, story drafts) use unguessable UUID tokens and never use `where`-based writes.
+- Access rules by collection are summarised in the migration spec (section 2) and pinned by `tests/int/access.int.test.ts` and `admin-access.int.test.ts`.
+
+## How to use it
+
+1. Admin: **Users**, **Add new**; enter the email, a strong password and choose Editor.
+2. To reset a forgotten password, open the user and set a new one, then give it to them in person.
+3. To remove someone, delete their user.
+
+## Not included / deferred
+
+- No self-service password reset by email, two-factor sign-in or single sign-on; no per-collection permissions beyond the two roles. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

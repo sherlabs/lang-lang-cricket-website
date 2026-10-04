@@ -8,6 +8,7 @@ export {
   getTeamGames,
   getClubGames,
   getGameSummary,
+  getRawGameSummary,
   getGameSummaryAuto,
   getLadder,
   getTeamPlayerStats,

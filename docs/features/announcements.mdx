@@ -1,0 +1,39 @@
+---
+title: Announcements
+status: shipped
+routes: ["/announcements", "/"]
+collections: [announcements]
+admin: "Announcements (everyday menu, 'Post an announcement' tile)"
+owner: "Committee (secretary or president); readers are members and parents"
+related: [home-page, committee-admin, news, pages]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The president** who needs everyone to see "Training moved to Friday because of the heat" the moment they open the site.
+- **A parent** who wants one place to find the latest club news.
+
+## Why it was built
+
+Notices were spread across Facebook posts and group chats. The site gains one committee-controlled channel: a banner on the home page and an archive page.
+
+## What it does
+
+- `announcements` rows have a headline, a message (blank line between paragraphs) and a "Show on the website" switch that defaults to **off**, so nothing appears until the committee turns it on. Switching it off takes it down without deleting.
+- The home page banner shows the newest published announcement (by created date), its headline and the first non-empty line of the message (trimmed to about 140 characters). It links to that announcement on `/announcements`.
+- A visitor can dismiss the banner. The dismissed announcement id is stored in a cookie (`llcc_ann_dismissed`); a newer announcement shows again (`shouldShowBanner`).
+- `/announcements` lists all published announcements, newest first, with paragraphs split on blank lines and dates in the club timezone.
+- **Announcements, news, stories and pages**: an announcement is a short banner for something urgent. For a dated article with a picture use [News](./news.mdx); for lasting information such as About or Join us use [Info pages](./pages.mdx); [Club history stories](./club-history-stories.mdx) are long-lived history. The Help page and the collection descriptions in the admin say the same.
+- Anonymous API reads only see `published = true`; staff see all. Saving revalidates the home page and the list.
+
+## How to use it
+
+1. Admin: **Announcements**, **Add new** (or "Post an announcement" on Home).
+2. Write a headline and message. Put the most important sentence first, because that line is the banner.
+3. Switch **Show on the website** on and save. Switch it off to take it down.
+
+## Not included / deferred
+
+- No expiry dates, scheduling ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)), email or push delivery, or rich text (plain text only).
+- Only the newest announcement is bannered. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

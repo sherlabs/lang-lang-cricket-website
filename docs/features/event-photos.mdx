@@ -1,0 +1,45 @@
+---
+title: Event photos
+status: shipped
+routes: ["/events", "/events/[id]", "/api/public/events/upload"]
+collections: [event-photos, events]
+admin: "Event edit page (recap photo uploader, pending photos) and Waiting for approval"
+owner: "Committee (approver); public users are anyone who took photos at an event"
+related: [events-and-rsvps, approvals-inbox, uploads-and-media, gallery]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A parent** who took twenty photos at presentation night and wants them on the club site.
+- **The social secretary** who wants to post an official set of recap photos after an event and to stop inappropriate pictures appearing.
+
+## Why it was built
+
+After the club's events there was nowhere to put photos except Facebook. The events spec asked for committee bulk upload of recap photos for a one-time event once it has happened. Public submission with approval was added so members can contribute without gaining any admin access.
+
+## What it does
+
+**Public**
+- A past one-time event page shows only `approved` photos in the order the committee set (`getEventPhotosPublic`).
+- Photos can only be submitted for a one-time event that has already started or passed (`submitEventPhoto` in `app/(frontend)/events/[id]/actions.ts`). The browser resizes the picture (`optimiseImage`) and uploads it straight to Vercel Blob under `events/pending/` through `/api/public/events/upload`. That route accepts only JPEG, PNG or WebP, at most 8 MB. The server action then checks the URL belongs to the club's own Blob store and prefix and registers it as a `pending` `event-photos` row with an optional caption and submitter name (200 characters each).
+- Pending photos are never shown publicly. The submitter's name is staff-only.
+- Without a Blob token (local development) the upload route answers 503 and the form says uploads are unavailable.
+
+**Admin**
+- Committee members add approved recap photos in bulk from the event form (`RecapPhotosField`).
+- Pending photos appear on the event form (`PendingPhotosField`) and in the Waiting for approval inbox, with Approve (sets `approved`) or Say no (deletes the photo and its file).
+- New admin uploads are approved by default; public ones are `pending`. Read access is `staffOr(status = approved)`.
+- Deleting an event deletes its photos and, through the storage plugin, their files (never legacy files, see [uploads and media](./uploads-and-media.mdx)).
+
+## How to use it
+
+1. After an event, open **Events**, then the event.
+2. In the recap section drag a batch of pictures in, or approve the ones people sent in.
+3. Or use **Waiting for approval** from the sidebar, which lists every pending photo with Approve / Say no.
+
+## Not included / deferred
+
+- No email to the submitter; no bulk approve; no per-photo reorder UI beyond the stored position (admin-only field).
+- Photos for recurring-event sessions are not supported (one-time events only).
+- Rejected uploads are deleted, not archived. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

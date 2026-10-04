@@ -1,0 +1,41 @@
+---
+title: Player sponsors
+status: shipped
+routes: ["/players", "/players/[slug]", "/sponsors"]
+collections: [player-sponsors, sponsors, players, people]
+admin: "Player sponsors (everyday menu, 'Add a player sponsor' tile)"
+owner: "Committee (sponsorship lead); visitors are fans, families and the sponsors themselves"
+related: [sponsors, players-directory-and-profiles, committee-and-contacts, committee-admin]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A local business** that pays to back one senior player and expects to be seen with that player's photo on the club site.
+- **The treasurer** who records "Central Insurance sponsors this player for 2025/26" once and wants it to appear on the Players page, the player's own page and the Sponsors page.
+
+## Why it was built
+
+The user asked for "a special place for player sponsors with the player image and reference, updated on the players page and the individual player page". The design note `2026-10-04-people-sponsors-apparel-design.md` records the decision to reuse the `sponsors` collection (which already had a Player tier) so one logo upload serves every page, and to link to the player by reference so a player's picture or name change is reflected everywhere.
+
+## What it does
+
+- A `player-sponsors` row links one **player** (required) to one **sponsor** (required), with optional season text (for example 2025/26), a short message (280 characters), a "featured" tick, an order number and an "active" switch (default on).
+- `/players` shows a gold-edged "Player sponsors" band above the directory. Each tile has the player photo, the player name (links to the profile), the sponsor logo or name (links to the sponsor website), season and message. Featured tiles come first, then order number, then id.
+- `/players/[slug]` has a "Sponsored by" block with every active sponsor of that player.
+- `/sponsors` shows "Sponsor X backs Player Y" under the sponsors in the Player tier.
+- The player photo uses the shared identity rule: a linked committee person's photo, else the player's own photo, else initials (see [committee and contacts](./committee-and-contacts.mdx)).
+- Visibility: public API reads only active rows whose player is not hidden. The Local API ignores access rules, so `lib/player-sponsors-queries.ts` repeats both filters and skips rows whose player or sponsor was deleted. Staff see all rows.
+- Deleting a player deletes their sponsorship rows; deleting a sponsor deletes its sponsorship rows; merging players repoints sponsorships to the surviving player.
+
+## How to use it
+
+1. If the business is not in **Sponsors** yet, add it there first with the Player level and its logo (the sponsor field also offers "create new").
+2. Admin: **Player sponsors**, **Add new** (or the Home tile).
+3. Pick the player and the sponsor, optionally season and a short message, tick Featured to list first, save.
+4. Untick **Active** to take a sponsorship down without deleting it.
+
+## Not included / deferred
+
+- No sponsorship value, dates or renewal reminders; no sponsor-specific page; no team or club-wide sponsorship record here (use Sponsors).
+- Sponsors cannot self-serve. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

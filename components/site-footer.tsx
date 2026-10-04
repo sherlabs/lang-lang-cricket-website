@@ -1,31 +1,24 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import { ClubLogo } from '@/components/club-logo'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
-
-// Column 1 mirrors the main nav + Contact, column 2 the Clubhouse group — five links each.
-const linkColumns = [
-  [
-    { href: '/fixtures', label: 'Fixtures' },
-    { href: '/events', label: 'Events' },
-    { href: '/players', label: 'Players' },
-    { href: '/history', label: 'History' },
-    { href: '/contact', label: 'Contact' },
-  ],
-  [
-    { href: '/people', label: 'Our People' },
-    { href: '/announcements', label: 'Announcements' },
-    { href: '/gallery', label: 'Gallery' },
-    { href: '/sponsors', label: 'Sponsors' },
-    { href: '/documents', label: 'Documents' },
-  ],
-]
+import { agencyCreditHref, AGENCY_CREDIT } from '@/config/site'
+import { ApparelLink } from '@/components/apparel-link'
+import type { Club } from '@/lib/club'
+import type { Link as NavLink } from '@/payload/seed/club-defaults'
 
 // Desktop column template for the main footer grid.
 const columns = 'lg:grid-cols-[1.5fr_1fr_1fr]'
 
-export function SiteFooter() {
+type FooterClub = Pick<Club, 'name' | 'tagline' | 'logoUrl' | 'email' | 'address' | 'socials' | 'siteUrl' | 'navigation'> & Partial<Pick<Club, 'apparel'>>
+
+export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: { heading: string; columns: NavLink[][] } }) {
+  const nav = club.navigation
+  // The shell passes the menu merged with published pages (lib/navigation.ts); the defaults apply without it.
+  const footer = footerNav ?? nav.footerNav
+  const social = club.socials[0]
+  const year = new Date().getFullYear()
   return (
     <footer className="mt-24 bg-brand-black text-white">
       <div className="h-1 w-full bg-gradient-to-r from-brand-gold-dark via-brand-gold to-brand-gold-light" />
@@ -33,9 +26,9 @@ export function SiteFooter() {
         <div className="sm:col-span-2 lg:col-span-1">
           <Link href="/" className="group inline-flex items-center gap-3 rounded-md">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white p-1 ring-1 ring-white/20 transition group-hover:ring-brand-gold">
-              <Image
-                src="/assets/branding/logo.png"
-                alt="Lang Lang Cricket Club crest"
+              <ClubLogo
+                src={club.logoUrl}
+                alt={`${club.name} crest`}
                 width={36}
                 height={45}
                 className="h-10 w-auto"
@@ -43,24 +36,21 @@ export function SiteFooter() {
             </span>
             <span className="leading-none">
               <span className="display block text-xl transition group-hover:text-brand-gold">
-                Lang Lang Cricket Club
+                {club.name}
               </span>
               <span className="mt-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-brand-gold">
-                Caldermeade, Victoria
+                {club.tagline}
               </span>
             </span>
           </Link>
-          <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/70">
-            Junior and senior cricket in Caldermeade, Victoria. New to the game or a seasoned
-            player, there is a spot for you on the field.
-          </p>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/70">{nav.footerBlurb}</p>
         </div>
 
         <nav aria-label="Footer">
-          <p className="display mb-4 text-lg text-brand-gold">Explore</p>
+          <p className="display mb-4 text-lg text-brand-gold">{footer.heading}</p>
           {/* Two lists side by side, each reading top-to-bottom in nav order. */}
           <div className="grid grid-cols-2 gap-x-6 text-sm">
-            {linkColumns.map((column, i) => (
+            {footer.columns.map((column, i) => (
               <ul key={i}>
                 {column.map((l) => (
                   <li key={l.href}>
@@ -78,25 +68,48 @@ export function SiteFooter() {
         </nav>
 
         <div>
-          <p className="display mb-4 text-lg text-brand-gold">Find us</p>
+          <p className="display mb-4 text-lg text-brand-gold">{nav.findUsHeading}</p>
           <ul className="space-y-1 text-sm">
+            {club.apparel && (
+              <li>
+                <ApparelLink apparel={club.apparel} variant="footer" className="justify-start font-bold" />
+              </li>
+            )}
             <li className="flex min-h-9 items-center gap-2.5 text-white/80">
               <HugeiconsIcon icon={MapPinIcon} className="h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
-              Caldermeade, Victoria, Australia
+              {club.address.locality}, {club.address.regionName}, {club.address.countryName}
             </li>
             <li>
               <a
-                href="mailto:langlangcricketclub@gmail.com"
+                href={`mailto:${club.email}`}
                 className="flex min-h-9 items-center gap-2.5 rounded-sm text-white/80 transition hover:text-brand-gold"
               >
                 <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 shrink-0 text-brand-gold" aria-hidden />
-                <span className="break-words">langlangcricketclub@gmail.com</span>
+                <span className="break-words">{club.email}</span>
               </a>
             </li>
-            <li className="flex min-h-9 items-center gap-2.5 text-white/80">
-              <FacebookIcon className="h-4 w-4 shrink-0 text-brand-gold" />
-              Find us on Facebook for club news
-            </li>
+            {social &&
+              (social.url ? (
+                <li>
+                  <a
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex min-h-9 items-center gap-2.5 rounded-sm text-white/80 transition hover:text-brand-gold"
+                  >
+                    <FacebookIcon className="h-4 w-4 shrink-0 text-brand-gold" />
+                    {social.label}
+                    {nav.footerSocialSuffix}
+                  </a>
+                </li>
+              ) : (
+                // No URL yet: plain text, as before.
+                <li className="flex min-h-9 items-center gap-2.5 text-white/80">
+                  <FacebookIcon className="h-4 w-4 shrink-0 text-brand-gold" />
+                  {social.label}
+                  {nav.footerSocialSuffix}
+                </li>
+              ))}
           </ul>
         </div>
       </div>
@@ -107,17 +120,17 @@ export function SiteFooter() {
         <div className="container-site flex flex-col py-6 text-xs leading-relaxed text-white/60">
           <p className="flex min-h-9 flex-col justify-center gap-y-1 lg:flex-row lg:items-center lg:justify-start lg:gap-x-3">
             <span className="whitespace-nowrap">
-              &copy; {new Date().getFullYear()} Lang Lang Cricket Club. All rights reserved.
+              &copy; {year} {nav.copyrightName}. All rights reserved.
             </span>
             <span aria-hidden className="hidden text-white/30 lg:inline">
               ·
             </span>
-            <span className="text-balance">Proudly supported by Cardinia Shire Council and Community Bank Lang Lang.</span>
+            <span className="text-balance">{nav.fundingCredit}</span>
           </p>
 
           {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
           <a
-            href="https://www.sherlabs.com/?utm_source=langlangcricketclub.com&utm_medium=referral&utm_campaign=footer_credit"
+            href={agencyCreditHref(club.siteUrl)}
             target="_blank"
             rel="noopener"
             className="group mt-2 flex min-h-9 flex-col justify-center gap-y-1 self-start rounded-sm sm:flex-row sm:items-center sm:justify-start sm:gap-x-3 lg:mt-0"
@@ -129,14 +142,14 @@ export function SiteFooter() {
               </span>{' '}
               by{' '}
               <span className="font-medium text-white/90 underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
-                sherlabs.com
+                {AGENCY_CREDIT.name}
               </span>
             </span>
             <span aria-hidden className="hidden text-white/30 sm:inline">
               ·
             </span>
             <span className="text-white/50 transition group-hover:text-white/70">
-              Websites for clubs &amp; local businesses
+              {AGENCY_CREDIT.tagline}
             </span>
           </a>
         </div>
@@ -144,3 +157,4 @@ export function SiteFooter() {
     </footer>
   )
 }
+

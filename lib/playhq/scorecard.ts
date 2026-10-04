@@ -53,6 +53,7 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
         runs: stat(a.statistics, 'TOTAL_RUNS'), balls: stat(a.statistics, 'BALLS_FACED'),
         fours: stat(a.statistics, 'FOURS'), sixes: stat(a.statistics, 'SIXES'),
         strikeRate: stat(a.statistics, 'STRIKE_RATE'), notOut: a.status === 'NOT_OUT',
+        unballed: !a.statistics.some((s) => s.type === 'BALLS_FACED'),
       })
     }
     const bowling: BowlingLine[] = bowl.appearances
@@ -102,6 +103,7 @@ export function clubWickets(sc: Scorecard, clubTeamId: string) {
  * PlayHQ returns placeholder 2nd innings for two-day games that never went there
  * (0 overs, 0 runs, two openers "not out 0"). Treat those as not played.
  */
-export function isInningsPlayed(i: Innings): boolean {
+export type PlayedCheck = { total: { overs: number; runs: number; wickets: number }; batting: { balls: number; runs: number }[] }
+export function isInningsPlayed(i: PlayedCheck): boolean {
   return i.total.overs > 0 || i.total.runs > 0 || i.total.wickets > 0 || i.batting.some((b) => b.balls > 0 || b.runs > 0)
 }

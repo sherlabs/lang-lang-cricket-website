@@ -1,0 +1,36 @@
+---
+title: Club details and site settings
+status: shipped
+routes: ["(every public page)", "/admin/globals/club", "/admin/globals/site-settings"]
+collections: [club, site-settings, club-apparel]
+admin: "Club details and Site settings (admin only); Club apparel link is for the committee"
+owner: "Site admin"
+related: [seo, sponsors, stats-leaderboards, club-apparel-link, multi-club-template, match-stats]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who changes the club email, address or Facebook link and wants the footer, contact page and structured data to follow.
+- **A developer** setting up the site for another club.
+
+## Why it was built
+
+Club identity was scattered through components and copy. The Payload migration (`2026-10-03-payload-cms-migration-design.md`, section 4) moved it into two globals so pages read from one place and a second club could be a data change rather than a code change.
+
+## What it does
+
+- **`club` (Club details, admin only)**: tabs for Identity (name, short name, tagline, canonical site URL, logo), Contact and location (email, address, map query), Socials (label and URL pairs; an empty URL shows the label as plain text), SEO (default title, suffix, description, share image, per-page titles and descriptions; see [SEO](./seo.mdx)) and History (narrative, pull quote, callout, and the story submission intro).
+- `getClub()` merges the saved global over `payload/seed/club-defaults.ts`, so the site renders correctly before anything is saved. It also merges the apparel link as `club.apparel`. Home copy, page headers and the menu stay in the defaults module in this version.
+- **`site-settings` (Site settings, admin only)**: the Site tab sets which sponsor tiers scroll on the home page (default Platinum and Gold). The Stats tab sets default categories, grade rules (regular expressions), qualification minimums, match-data minimums (how many innings, overs or games a rate from the stored matches needs before it is shown; see [Match analysis](./match-stats.mdx)), milestone thresholds, honour categories and **Grade and team names** (club-wide renames; see [Preferred names and grade label renames](./name-and-grade-labels.mdx)). Reads fall back to code defaults before the global is saved.
+- Saving the club global revalidates the whole site layout.
+- Build-time constants (timezone, locale, cookie prefix, canonical host, PlayHQ organisation and team prefix, export file name prefix, agency credit) are in `config/site.ts`, read from environment variables with Lang Lang defaults outside production, and cannot be edited in the admin. In production the PlayHQ organisation, team prefix and canonical host have no default and the server refuses to start without them.
+- The club crest, colours and heading font moved to the **Site look** global ([Site look](./theme-editor.mdx)). The logo field here is now only a fallback for the crest.
+
+## How to use it
+
+An admin opens **Club details** or **Site settings** from the Advanced section, changes a field and saves. The committee edits the apparel link separately under **Club apparel link**.
+
+## Not included / deferred
+
+- No block-based pages ([#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22)); navigation and page copy are not editable in the admin yet. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

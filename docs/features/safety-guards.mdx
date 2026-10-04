@@ -1,0 +1,39 @@
+---
+title: Safety guards (env, scripts, migrations)
+status: shipped
+routes: []
+collections: []
+admin: "None; developer and operator tooling"
+owner: "Developers and the site operator"
+related: [legacy-etl-and-cutover, uploads-and-media, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A developer** who clones the repo and runs `pnpm dev` and must be unable to touch the production database by accident.
+- **The operator** running a script against the live database who needs a deliberate, confirmed step.
+
+## Why it was built
+
+During the migration the same repository could point at production Neon and the live Blob store. A pulled env file or a wrong `.env.local` could write to production. The migration spec (decision D4 and section 11) added layered guards so safe is the default and unsafe is explicit.
+
+## What it does
+
+- **Environment guard** (`assertSafeEnv`, `payload/env.ts`, called from `payload.config.ts` and `next.config.ts`): refuses a non-local `DATABASE_URI` and any Blob token unless the process is truly on Vercel. "On Vercel" needs `VERCEL=1` with `VERCEL_ENV` production or preview, a non-local `VERCEL_URL` and a non-localhost server URL; a pulled env file with a bare `VERCEL=1` makes the app refuse to start. Every host in the URL, `?host=` and `?hostaddr=` is checked. `ALLOW_REMOTE_DB=yes` / `ALLOW_REMOTE_BLOB=yes` are exported by an operator for one shell only.
+- **Script guard** (`payload/scripts/_guard.ts`): `--target <host>/<db>` must equal `DATABASE_URI`; writes need `--confirm`; a remote host needs `ALLOW_REMOTE_DB=yes`; it pauses 5 seconds before writing (`GUARD_NO_DELAY=1` skips that on local only).
+- **`.env.local` is local-only**: never production URLs or a Blob token, never `vercel env pull` into the checkout. Local Postgres is on `127.0.0.1:54329` with `langlang_dev`, `langlang_mig`, `langlang_test` and `langlang_legacy`. The integration test harness refuses any database that is not a local `*_test` one.
+- **Build guard** (`scripts/vercel-build.mjs`): refuses an empty `PROD_DATABASE_HOST`; production migrates then builds; previews refuse the production database host (unless `PREVIEW_SHARES_PROD_DB=yes`) and require `BLOB_DELETE_DISABLED=1`.
+- **Blob delete guard** (`payload/plugins/guardLegacyBlobDeletes.ts`): never deletes legacy files.
+- **Migrations**: schema changes need `pnpm payload migrate:create <name>` with both the `.ts` and `.json` committed. `pnpm check:migrations` replays every migration on a hard-coded local `langlang_mig` database. `pnpm check:generated` regenerates `payload-types.ts` and the admin import map and fails if they differ from what is committed. Payload "push" is opt-in, local only, and not mixed with migrations.
+- Token-keyed public writes never use `where` and the public upload routes allow narrow prefixes and types only.
+
+## How to use it
+
+- Day to day: just use the local `.env.local` from `.env.example`; the guards stay out of the way.
+- Running a script: `pnpm seed:club --target 127.0.0.1/langlang_dev --confirm`.
+- Before a PR that changes a collection: create the migration, run `pnpm generate`, `pnpm check:migrations`, `pnpm check:generated`.
+
+## Not included / deferred
+
+- No secret scanning in CI or a Vercel firewall rule for abusive traffic (a deployment setting). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

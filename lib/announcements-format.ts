@@ -2,9 +2,10 @@
  * Pure helpers for rendering announcements on the public site. No React/Next
  * imports so both the server pages and the client banner can use them.
  */
+import { CLUB_LOCALE, CLUB_TIMEZONE, COOKIE_PREFIX } from '@/config/site'
 
 /** Cookie the visitor sets by dismissing the home banner; value is the announcement id. */
-export const ANNOUNCEMENT_DISMISS_COOKIE = 'llcc_ann_dismissed'
+export const ANNOUNCEMENT_DISMISS_COOKIE = `${COOKIE_PREFIX}_ann_dismissed`
 
 /** Textarea input may arrive with CRLF line endings. */
 const normalise = (body: string) => body.replace(/\r\n?/g, '\n')
@@ -47,13 +48,13 @@ export function shouldShowBanner(latestId: number | null | undefined, cookieValu
   return cookieValue !== String(latestId)
 }
 
-/** `30 September 2026` in Melbourne time, regardless of the server's zone. */
+/** `30 September 2026` in the club's timezone, regardless of the server's zone. */
 export function formatAnnouncementDate(d: Date): string {
-  const list = new Intl.DateTimeFormat('en-AU', {
+  const list = new Intl.DateTimeFormat(CLUB_LOCALE, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone: 'Australia/Melbourne',
+    timeZone: CLUB_TIMEZONE,
   }).formatToParts(d)
   const get = (t: Intl.DateTimeFormatPartTypes) => list.find((p) => p.type === t)?.value ?? ''
   return `${get('day')} ${get('month')} ${get('year')}`

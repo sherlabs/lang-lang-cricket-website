@@ -1,0 +1,315 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+  }
+  * {
+    @apply border-border;
+    outline-color: rgb(var(--brand-gold));
+  }
+  /* Visible, brand-coloured keyboard focus ring on every focusable element. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand-gold));
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply scroll-smooth font-sans;
+  }
+  /* Single-weight display faces (Bebas Neue, Anton) must never be faux-bolded by `font-bold`. */
+  .font-heading {
+    font-synthesis-weight: none;
+  }
+  ::selection {
+    background: rgb(var(--brand-gold));
+    color: rgb(var(--brand-black));
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-deep;
+  }
+  /* Display type: condensed athletic face for hero titles, section titles and wordmarks. */
+  .display {
+    @apply font-heading font-bold uppercase leading-none tracking-wide;
+  }
+  .container-site {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  /* Home page sponsor marquee: two copies of the logo row slide left by half
+     the track width, so the loop is seamless. Edge fades come from a mask so
+     the band's background shows through. Hover/focus pauses it; reduced
+     motion turns it into a plain wrapped row with the duplicate hidden. */
+  .sponsor-marquee {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  }
+  .sponsor-marquee-track {
+    animation: sponsor-marquee var(--marquee-duration, 40s) linear infinite;
+  }
+  .sponsor-marquee:hover .sponsor-marquee-track,
+  .sponsor-marquee:focus-within .sponsor-marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes sponsor-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sponsor-marquee {
+      -webkit-mask-image: none;
+      mask-image: none;
+      @apply mx-auto max-w-6xl px-5 sm:px-8;
+    }
+    /* Doubled selector so this outranks the `w-max` utility on the track. */
+    .sponsor-marquee .sponsor-marquee-track {
+      animation: none;
+      width: 100%;
+    }
+    .sponsor-marquee-track > ul {
+      @apply w-full flex-wrap justify-center gap-y-5;
+    }
+    .sponsor-marquee-dup {
+      display: none;
+    }
+  }
+  /* Minimal editorial reading/writing surface (Vercel blog-starter style) —
+     shared by the live Tiptap editor and rendered story HTML on the public
+     detail page. Neutral sans-serif copy, generous measure, no boxed chrome. */
+  .story-content {
+    @apply text-[17px] leading-[1.75] text-brand-charcoal;
+  }
+  .story-content h2 {
+    @apply mb-4 mt-10 text-2xl font-semibold tracking-tight text-brand-black first:mt-0;
+  }
+  .story-content h3 {
+    @apply mb-3 mt-8 text-xl font-semibold tracking-tight text-brand-black;
+  }
+  .story-content p {
+    @apply mb-6;
+  }
+  /* A blank line while composing (Enter with nothing typed) shouldn't inherit
+     full paragraph spacing — otherwise a few blank lines create a large void
+     and the floating "+" (which correctly tracks the cursor) looks disconnected
+     from the text above it. */
+  .story-content .ProseMirror p:has(> br.ProseMirror-trailingBreak) {
+    @apply mb-2;
+  }
+  .story-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none float-left h-0 text-brand-grey-light transition-opacity;
+  }
+  /* The expanded insert row overlays the empty first line, so the placeholder
+     steps aside while it's open. */
+  .story-content[data-plus-open="true"] p.is-editor-empty:first-child::before {
+    @apply opacity-0;
+  }
+  .story-content ul {
+    @apply mb-6 list-disc pl-6;
+  }
+  .story-content ol {
+    @apply mb-6 list-decimal pl-6;
+  }
+  .story-content li {
+    @apply mb-2;
+  }
+  /* Rendered stories (Lexical via RichText): list text sits straight in the <li>
+     (`<ul class="list-bullet"><li value="1">…`), where Tiptap wraps it in a <p>
+     whose mb-6 set the rhythm — same 24px gap. Child combinator, so the
+     editor's own lists (inside .ProseMirror) are untouched. A nested list's
+     <li class="nestedListItem"> carries list-style none inline. */
+  .story-content > ul li,
+  .story-content > ol li {
+    @apply mb-6;
+  }
+  .story-content blockquote {
+    @apply my-8 border-l-2 border-brand-black/15 pl-6 text-brand-grey;
+  }
+  .story-content img {
+    @apply -mx-5 my-8 w-[calc(100%+2.5rem)] rounded-none sm:mx-0 sm:w-full sm:rounded-xl;
+  }
+  .story-content a {
+    @apply text-brand-black underline underline-offset-2 hover:text-brand-grey;
+  }
+  .story-content hr {
+    @apply mx-auto my-10 w-16 border-0 border-t-2 border-brand-black/15;
+  }
+  .story-content .ProseMirror {
+    @apply min-h-[50vh];
+  }
+  .story-content .ProseMirror:focus {
+    @apply outline-none;
+  }
+
+  /* Medium-style editor chrome. The tippy poppers mount inside the editor
+     wrapper, so typography is reset explicitly rather than inherited from
+     .story-content. */
+  .story-bubble-menu {
+    @apply flex items-center gap-0.5 rounded-lg bg-brand-black p-1 text-sm leading-none text-white shadow-lg shadow-black/25;
+  }
+  .story-bubble-menu button {
+    @apply inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-white/85 transition hover:bg-white/10 hover:text-white;
+  }
+  .story-bubble-menu button[aria-pressed="true"] {
+    @apply bg-white/20 text-white;
+  }
+  .story-bubble-menu-divider {
+    @apply mx-1 h-5 w-px bg-white/20;
+  }
+  .story-bubble-menu-input {
+    @apply h-8 w-64 bg-transparent px-2 text-sm text-white placeholder:text-white/40 focus:outline-none;
+  }
+  .story-floating-menu {
+    @apply relative;
+  }
+  .story-floating-menu button {
+    @apply relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-black/30 bg-white text-brand-grey transition hover:border-brand-black hover:text-brand-black disabled:opacity-40;
+  }
+  .story-floating-menu button[aria-expanded="true"] {
+    @apply border-brand-black text-brand-black;
+  }
+  /* Ghost-style insert row: overflows to the right of the "+" over the empty
+     line. Always mounted so the reveal can transition; hidden state is
+     `invisible` so the buttons also leave the tab order. */
+  .story-plus-row {
+    @apply invisible absolute left-full top-0 ml-2 flex -translate-x-1 items-center gap-2 opacity-0 transition-[opacity,transform,visibility] duration-200;
+  }
+  .story-plus-row[data-open="true"] {
+    @apply visible translate-x-0 opacity-100;
+  }
+  .story-plus-row button {
+    @apply border-brand-gold text-brand-gold-deep hover:border-brand-gold-dark hover:bg-brand-gold-pale hover:text-brand-black;
+  }
+  .story-tooltip {
+    @apply pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-black px-2 py-1 text-xs font-medium leading-none text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100;
+  }
+
+  /* Headline input on the write/submit forms — looks like a title, not a form field. */
+  .story-title-input {
+    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-2 font-serif text-3xl font-bold leading-tight tracking-tight text-brand-black placeholder:text-brand-black/20 focus:border-brand-black/20 focus:outline-none focus:ring-0 sm:text-4xl;
+  }
+
+  /* Byline fields under the title: borderless inputs that sit on a hairline,
+     so they read as part of the article header rather than a form. */
+  .story-byline-input {
+    @apply w-full border-0 border-b border-transparent bg-transparent px-0 py-1 text-brand-black placeholder:text-brand-grey-light focus:border-brand-gold focus:outline-none focus:ring-0;
+  }
+}
+/* Yearbook print (BetterStats A9). Everything is scoped under `.yearbook-print`, so no other
+   page changes. Paper: no site chrome, light surfaces, dark text, sections kept whole. */
+@media print {
+  body:has(.yearbook-print) header,
+  body:has(.yearbook-print) footer,
+  .yearbook-print .print-hide {
+    display: none !important;
+  }
+  body:has(.yearbook-print) {
+    background: #fff !important;
+  }
+  .yearbook-print .print-banner section {
+    background: none !important;
+    color: #000 !important;
+  }
+  .yearbook-print .print-banner section * {
+    color: #000 !important;
+    background: none !important;
+  }
+  .yearbook-print .print-banner section [aria-hidden='true'] {
+    display: none !important;
+  }
+  .yearbook-print .print-section {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  .yearbook-print details > summary {
+    list-style: none;
+  }
+  .yearbook-print a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

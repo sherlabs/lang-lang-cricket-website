@@ -1,0 +1,51 @@
+---
+title: Players directory and profiles
+status: shipped
+routes: ["/players", "/players/[slug]", "/history/players (308 to /players)"]
+collections: [players, player-seasons, player-aliases, people, player-sponsors]
+admin: "Players (everyday menu); player seasons, aliases and sync runs are admin-only"
+owner: "Committee (anyone who looks after player pages); visitors are players, families and former players"
+related: [playhq-player-sync, committee-and-contacts, player-sponsors, milestones, stat-cards, player-comparison, honour-board, match-stats]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A senior player** who wants to see their own career runs, wickets and catches and send the link to their mum.
+- **A former player** from 1985 who wants to be remembered with a photo, years and a few lines.
+- **The committee member** who adds a bio, a photo and honours (premierships, club champion) to a player.
+
+## Why it was built
+
+The club wanted a Players section with Active and Past players, each with a profile (`2026-09-30-players-design.md`). PlayHQ has no roster endpoint and no stable player id, so players are built from game appearances and synced into the database rather than fetched live.
+
+## What it does
+
+**Directory (`/players`)**
+- Active and Past grids with a live search box (filters in the browser, the list is small). Active means the player appeared in the newest or the previous senior season group, unless the committee overrides it with "Show as: Active / Past". Manual players (added by hand, pre-PlayHQ) are Past unless overridden.
+- Hidden players ("Hide from the website") are excluded from every public page, the sitemap, share cards, comparisons and exports.
+- Above the grids: the [player sponsors](./player-sponsors.mdx) band and the [milestones](./milestones.mdx) strip. Each is a bonus; if it fails to load the directory still renders.
+- The old URLs `/history/players` and `/history/players/[slug]` redirect permanently to `/players`.
+
+**Profile (`/players/[slug]`)**
+- Hero with photo (identity rule: linked committee person's photo, else the player's own, else initials), name, years, club role if the player is also on the committee, a Share button, Compare link and the [stat card](./stat-cards.mdx) as the share image when there is no photo.
+- Milestone and ranking badges, About (bio, blank line between paragraphs), Honours and roles, "Sponsored by", season progression charts (inline SVG, with a data table), and a season-by-season table highlighting best and lowest seasons with a symbol as well as colour. Sections without data are omitted.
+- Career figures cover seasons stored from PlayHQ (the first is Summer 2023/24), and are labelled so. Optional "before PlayHQ" baseline numbers (games, runs, wickets, catches) are admin-only and feed milestones, not career tables.
+- Junior seasons are hidden by default; a toggle (`?juniors=1`) shows them when the player has any, and a player with only junior rows always sees them.
+- Structured data is `Person` plus breadcrumbs; the page is in the sitemap.
+
+**Admin**
+- Fields: first and last name, an optional **Preferred name** (a nickname shown on the site instead of the PlayHQ name; the address and PlayHQ matching do not change; see [Preferred names and grade label renames](./name-and-grade-labels.mdx)), photo, bio, years played (for manual players), Show as, Hide from the website, an ordered honours list (title and years), baseline numbers, and read-only seasons, aliases and a "Merge" panel (see [PlayHQ sync and merge](./playhq-player-sync.mdx)).
+- Only manual players can be deleted; PlayHQ players would come back on the next sync. The slug is set once from the name and never changes. `compare` is a reserved slug.
+
+## How to use it
+
+1. Admin: **Players**, open a player.
+2. Add a photo (or leave empty to use the committee photo), a few lines in About, and honours such as "Club champion" with the years.
+3. Tick **Hide from the website** to remove someone at their request.
+4. To add a former player who is not in PlayHQ, press **Add new**, fill in the name and years, and add a bio.
+
+## Not included / deferred
+
+- Profiles of players with stored games have a Match analysis block (opposition splits, dismissals, partnerships, batting position; see [Match analysis](./match-stats.mdx)). Still no per-match history list or form chart ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), [#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#4](https://github.com/sherlabs/lang-lang-cricket-website/issues/4), [#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)).
+- No manually entered stats for pre-PlayHQ players; no player self-service editing; no player trends ([#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

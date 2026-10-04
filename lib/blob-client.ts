@@ -2,10 +2,6 @@
 
 import { upload } from '@vercel/blob/client'
 
-// Re-exported from a directive-free module so server code (server actions)
-// can also import isBlobUrl without pulling in this 'use client' module.
-export { isBlobUrl } from './blob-url'
-
 /**
  * Downscale an image in the browser so uploads stay small. Photos become JPEG;
  * logos (`keepAlpha`) become WebP/PNG so transparency survives. Anything the
@@ -40,35 +36,47 @@ export async function optimiseImage(
   }
 }
 
-export type UploadPrefix = 'gallery' | 'sponsors' | 'documents' | 'stories' | 'contacts' | 'events' | 'players'
+/**
+ * Safe basename for a public upload (spec §6): `IMG 1234 (1).JPG` → `img-1234-1.jpg`. The
+ * server's `isOwnBlobUrl` only accepts `[A-Za-z0-9._-]+` basenames, which phone filenames often
+ * are not. Falls back to `image` when nothing usable is left.
+ */
+export function publicUploadName(name: string): string {
+  const dot = name.lastIndexOf('.')
+  const stem = dot > 0 ? name.slice(0, dot) : name
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : ''
+  const slug =
+    stem
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || 'image'
+  return ext ? `${slug}.${ext}` : slug
+}
 
 /**
- * Upload straight from the browser to Vercel Blob under `prefix/` and return the public URL.
- * Requires the admin session (routes through /api/admin/upload). `onProgress` receives 0–100.
+ * Upload a story image (cover or inline) with no admin session required (public submission
+ * and token edit forms). The route answers 503 when the site has no Blob store (local dev).
  */
-export async function uploadToBlob(file: File, prefix: UploadPrefix, onProgress?: (percentage: number) => void): Promise<string> {
-  const blob = await upload(`${prefix}/${file.name}`, file, {
-    access: 'public',
-    handleUploadUrl: '/api/admin/upload',
-    onUploadProgress: onProgress ? (e) => onProgress(e.percentage) : undefined,
-  })
-  return blob.url
-}
-
-/** Upload a story image with no admin session required (public submission form). */
 export async function uploadPublicStoryImage(file: File): Promise<string> {
-  const blob = await upload(`stories/pending/${file.name}`, file, {
+  const blob = await upload(`stories/pending/${publicUploadName(file.name)}`, file, {
     access: 'public',
-    handleUploadUrl: '/api/stories/upload',
+    handleUploadUrl: '/api/public/stories/upload',
   })
   return blob.url
 }
 
-/** Upload a publicly submitted event recap photo with no admin session required (see app/events/[id]/actions.ts's submitEventPhoto). */
+/**
+ * Upload a publicly submitted event recap photo with no admin session required (see
+ * app/(frontend)/events/[id]/actions.ts's submitEventPhoto). The route answers 503 when the
+ * site has no Blob store (local dev), which surfaces as a thrown error here.
+ */
 export async function uploadPublicEventPhoto(file: File): Promise<string> {
-  const blob = await upload(`events/pending/${file.name}`, file, {
+  const blob = await upload(`events/pending/${publicUploadName(file.name)}`, file, {
     access: 'public',
-    handleUploadUrl: '/api/events/upload',
+    handleUploadUrl: '/api/public/events/upload',
   })
   return blob.url
 }

@@ -1,6 +1,7 @@
+import { PLAYHQ_DEFAULTS } from '@/config/site'
 const HOST = 'https://api.playhq.com'
 
-export const PLAYHQ_ORG_ID = process.env.PLAYHQ_ORG_ID ?? '484ced51-403a-466c-9a94-bd95eedf7319'
+export const PLAYHQ_ORG_ID = process.env.PLAYHQ_ORG_ID || PLAYHQ_DEFAULTS.orgId
 
 export class PlayHQError extends Error {
   constructor(public status: number, public path: string) {
@@ -9,7 +10,8 @@ export class PlayHQError extends Error {
   }
 }
 
-export type FetchOpts = { revalidate: number; tags?: string[] }
+/** `fresh` bypasses the fetch cache entirely (`cache: 'no-store'`, no `next.revalidate`: Next rejects both). */
+export type FetchOpts = { revalidate: number; tags?: string[]; fresh?: boolean }
 
 function headers() {
   const key = process.env.PLAYHQ_CLIENT_ID
@@ -22,10 +24,12 @@ function headers() {
 }
 
 export async function phqFetch<T>(path: string, opts: FetchOpts): Promise<T> {
-  const res = await fetch(`${HOST}${path}`, {
-    headers: headers(),
-    next: { revalidate: opts.revalidate, tags: ['playhq', ...(opts.tags ?? [])] },
-  })
+  const res = await fetch(
+    `${HOST}${path}`,
+    opts.fresh
+      ? { headers: headers(), cache: 'no-store' }
+      : { headers: headers(), next: { revalidate: opts.revalidate, tags: ['playhq', ...(opts.tags ?? [])] } },
+  )
   if (!res.ok) throw new PlayHQError(res.status, path)
   return (await res.json()) as T
 }

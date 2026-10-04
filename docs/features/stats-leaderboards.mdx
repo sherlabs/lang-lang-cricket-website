@@ -1,0 +1,39 @@
+---
+title: Stats leaderboards
+status: shipped
+routes: ["/stats"]
+collections: [player-seasons, players, site-settings]
+admin: "Site settings, Stats tab (admin only): categories, grade rules, qualification minimums"
+owner: "Visitors (players, families); admin tunes the rules"
+related: [club-records, statlab-and-csv-export, players-directory-and-profiles, playhq-player-sync, milestones, match-stats]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A senior player** who wants to know who has the most runs this season, and where they sit.
+- **A selector or coach** comparing economy rates across bowlers.
+- **The site admin** who needs to decide what counts as "enough data" to be ranked.
+
+## Why it was built
+
+The user asked for a BetterStats-style statistics section. The feature design (`2026-10-03-betterstats-features-design.md`) builds only what the stored data can honestly support: season totals per player per team, synced from PlayHQ. Anything that needs per-match rows is deferred.
+
+## What it does
+
+- `/stats` shows leaderboards for batting (runs, average, high score, strike rate, sixes, fours and more), bowling (wickets, economy, average, bowling strike rate, best bowling, maidens, overs, runs conceded) and fielding (catches, catches per game), plus games. There are 26 metrics in the registry (`lib/stats/metrics.ts`).
+- Filters: season (all seasons since 2023/24, or one named season), grade, and category checkboxes. Categories are senior, junior, women's, masters and mixed, decided from the grade name first and the team name second, using built-in patterns plus admin-added grade rules. Juniors are off unless chosen (`?juniors=1`); categories with no data are not offered.
+- The hub shows the top 10 per metric; `?metric=` shows the top 50. Ties share a rank, rank is shown as numerals and text, not colour alone.
+- **Qualification minimums**: average, strike rate, bowling average and economy need enough volume to be ranked. Defaults (editable in Site settings): career batting average 300 runs and 8 innings, strike rate 300 balls, bowling average 25 wickets, economy 300 balls; single season 100 runs and 5 innings, 100 balls, 8 wickets, 120 balls. Players below a minimum are listed under "Not enough data yet" and never ranked. The minimums are printed in the table caption.
+- Hidden players are excluded. Filtered views are `noindex`. The page works without JavaScript (a GET form); on small screens the metric list is a select.
+- Data is cached in a slim columnar shape under the `player-stats` tag and invalidated when a sync finishes or a player changes (`lib/stats/queries.ts`).
+- Career means "since Summer 2023/24" (PlayHQ coverage) and is labelled so.
+
+## How to use it
+
+Visitors: open **Stats** from the menu, pick a tab and filters. Admin: **Site settings**, **Stats** tab to change default categories, regex grade rules, qualification minimums, milestone thresholds and honour categories. Grade rules are validated as regular expressions (max 100 characters).
+
+## Not included / deferred
+
+- Fifties, hundreds, golden ducks, ducks, five-fors, run outs and stumpings are now boards too, from the stored matches and labelled "from match data" (see [Match analysis](./match-stats.mdx)); they have their own caption and window. Still not built: batting position ([#6](https://github.com/sherlabs/lang-lang-cricket-website/issues/6)); partnerships ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5)); per-match store ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)).
+- Strike rate and boundary share now leave out runs scored in innings with no balls recorded (`batRunsUnballed`), so partial scorecards no longer inflate them; rows stored before the nightly sync after this change still show the old figure until the next sync. Legacy rows imported without a balls figure are not marked and can still read high. The profile page still computes league ranks per request. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

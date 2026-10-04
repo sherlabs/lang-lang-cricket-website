@@ -1,0 +1,39 @@
+---
+title: Club apparel link
+status: shipped
+routes: ["/", "(every page: menu and footer)"]
+collections: [club-apparel]
+admin: "Club apparel link (everyday menu, 'Change the apparel link' tile)"
+owner: "Committee (anyone who looks after merchandise); visitors are players and families wanting a shirt or hoodie"
+related: [home-page, committee-admin, club-and-site-settings]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A new player's parent** who was told "order your playing shirt online" and needs to find the shop without hunting.
+- **The merchandise coordinator** who changes the shop link when the supplier changes.
+
+## Why it was built
+
+The user asked for "a club apparel link that routes to a different page outside Lang Lang for merchandise ... make it look prominent". The shop is an external site, so the website only needs a link that is easy to see and easy to change.
+
+## What it does
+
+- A small global, `club-apparel`: shop link, button wording (default "Club apparel") and an optional one-line blurb for the home page. It is its own global rather than part of the admin-only `club` global so the committee can edit it without gaining write access to other club details.
+- The link must start with http or https. **When it is empty nothing renders anywhere**, so there is never a dead button.
+- Placement: an outlined gold button in the desktop menu before "Get in touch" (the label shows from large screens up, an icon-only link with a screen-reader name below), a full-width gold button in the mobile menu, a black full-width strip on the home page between the hero and the sponsor carousel with a large solid gold button, and a link in the footer "Find us" column.
+- Always opens in a new tab with `rel="noopener noreferrer"` and announces "(opens the shop in a new tab)" to screen readers.
+- `getClub()` merges the global as `club.apparel`, so every component reads it from "the club". Saving revalidates the whole site layout.
+- No default link is seeded; the committee supplies it.
+
+## How to use it
+
+1. Admin: **Club apparel link** (or the Home tile).
+2. Paste the full shop address starting `https://`, optionally change the button wording and add the home page line.
+3. Save. Clear the address to hide the button everywhere.
+
+## Not included / deferred
+
+- No on-site shop, stock or orders; stock and merch tracking is [#30](https://github.com/sherlabs/lang-lang-cricket-website/issues/30).
+- One link only (no multiple shops or per-team kits). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

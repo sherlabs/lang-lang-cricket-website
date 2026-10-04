@@ -1,0 +1,39 @@
+---
+title: Simple committee admin
+status: shipped
+routes: ["/admin", "/admin/help", "/admin/approvals"]
+collections: [users, "(every collection and global is classified in payload/admin/navigation.ts)"]
+admin: "This is the admin: Home, a flat menu, Help; admins also see an Advanced section"
+owner: "Committee volunteers (editors) and the site admin"
+related: [pages, news, approvals-inbox, users-and-authentication, club-and-site-settings, uploads-and-media]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A volunteer secretary in her sixties** who needs to add an event, post an announcement, change a phone number and approve a story without training.
+- **The site admin** who also needs Users, Club details and technical collections but does not want volunteers seeing them.
+
+## Why it was built
+
+Payload's default admin is built for developers (grouped sidebar, API tabs, technical field names). The committee are not technical. The design in `2026-10-03-simple-admin-design.md` makes the admin a plain-English tool: five or six jobs, a friendly Home, no jargon, no way to break anything.
+
+## What it does
+
+- **Roles**: `editor` (committee) and `admin` (site owner). Access rules are unchanged by the simple admin; the menu is only a view. Editors cannot read other users, change roles, or open hidden collections even by typing the URL (hidden entities 404).
+- **Flat menu** (`payload/admin/navigation.ts`): Home, Events, Announcements, Photo gallery, Sponsors, Committee & contacts, Documents, Pages, News, Club history stories, Season yearbooks, Players, Player sponsors, Club apparel link, Waiting for approval (with a count badge) and Help. Admins also get Users, Club details, Site settings, Site look, Media library, Event photos, RSVPs, Player aliases, Player seasons, Sync runs, Saved reports and Player data tools (CSV import and export of history, and the duplicate-players list).
+- **Home** (`views.dashboard`): large buttons for the common jobs ("Add an event", "Post an announcement", "Add photos to the gallery", "Add a sponsor", "Add a player sponsor", "Change the apparel link", "Update a contact", "Upload a document", "Add a page", "Post news", "Write a club history story", "Need a hand?"), count cards, a "needs your attention" list (the latest PlayHQ update in plain words, what is waiting for approval and, for admins, counts, duplicates and the import log; see [Admin notification centre](./admin-notifications.mdx)), the milestones widget and the Refresh PlayHQ data button.
+- **Help** (`payload/admin/helpContent.ts`): step-by-step guides for the common jobs; edit that file to change the wording.
+- **Forms**: plain labels, helper text and placeholders; important fields first; system fields (slug, source, tokens, sync flags, legacy URL, photo order) are hidden from editors but kept in the data. List views have two to four columns and search the main field. The Duplicate action and the API tab are removed. Delete confirmations and validation messages are rewritten in plain English (`payload/admin/copy.ts`). A light theme with bigger text and buttons (`payload/components/admin.css`).
+- **The classification rule**: `tests/admin-visibility.test.ts` fails unless every collection and global has `admin.group: false`, plain labels and an entry in `everydayNav` (committee) or `advancedNav` (admin only, with `admin.hidden: hiddenFromEditors`). The test also pins the maximum size of the menu (16) and the tile row (12); Pages and News raised them from 14 and 10 because the committee runs both.
+- Custom views call `requireUser` first because Payload does not gate them. The Player data tools view also refuses everyone but an admin. Code-written collections (`merge-log`, `ai-draft-counter` and the match tables) are listed in `internalCollections`, hidden from every role.
+
+## How to use it
+
+Sign in at `/admin`. Use Home for the common jobs, the left menu for lists, and **Help** for step-by-step guides. Press **Save** after any change; the website updates straight away.
+
+## Not included / deferred
+
+- No email or push notifications and no "milestones crossed" line ([Admin notification centre](./admin-notifications.mdx)); no member directory, fees, rosters, meeting minutes or bulk email ([#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24) to [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29)).
+- The committee sidebar is at its cap of 16 entries (`tests/admin-visibility.test.ts` records each raise and why). The next committee-run feature must group entries (for example one "Website content" entry for Pages and News) or move a rarely used one, such as Season yearbooks or Club history stories, under Advanced. Pages still shows editors the "Published on" and "Menu order" fields; they are plain helper-texted fields, not hidden.
+- Upload fields still offer both "Add new" and "Choose from existing" (a Payload limit). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

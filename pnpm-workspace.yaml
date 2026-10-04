@@ -1,0 +1,9 @@
+# pnpm 11 ignores package.json "pnpm.*"; build-script approvals live here.
+onlyBuiltDependencies:
+  - sharp
+  - esbuild
+  - unrs-resolver
+allowBuilds:
+  sharp: true
+  esbuild: true
+  unrs-resolver: true

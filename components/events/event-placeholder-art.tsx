@@ -12,7 +12,9 @@ import { cn } from '@/lib/utils'
  * varied by rotation, focal-point position and which gold tokens are used.
  */
 
-const GOLD = ['#F5B700', '#C99400', '#FFD966'] as const
+// Theme variables, applied through `style` (a `var()` inside an SVG presentation attribute is not reliable in every browser).
+const GOLD = ['rgb(var(--brand-gold))', 'rgb(var(--brand-gold-dark))', 'rgb(var(--brand-gold-light))'] as const
+const BLACK = 'rgb(var(--brand-black))'
 
 /** Small 32-bit integer hash (xorshift-ish) so nearby ids don't look alike. */
 function hash32(seed: number): number {
@@ -56,28 +58,28 @@ export function EventPlaceholderArt({ seed, className }: Props) {
     >
       <defs>
         <radialGradient id={`${uid}-glow`} cx={`${fx}%`} cy={`${fy}%`} r="70%">
-          <stop offset="0%" stopColor={gold} stopOpacity="0.55" />
-          <stop offset="55%" stopColor={gold} stopOpacity="0.12" />
-          <stop offset="100%" stopColor="#0B0B0D" stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: gold }} stopOpacity="0.55" />
+          <stop offset="55%" style={{ stopColor: gold }} stopOpacity="0.12" />
+          <stop offset="100%" style={{ stopColor: BLACK }} stopOpacity="0" />
         </radialGradient>
         <pattern id={`${uid}-bands`} width="28" height="28" patternUnits="userSpaceOnUse" patternTransform={`rotate(${rotation})`}>
-          <rect width="10" height="28" fill={gold} />
+          <rect width="10" height="28" style={{ fill: gold }} />
         </pattern>
         <pattern id={`${uid}-dots`} width="22" height="22" patternUnits="userSpaceOnUse" patternTransform={`rotate(${rotation})`}>
-          <circle cx="11" cy="11" r="3" fill={gold} />
+          <circle cx="11" cy="11" r="3" style={{ fill: gold }} />
         </pattern>
       </defs>
 
-      <rect width="320" height="200" fill="#0B0B0D" />
+      <rect width="320" height="200" style={{ fill: BLACK }} />
       <rect width="320" height="200" fill={`url(#${uid}-glow)`} />
 
       {variant === 0 && (
         // Concentric rings radiating from the focal point, like a ball's seam.
-        <g fill="none" stroke={gold} strokeWidth="1.5" opacity="0.7" transform={`translate(${fx * 3.2} ${fy * 2})`}>
+        <g fill="none" style={{ stroke: gold }} strokeWidth="1.5" opacity="0.7" transform={`translate(${fx * 3.2} ${fy * 2})`}>
           {[28, 56, 84, 112, 140, 168].map((r, i) => (
             <circle key={r} r={r} strokeOpacity={1 - i * 0.14} strokeDasharray={i % 2 ? '6 10' : undefined} />
           ))}
-          <circle r="12" fill={goldAlt} stroke="none" />
+          <circle r="12" style={{ fill: goldAlt }} stroke="none" />
         </g>
       )}
 
@@ -86,8 +88,8 @@ export function EventPlaceholderArt({ seed, className }: Props) {
         <g>
           <rect width="320" height="200" fill={`url(#${uid}-bands)`} opacity="0.45" />
           <g transform={`rotate(${rotation} ${fx * 3.2} ${fy * 2})`}>
-            <rect x={fx * 3.2 - 8} y="-300" width="16" height="800" fill={goldAlt} opacity="0.95" />
-            <rect x={fx * 3.2 + 20} y="-300" width="3" height="800" fill={goldAlt} opacity="0.7" />
+            <rect x={fx * 3.2 - 8} y="-300" width="16" height="800" style={{ fill: goldAlt }} opacity="0.95" />
+            <rect x={fx * 3.2 + 20} y="-300" width="3" height="800" style={{ fill: goldAlt }} opacity="0.7" />
           </g>
         </g>
       )}
@@ -96,9 +98,9 @@ export function EventPlaceholderArt({ seed, className }: Props) {
         // Dot lattice fading out around a solid gold disc.
         <g>
           <rect width="320" height="200" fill={`url(#${uid}-dots)`} opacity="0.45" />
-          <circle cx={fx * 3.2} cy={fy * 2} r="46" fill={goldAlt} opacity="0.9" />
-          <circle cx={fx * 3.2} cy={fy * 2} r="46" fill="none" stroke="#0B0B0D" strokeWidth="6" />
-          <circle cx={fx * 3.2} cy={fy * 2} r="60" fill="none" stroke={gold} strokeWidth="1.5" opacity="0.8" />
+          <circle cx={fx * 3.2} cy={fy * 2} r="46" style={{ fill: goldAlt }} opacity="0.9" />
+          <circle cx={fx * 3.2} cy={fy * 2} r="46" fill="none" style={{ stroke: BLACK }} strokeWidth="6" />
+          <circle cx={fx * 3.2} cy={fy * 2} r="60" fill="none" style={{ stroke: gold }} strokeWidth="1.5" opacity="0.8" />
         </g>
       )}
     </svg>

@@ -37,3 +37,34 @@ export function groupPeople<T extends Person>(rows: readonly T[]): PeopleGroup<T
     return people.length ? [{ key, label, people }] : []
   })
 }
+
+/** One job a person holds: a role label and the group it is listed under. */
+export type PersonRole = { role: string; section: string }
+
+/**
+ * Every job of one person, main job first. Extra roles with a blank label are dropped, and a
+ * person is listed at most once per section (the first role for that section wins), so the same
+ * human never shows twice inside one group.
+ */
+export function rolesOf(main: PersonRole, more: readonly PersonRole[] | null | undefined): PersonRole[] {
+  const seen = new Set<Section>()
+  const out: PersonRole[] = []
+  for (const r of [main, ...(more ?? [])]) {
+    const role = r.role?.trim()
+    if (!role) continue
+    const section = sectionOf(r.section)
+    if (seen.has(section)) continue
+    seen.add(section)
+    out.push({ role, section })
+  }
+  return out
+}
+
+/**
+ * One card per role/section: a person with two jobs is returned twice (same record: same id,
+ * photo, phone, email), once per section. Order is stable: input order, then the person's own role
+ * order.
+ */
+export function expandPeople<T extends { role: string; section: string; moreRoles: readonly PersonRole[] }>(rows: readonly T[]): T[] {
+  return rows.flatMap((row) => rolesOf(row, row.moreRoles).map((r) => ({ ...row, role: r.role, section: r.section })))
+}

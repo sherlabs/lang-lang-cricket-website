@@ -2,35 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { ClubLogo } from '@/components/club-logo'
 import { usePathname } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon, Cancel01Icon, Mail01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { ApparelLink } from '@/components/apparel-link'
+import type { Apparel } from '@/lib/club-merge'
 import { cn } from '@/lib/utils'
 
-// What a visitor comes to the site for most weeks: always visible on desktop.
-const primaryLinks = [
-  { href: '/fixtures', label: 'Fixtures' },
-  { href: '/events', label: 'Events' },
-  { href: '/players', label: 'Players' },
-  { href: '/history', label: 'History' },
-]
-
-// Around the clubrooms: grouped under a "Clubhouse" disclosure on desktop
-// and under a small heading in the mobile menu.
-const clubLinks = [
-  { href: '/people', label: 'Our People' },
-  { href: '/announcements', label: 'Announcements' },
-  { href: '/gallery', label: 'Gallery' },
-  { href: '/sponsors', label: 'Sponsors' },
-  { href: '/documents', label: 'Documents' },
-]
-
-// Home is reachable from the crest on desktop; the mobile menu spells it out.
-const mobilePrimaryLinks = [{ href: '/', label: 'Home' }, ...primaryLinks]
-
-const isActivePath = (pathname: string, href: string) =>
-  href === '/' ? pathname === '/' : pathname.startsWith(href)
+// Pages that live under the Stats item without sharing its URL prefix.
+const STATS_FAMILY = ['/stats', '/records', '/honours', '/statlab', '/yearbooks', '/matches', '/players/compare']
+const isActivePath = (pathname: string, href: string) => {
+  if (href === '/') return pathname === '/'
+  if (href === '/stats') return STATS_FAMILY.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  // /players/compare belongs to Stats, not to Players.
+  if (href === '/players' && (pathname === '/players/compare' || pathname.startsWith('/players/compare/'))) return false
+  return pathname.startsWith(href)
+}
 
 // Shared desktop item styling: the gold underline sits on the header's bottom edge.
 const desktopItemClass = cn(
@@ -39,7 +27,23 @@ const desktopItemClass = cn(
 )
 const desktopActiveClass = 'text-brand-gold after:opacity-100 hover:text-brand-gold'
 
-export function SiteNav() {
+type NavLink = { href: string; label: string }
+
+type SiteNavProps = {
+  club: { name: string; tagline: string; logoUrl: string }
+  /** What a visitor comes to the site for most weeks: always visible on desktop. */
+  primaryLinks: NavLink[]
+  /** Around the clubrooms: grouped under a disclosure on desktop and a small heading on mobile. */
+  clubLinks: NavLink[]
+  clubLabel: string
+  cta: NavLink
+  /** Merchandise shop link; null renders no button. */
+  apparel?: Apparel | null
+}
+
+export function SiteNav({ club, primaryLinks, clubLinks, clubLabel, cta, apparel = null }: SiteNavProps) {
+  // Home is reachable from the crest on desktop; the mobile menu spells it out.
+  const mobilePrimaryLinks = [{ href: '/', label: 'Home' }, ...primaryLinks]
   const [open, setOpen] = useState(false)
   const [clubOpen, setClubOpen] = useState(false)
   const pathname = usePathname()
@@ -51,6 +55,8 @@ export function SiteNav() {
 
   // Backstop: any navigation closes both menus.
   useEffect(() => {
+    // Intentional: reset on route change (react-hooks v7 rule, new with eslint-config-next 16).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false)
     setClubOpen(false)
   }, [pathname])
@@ -91,12 +97,12 @@ export function SiteNav() {
           href="/"
           className="group flex items-center gap-3 rounded-md"
           onClick={() => setOpen(false)}
-          aria-label="Lang Lang Cricket Club home"
+          aria-label={`${club.name} home`}
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white p-1 shadow-sm ring-1 ring-white/20 transition group-hover:ring-brand-gold">
-            <Image
-              src="/assets/branding/logo.png"
-              alt="Lang Lang Cricket Club crest"
+            <ClubLogo
+              src={club.logoUrl}
+              alt={`${club.name} crest`}
               width={36}
               height={45}
               className="h-9 w-auto"
@@ -105,10 +111,10 @@ export function SiteNav() {
           </span>
           <span className="leading-none whitespace-nowrap">
             <span className="display block text-xl text-white transition group-hover:text-brand-gold">
-              Lang Lang Cricket Club
+              {club.name}
             </span>
             <span className="mt-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-brand-gold">
-              Caldermeade, Victoria
+              {club.tagline}
             </span>
           </span>
         </Link>
@@ -142,7 +148,7 @@ export function SiteNav() {
                 clubOpen && 'bg-white/5 text-white'
               )}
             >
-              Clubhouse
+              {clubLabel}
               <HugeiconsIcon
                 icon={ArrowDown01Icon}
                 className={cn('h-4 w-4 transition', clubOpen && 'rotate-180')}
@@ -176,13 +182,15 @@ export function SiteNav() {
             )}
           </div>
 
+          <ApparelLink apparel={apparel} variant="nav" />
+
           <Link
-            href="/contact"
-            aria-current={isActive('/contact') ? 'page' : undefined}
+            href={cta.href}
+            aria-current={isActive(cta.href) ? 'page' : undefined}
             className="ml-3 inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-brand-gold px-3.5 py-2 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
           >
             <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
-            Get in touch
+            {cta.label}
           </Link>
         </nav>
 
@@ -229,7 +237,7 @@ export function SiteNav() {
           </div>
 
           <p className="mb-1 mt-4 px-3 text-[11px] font-medium uppercase tracking-[0.18em] text-brand-gold">
-            Clubhouse
+            {clubLabel}
           </p>
           <div className="flex flex-col">
             {clubLinks.map((l) => {
@@ -251,13 +259,15 @@ export function SiteNav() {
             })}
           </div>
 
+          <ApparelLink apparel={apparel} variant="mobile" onClick={() => setOpen(false)} />
+
           <Link
-            href="/contact"
+            href={cta.href}
             onClick={() => setOpen(false)}
             className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-brand-gold px-4 py-3 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-light"
           >
             <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" aria-hidden />
-            Get in touch
+            {cta.label}
           </Link>
         </nav>
       )}
