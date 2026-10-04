@@ -53,6 +53,8 @@ export const advancedNav: NavEntry[] = [
   { key: 'player-seasons', label: 'Player seasons', path: '/collections/player-seasons' },
   { key: 'player-sync-runs', label: 'Sync runs', path: '/collections/player-sync-runs' },
   { key: 'saved-reports', label: 'Saved reports', path: '/collections/saved-reports' },
+  // Import and export of history, and the duplicate-players list: one advanced entry for both (W2 spec 6.1).
+  { key: 'player-data-tools', label: 'Player data tools', path: '/player-data-tools' },
 ]
 
 /**
