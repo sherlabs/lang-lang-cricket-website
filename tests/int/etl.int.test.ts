@@ -517,7 +517,7 @@ describe('legacy ETL, two stores (preview rehearsal)', () => {
       expect(ctx.report.files.get(`media ${PROD}players/headshot.jpg`)).toBe('fallback-failed')
       expect(ctx.report.media['fallback-failed']).toBe(1)
       expect(ctx.report.counts('players').created).toBe(6)
-      const { docs: [photo] } = await payload.find({ collection: 'gallery-photos', where: { legacyUrl: { equals: `${PROD}gallery/photo-01.jpg` } }, overrideAccess: true })
+      const { docs: [photo] } = await payload.find({ collection: 'gallery-photos', where: { legacyUrl: { equals: `${PROD}gallery/photo-01.jpg` } }, sort: 'id', limit: 1, overrideAccess: true })
       expect(photo.mimeType).toBe('image/png')
 
       const result = await verify(undefined, { token: PREVIEW_TOKEN, headSample: 1000 })

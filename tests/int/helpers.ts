@@ -42,8 +42,12 @@ export async function clearCollection(payload: Payload, collection: CollectionSl
  * `global._payload`, so a destroyed instance would be handed to the next file.
  */
 export async function destroyTestPayload(payload: Payload | undefined): Promise<void> {
-  await payload?.destroy()
-  ;(globalThis as { _payload?: Map<string, unknown> })._payload?.clear()
+  try {
+    await payload?.destroy()
+  } finally {
+    // Even when destroy throws, the next file must not be handed this instance.
+    ;(globalThis as { _payload?: Map<string, unknown> })._payload?.clear()
+  }
 }
 
 /** A logged-in user's JWT, creating the user first when needed (context.seedAdmin passes the first-register guard). */

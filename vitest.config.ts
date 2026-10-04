@@ -42,6 +42,7 @@ export default defineConfig({
           include: ['tests/int/**/*.int.test.ts'],
           exclude: [...configDefaults.exclude, '.claude/**'],
           globalSetup: ['tests/int/setup.ts'],
+          setupFiles: ['tests/int/isolate.ts'],
           env: intTestEnv(),
           // One file at a time against the shared test DB.
           pool: 'forks',
