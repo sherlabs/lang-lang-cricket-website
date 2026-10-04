@@ -25,6 +25,7 @@
     "dedupe:people": "payload run payload/scripts/dedupe-people.ts --",
     "verify:cutover": "payload run payload/scripts/verify-cutover.ts --",
     "seed:demo": "payload run payload/scripts/seed-demo.ts --",
+    "backfill:matches": "payload run payload/scripts/backfill-matches.ts --",
     "export:since": "payload run payload/scripts/export-since.ts --",
     "reset:payload-schema": "payload run payload/scripts/reset-payload-schema.ts --",
     "fixture:stats": "payload run payload/scripts/fixtures/stats-seed.ts --",

@@ -11,6 +11,10 @@
  * so a second club look can be eyeballed locally; without it the Lang Lang seed is written only when
  * the theme was never saved.
  *
+ * It also writes about 25 synthesised matches (invented players and opponents) into the per-match store
+ * through the real writer, only when `matches` is empty, and prints the reconciliation against the season
+ * aggregates (expect 0 mismatches).
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -22,7 +26,9 @@ import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
+import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
 import { guard } from './_guard'
+import { reconcileSeed, seedMatchStore } from './fixtures/match-seed-db'
 
 const PUBLIC = path.resolve(process.cwd(), 'public')
 const CTX = { disableRevalidate: true } as const
@@ -97,6 +103,17 @@ async function seedCollection(payload: Payload, collection: CollectionSlug, fill
     await payload.delete({ collection, where: { id: { exists: true } }, overrideAccess: true, context: CTX })
     throw err
   }
+}
+
+/** Per-match store demo data (WP-M): idempotent, only when `matches` is empty. */
+async function seedDemoMatches(payload: Payload) {
+  if (!(await isEmpty(payload, 'matches'))) {
+    console.log('[seed-demo] matches: not empty, skipped')
+    return
+  }
+  const r = await seedMatchStore(payload, { clubOrgId: PLAYHQ_ORG_ID })
+  const rec = await reconcileSeed(payload, PLAYHQ_ORG_ID)
+  console.log(`[seed-demo] matches: ${r.created} created, ${r.skipped} skipped by the mapper (abandoned), ${r.players} players and ${r.aliases} aliases created; reconcile: ${rec.mismatchedPlayers} mismatches over ${rec.playersCompared} players`)
 }
 
 async function main() {
@@ -247,6 +264,8 @@ async function main() {
       }
       return players.length
     })
+
+    await seedDemoMatches(payload)
   } finally {
     await payload.destroy()
   }

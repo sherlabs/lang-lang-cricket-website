@@ -16,12 +16,16 @@ export type ReconcileSummary = { pairsCompared: number; pairsSkipped: number; pl
 
 export const pairKey = (teamId: string, seasonName: string) => `${teamId}|${seasonName}`
 
+/** A resolved player's id, else the name key itself, so a backfill with no aliases yet still compares like with like. */
+export const playerKey = (aliasMap: AliasMap, nameKey: string): string => {
+  const p = aliasMap.get(nameKey.trim())
+  return p === undefined ? `name:${nameKey.trim()}` : String(p)
+}
+
 export function expectedCounts(aggregate: TeamAggregate, aliasMap: AliasMap): Map<string, SeasonCounts> {
   const out = new Map<string, SeasonCounts>()
   for (const s of aggregate.stats) {
-    const player = aliasMap.get(s.key.trim())
-    if (player === undefined) continue
-    const key = String(player)
+    const key = playerKey(aliasMap, s.key)
     const counts = countsFromStats(s)
     out.set(key, out.has(key) ? combineCounts(out.get(key)!, counts) : counts)
   }
@@ -42,10 +46,7 @@ export async function reconcileMatchStore(
       summary.pairsSkipped++
       continue
     }
-    const derived = collectPlayerRows(byPair.get(key) ?? [], agg.teamId, (a) => {
-      const p = a.nameKey ? input.aliasMap.get(a.nameKey) : undefined
-      return p === undefined ? null : String(p)
-    })
+    const derived = collectPlayerRows(byPair.get(key) ?? [], agg.teamId, (a) => (a.nameKey ? playerKey(input.aliasMap, a.nameKey) : null))
     const result = compareCounts(expectedCounts(agg, input.aliasMap), derived)
     summary.pairsCompared++
     summary.playersCompared += result.compared
