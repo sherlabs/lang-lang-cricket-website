@@ -92,6 +92,7 @@ export interface Config {
     'match-batting': MatchBatting;
     'match-bowling': MatchBowling;
     'match-fielding': MatchFielding;
+    'saved-reports': SavedReport;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -134,6 +135,7 @@ export interface Config {
     'match-batting': MatchBattingSelect<false> | MatchBattingSelect<true>;
     'match-bowling': MatchBowlingSelect<false> | MatchBowlingSelect<true>;
     'match-fielding': MatchFieldingSelect<false> | MatchFieldingSelect<true>;
+    'saved-reports': SavedReportsSelect<false> | SavedReportsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1163,6 +1165,34 @@ export interface MatchFielding {
   createdAt: string;
 }
 /**
+ * Bookmarks of StatLab tables. Open StatLab, build a table, then use "Save this report" under the table. The link of a saved report is the page address, so it can be shared.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-reports".
+ */
+export interface SavedReport {
+  id: number;
+  /**
+   * For example "Fifty makers, one day games".
+   */
+  title: string;
+  slug?: string | null;
+  /**
+   * Who saved it.
+   */
+  owner?: (number | null) | User;
+  /**
+   * The StatLab query string, tidied up on save. Normally filled in by "Save this report".
+   */
+  query: string;
+  /**
+   * Optional note about what the report shows.
+   */
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1285,6 +1315,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'match-fielding';
         value: number | MatchFielding;
+      } | null)
+    | ({
+        relationTo: 'saved-reports';
+        value: number | SavedReport;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1893,6 +1927,19 @@ export interface MatchFieldingSelect<T extends boolean = true> {
   stumpings?: T;
   runOutsAssisted?: T;
   runOutsUnassisted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-reports_select".
+ */
+export interface SavedReportsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  owner?: T;
+  query?: T;
+  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }

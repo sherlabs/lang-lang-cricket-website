@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { JsonLd } from '@/components/json-ld'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/playhq/player-stats-tables'
+import { SavedReportsPanel } from '@/components/stats/saved-reports-panel'
 import { ShareButton } from '@/components/stats/share-button'
 import { StatLabForm } from '@/components/stats/statlab-form'
 import { StatsSubNav } from '@/components/stats/stats-sub-nav'
@@ -11,9 +12,7 @@ import { getClub } from '@/lib/club'
 import { canonicalFor, pageSeo } from '@/lib/site-metadata'
 import { filterRows, gradeNames } from '@/lib/stats/leaderboard'
 import { PRESETS, presetHref } from '@/lib/stats/presets'
-import { sinceLabel } from '@/lib/stats/season-window'
-import { ALL } from '@/lib/stats/query-string'
-import { defaultDir, identityColumns, PAGE_ROWS, statLabHref } from '@/lib/stats/statlab'
+import { cellsOf, defaultDir, identityColumns, PAGE_ROWS, statLabHref } from '@/lib/stats/statlab'
 import { runStatLab } from '@/lib/stats/statlab-queries'
 import { breadcrumbJsonLd } from '@/lib/structured-data'
 import { cn } from '@/lib/utils'
@@ -39,13 +38,13 @@ export default async function StatLabPage({ searchParams }: Props) {
   const raw = await searchParams
   const [club, lab] = await Promise.all([getClub(), runStatLab(raw)])
   const copy = club.pageCopy.statlab
-  const { params, result, data, settings, cats, categories } = lab
+  const { params, result, data, settings, cats, categories, caption, opps } = lab
   const grades = gradeNames(filterRows(data.rows, { cats, rules: settings.gradeRules }))
   const shown = result.rows.slice(0, PAGE_ROWS)
   const id = identityColumns(params.scope)
   const href = statLabHref('/statlab', params)
   const qs = href.includes('?') ? href.slice(href.indexOf('?')) : ''
-  const since = sinceLabel(data.rows)
+  const modeNote = result.mode === 'match' ? (result.forcedByColumn ? 'Showing match data because a match-data column is selected.' : 'Showing match data because an opponent or format filter is set.') : null
 
   const sortHref = (key: string) => {
     const same = params.sort.key === key
@@ -72,12 +71,14 @@ export default async function StatLabPage({ searchParams }: Props) {
           </ul>
         </div>
 
-        <StatLabForm params={params} seasons={data.seasons.map((s) => s.seasonName)} grades={grades} categories={categories} selected={cats} />
+        <StatLabForm params={params} seasons={data.seasons.map((s) => s.seasonName)} grades={grades} categories={categories} selected={cats} opps={opps} />
+
+        <SavedReportsPanel query={qs.slice(1)} />
 
         <div id="lab-results" className="scroll-mt-24 space-y-3">
           <SubHeading title="Your table" count={result.total} />
           <p className="text-sm text-brand-grey">
-            Figures {params.season === ALL ? since : params.season}. {copy.coverageNote}
+            {caption}. {result.mode === 'season' ? copy.coverageNote : `${modeNote ?? ''}${params.juniors ? ' Junior games are not in the match data.' : ''}`}
             {result.total > shown.length ? ` Showing the top ${shown.length} of ${result.total}; the download has up to 5,000.` : ''}
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -94,7 +95,7 @@ export default async function StatLabPage({ searchParams }: Props) {
           <Panel title="Results">
             <Table>
               <caption className="sr-only">
-                StatLab table, {params.scope === 'career' ? 'one row per player' : 'one row per player and season'}, {params.season === ALL ? since : params.season}. Select a column heading to sort by it.
+                StatLab table, {params.scope === 'career' ? 'one row per player' : 'one row per player and season'}. {caption}. Select a column heading to sort by it.
               </caption>
               <TableHeader>
                 <TableRow className="border-brand-black/10 hover:bg-transparent">
@@ -108,7 +109,8 @@ export default async function StatLabPage({ searchParams }: Props) {
                     <TableHead key={m.key} scope="col" aria-sort={ariaSort(m.key)} className="text-right tabular-nums text-brand-grey">
                       <Link href={sortHref(m.key)} title={m.label} className={cn('hover:text-brand-black hover:underline', params.sort.key === m.key && 'text-brand-black')}>
                         {m.short}
-                        <span className="sr-only"> ({m.label})</span>
+                        <span className="sr-only"> ({m.label}{m.matchOnly ? ', from match data' : ''})</span>
+                        {m.matchOnly && <span aria-hidden className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-brand-gold-deep">match</span>}
                         {params.sort.key === m.key && <span aria-hidden> {params.sort.dir === 'asc' ? '↑' : '↓'}</span>}
                       </Link>
                     </TableHead>
@@ -127,7 +129,7 @@ export default async function StatLabPage({ searchParams }: Props) {
                       </TableCell>
                     ))}
                     {result.columns.map((m) => (
-                      <TableCell key={m.key} className={cn('text-right tabular-nums text-brand-charcoal', params.sort.key === m.key && 'font-semibold text-brand-black')}>{m.format(r.counts)}</TableCell>
+                      <TableCell key={m.key} className={cn('text-right tabular-nums text-brand-charcoal', params.sort.key === m.key && 'font-semibold text-brand-black')}>{m.format(cellsOf(r), settings.matchMinimums)}</TableCell>
                     ))}
                   </TableRow>
                 ))}

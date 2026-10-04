@@ -131,13 +131,14 @@ describe('statLabCsv', () => {
     expect(truncated).toBe(false)
   })
 
-  it('marks truncation on the first line', () => {
+  it('reports truncation by flag only: the body is a header plus data rows, never a # line', () => {
     const params = p('cols=runs')
     const { csv, truncated } = statLabCsv(params, buildStatLab(params, ctx), 1)
     expect(truncated).toBe(true)
     const lines = csv.trimEnd().split('\r\n')
-    expect(lines[0]).toBe('# truncated to 1 of 2 rows')
-    expect(lines).toHaveLength(3)
+    expect(lines[0]).toBe('Player,Seasons,Grades,Runs')
+    expect(lines.some((l) => l.startsWith('#'))).toBe(false)
+    expect(lines).toHaveLength(2)
   })
 })
 

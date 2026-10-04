@@ -6,8 +6,8 @@ const known = { seasons: ['Summer 2025/26'], grades: ['A Grade'] }
 const parse = (href: string) => parseStatLabParams(rawFromSearchParams(new URL(href, 'http://x').searchParams), known)
 
 describe('StatLab presets', () => {
-  it('has about a dozen, with unique keys and labels', () => {
-    expect(PRESETS.length).toBe(12)
+  it('has at least eighteen, with unique keys and labels', () => {
+    expect(PRESETS.length).toBeGreaterThanOrEqual(18)
     expect(new Set(PRESETS.map((p) => p.key)).size).toBe(PRESETS.length)
     expect(new Set(PRESETS.map((p) => p.label)).size).toBe(PRESETS.length)
   })

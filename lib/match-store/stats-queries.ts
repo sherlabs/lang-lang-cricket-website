@@ -4,10 +4,9 @@ import { cached, getVisibleStatData } from '@/lib/stats/queries'
 import { assembleFacts, deriveFacts, filterFacts, mergeFactSets, playerFacts } from '@/lib/stats/match/facts'
 import { decodeFacts, encodeFacts, type SlimFacts } from '@/lib/stats/match/codec'
 import { coverageOf, type MatchCoverage } from '@/lib/stats/match/coverage'
+import { oppositionKey, oppositionLabel } from '@/lib/stats/match/opposition-key'
 import { PROFILE_MAX_SEASONS, STATLAB_MAX_SEASONS } from '@/lib/stats/match/limits'
-import type { FactSet, MatchHeader } from '@/lib/stats/match/types'
-import { classifyGrade, type GradeCategory, type GradeRule } from '@/lib/stats/categories'
-import { sameLabel } from '@/lib/stats/labels'
+import type { FactSet } from '@/lib/stats/match/types'
 import { readStoredBundles } from './read'
 
 /**
@@ -64,6 +63,26 @@ export async function getSeasonFacts(seasonStartYear: number): Promise<FactSet> 
   return decodeFacts(await cached(['match-facts', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)))
 }
 
+export type OppositionOption = { key: string; label: string }
+
+async function loadOppositionOptions(): Promise<OppositionOption[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'matches', where: { status: { equals: 'FINAL' } }, pagination: false, depth: 0, sort: 'localDate',
+    select: { opponentOrgId: true, opponentOrgName: true, opponentName: true, localDate: true },
+  })
+  // Oldest to newest, so the label follows the most recent meeting.
+  const by = new Map<string, string>()
+  for (const d of docs) {
+    const ref = { opponentOrgId: d.opponentOrgId ?? null, opponentOrgName: d.opponentOrgName ?? null, opponentName: d.opponentName ?? null }
+    by.set(oppositionKey(ref), oppositionLabel(ref))
+  }
+  return [...by].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label) || a.key.localeCompare(b.key))
+}
+
+/** Every opposition with a stored FINAL match (StatLab's opposition filter). Names only, no individuals. */
+export const getOppositionOptions = (): Promise<OppositionOption[]> => cached(['match-opposition-options'], loadOppositionOptions)
+
 /** Facts for the given seasons, bounded to the newest `max` (the cap that keeps a wide request cheap). */
 export async function getFactsFor(seasonYears: readonly number[], max: number = STATLAB_MAX_SEASONS): Promise<FactSet> {
   const unique = [...new Set(seasonYears)].sort((a, b) => b - a)
@@ -94,28 +113,7 @@ export async function getPlayerMatchFacts(playerId: number): Promise<PlayerMatch
   return { player, coverage: coverageOf(player) }
 }
 
-export type MatchFilter = {
-  cats?: readonly GradeCategory[]
-  rules?: readonly GradeRule[]
-  /** A season name, or undefined for every season. */
-  season?: string
-  /** A grade label (compared after normalisation), or undefined for every grade. */
-  grade?: string
-  oppKey?: string
-  format?: string
-}
-
-/** The pure predicate behind `filterMatchFacts`, exported for tests. */
-export function matchKeeper(f: MatchFilter): (h: MatchHeader) => boolean {
-  return (h) =>
-    (!f.cats || f.cats.includes(classifyGrade(h.grade, h.team, f.rules ?? []))) &&
-    (!f.season || h.seasonName === f.season) &&
-    (!f.grade || sameLabel(h.grade, f.grade)) &&
-    (!f.oppKey || h.oppKey === f.oppKey) &&
-    (!f.format || h.format === f.format)
-}
-
-export const filterMatchFacts = (set: FactSet, f: MatchFilter): FactSet => filterFacts(set, matchKeeper(f))
+export { filterMatchFacts, matchKeeper, type MatchFilter } from '@/lib/stats/match/filter'
 
 /** Names of visible players for partnership and ranking lists. */
 export async function getVisiblePlayerNames() {

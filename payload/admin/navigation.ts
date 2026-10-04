@@ -52,6 +52,7 @@ export const advancedNav: NavEntry[] = [
   { key: 'player-aliases', label: 'Player aliases', path: '/collections/player-aliases' },
   { key: 'player-seasons', label: 'Player seasons', path: '/collections/player-seasons' },
   { key: 'player-sync-runs', label: 'Sync runs', path: '/collections/player-sync-runs' },
+  { key: 'saved-reports', label: 'Saved reports', path: '/collections/saved-reports' },
 ]
 
 /**

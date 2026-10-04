@@ -1,9 +1,10 @@
 import { CategoryChecks } from '@/components/stats/category-checks'
 import { ColumnPicker } from '@/components/stats/column-picker'
 import type { GradeCategory } from '@/lib/stats/categories'
-import { METRICS } from '@/lib/stats/metrics'
+import type { OppositionOption } from '@/lib/match-store/stats-queries'
+import { LAB_COLUMNS } from '@/lib/stats/statlab-columns'
 import { ALL } from '@/lib/stats/query-string'
-import { SCOPES, SCOPE_LABELS, type StatLabParams } from '@/lib/stats/statlab'
+import { FORMATS, FORMAT_LABELS, SCOPES, SCOPE_LABELS, type StatLabParams } from '@/lib/stats/statlab'
 import { cn } from '@/lib/utils'
 
 const selectClass = 'mt-2 min-h-11 w-full rounded-md border border-brand-black/15 bg-white px-3 text-sm text-brand-black'
@@ -15,12 +16,14 @@ export function StatLabForm({
   grades,
   categories,
   selected,
+  opps,
 }: {
   params: StatLabParams
   seasons: string[]
   grades: string[]
   categories: GradeCategory[]
   selected: GradeCategory[]
+  opps: readonly OppositionOption[]
 }) {
   const sortKey = `${params.sort.key}.${params.sort.dir}`
   return (
@@ -47,6 +50,20 @@ export function StatLabForm({
           </select>
         </div>
         <div>
+          <label htmlFor="lab-opp" className="eyebrow">Opposition</label>
+          <select id="lab-opp" name="opp" defaultValue={params.opp} className={selectClass}>
+            <option value="all">All oppositions</option>
+            {opps.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="lab-fmt" className="eyebrow">Format</label>
+          <select id="lab-fmt" name="fmt" defaultValue={params.fmt} className={selectClass}>
+            <option value="all">All formats</option>
+            {FORMATS.map((f) => <option key={f} value={f}>{FORMAT_LABELS[f]}</option>)}
+          </select>
+        </div>
+        <div>
           <label htmlFor="lab-q" className="eyebrow">Player name</label>
           <input id="lab-q" name="q" type="search" maxLength={80} defaultValue={params.q} placeholder="Search" className={cn(selectClass, 'placeholder:text-brand-grey-light')} />
         </div>
@@ -54,8 +71,8 @@ export function StatLabForm({
           <label htmlFor="lab-sort" className="eyebrow">Sort by</label>
           <select id="lab-sort" name="sort" defaultValue={sortKey} className={selectClass}>
             <option value="name.asc">Player name (A to Z)</option>
-            {METRICS.flatMap((m) => [
-              <option key={`${m.key}.desc`} value={`${m.key}.desc`}>{m.label} (high to low)</option>,
+            {LAB_COLUMNS.flatMap((m) => [
+              <option key={`${m.key}.desc`} value={`${m.key}.desc`}>{m.label}{m.matchOnly ? ' (match data)' : ''} (high to low)</option>,
               <option key={`${m.key}.asc`} value={`${m.key}.asc`}>{m.label} (low to high)</option>,
             ])}
           </select>
@@ -71,6 +88,9 @@ export function StatLabForm({
           </label>
         </div>
       </div>
+      <p className="text-sm text-brand-grey">
+        Choosing an opposition, a format or a column marked &ldquo;match&rdquo; works the whole table out from stored match data instead of season totals. The two sources are never mixed in one table.
+      </p>
       <CategoryChecks categories={categories} selected={selected} />
 
       <details open className="group">

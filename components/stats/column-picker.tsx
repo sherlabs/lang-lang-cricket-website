@@ -1,4 +1,4 @@
-import { GROUP_LABELS, GROUPS, METRICS } from '@/lib/stats/metrics'
+import { GROUP_LABELS, GROUPS, LAB_COLUMNS } from '@/lib/stats/statlab-columns'
 import { MAX_COLUMNS, type StatLabParams } from '@/lib/stats/statlab'
 
 /**
@@ -10,9 +10,9 @@ export function ColumnPicker({ params }: { params: StatLabParams }) {
   return (
     <fieldset className="space-y-5">
       <legend className="eyebrow">Columns and minimums</legend>
-      <p className="text-sm text-brand-grey">Tick up to {MAX_COLUMNS} stats. A minimum hides players below it (leave blank for none).</p>
+      <p className="text-sm text-brand-grey">Tick up to {MAX_COLUMNS} stats. A minimum hides players below it (leave blank for none). Columns marked &ldquo;match data&rdquo; switch the table to stored match data.</p>
       {GROUPS.map((g) => {
-        const metrics = METRICS.filter((m) => m.group === g)
+        const metrics = LAB_COLUMNS.filter((m) => m.group === g)
         if (!metrics.length) return null
         return (
           <div key={g}>
@@ -22,7 +22,11 @@ export function ColumnPicker({ params }: { params: StatLabParams }) {
                 <li key={m.key} className="flex min-h-11 items-center justify-between gap-3">
                   <label className="flex min-w-0 items-center gap-2 text-sm text-brand-black">
                     <input type="checkbox" name="cols" value={m.key} defaultChecked={params.cols.includes(m.key)} className="h-4 w-4 shrink-0 accent-brand-gold" />
-                    <span className="truncate">{m.label}</span>
+                    <span className="min-w-0">
+                      <span className="truncate">{m.label}</span>
+                      {m.matchOnly && <span className="ml-1.5 rounded-full bg-brand-gold-pale px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gold-deep">match data</span>}
+                      {m.help && <span className="block text-xs text-brand-grey">{m.help}</span>}
+                    </span>
                   </label>
                   <span className="flex shrink-0 items-center gap-1.5">
                     <label htmlFor={`min-${m.key}`} className="text-xs text-brand-grey">Min<span className="sr-only"> {m.label}</span></label>

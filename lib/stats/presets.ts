@@ -2,7 +2,7 @@ import { statLabHref, type StatLabParams } from './statlab'
 
 /**
  * Quick reports (spec A11). A preset is only a set of StatLab params, so it is also a URL: the
- * same canonical href the form produces. Minimums are scaled to the since-2023/24 window.
+ * same canonical href the form produces. Minimums are scaled to the since-2023/24 window. The last six read stored match data.
  */
 export type Preset = { key: string; label: string; blurb: string; params: Partial<StatLabParams> }
 
@@ -22,6 +22,13 @@ export const PRESETS: readonly Preset[] = [
   { key: 'most-capped', label: 'Most capped', blurb: 'Most games played.', params: { cols: ['games', 'runs', 'wickets', 'catches'], sort: desc('games'), mins: { games: 1 } } },
   { key: 'rising-stars', label: 'Rising stars', blurb: 'Three seasons or fewer, ranked by runs per game.', params: { maxSeasons: 3, cols: ['games', 'runs', 'runsPerGame', 'wickets'], sort: desc('runsPerGame'), mins: { games: 8 } } },
   { key: 'active-squad', label: 'Active squad snapshot', blurb: 'Current players only.', params: { active: true, cols: ['games', 'runs', 'avg', 'wickets', 'catches'], sort: desc('games') } },
+  // Match-data presets (W2 spec 5.2): they put the table in match mode, so the figures come from stored matches.
+  { key: 'fifty-makers', label: 'Fifty makers', blurb: 'Most scores of 50 to 99, from match data.', params: { cols: ['games', 'innings', 'runs', 'fifties', 'hundreds'], sort: desc('fifties'), mins: { fifties: 1 } } },
+  { key: 'century-makers', label: 'Century makers', blurb: 'Scores of 100 or more, from match data.', params: { cols: ['innings', 'runs', 'hs', 'hundreds', 'fiftyConversion'], sort: desc('hundreds'), mins: { hundreds: 1 } } },
+  { key: 'five-for-club', label: 'Five-for club', blurb: 'Five-wicket hauls recorded in match data.', params: { cols: ['games', 'overs', 'wickets', 'fiveFors', 'threeFors', 'best'], sort: desc('fiveFors'), mins: { fiveFors: 1 } } },
+  { key: 'run-out-specialists', label: 'Run-out specialists', blurb: 'Run outs credited on the scorecard, from match data.', params: { cols: ['games', 'runOuts', 'stumpings', 'catches'], sort: desc('runOuts'), mins: { runOuts: 1 } } },
+  { key: 'boundary-hitters', label: 'Boundary hitters', blurb: 'Fewest balls per boundary, at least 100 runs, from match data.', params: { cols: ['runs', 'sixes', 'fours', 'ballsPerBoundary', 'sr'], sort: asc('ballsPerBoundary'), mins: { runs: 100 } } },
+  { key: 'best-partnerships', label: 'Best partnerships', blurb: 'Biggest stands and fifty stands, inferred from batting order and fall of wickets.', params: { cols: ['games', 'innings', 'bestPartnership', 'partnerships50'], sort: desc('bestPartnership'), mins: { bestPartnership: 1 } } },
 ]
 
 /** A preset as a canonical StatLab link. */
