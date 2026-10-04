@@ -108,3 +108,24 @@ export const AI_DEFAULTS = {
   yearbookModel: 'anthropic/claude-sonnet-4.6',
   dailyDraftLimit: 20,
 } as const
+
+/**
+ * Selector accounts and Facebook sign-in (announce-teams spec 3.4, 3.5). The Meta app itself is per club and lives in env
+ * (`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`); only these constants are in code.
+ */
+export const FACEBOOK_GRAPH_VERSION = env.FACEBOOK_GRAPH_VERSION?.trim() || 'v25.0'
+/** How long an invite link works (days). Env `SELECTOR_INVITE_DAYS`. */
+const inviteDays = Number(env.SELECTOR_INVITE_DAYS)
+export const SELECTOR_INVITE_DAYS = Number.isInteger(inviteDays) && inviteDays >= 1 && inviteDays <= 90 ? inviteDays : 14
+/** Public paths of the selector area. */
+export const selectorPaths = {
+  home: '/selector',
+  login: '/selector/login',
+  account: '/selector/account',
+  invite: (token: string) => `/selector/invite/${token}`,
+  facebookStart: '/selector/facebook/start',
+  facebookCallback: '/selector/facebook/callback',
+  facebookDataDeletion: '/selector/facebook/data-deletion',
+  facebookDeauthorize: '/selector/facebook/deauthorize',
+  facebookDeletionStatus: '/selector/facebook/deletion-status',
+} as const

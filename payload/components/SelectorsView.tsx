@@ -1,0 +1,56 @@
+import { SetStepNav } from '@payloadcms/ui'
+import type { AdminViewServerProps } from 'payload'
+import { CLUB_LOCALE } from '@/config/site'
+import { selectorStatus, STATUS_LABEL } from '@/lib/selector-status'
+import { isStaffUser } from '../access'
+import { AdminPage, requireUser } from './AdminPage'
+import { SelectorsPanel, type SelectorRow } from './SelectorsPanel'
+
+const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
+
+/**
+ * `/admin/selectors` (custom view, admin and editor): the people who pick the teams. Add one (name and email), share the invite
+ * link, and manage the logins. Reads with the Local API after the staff check; the invite token and the Facebook id are never read.
+ */
+export async function SelectorsView(view: AdminViewServerProps) {
+  requireUser(view, '/selectors')
+  const { req } = view.initPageResult
+  const api = req.payload.config.routes.api
+  if (!isStaffUser(req.user)) {
+    return (
+      <AdminPage view={view}>
+        <h1 className="club-page__title">Selectors</h1>
+        <p className="club-page__lead">Only the committee can manage selector logins.</p>
+      </AdminPage>
+    )
+  }
+  const found = await req.payload.find({
+    collection: 'users',
+    where: { role: { equals: 'selector' } },
+    sort: 'name',
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+    select: { name: true, email: true, disabled: true, lastLoginAt: true, lastLoginMethod: true, inviteExpiresAt: true, facebookLinkedAt: true },
+  })
+  const rows: SelectorRow[] = found.docs.map((u) => {
+    const status = selectorStatus(u)
+    return {
+      id: u.id,
+      name: u.name ?? '',
+      email: u.email,
+      status,
+      statusLabel: STATUS_LABEL[status],
+      facebookLinked: Boolean(u.facebookLinkedAt),
+      lastSignIn: u.lastLoginAt ? `${when.format(new Date(u.lastLoginAt))}${u.lastLoginMethod === 'facebook' ? ' (Facebook)' : ''}` : null,
+    }
+  })
+  return (
+    <AdminPage view={view}>
+      <SetStepNav nav={[{ label: 'Selectors' }]} />
+      <h1 className="club-page__title">Selectors</h1>
+      <p className="club-page__lead">Selectors pick the team for each grade and announce it. They sign in on the website, never here. Add a name and email, then send them the link.</p>
+      <SelectorsPanel api={api} rows={rows} facebookOn={Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET)} inviteDays={Number(process.env.SELECTOR_INVITE_DAYS) || undefined} />
+    </AdminPage>
+  )
+}

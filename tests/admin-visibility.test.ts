@@ -35,9 +35,11 @@ describe('role visibility helpers', () => {
 })
 
 describe('navigation', () => {
-  it('editors get the short plain list and never the Advanced section', () => {
+  it('editors get the short plain list and only the Selectors entry of Advanced', () => {
     const nav = navFor('editor')
-    expect(nav.advanced).toEqual([])
+    // Selectors is an occasional task, so it is an Advanced entry (not a 17th everyday one) that editors can reach; also a Home tile.
+    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors'])
+    expect(navFor('selector').advanced).toEqual([])
     // 12 -> 14: Player sponsors and Club apparel link each need an everyday entry (editors must reach them).
     // 14 -> 16: Pages and News are committee-run content (WP-P); hiding them under Advanced was rejected.
     expect(nav.everyday.length).toBeLessThanOrEqual(16)
@@ -69,7 +71,8 @@ describe('navigation', () => {
     for (const t of jobTiles) expect(t.path.startsWith('/')).toBe(true)
     // 8 -> 10: Add a player sponsor and Change the apparel link.
     // 10 -> 12: Add a page and Post news (WP-P).
-    expect(jobTiles.length).toBeLessThanOrEqual(12)
+    // 12 -> 13: Add a selector (announce teams); creating logins is occasional, so it is a tile and an Advanced entry, not an everyday menu item.
+    expect(jobTiles.length).toBeLessThanOrEqual(13)
   })
 
   it('help content has steps in every section', () => {

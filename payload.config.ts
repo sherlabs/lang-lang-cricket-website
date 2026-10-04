@@ -38,6 +38,7 @@ import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
+import { selectorEndpoints } from './payload/endpoints/selectors'
 import { historyImportEndpoints } from './payload/endpoints/historyImport'
 import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
@@ -77,6 +78,7 @@ export default buildConfig({
         dashboard: { Component: '/payload/components/Dashboard#Dashboard' },
         approvals: { Component: '/payload/components/ApprovalsView#ApprovalsView', path: '/approvals', meta: { title: 'Waiting for approval' } },
         playerDataTools: { Component: '/payload/components/PlayerDataToolsView#PlayerDataToolsView', path: '/player-data-tools', meta: { title: 'Player data tools' } },
+        selectors: { Component: '/payload/components/SelectorsView#SelectorsView', path: '/selectors', meta: { title: 'Selectors' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
@@ -85,7 +87,7 @@ export default buildConfig({
   graphQL: { disable: true },
   collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter],
   globals: [Club, ClubApparel, SiteSettings, Theme],
-  endpoints: [...historyImportEndpoints],
+  endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
   onInit: restrictBuiltinCollections,
   db: postgresAdapter({

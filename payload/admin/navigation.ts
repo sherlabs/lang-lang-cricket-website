@@ -20,6 +20,8 @@ export type NavEntry = {
   matches?: string[]
   /** Optional pending-count badge key (see `badgeCounts` in AdminNav). */
   badge?: 'approvals'
+  /** Advanced entries only: also shown to editors (the committee), not just admins. */
+  forEditors?: boolean
 }
 
 export const everydayNav: NavEntry[] = [
@@ -43,6 +45,8 @@ export const everydayNav: NavEntry[] = [
 
 export const advancedNav: NavEntry[] = [
   { key: 'users', label: 'Users', path: '/collections/users' },
+  // Selectors are an occasional task, so they sit under Advanced; the committee reaches them here and from the Home tile.
+  { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
   { key: 'club', label: 'Club details', path: '/globals/club' },
   { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
   { key: 'theme', label: 'Site look (colours and fonts)', path: '/globals/theme' },
@@ -65,7 +69,8 @@ export const internalCollections: string[] = ['matches', 'match-innings', 'match
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {
-  return { everyday: everydayNav, advanced: role === 'admin' ? advancedNav : [] }
+  const advanced = role === 'admin' ? advancedNav : role === 'editor' ? advancedNav.filter((e) => e.forEditors) : []
+  return { everyday: everydayNav, advanced }
 }
 
 export type JobTile = { key: string; title: string; hint: string; path: string }
@@ -83,6 +88,7 @@ export const jobTiles: JobTile[] = [
   { key: 'page', title: 'Add a page', hint: 'An info page such as About or Join us', path: '/collections/pages/create' },
   { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create' },
   { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create' },
+  { key: 'selector', title: 'Add a selector', hint: 'A login for someone who picks the teams', path: '/selectors' },
   { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help' },
 ]
 

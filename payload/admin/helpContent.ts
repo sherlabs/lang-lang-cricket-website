@@ -8,6 +8,17 @@ export const helpIntro = 'Everything on the club website is changed from here. N
 
 export const helpSections: HelpSection[] = [
   {
+    id: 'selector',
+    title: 'Add a selector',
+    steps: [
+      'Click "Add a selector" on the Home page (or Advanced, then Selectors).',
+      'Type their name and email, then click "Add selector".',
+      'Copy the link that appears, or share it by text or WhatsApp. It is shown only once, works for 14 days and works once.',
+      'They open the link on their phone, then sign in with Facebook (when the club has set that up) or choose a password.',
+      'To stop someone picking teams, click Disable on their row. To start again, click Enable, or "New invite link" for a fresh link.',
+    ],
+  },
+  {
     id: 'event',
     title: 'Add an event',
     steps: [
