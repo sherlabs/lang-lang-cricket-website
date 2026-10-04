@@ -25,6 +25,11 @@ describe('mapGame', () => {
     expect(g.gradeName).toBe('4. Senior Men B Grade'); expect(g.roundAbbr).toBe('R4')
     expect(g.isClubDerby).toBe(false)
   })
+  it('keeps the fixture updatedAt (the match store uses it to detect corrected scorecards)', () => {
+    const raw = (bGrade.data as RawFixtureGame[])[0]
+    expect(mapGame(raw, ids)!.updatedAt).toBe(raw.updatedAt)
+    expect(mapGame({ ...raw, updatedAt: undefined as never }, ids)!.updatedAt).toBeNull()
+  })
   it('handles upcoming games with no outcome/score', () => {
     const g = mapGame(upcoming.data[0] as RawFixtureGame, ids)!
     expect(g.status).toBe('UPCOMING')

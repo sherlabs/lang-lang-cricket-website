@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advancedNav, everydayNav, isNavActive, jobTiles, navFor } from '../payload/admin/navigation'
+import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor } from '../payload/admin/navigation'
 import { adminOnlyCondition, hiddenFromEditors, isAdminUser } from '../payload/admin/visibility'
 import { helpSections } from '../payload/admin/helpContent'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -80,14 +80,27 @@ describe('every collection and global is classified (new ones fail here until th
     const config = await loadSanitizedConfig()
     const navSlugs = new Set([...everydayNav, ...advancedNav].map((e) => e.path.split('/').pop()))
     const entities = [
-      ...config.collections.map((c) => ({ kind: 'collection', slug: c.slug, admin: c.admin, labels: c.labels })),
+      ...config.collections.map((c) => ({ kind: 'collection', slug: c.slug, admin: c.admin, labels: c.labels, access: c.access })),
       ...config.globals.map((g) => ({ kind: 'global', slug: g.slug, admin: g.admin, labels: undefined })),
     ]
     for (const e of entities.filter((x) => !x.slug.startsWith('payload-'))) {
       // Payload's grouped nav is replaced by AdminNav: a stray group would add a second menu.
       expect(e.admin.group, `${e.slug} admin.group`).toBe(false)
-      expect(navSlugs.has(e.slug), `${e.slug} is missing from payload/admin/navigation.ts`).toBe(true)
+      if (internalCollections.includes(e.slug)) {
+        // Written only by code: hidden from every role, absent from both menus, never writable via REST/admin.
+        expect(navSlugs.has(e.slug), `${e.slug} is internal and must not be in a nav list`).toBe(false)
+        expect(e.admin.hidden, `${e.slug} must be admin.hidden === true`).toBe(true)
+        const access = (e as { access?: Record<string, (a: { req: { user: unknown } }) => unknown> }).access!
+        for (const op of ['create', 'update', 'delete']) {
+          expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} must be denied even to admins`).toBe(false)
+        }
+        expect(access.read({ req: { user: editor } }), `${e.slug} read is staff only`).toBe(true)
+        expect(access.read({ req: { user: undefined } }), `${e.slug} read is staff only`).toBe(false)
+      } else {
+        expect(navSlugs.has(e.slug), `${e.slug} is missing from payload/admin/navigation.ts`).toBe(true)
+      }
     }
+    for (const slug of internalCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as internal but is not a collection`).toBe(true)
     // Entities listed under Advanced must be hidden from editors unless they are a deliberate upload target.
     const uploadTargets = new Set(['media', 'event-photos'])
     for (const entry of advancedNav) {

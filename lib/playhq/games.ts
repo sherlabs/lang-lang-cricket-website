@@ -12,7 +12,7 @@ export function mapGame(raw: RawFixtureGame, clubTeamIds: Set<string>): Game | n
   const localDate = raw.schedule?.date ?? null
   const localTime = raw.schedule?.time ?? null
   return {
-    id: raw.id, status: raw.status, url: raw.url,
+    id: raw.id, status: raw.status, url: raw.url, updatedAt: raw.updatedAt ?? null,
     gradeId: raw.grade?.id ?? null, gradeName: raw.grade?.name ?? null,
     roundName: raw.round?.name ?? null, roundAbbr: raw.round?.abbreviatedName ?? null,
     isFinalRound: raw.round?.isFinalRound ?? false,

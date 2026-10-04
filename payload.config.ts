@@ -15,6 +15,12 @@ import { EventPhotos } from './payload/collections/EventPhotos'
 import { EventRsvps } from './payload/collections/EventRsvps'
 import { Events } from './payload/collections/Events'
 import { GalleryPhotos } from './payload/collections/GalleryPhotos'
+import { MatchAppearances } from './payload/collections/MatchAppearances'
+import { MatchBatting } from './payload/collections/MatchBatting'
+import { MatchBowling } from './payload/collections/MatchBowling'
+import { MatchFielding } from './payload/collections/MatchFielding'
+import { MatchInnings } from './payload/collections/MatchInnings'
+import { Matches } from './payload/collections/Matches'
 import { Media } from './payload/collections/Media'
 import { People } from './payload/collections/People'
 import { PlayerAliases } from './payload/collections/PlayerAliases'
@@ -69,7 +75,7 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding],
   globals: [Club, ClubApparel, SiteSettings, Theme],
   editor: lexicalEditor(),
   db: postgresAdapter({

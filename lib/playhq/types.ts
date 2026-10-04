@@ -11,19 +11,22 @@ export type RawFixtureGame = {
   venue: { name: string; surfaceName?: string; address?: { suburb?: string } } | null
 }
 export type RawStat = { type: string; value: number }
-export type RawAppearance = { id: string; firstName: string; lastName: string; teamId: string; visible: boolean; roleType: string; captainRole: string | null }
+export type RawAppearance = {
+  id: string; firstName: string; lastName: string; teamId: string; visible: boolean; roleType: string; captainRole: string | null
+  playerNumber?: number | null; isFillIn?: boolean; isRegisteredPlayer?: boolean; playerPosition?: string | null
+}
 export type RawPeriodAppearance = { id: string; displayOrder: number; status: string | null; statistics: RawStat[] }
 export type RawPeriodTeam = { id: string; discipline: 'BATTING' | 'BOWLING'; status: string | null; statistics: RawStat[]; appearances: RawPeriodAppearance[]; fallOfWickets: { sequenceNo: number; appearanceId: string; runs: number }[] | null }
 export type RawPeriod = { id: string; name: string; sequenceNo: number; teams: RawPeriodTeam[]; sharedStatistics: { type: string; appearances: { id: string; role: 'BATTING' | 'BOWLING' | 'FIELDING' }[] }[] }
 export type RawGameSummary = {
   id: string; status: string; type: string
   grade: { id: string; name: string }; round: { name: string; abbreviatedName: string; isFinalRound: boolean } | null
-  schedule: { day: number | null; dateTime: string }[]
+  schedule: { day: number | null; dateTime: string; playingSurfaceId?: string }[]
   teams: { id: string; name: string; isHomeTeam: boolean; outcome: string | null; organisation: { id: string; name: string } }[]
   appearances: RawAppearance[]
   coinToss: { winningTeamId: string | null; preference: 'BAT' | 'BOWL' | null } | null
   periods: RawPeriod[]
-  playingSurfaces: { name: string; venue: { name: string; timezone: string } }[]
+  playingSurfaces: { id?: string; name: string; venue: { id?: string; name: string; timezone: string } }[]
 }
 export type RawLadder = { gradeId: string; ladders: { headers: { key: string; name: string; shortName: string }[]; standings: { team: { id: string; name: string }; values: (number | string | null)[] }[] }[] }
 
@@ -32,7 +35,7 @@ export type SeasonGroup = { name: string; isJunior: boolean; seasons: { id: stri
 export type ClubTeam = { id: string; name: string; seasonId: string; seasonName: string; competitionName: string; isJunior: boolean; gradeId: string | null; gradeName: string | null }
 export type GameSide = { id: string; name: string; isHome: boolean; outcome: string | null; score: number | null }
 export type Game = {
-  id: string; status: string; url: string; gradeId: string | null; gradeName: string | null
+  id: string; status: string; url: string; updatedAt: string | null; gradeId: string | null; gradeName: string | null
   roundName: string | null; roundAbbr: string | null; isFinalRound: boolean
   localDate: string | null; localTime: string | null; sortKey: string   // `${date}T${time ?? '00:00:00'}`
   venueName: string | null; venueSuburb: string | null

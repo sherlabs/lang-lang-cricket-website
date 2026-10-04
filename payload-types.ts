@@ -84,6 +84,12 @@ export interface Config {
     'player-sync-runs': PlayerSyncRun;
     'player-sponsors': PlayerSponsor;
     yearbooks: Yearbook;
+    matches: Match;
+    'match-innings': MatchInning;
+    'match-appearances': MatchAppearance;
+    'match-batting': MatchBatting;
+    'match-bowling': MatchBowling;
+    'match-fielding': MatchFielding;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -118,6 +124,12 @@ export interface Config {
     'player-sync-runs': PlayerSyncRunsSelect<false> | PlayerSyncRunsSelect<true>;
     'player-sponsors': PlayerSponsorsSelect<false> | PlayerSponsorsSelect<true>;
     yearbooks: YearbooksSelect<false> | YearbooksSelect<true>;
+    matches: MatchesSelect<false> | MatchesSelect<true>;
+    'match-innings': MatchInningsSelect<false> | MatchInningsSelect<true>;
+    'match-appearances': MatchAppearancesSelect<false> | MatchAppearancesSelect<true>;
+    'match-batting': MatchBattingSelect<false> | MatchBattingSelect<true>;
+    'match-bowling': MatchBowlingSelect<false> | MatchBowlingSelect<true>;
+    'match-fielding': MatchFieldingSelect<false> | MatchFieldingSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -705,6 +717,22 @@ export interface PlayerSyncRun {
   status?: ('running' | 'ok' | 'error') | null;
   playersCreated?: number | null;
   seasonRows?: number | null;
+  /**
+   * Matches created or changed in the per-match store this run.
+   */
+  matchesUpserted?: number | null;
+  /**
+   * Games not stored (junior, club against club, not final).
+   */
+  matchesSkipped?: number | null;
+  /**
+   * Players whose per-match totals disagree with their season totals.
+   */
+  matchMismatches?: number | null;
+  /**
+   * Games the per-match store failed to write (the season sync still succeeded).
+   */
+  matchError?: number | null;
   error?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -786,6 +814,185 @@ export interface Yearbook {
   sponsorMessage?: string | null;
   photos?: (number | GalleryPhoto)[] | null;
   featuredSponsors?: (number | Sponsor)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One row per finished senior game, written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "matches".
+ */
+export interface Match {
+  id: number;
+  gameId: string;
+  status?: string | null;
+  type?: string | null;
+  seasonName?: string | null;
+  seasonStartYear?: number | null;
+  competitionName?: string | null;
+  gradeId?: string | null;
+  gradeName?: string | null;
+  roundName?: string | null;
+  roundAbbr?: string | null;
+  isFinalRound?: boolean | null;
+  startsAt?: string | null;
+  localDate?: string | null;
+  days?: number | null;
+  venueName?: string | null;
+  venueSuburb?: string | null;
+  clubTeamId?: string | null;
+  clubTeamName?: string | null;
+  opponentTeamId?: string | null;
+  opponentName?: string | null;
+  opponentOrgId?: string | null;
+  opponentOrgName?: string | null;
+  isHome?: boolean | null;
+  tossWinnerTeamId?: string | null;
+  tossChoice?: ('bat' | 'bowl') | null;
+  clubWonToss?: boolean | null;
+  clubOutcome?: string | null;
+  opponentOutcome?: string | null;
+  result?: ('won' | 'lost' | 'draw' | 'tie' | 'no_result' | 'abandoned') | null;
+  byForfeit?: boolean | null;
+  onFirstInnings?: boolean | null;
+  playhqUpdatedAt?: string | null;
+  sourceHash?: string | null;
+  syncedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Innings totals for each stored match. Written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-innings".
+ */
+export interface MatchInning {
+  id: number;
+  match: number | Match;
+  sequenceNo: number;
+  periodName?: string | null;
+  battingTeamId?: string | null;
+  bowlingTeamId?: string | null;
+  isClubBatting?: boolean | null;
+  periodStatus?: string | null;
+  played?: boolean | null;
+  declared?: boolean | null;
+  allOut?: boolean | null;
+  totalRuns?: number | null;
+  totalWickets?: number | null;
+  totalBalls?: number | null;
+  extrasTotal?: number | null;
+  wides?: number | null;
+  noBalls?: number | null;
+  byes?: number | null;
+  legByes?: number | null;
+  penalty?: number | null;
+  hasFallOfWickets?: boolean | null;
+  hasBowlingData?: boolean | null;
+  hasBallData?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who played in each stored match. Written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-appearances".
+ */
+export interface MatchAppearance {
+  id: number;
+  match: number | Match;
+  appearanceId: string;
+  teamId?: string | null;
+  isClubSide?: boolean | null;
+  player?: (number | null) | Player;
+  nameKey?: string | null;
+  displayName?: string | null;
+  captainRole?: string | null;
+  isFillIn?: boolean | null;
+  isRegisteredPlayer?: boolean | null;
+  playerNumber?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Batting lines for each stored match. Written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-batting".
+ */
+export interface MatchBatting {
+  id: number;
+  innings: number | MatchInning;
+  match: number | Match;
+  appearanceId: string;
+  position?: number | null;
+  battingStatus?: ('out' | 'not_out' | 'did_not_bat' | 'unknown') | null;
+  runs?: number | null;
+  balls?: number | null;
+  fours?: number | null;
+  sixes?: number | null;
+  dismissalType?:
+    | (
+        | 'bowled'
+        | 'caught'
+        | 'caught_and_bowled'
+        | 'lbw'
+        | 'stumped'
+        | 'run_out'
+        | 'hit_wicket'
+        | 'retired_hurt'
+        | 'retired'
+        | 'retired_out'
+        | 'other'
+      )
+    | null;
+  bowlerAppearanceId?: string | null;
+  fielderAppearanceId?: string | null;
+  fowWicket?: number | null;
+  fowRuns?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Bowling figures for each stored match. Written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-bowling".
+ */
+export interface MatchBowling {
+  id: number;
+  innings: number | MatchInning;
+  match: number | Match;
+  appearanceId: string;
+  order?: number | null;
+  balls?: number | null;
+  maidens?: number | null;
+  runs?: number | null;
+  wickets?: number | null;
+  wides?: number | null;
+  noBalls?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Fielding statistics for each stored match. Written by the PlayHQ sync. Read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-fielding".
+ */
+export interface MatchFielding {
+  id: number;
+  innings: number | MatchInning;
+  match: number | Match;
+  appearanceId: string;
+  catches?: number | null;
+  keeperCatches?: number | null;
+  stumpings?: number | null;
+  runOutsAssisted?: number | null;
+  runOutsUnassisted?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -880,6 +1087,30 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'yearbooks';
         value: number | Yearbook;
+      } | null)
+    | ({
+        relationTo: 'matches';
+        value: number | Match;
+      } | null)
+    | ({
+        relationTo: 'match-innings';
+        value: number | MatchInning;
+      } | null)
+    | ({
+        relationTo: 'match-appearances';
+        value: number | MatchAppearance;
+      } | null)
+    | ({
+        relationTo: 'match-batting';
+        value: number | MatchBatting;
+      } | null)
+    | ({
+        relationTo: 'match-bowling';
+        value: number | MatchBowling;
+      } | null)
+    | ({
+        relationTo: 'match-fielding';
+        value: number | MatchFielding;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1233,6 +1464,10 @@ export interface PlayerSyncRunsSelect<T extends boolean = true> {
   status?: T;
   playersCreated?: T;
   seasonRows?: T;
+  matchesUpserted?: T;
+  matchesSkipped?: T;
+  matchMismatches?: T;
+  matchError?: T;
   error?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1269,6 +1504,153 @@ export interface YearbooksSelect<T extends boolean = true> {
   sponsorMessage?: T;
   photos?: T;
   featuredSponsors?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "matches_select".
+ */
+export interface MatchesSelect<T extends boolean = true> {
+  gameId?: T;
+  status?: T;
+  type?: T;
+  seasonName?: T;
+  seasonStartYear?: T;
+  competitionName?: T;
+  gradeId?: T;
+  gradeName?: T;
+  roundName?: T;
+  roundAbbr?: T;
+  isFinalRound?: T;
+  startsAt?: T;
+  localDate?: T;
+  days?: T;
+  venueName?: T;
+  venueSuburb?: T;
+  clubTeamId?: T;
+  clubTeamName?: T;
+  opponentTeamId?: T;
+  opponentName?: T;
+  opponentOrgId?: T;
+  opponentOrgName?: T;
+  isHome?: T;
+  tossWinnerTeamId?: T;
+  tossChoice?: T;
+  clubWonToss?: T;
+  clubOutcome?: T;
+  opponentOutcome?: T;
+  result?: T;
+  byForfeit?: T;
+  onFirstInnings?: T;
+  playhqUpdatedAt?: T;
+  sourceHash?: T;
+  syncedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-innings_select".
+ */
+export interface MatchInningsSelect<T extends boolean = true> {
+  match?: T;
+  sequenceNo?: T;
+  periodName?: T;
+  battingTeamId?: T;
+  bowlingTeamId?: T;
+  isClubBatting?: T;
+  periodStatus?: T;
+  played?: T;
+  declared?: T;
+  allOut?: T;
+  totalRuns?: T;
+  totalWickets?: T;
+  totalBalls?: T;
+  extrasTotal?: T;
+  wides?: T;
+  noBalls?: T;
+  byes?: T;
+  legByes?: T;
+  penalty?: T;
+  hasFallOfWickets?: T;
+  hasBowlingData?: T;
+  hasBallData?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-appearances_select".
+ */
+export interface MatchAppearancesSelect<T extends boolean = true> {
+  match?: T;
+  appearanceId?: T;
+  teamId?: T;
+  isClubSide?: T;
+  player?: T;
+  nameKey?: T;
+  displayName?: T;
+  captainRole?: T;
+  isFillIn?: T;
+  isRegisteredPlayer?: T;
+  playerNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-batting_select".
+ */
+export interface MatchBattingSelect<T extends boolean = true> {
+  innings?: T;
+  match?: T;
+  appearanceId?: T;
+  position?: T;
+  battingStatus?: T;
+  runs?: T;
+  balls?: T;
+  fours?: T;
+  sixes?: T;
+  dismissalType?: T;
+  bowlerAppearanceId?: T;
+  fielderAppearanceId?: T;
+  fowWicket?: T;
+  fowRuns?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-bowling_select".
+ */
+export interface MatchBowlingSelect<T extends boolean = true> {
+  innings?: T;
+  match?: T;
+  appearanceId?: T;
+  order?: T;
+  balls?: T;
+  maidens?: T;
+  runs?: T;
+  wickets?: T;
+  wides?: T;
+  noBalls?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "match-fielding_select".
+ */
+export interface MatchFieldingSelect<T extends boolean = true> {
+  innings?: T;
+  match?: T;
+  appearanceId?: T;
+  catches?: T;
+  keeperCatches?: T;
+  stumpings?: T;
+  runOutsAssisted?: T;
+  runOutsUnassisted?: T;
   updatedAt?: T;
   createdAt?: T;
 }
