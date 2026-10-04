@@ -10,7 +10,7 @@ export const PlayerSyncRuns: CollectionConfig = {
     group: false,
     hideAPIURL: true,
     hidden: hiddenFromEditors,
-    defaultColumns: ['startedAt', 'status', 'playersCreated', 'seasonRows', 'finishedAt'],
+    defaultColumns: ['startedAt', 'status', 'playersCreated', 'seasonRows', 'matchesUpserted', 'matchMismatches', 'matchError', 'finishedAt'],
   },
   defaultSort: '-startedAt',
   access: { read: isStaff, create: nobody, update: nobody, delete: nobody },

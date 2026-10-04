@@ -5,7 +5,7 @@ routes: ["/fixtures", "/fixtures/[gameId]"]
 collections: []
 admin: "Home 'Refresh PlayHQ data' button (admin API /api/admin/playhq-refresh); no collection, data comes from PlayHQ"
 owner: "Committee (webmaster); visitors are players, parents and opposition clubs"
-related: [match-archive, playhq-player-sync, seo]
+related: [match-archive, match-data-store, playhq-player-sync, seo]
 added: feat/payload-cms
 ---
 
@@ -36,5 +36,5 @@ Nothing to maintain. After entering results in PlayHQ, press **Refresh PlayHQ da
 ## Not included / deferred
 
 - There is no separate `/teams` page; the team view is `/fixtures?team=`.
-- Scorecards are read live, not stored, so there is no per-match database ([#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)). Opposition analysis, partnerships and phase analysis build on that ([#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- The pages still read scorecards live from PlayHQ. Every finished senior game is now also stored row by row by the nightly sync ([Match data store](./match-data-store.mdx), [#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)), but no page reads those rows yet. Opposition analysis, partnerships and phase analysis build on them ([#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
 - No live-score push or notifications. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

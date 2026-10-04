@@ -1,0 +1,50 @@
+---
+title: Match data store
+status: shipped
+routes: []
+collections: [matches, match-innings, match-appearances, match-batting, match-bowling, match-fielding]
+admin: "No admin screen (the six collections are hidden from every role). The sync counters show above the Players list and in Advanced > Sync runs."
+owner: "The site developer or admin; the committee has nothing to do"
+related: [playhq-player-sync, fixtures-and-scorecards, match-archive, players-directory-and-profiles, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site developer** building opposition analysis, head-to-head tables, per-player innings lists and form charts, who needs every game as rows rather than a live PlayHQ call.
+- **The site admin** running a one-off history load for a new club or after a PlayHQ correction.
+- **The committee** is not involved: nothing changes on the site today.
+
+## Why it was built
+
+Until now only season totals were stored, so anything about a single game (who got whom out, partnerships, results against one opponent) meant fetching the scorecard from PlayHQ page by page. This is the per-match foundation for those features (issue [#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2), tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). It is built for reuse by other clubs: nothing in it names a club, the club's PlayHQ organisation comes from configuration.
+
+## What it does
+
+- **Six tables**, keyed by the PlayHQ game id: `matches` (one row per game: teams, grade, round, venue, toss, result, forfeit and first-innings flags), `match-innings` (totals, extras, declared, all out, whether it was played), `match-appearances` (who played, the only table that holds identity), `match-batting` (runs, balls, fours, sixes, position, how out, bowler and fielder, fall of wicket), `match-bowling` (balls, maidens, runs, wickets, wides, no balls) and `match-fielding` (the fielding figures the scorer entered).
+- **Who is stored.** Finished (`FINAL`) senior games only. Not stored: games that were abandoned or not finished, junior games, games between two teams of the club, and any game where the club is not a side. Lost and won forfeits are stored (with `byForfeit` and no played innings).
+- **Honest gaps.** Balls faced, fours and sixes are empty (never zero) when the scorer did not record them, and each innings says whether it has fall of wickets, bowling figures and ball data. The real PlayHQ summaries show both cases, so a total that adds up from the rows is not guaranteed (a captured real innings has a 6 run difference between batters plus extras and the team total).
+- **People.** A club player is stored only as a name key (the same `first|last` key as the player aliases) plus a cached link to the player, and the name is looked up when a page is drawn. Opposition players are stored as display names. Merging two players moves all of their stored appearances in one update, deleting a player leaves the rows unlinked until an alias links them again, and every nightly sync re-links rows from the aliases. A hidden player never appears in a match view, and is shown as "a club player" inside someone else's dismissal (`getMatchByGameId` in `lib/match-store/queries.ts`, the only read helper so far).
+- **Written by code only.** The collections are hidden in the admin, nobody can create, edit or delete through the admin or REST, and only signed-in staff can read them over REST (the tables hold opposition players' full names, so they are not public). Nightly sync, `pnpm backfill:matches` and `seed:demo` write them directly.
+- **The nightly sync** (`/api/cron/players-sync`) maps the same PlayHQ calls it already makes into match rows, in a step after the season totals are saved, so a failure there never fails the sync: the season totals still update and the Players list shows a red note with the number of games that could not be saved. It stores a game only when its content changed (a stored hash of the rows), so re-running writes nothing. When PlayHQ's own "updated" stamp for a game differs from the stored one, the scorecard is fetched fresh instead of from the seven-day cache, so a corrected scorecard is picked up the next night.
+- **Reconciliation.** After saving, the sync adds the stored rows up per player and compares with the season totals it just wrote (games, innings, not outs, runs, balls, fours, sixes, high score, bowling, best figures and catches) with zero tolerance. The count of players who disagree shows above the Players list. Catches for players who share a name with a team-mate in the same game are left out of that check. Season totals remain what every stats page shows.
+- **Counters** on each sync run: matches saved, matches skipped, players with a mismatch and games that failed to save.
+- **Demo data.** `pnpm seed:demo` adds about 25 invented games over two seasons (invented players and opponents, no real names) covering declared innings, all out, a two-day game with a placeholder innings, run out, stumped, retired hurt, caught-and-bowled, forfeits, a no-result game, an abandoned game (skipped, as in real data), a fill-in, a hidden player, one player with two aliases and a same-name pair.
+
+## How to use it
+
+1. **Committee:** nothing to do. After a nightly sync the Players page shows "N matches saved".
+2. **Developer, reading a game:** `getMatchByGameId(gameId)` returns the match with innings, batting, bowling and fielding and resolved names. Reference `matches.id` or `gameId` and never child row ids, because a corrected game replaces its child rows.
+3. **Admin, loading history** (local or with `ALLOW_REMOTE_DB=yes`, the same guard as the other scripts):
+   - `pnpm backfill:matches --target <host>/<db>` is a **dry run**: it reads the seasons, teams and fixtures from PlayHQ (a handful of requests) and prints, per season and team, how many games it would fetch and the estimated time. It writes nothing.
+   - `pnpm backfill:matches --target <host>/<db> --apply --confirm [--season "2025/26"] [--since 2025-10-01] [--limit 20] [--team <id>] [--delay-ms 2000] [--log file] [--force]` writes. It makes one request at a time, at least 500 ms apart (default 1500), stops with a message on a 429 or 5xx, and can be re-run: games already stored with the same PlayHQ stamp are skipped without a request (`--force` refetches them after a fix). A log `backfill-matches-<time>.log` records every request and game, including any unrecognised shape, and a team-season is reconciled when the run covered all of its games.
+4. **Starting a new club:** set the PlayHQ organisation in the environment, run a sync, then the backfill for older seasons.
+
+## Not included / deferred
+
+- No page reads the match rows yet: the stats, fixtures and archive pages are unchanged. Opposition and head-to-head pages ([#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3)), partnerships ([#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5)), fifties, ducks and other match-level leaderboards ([#7](https://github.com/sherlabs/lang-lang-cricket-website/issues/7)), and switching the season totals to be derived from match rows are later work.
+- Partnerships are not stored: fall of wickets is present only in some innings, and who batted together would be a guess.
+- Not available from PlayHQ and so never stored: ball-by-ball, over-by-over scores, powerplay or death-over phases, dot balls, wagon wheels and who was on strike ([#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35) cannot be built from this source).
+- Junior games are not stored (no junior name may be stored before a rule hides them from public pages), and a game between two of the club's own teams is skipped.
+- The raw PlayHQ response is not kept; a corrected mapper is re-run with `--force`. How out for run out, stumped, retired and hit wicket is covered by invented data only, because no captured game contained them; the backfill log reports any shape it does not recognise.
+- No admin screen for the data. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
