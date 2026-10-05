@@ -86,11 +86,15 @@ describe('selector is not staff (access matrix)', () => {
     expect(mismatches).toEqual([])
   }, 120_000)
 
-  it('every global: reads and writes equal anonymous', async () => {
+  it('every global: reads and writes equal anonymous (except selection-settings, which selection users may read)', async () => {
     for (const { slug } of payload.config.globals) {
       const anonR = await rest('GET', `/globals/${slug}`)
       const selR = await rest('GET', `/globals/${slug}`, { token: selectorToken })
-      expect({ slug, r: selR.status }).toEqual({ slug, r: anonR.status })
+      if (slug === 'selection-settings') {
+        expect({ slug, anon: denied(anonR.status), selector: selR.status }).toEqual({ slug, anon: true, selector: 200 })
+      } else {
+        expect({ slug, r: selR.status }).toEqual({ slug, r: anonR.status })
+      }
       const anonW = await rest('POST', `/globals/${slug}`, { body: {} })
       const selW = await rest('POST', `/globals/${slug}`, { body: {}, token: selectorToken })
       expect({ slug, w: denied(selW.status), anon: denied(anonW.status) }).toEqual({ slug, w: true, anon: true })

@@ -96,6 +96,11 @@ export interface Config {
     'merge-log': MergeLog;
     'ai-draft-counter': AiDraftCounter;
     'throttle-hits': ThrottleHit;
+    'player-selection-profiles': PlayerSelectionProfile;
+    'selection-fixtures': SelectionFixture;
+    availability: Availability;
+    squads: Squad;
+    'squad-members': SquadMember;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -142,6 +147,11 @@ export interface Config {
     'merge-log': MergeLogSelect<false> | MergeLogSelect<true>;
     'ai-draft-counter': AiDraftCounterSelect<false> | AiDraftCounterSelect<true>;
     'throttle-hits': ThrottleHitsSelect<false> | ThrottleHitsSelect<true>;
+    'player-selection-profiles': PlayerSelectionProfilesSelect<false> | PlayerSelectionProfilesSelect<true>;
+    'selection-fixtures': SelectionFixturesSelect<false> | SelectionFixturesSelect<true>;
+    availability: AvailabilitySelect<false> | AvailabilitySelect<true>;
+    squads: SquadsSelect<false> | SquadsSelect<true>;
+    'squad-members': SquadMembersSelect<false> | SquadMembersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -156,12 +166,14 @@ export interface Config {
     'club-apparel': ClubApparel;
     'site-settings': SiteSetting;
     theme: Theme;
+    'selection-settings': SelectionSetting;
   };
   globalsSelect: {
     club: ClubSelect<false> | ClubSelect<true>;
     'club-apparel': ClubApparelSelect<false> | ClubApparelSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     theme: ThemeSelect<false> | ThemeSelect<true>;
+    'selection-settings': SelectionSettingsSelect<false> | SelectionSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1305,6 +1317,114 @@ export interface ThrottleHit {
   createdAt: string;
 }
 /**
+ * Phone, PIN and selector notes for one player. Managed by the selectors, never shown publicly.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-selection-profiles".
+ */
+export interface PlayerSelectionProfile {
+  id: number;
+  player: number | Player;
+  /**
+   * Used to ring the player and as the default PIN (last four digits). Never shown publicly.
+   */
+  phone?: string | null;
+  pinHash?: string | null;
+  pinSalt?: string | null;
+  pinSource?: ('phone' | 'manual') | null;
+  pinSetAt?: string | null;
+  /**
+   * Set when two players of one name share a PIN, until a selector gives one of them their own.
+   */
+  needsManualPin?: boolean | null;
+  otcHash?: string | null;
+  otcExpiresAt?: string | null;
+  /**
+   * The selectors’ view of the player. Leave empty to let the site guess from the stats.
+   */
+  role?: ('batter' | 'bowler' | 'all-rounder' | 'keeper') | null;
+  canKeep?: boolean | null;
+  /**
+   * Private to selectors.
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Upcoming games copied from PlayHQ for availability and team selection. Written by the site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "selection-fixtures".
+ */
+export interface SelectionFixture {
+  id: number;
+  gameId: string;
+  gradeId: string;
+  gradeName: string;
+  clubTeamId: string;
+  clubTeamName: string;
+  roundName?: string | null;
+  localDate: string;
+  localTime?: string | null;
+  startsAt?: string | null;
+  venueName?: string | null;
+  venueSuburb?: string | null;
+  opponentName: string;
+  isHome?: boolean | null;
+  status: 'upcoming' | 'final' | 'removed';
+  syncedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * In, maybe or out for one player and one game. Managed in the selector area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "availability".
+ */
+export interface Availability {
+  id: number;
+  player: number | Player;
+  fixture: number | SelectionFixture;
+  status: 'in' | 'maybe' | 'out';
+  note?: string | null;
+  source?: ('player' | 'selector') | null;
+  setBy?: (number | null) | User;
+  respondedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The players in one grade for one season. Managed in the selector area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "squads".
+ */
+export interface Squad {
+  id: number;
+  seasonStartYear: number;
+  gradeId: string;
+  gradeName: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One player in one squad. Managed in the selector area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "squad-members".
+ */
+export interface SquadMember {
+  id: number;
+  squad: number | Squad;
+  player: number | Player;
+  addedBy?: (number | null) | User;
+  addedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1443,6 +1563,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'throttle-hits';
         value: number | ThrottleHit;
+      } | null)
+    | ({
+        relationTo: 'player-selection-profiles';
+        value: number | PlayerSelectionProfile;
+      } | null)
+    | ({
+        relationTo: 'selection-fixtures';
+        value: number | SelectionFixture;
+      } | null)
+    | ({
+        relationTo: 'availability';
+        value: number | Availability;
+      } | null)
+    | ({
+        relationTo: 'squads';
+        value: number | Squad;
+      } | null)
+    | ({
+        relationTo: 'squad-members';
+        value: number | SquadMember;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2128,6 +2268,87 @@ export interface ThrottleHitsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "player-selection-profiles_select".
+ */
+export interface PlayerSelectionProfilesSelect<T extends boolean = true> {
+  player?: T;
+  phone?: T;
+  pinHash?: T;
+  pinSalt?: T;
+  pinSource?: T;
+  pinSetAt?: T;
+  needsManualPin?: T;
+  otcHash?: T;
+  otcExpiresAt?: T;
+  role?: T;
+  canKeep?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "selection-fixtures_select".
+ */
+export interface SelectionFixturesSelect<T extends boolean = true> {
+  gameId?: T;
+  gradeId?: T;
+  gradeName?: T;
+  clubTeamId?: T;
+  clubTeamName?: T;
+  roundName?: T;
+  localDate?: T;
+  localTime?: T;
+  startsAt?: T;
+  venueName?: T;
+  venueSuburb?: T;
+  opponentName?: T;
+  isHome?: T;
+  status?: T;
+  syncedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "availability_select".
+ */
+export interface AvailabilitySelect<T extends boolean = true> {
+  player?: T;
+  fixture?: T;
+  status?: T;
+  note?: T;
+  source?: T;
+  setBy?: T;
+  respondedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "squads_select".
+ */
+export interface SquadsSelect<T extends boolean = true> {
+  seasonStartYear?: T;
+  gradeId?: T;
+  gradeName?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "squad-members_select".
+ */
+export interface SquadMembersSelect<T extends boolean = true> {
+  squad?: T;
+  player?: T;
+  addedBy?: T;
+  addedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2522,6 +2743,29 @@ export interface Theme {
   createdAt?: string | null;
 }
 /**
+ * The availability link and selection options. Selectors change the link from the selector area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "selection-settings".
+ */
+export interface SelectionSetting {
+  id: number;
+  /**
+   * Untick to turn the link off: everyone who opens it sees a "page not found".
+   */
+  linkEnabled?: boolean | null;
+  /**
+   * Add one to give everyone a new link. The old link, and every remembered phone, stops working at once.
+   */
+  linkVersion: number;
+  /**
+   * 0 keeps availability open until the game. After it closes, players see "Selection has started; call a selector".
+   */
+  availabilityLockHours?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "club_select".
  */
@@ -2827,6 +3071,18 @@ export interface ThemeSelect<T extends boolean = true> {
       };
   crest?: T;
   headingFont?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "selection-settings_select".
+ */
+export interface SelectionSettingsSelect<T extends boolean = true> {
+  linkEnabled?: T;
+  linkVersion?: T;
+  availabilityLockHours?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

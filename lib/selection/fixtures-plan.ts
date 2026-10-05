@@ -1,5 +1,6 @@
 import { AVAILABILITY, CLUB_TIMEZONE } from '@/config/site'
 import type { ClubTeam, Game } from '@/lib/playhq/types'
+import { normaliseLabel } from '@/lib/stats/labels'
 
 /**
  * Selection fixtures (announce-teams spec 4.3): a durable copy of the club's upcoming senior games, so availability and team
@@ -9,7 +10,8 @@ import type { ClubTeam, Game } from '@/lib/playhq/types'
 export type FixtureStatus = 'upcoming' | 'final' | 'removed'
 export type FixtureInput = {
   gameId: string
-  gradeId: string | null
+  /** PlayHQ's grade id, or `name:<normalised grade name>` when PlayHQ gave none, so every fixture has one. */
+  gradeId: string
   gradeName: string
   clubTeamId: string
   clubTeamName: string
@@ -49,7 +51,7 @@ export function gameToFixture(game: Game, team: Pick<ClubTeam, 'id' | 'name'> | 
   if (!game.localDate || !team) return null
   return {
     gameId: game.id,
-    gradeId: game.gradeId,
+    gradeId: game.gradeId ?? `name:${normaliseLabel(game.gradeName)}`,
     gradeName: game.gradeName ?? '',
     clubTeamId: team.id,
     clubTeamName: team.name,

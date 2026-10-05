@@ -24,6 +24,7 @@ import * as migration_20261004_073717_w2_s3_labels_names from './20261004_073717
 import * as migration_20261004_074421_w2_s3_yearbook_ai from './20261004_074421_w2_s3_yearbook_ai';
 import * as migration_20261004_223250_wp_a_selectors from './20261004_223250_wp_a_selectors';
 import * as migration_20261005_004135_wp_a_password_chosen from './20261005_004135_wp_a_password_chosen';
+import * as migration_20261005_010249_wp_b_availability from './20261005_010249_wp_b_availability';
 
 export const migrations = [
   {
@@ -154,6 +155,11 @@ export const migrations = [
   {
     up: migration_20261005_004135_wp_a_password_chosen.up,
     down: migration_20261005_004135_wp_a_password_chosen.down,
-    name: '20261005_004135_wp_a_password_chosen'
+    name: '20261005_004135_wp_a_password_chosen',
+  },
+  {
+    up: migration_20261005_010249_wp_b_availability.up,
+    down: migration_20261005_010249_wp_b_availability.down,
+    name: '20261005_010249_wp_b_availability'
   },
 ];

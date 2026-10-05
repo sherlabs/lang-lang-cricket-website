@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor } from '../payload/admin/navigation'
+import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, selectionCollections } from '../payload/admin/navigation'
 import { adminOnlyCondition, hiddenFromEditors, isAdminUser } from '../payload/admin/visibility'
 import { helpSections } from '../payload/admin/helpContent'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -103,10 +103,26 @@ describe('every collection and global is classified (new ones fail here until th
         expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(e.slug !== 'merge-log' && e.slug !== 'throttle-hits')
         expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(true)
         expect(access.read({ req: { user: undefined } }), `${e.slug} read is staff only`).toBe(false)
+      } else if (selectionCollections.includes(e.slug)) {
+        // Selection data: hidden for every role, in no menu, managed in the selector area. Over REST only admin and editor may read or
+        // write (never a selector or an anonymous visitor); `selection-fixtures` is written by code only.
+        expect(navSlugs.has(e.slug), `${e.slug} is a selection collection and must not be in a nav list`).toBe(false)
+        expect(e.admin.hidden, `${e.slug} must be admin.hidden === true`).toBe(true)
+        const access = (e as { access?: Record<string, (a: { req: { user: unknown } }) => unknown> }).access!
+        const codeOnly = e.slug === 'selection-fixtures'
+        for (const op of ['read', 'create', 'update', 'delete']) {
+          const writes = op !== 'read'
+          expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} by an admin`).toBe(!(writes && codeOnly))
+          expect(access[op]({ req: { user: editor } }), `${e.slug} ${op} by an editor`).toBe(!(writes && codeOnly))
+          expect(access[op]({ req: { user: { id: 3, role: 'selector' } } }), `${e.slug} ${op} by a selector`).toBe(false)
+          expect(access[op]({ req: { user: { id: 2, role: 'editor', disabled: true } } }), `${e.slug} ${op} by a disabled editor`).toBe(false)
+          expect(access[op]({ req: { user: undefined } }), `${e.slug} ${op} anonymous`).toBe(false)
+        }
       } else {
         expect(navSlugs.has(e.slug), `${e.slug} is missing from payload/admin/navigation.ts`).toBe(true)
       }
     }
+    for (const slug of selectionCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a selection collection but is not a collection`).toBe(true)
     for (const slug of internalCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as internal but is not a collection`).toBe(true)
     // Entities listed under Advanced must be hidden from editors unless they are a deliberate upload target.
     const uploadTargets = new Set(['media', 'event-photos'])

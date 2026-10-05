@@ -47,6 +47,7 @@ export const advancedNav: NavEntry[] = [
   { key: 'users', label: 'Users', path: '/collections/users' },
   // Selectors are an occasional task, so they sit under Advanced; the committee reaches them here and from the Home tile.
   { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
+  { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings' },
   { key: 'club', label: 'Club details', path: '/globals/club' },
   { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
   { key: 'theme', label: 'Site look (colours and fonts)', path: '/globals/theme' },
@@ -66,6 +67,13 @@ export const advancedNav: NavEntry[] = [
  * role and never writable through REST. `tests/admin-visibility.test.ts` enforces both.
  */
 export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter', 'throttle-hits']
+
+/**
+ * Selection collections (announce-teams spec section 1): data the selectors work with, managed in the selector area, never as raw
+ * rows in the admin. Hidden from the sidebar for every role, absent from both menus, and over REST readable by admins and editors
+ * only (a selector is denied exactly like an anonymous visitor). `tests/admin-visibility.test.ts` enforces all of it.
+ */
+export const selectionCollections: string[] = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members']
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {

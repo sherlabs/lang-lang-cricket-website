@@ -12,6 +12,7 @@ import { restrictBuiltinCollections } from './payload/access/builtins'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { AiDraftCounter } from './payload/collections/AiDraftCounter'
 import { Announcements } from './payload/collections/Announcements'
+import { Availability } from './payload/collections/Availability'
 import { Documents } from './payload/collections/Documents'
 import { EventPhotos } from './payload/collections/EventPhotos'
 import { EventRsvps } from './payload/collections/EventRsvps'
@@ -29,6 +30,9 @@ import { News } from './payload/collections/News'
 import { Pages } from './payload/collections/Pages'
 import { People } from './payload/collections/People'
 import { PlayerAliases } from './payload/collections/PlayerAliases'
+import { PlayerSelectionProfiles } from './payload/collections/PlayerSelectionProfiles'
+import { SelectionFixtures } from './payload/collections/SelectionFixtures'
+import { SquadMembers, Squads } from './payload/collections/Squads'
 import { SavedReports } from './payload/collections/SavedReports'
 import { Players } from './payload/collections/Players'
 import { PlayerSponsors } from './payload/collections/PlayerSponsors'
@@ -43,6 +47,7 @@ import { selectorEndpoints } from './payload/endpoints/selectors'
 import { historyImportEndpoints } from './payload/endpoints/historyImport'
 import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
+import { SelectionSettings } from './payload/globals/SelectionSettings'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { Theme } from './payload/globals/Theme'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
@@ -86,8 +91,8 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits],
-  globals: [Club, ClubApparel, SiteSettings, Theme],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers],
+  globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
   onInit: restrictBuiltinCollections,
