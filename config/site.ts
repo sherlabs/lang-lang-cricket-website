@@ -138,6 +138,9 @@ export const selectorPaths = {
   squads: '/selector/squads',
   link: '/selector/link',
   player: (slug: string) => `/selector/players/${slug}`,
+  teams: '/selector/teams',
+  team: (gameId: string) => `/selector/teams/${gameId}`,
+  teamPreviewImage: (gameId: string) => `/selector/teams/${gameId}/preview-image`,
 } as const
 
 /**

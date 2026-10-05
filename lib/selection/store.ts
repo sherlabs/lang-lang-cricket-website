@@ -6,17 +6,22 @@ import { currentSeasonStartYear } from './season'
  * override (`overrideAccess: true`, the default), so every caller has already checked who is asking: the availability link by its
  * signed cookie, the selector area by `requireSelection()` plus the role check in the `lib/selector-*` files.
  */
-export type SelectionSettingsValues = { linkEnabled: boolean; linkVersion: number; availabilityLockHours: number }
+export type SelectionSettingsValues = { linkEnabled: boolean; linkVersion: number; availabilityLockHours: number; defaultXiSize: 0 | 11 | 12 | 13; publishBattingOrder: boolean; announceOnPublish: boolean }
 
 export async function getSelectionSettings(payload: Payload): Promise<SelectionSettingsValues> {
   const g = await payload.findGlobal({ slug: 'selection-settings', depth: 0 })
   const version = Number((g as { linkVersion?: unknown }).linkVersion)
   const hours = Number((g as { availabilityLockHours?: unknown }).availabilityLockHours)
+  const rawXi = (g as { defaultXiSize?: unknown }).defaultXiSize
+  const xi = rawXi == null ? 11 : Number(rawXi)
   return {
     // A never-saved global has no row: the defaults (on, version 1, no cutoff) apply.
     linkEnabled: (g as { linkEnabled?: boolean | null }).linkEnabled !== false,
     linkVersion: Number.isInteger(version) && version >= 1 ? version : 1,
     availabilityLockHours: Number.isFinite(hours) && hours > 0 ? hours : 0,
+    defaultXiSize: [0, 11, 12, 13].includes(xi) ? (xi as 0 | 11 | 12 | 13) : 11,
+    publishBattingOrder: (g as { publishBattingOrder?: boolean | null }).publishBattingOrder !== false,
+    announceOnPublish: (g as { announceOnPublish?: boolean | null }).announceOnPublish !== false,
   }
 }
 
