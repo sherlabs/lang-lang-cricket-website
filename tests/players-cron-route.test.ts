@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const syncPlayers = vi.fn(async () => ({ status: 'ok', playersCreated: 1, seasonRows: 2 }))
 vi.mock('@/lib/players/sync', () => ({ syncPlayers }))
+const refreshSelectionFixtures = vi.fn(async () => ({ created: 0 }))
+vi.mock('@/lib/selection-fixtures', () => ({ refreshSelectionFixtures }))
 const payload = { fake: 'payload' }
 vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => payload }))
 
@@ -15,6 +17,13 @@ describe('GET /api/cron/players-sync', () => {
     expect((await GET(req())).status).toBe(401)
     expect((await GET(req('Bearer nope'))).status).toBe(401)
     expect(syncPlayers).not.toHaveBeenCalled()
+  })
+  it('refreshes the selection fixtures after the sync, and a failure there does not fail the sync', async () => {
+    const { GET } = await import('@/app/api/cron/players-sync/route')
+    refreshSelectionFixtures.mockRejectedValueOnce(new Error('PlayHQ down'))
+    const res = await GET(req('Bearer s3cret'))
+    expect(res.status).toBe(200)
+    expect(refreshSelectionFixtures).toHaveBeenCalledWith(payload)
   })
   it('401 when CRON_SECRET is unset', async () => {
     delete process.env.CRON_SECRET

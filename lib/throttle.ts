@@ -76,7 +76,7 @@ export async function sweep(payload: Payload): Promise<void> {
 /** The soft per-IP rules for the selector routes: 60 per 10 minutes, a 10-minute pause. Skipped (allowed) when there is no trusted IP. */
 export const IP_RULE: ThrottleRule = { limit: 60, windowMs: 600_000, lockMs: 600_000 }
 
-export async function ipHit(payload: Payload, bucket: 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login', ip: string | null): Promise<ThrottleResult> {
+export async function ipHit(payload: Payload, bucket: 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login' | 'avail', ip: string | null): Promise<ThrottleResult> {
   if (!ip) return { allowed: true, retryAfterSeconds: 0 }
   return hit(payload, `${bucket}:ip:${ip}`, IP_RULE)
 }
