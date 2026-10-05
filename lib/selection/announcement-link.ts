@@ -6,7 +6,6 @@ export function isSafeAnnouncementLink(value: unknown): boolean {
   if (typeof value !== 'string') return false
   const v = value.trim()
   if (!v || v.length > 500) return false
-  // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001f\u007f\\]/.test(v)) return false
   if (v.startsWith('/')) return !v.startsWith('//')
   try {

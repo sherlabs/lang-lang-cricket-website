@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdminField, isStaff, isStaffField, nobodyField, staffOr } from '../access'
 import { adminOnlyCondition } from '../admin/visibility'
 import { dismissDuplicateEndpoint, mergePlayersEndpoint, undoMergeEndpoint } from '../endpoints/mergePlayers'
+import { TEAMS_TAG } from '../../lib/selection/tags'
 import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
@@ -15,8 +16,8 @@ import { trimHonours, trimStrings } from '../hooks/trimStrings'
 const STATS_PATHS = ['/stats', '/records', '/honours', '/players/compare', '/stats/opposition', '/records/partnerships']
 const paths = (doc: Record<string, unknown>) =>
   doc.slug
-    ? ['/players', `/players/${doc.slug}`, `/api/public/players/${doc.slug}/card`, ...STATS_PATHS]
-    : ['/players', ...STATS_PATHS]
+    ? ['/players', '/teams', `/players/${doc.slug}`, `/api/public/players/${doc.slug}/card`, ...STATS_PATHS]
+    : ['/players', '/teams', ...STATS_PATHS]
 
 /** Pre-PlayHQ totals used only by milestones (spec 3.6). Names match the `players` columns. */
 export const BASELINE_FIELDS = [
@@ -67,8 +68,8 @@ export const Players: CollectionConfig = {
       ]),
       unlinkPeople,
     ],
-    afterChange: [revalidateAfterChange(paths, ALL_STATS_TAGS)],
-    afterDelete: [revalidateAfterDelete(paths, ALL_STATS_TAGS)],
+    afterChange: [revalidateAfterChange(paths, [...ALL_STATS_TAGS, TEAMS_TAG])],
+    afterDelete: [revalidateAfterDelete(paths, [...ALL_STATS_TAGS, TEAMS_TAG])],
   },
   endpoints: [mergePlayersEndpoint, undoMergeEndpoint, dismissDuplicateEndpoint],
   timestamps: true,

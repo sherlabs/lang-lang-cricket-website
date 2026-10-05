@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig } from 'payload'
 import { TIER_ORDER } from '../../lib/sponsors'
 import {
+  DEFAULT_MATCHDAY_LABEL,
   DEFAULT_APPROACH_WINDOW,
   DEFAULT_INCLUDED_CATEGORIES,
   DEFAULT_MILESTONE_THRESHOLDS,
@@ -173,6 +174,7 @@ export const SiteSettings: GlobalConfig = {
         {
           label: 'Site',
           fields: [
+            { name: 'matchdayLabel', label: 'Matchday label', type: 'text', maxLength: 30, defaultValue: DEFAULT_MATCHDAY_LABEL, admin: { description: 'The word in the headline when teams are announced, e.g. "Matchday 12 October".' } },
             {
               name: 'sponsorCarouselTiers',
               label: 'Sponsor carousel tiers',

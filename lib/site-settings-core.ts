@@ -8,6 +8,9 @@ import { GRADE_CATEGORIES, MAX_RULE_PATTERN_LENGTH, classifyGradeStrict, compile
 import { DEFAULT_MATCH_MINIMUMS, resolveMatchMinimums, type MatchMinimums } from './stats/match/minimums'
 import { DEFAULT_QUALIFICATION, type QualConfig, type QualScope } from './stats/qualify'
 
+/** The word in a team announcement headline until the club sets its own (`site-settings.matchdayLabel`). */
+export const DEFAULT_MATCHDAY_LABEL = 'Matchday'
+
 export const DEFAULT_SPONSOR_CAROUSEL_TIERS: readonly string[] = ['Platinum', 'Gold']
 
 /**

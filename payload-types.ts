@@ -101,6 +101,7 @@ export interface Config {
     availability: Availability;
     squads: Squad;
     'squad-members': SquadMember;
+    'team-sheets': TeamSheet;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -152,6 +153,7 @@ export interface Config {
     availability: AvailabilitySelect<false> | AvailabilitySelect<true>;
     squads: SquadsSelect<false> | SquadsSelect<true>;
     'squad-members': SquadMembersSelect<false> | SquadMembersSelect<true>;
+    'team-sheets': TeamSheetsSelect<false> | TeamSheetsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -582,6 +584,15 @@ export interface Announcement {
    * Nothing shows on the website until this is switched on. Switch it off later to take the announcement down without deleting it.
    */
   published?: boolean | null;
+  /**
+   * Optional. A page on this site (starting with /, for example /teams) or a link starting with https://. Adds a button to the banner.
+   */
+  link?: string | null;
+  /**
+   * Optional. Defaults to "Read more".
+   */
+  linkLabel?: string | null;
+  autoKey?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1425,6 +1436,52 @@ export interface SquadMember {
   createdAt: string;
 }
 /**
+ * The team picked for one game. Managed in the selector area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-sheets".
+ */
+export interface TeamSheet {
+  id: number;
+  fixture: number | SelectionFixture;
+  slots?:
+    | {
+        player?: (number | null) | Player;
+        guestName?: string | null;
+        order: number;
+        isCaptain?: boolean | null;
+        isKeeper?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 11, 12 or 13 players, or 0 for no limit.
+   */
+  size?: number | null;
+  markedReady?: boolean | null;
+  /**
+   * Private to selectors.
+   */
+  notes?: string | null;
+  revision?: number | null;
+  updatedBy?: (number | null) | User;
+  publishedSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  publishedAt?: string | null;
+  publishedBy?: (number | null) | User;
+  publishCount?: number | null;
+  announcementId?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1583,6 +1640,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'squad-members';
         value: number | SquadMember;
+      } | null)
+    | ({
+        relationTo: 'team-sheets';
+        value: number | TeamSheet;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1769,6 +1830,9 @@ export interface AnnouncementsSelect<T extends boolean = true> {
   title?: T;
   body?: T;
   published?: T;
+  link?: T;
+  linkLabel?: T;
+  autoKey?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2349,6 +2413,35 @@ export interface SquadMembersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-sheets_select".
+ */
+export interface TeamSheetsSelect<T extends boolean = true> {
+  fixture?: T;
+  slots?:
+    | T
+    | {
+        player?: T;
+        guestName?: T;
+        order?: T;
+        isCaptain?: T;
+        isKeeper?: T;
+        id?: T;
+      };
+  size?: T;
+  markedReady?: T;
+  notes?: T;
+  revision?: T;
+  updatedBy?: T;
+  publishedSnapshot?: T;
+  publishedAt?: T;
+  publishedBy?: T;
+  publishCount?: T;
+  announcementId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2417,6 +2510,10 @@ export interface Club {
   ogLocale?: string | null;
   email?: string | null;
   sponsorshipSubject?: string | null;
+  /**
+   * Optional last line of the post text selectors copy for Facebook, e.g. a club cheer. Leave empty for none.
+   */
+  teamsSignOff?: string | null;
   address?: {
     locality?: string | null;
     region?: string | null;
@@ -2574,6 +2671,10 @@ export interface ClubApparel {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * The word in the headline when teams are announced, e.g. "Matchday 12 October".
+   */
+  matchdayLabel?: string | null;
   /**
    * Sponsors in these tiers scroll across the home page under the hero. Leave empty to hide the carousel.
    */
@@ -2762,6 +2863,18 @@ export interface SelectionSetting {
    * 0 keeps availability open until the game. After it closes, players see "Selection has started; call a selector".
    */
   availabilityLockHours?: number | null;
+  /**
+   * 11, 12 or 13. A selector can change it for one game. 0 means no limit.
+   */
+  defaultXiSize?: number | null;
+  /**
+   * Untick to list the team alphabetically without numbers (captain and keeper stay marked).
+   */
+  publishBattingOrder?: boolean | null;
+  /**
+   * Adds one announcement per weekend (updated if the teams change) that links to the teams page.
+   */
+  announceOnPublish?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2780,6 +2893,7 @@ export interface ClubSelect<T extends boolean = true> {
   ogLocale?: T;
   email?: T;
   sponsorshipSubject?: T;
+  teamsSignOff?: T;
   address?:
     | T
     | {
@@ -2962,6 +3076,7 @@ export interface ClubApparelSelect<T extends boolean = true> {
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  matchdayLabel?: T;
   sponsorCarouselTiers?: T;
   stats?:
     | T
@@ -3083,6 +3198,9 @@ export interface SelectionSettingsSelect<T extends boolean = true> {
   linkEnabled?: T;
   linkVersion?: T;
   availabilityLockHours?: T;
+  defaultXiSize?: T;
+  publishBattingOrder?: T;
+  announceOnPublish?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

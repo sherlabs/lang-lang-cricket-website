@@ -89,6 +89,7 @@ export const Club: GlobalConfig = {
           fields: [
             { name: 'email', type: 'email', defaultValue: d.email },
             { name: 'sponsorshipSubject', type: 'text', defaultValue: d.sponsorshipSubject },
+            { name: 'teamsSignOff', label: 'Sign-off for team announcements', type: 'text', maxLength: 80, defaultValue: d.teamsSignOff, admin: { description: 'Optional last line of the post text selectors copy for Facebook, e.g. a club cheer. Leave empty for none.' } },
             {
               name: 'address',
               type: 'group',

@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { validateAnnouncementLink } from '../../lib/selection/announcement-link'
 import { isStaff, staffOr } from '../access'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { trimStrings } from '../hooks/trimStrings'
@@ -55,5 +56,16 @@ export const Announcements: CollectionConfig = {
       index: true,
       admin: { description: 'Nothing shows on the website until this is switched on. Switch it off later to take the announcement down without deleting it.' },
     },
+    {
+      name: 'link',
+      label: 'Button link',
+      type: 'text',
+      maxLength: 500,
+      validate: validateAnnouncementLink,
+      admin: { description: 'Optional. A page on this site (starting with /, for example /teams) or a link starting with https://. Adds a button to the banner.', placeholder: '/teams' },
+    },
+    { name: 'linkLabel', label: 'Button text', type: 'text', maxLength: 40, admin: { description: 'Optional. Defaults to "Read more".', placeholder: 'See the teams' } },
+    // Set by the site when team selection is published (one announcement per weekend); never edited by hand.
+    { name: 'autoKey', type: 'text', unique: true, index: true, hidden: true, access: { create: () => false, update: () => false } },
   ],
 }

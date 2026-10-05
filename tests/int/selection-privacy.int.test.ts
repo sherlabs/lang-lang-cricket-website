@@ -47,7 +47,7 @@ describe('selection privacy and access', () => {
     await destroyTestPayload(payload)
   })
 
-  const SLUGS = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members'] as const
+  const SLUGS = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets'] as const
 
   it('anonymous and selector get nothing from any selection collection, and cannot write', async () => {
     for (const slug of SLUGS) {

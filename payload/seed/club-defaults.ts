@@ -78,6 +78,8 @@ export type ClubGlobalDefaults = {
   // Contact & location
   email: string
   sponsorshipSubject: string
+  /** Last line of a team announcement post (e.g. a club cheer). Empty by default, so a club that sets nothing shows nothing. */
+  teamsSignOff: string
   address: { locality: string; region: string; regionName: string; country: string; countryName: string }
   mapQuery: string
   // Socials
@@ -216,6 +218,7 @@ export const clubDefaults: ClubDefaults = {
   // ---- Contact & location ------------------------------------------------
   email: 'langlangcricketclub@gmail.com',
   sponsorshipSubject: 'Sponsorship enquiry',
+  teamsSignOff: '',
   address: { locality: 'Caldermeade', region: 'VIC', regionName: 'Victoria', country: 'AU', countryName: 'Australia' },
   mapQuery: 'Caldermeade, Victoria, Australia',
 
@@ -736,6 +739,7 @@ export function clubGlobalSeed(d: ClubDefaults = clubDefaults): ClubGlobalDefaul
     ogLocale: d.ogLocale,
     email: d.email,
     sponsorshipSubject: d.sponsorshipSubject,
+    teamsSignOff: d.teamsSignOff,
     address: { ...d.address },
     mapQuery: d.mapQuery,
     socials: d.socials.map((s) => ({ ...s })),
