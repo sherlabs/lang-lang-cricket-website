@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { newNonce, oauthCookieName, serializeOAuthCookie, signOAuthCookie, stateFor } from '@/lib/oauth-cookie'
+import { newNonce, oauthCookieName, signOAuthCookie, stateFor } from '@/lib/oauth-cookie'
 import { consumeInvite, hashInviteToken, newInviteToken } from '@/lib/selector-invite'
 import { handleCallback, handleDataCallback, handleStart } from '@/lib/selector-oauth'
 import { clearCollection, destroyTestPayload, getTestPayload } from './helpers'

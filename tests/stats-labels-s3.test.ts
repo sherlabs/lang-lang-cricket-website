@@ -132,6 +132,11 @@ describe('single source for names and labels', () => {
         'app/(frontend)/selector/(area)/availability/page.tsx', 'app/(frontend)/selector/(area)/squads/page.tsx', 'components/availability/answer-list.tsx',
         'components/selector/squad-grade.tsx', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
         'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts',
+        // Team sheets and the public teams pages: the PlayHQ grade name of the game, as for availability and squads.
+        'app/(frontend)/selector/(area)/players/[slug]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/page.tsx', 'app/(frontend)/selector/(area)/teams/page.tsx',
+        'app/(frontend)/teams/[gameId]/lineup-image/route.tsx', 'app/(frontend)/teams/[gameId]/page.tsx', 'app/(frontend)/teams/page.tsx',
+        'components/selector/team-builder.tsx', 'components/selector/weekend-cards.tsx', 'components/teams/team-card.tsx',
+        'lib/selection/announce.ts', 'lib/selection/lineup-image.tsx', 'lib/selection/lineup-text.ts', 'lib/selection/reminder.ts', 'lib/selector-team-queries.ts', 'lib/teams-queries.ts',
       ].sort(),
     )
   })
