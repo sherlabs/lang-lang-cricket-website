@@ -68,7 +68,7 @@ export async function clear(payload: Payload, key: string): Promise<void> {
   await payload.db.drizzle.execute(sql`DELETE FROM "payload"."throttle_hits" WHERE "key" = ${hashKey(key)}`)
 }
 
-/** Rows idle for two days are deleted (called from the nightly job). */
+/** Rows idle for two days are deleted (called from the daily players-sync cron). */
 export async function sweep(payload: Payload): Promise<void> {
   await payload.db.drizzle.execute(sql`DELETE FROM "payload"."throttle_hits" WHERE "updated_at" < now() - interval '2 days'`)
 }
@@ -76,7 +76,7 @@ export async function sweep(payload: Payload): Promise<void> {
 /** The soft per-IP rules for the selector routes: 60 per 10 minutes, a 10-minute pause. Skipped (allowed) when there is no trusted IP. */
 export const IP_RULE: ThrottleRule = { limit: 60, windowMs: 600_000, lockMs: 600_000 }
 
-export async function ipHit(payload: Payload, bucket: 'sel-login' | 'sel-oauth' | 'sel-invite', ip: string | null): Promise<ThrottleResult> {
+export async function ipHit(payload: Payload, bucket: 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login', ip: string | null): Promise<ThrottleResult> {
   if (!ip) return { allowed: true, retryAfterSeconds: 0 }
   return hit(payload, `${bucket}:ip:${ip}`, IP_RULE)
 }

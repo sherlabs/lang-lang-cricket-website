@@ -77,15 +77,17 @@ const create: Handler = async (req, body) => {
   if (!EMAIL_RE.test(email) || email.length > 200) return fail(400, 'Enter an email address, for example sam@example.com.')
   const token = newInviteToken()
   const w = inviteWindow()
+  // Counted across every role (a selector must not share an address with an admin), but the message is generic so an editor
+  // cannot tell whether an admin's or editor's address exists.
   const clash = await req.payload.count({ collection: 'users', where: { email: { equals: email } }, overrideAccess: true })
-  if (clash.totalDocs) return fail(400, 'Someone already has a login with that email address.')
+  if (clash.totalDocs) return fail(400, 'That email address cannot be used for a new selector login.')
   const doc = await req.payload.create({
     collection: 'users',
     // Payload needs a password; this one is random and nobody ever knows it. The person chooses theirs from the invite link.
     data: { email, name, role: 'selector', password: randomBytes(32).toString('base64url') },
     user: req.user,
     overrideAccess: false,
-    context: { ...ctx, selectorInvite: { hash: hashInviteToken(token), expiresAt: w.expiresAt, invitedAt: w.invitedAt } },
+    context: { ...ctx, randomPassword: true, selectorInvite: { hash: hashInviteToken(token), expiresAt: w.expiresAt, invitedAt: w.invitedAt } },
   })
   return Response.json({ ok: true, id: doc.id, inviteUrl: inviteUrl(req, token), expiresAt: w.expiresAt })
 }

@@ -129,7 +129,7 @@ export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: 
             <span aria-hidden className="hidden text-white/30 lg:inline">
               ·
             </span>
-            <Link href={selectorPaths.login} className="inline-flex min-h-9 items-center underline decoration-white/30 underline-offset-4 transition hover:text-brand-gold lg:min-h-0">
+            <Link href={selectorPaths.login} className="inline-flex min-h-11 items-center underline decoration-white/30 underline-offset-4 transition hover:text-brand-gold lg:min-h-0">
               Selector login
             </Link>
           </p>

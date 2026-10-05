@@ -1,5 +1,7 @@
 import { APIError, AuthenticationError, Forbidden, ValidationError, type CollectionAfterChangeHook, type CollectionBeforeChangeHook, type CollectionBeforeValidateHook, type CollectionConfig, type Where } from 'payload'
+import { clientIp } from '../../lib/client-ip'
 import { MIN_PASSWORD_LENGTH } from '../../lib/selector-status'
+import { ipHit } from '../../lib/throttle'
 import { isAdminField, isAdminUser, isSelectorUser, isStaff, isStaffUser, isSignedIn, nobodyField, type Role } from '../access'
 import { adminOnlyCondition, hiddenFromEditors } from '../admin/visibility'
 
@@ -34,7 +36,13 @@ export type SelectorInviteContext = { hash: string; expiresAt: string; invitedAt
 
 const accessAdmin = ({ req }: { req: { user?: unknown } }): boolean => isStaffUser(req.user as never)
 
-const beforeOperationGuard: NonNullable<NonNullable<CollectionConfig['hooks']>['beforeOperation']>[number] = ({ operation, req, args }) => {
+const beforeOperationGuard: NonNullable<NonNullable<CollectionConfig['hooks']>['beforeOperation']>[number] = async ({ operation, req, args }) => {
+  if (operation === 'login') {
+    // Soft per-IP cap on the REST login route (the selector form has its own bucket). No trusted IP (local dev, Local API) means no cap.
+    const ip = clientIp(req.headers ?? new Headers())
+    if (ip && !(await ipHit(req.payload, 'rest-login', ip)).allowed) throw new APIError('Too many tries. Please wait a few minutes and try again.', 429, null, true)
+    return args
+  }
   if (operation === 'create' && !isSignedIn(req.user) && !req.context?.seedAdmin) {
     // First-register is closed structurally: `registerFirstUser` creates with overrideAccess, so `access.create` cannot stop it.
     throw new Forbidden(req.t)
@@ -96,6 +104,17 @@ const requireCurrentPassword: CollectionBeforeValidateHook = async ({ data, oper
   } catch {
     throw new ValidationError({ errors: [{ message: 'Your current password is not right.', path: 'currentPassword' }] })
   }
+  return data
+}
+
+/**
+ * Records that a person chose a password (the committee's random placeholder at creation does not count; it passes
+ * `req.context.randomPassword`). Facebook-invited selectors have none until they choose one on `/selector/account`.
+ */
+// beforeValidate, not beforeChange: Payload lifts `password` out of `data` (into hash and salt) before beforeChange runs.
+const stampPasswordChosen: CollectionBeforeValidateHook = ({ data, req }) => {
+  if (!data) return data
+  if (typeof data.password === 'string' && data.password && !req.context?.randomPassword) data.passwordChosenAt = new Date().toISOString()
   return data
 }
 
@@ -215,7 +234,7 @@ export const Users: CollectionConfig = {
   },
   hooks: {
     beforeOperation: [beforeOperationGuard],
-    beforeValidate: [forceSelectorForEditor, passwordRules, requireCurrentPassword],
+    beforeValidate: [forceSelectorForEditor, passwordRules, requireCurrentPassword, stampPasswordChosen],
     beforeChange: [applyInviteContext, emailChangeUnlinks, facebookIdRules],
     afterChange: [revokeSessions],
     // One message for every refusal, so a disabled account is indistinguishable from a wrong password.
@@ -226,6 +245,16 @@ export const Users: CollectionConfig = {
       },
     ],
     afterLogin: [stampLogin],
+    // REST login must not say which accounts exist: an unknown email, a wrong password, a disabled account and a locked account
+    // all get the one message (the selector form already does).
+    afterError: [
+      ({ error, req }) => {
+        const name = (error as { name?: string }).name
+        if (req.method !== 'POST' || !req.pathname?.endsWith('/users/login')) return
+        if (name !== 'AuthenticationError' && name !== 'LockedAuth') return
+        return { response: { errors: [{ message: 'The email or password provided is incorrect.' }] }, status: 401 }
+      },
+    ],
   },
   timestamps: true,
   fields: [
@@ -259,6 +288,8 @@ export const Users: CollectionConfig = {
     { name: 'invitedAt', type: 'date', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     // Normal unique index: Postgres allows many NULLs, so no partial index is needed.
     { name: 'facebookId', type: 'text', unique: true, hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
+    // When the person chose a password (null for a Facebook-invited selector who never did). Not readable over REST; only the `stampPasswordChosen` hook writes it (a non-admin's body keys are filtered in beforeOperation).
+    { name: 'passwordChosenAt', type: 'date', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     { name: 'facebookLinkedAt', type: 'date', admin: { readOnly: true, condition: adminOnlyCondition(), description: 'When a Facebook sign-in was linked.' }, access: { create: nobodyField, update: nobodyField } },
     { name: 'lastLoginAt', type: 'date', admin: { readOnly: true, condition: adminOnlyCondition() }, access: { create: nobodyField, update: nobodyField } },
     {

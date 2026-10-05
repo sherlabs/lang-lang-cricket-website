@@ -6,12 +6,14 @@ import { isTabActive, selectorTabs } from '@/lib/selector-nav'
 
 /**
  * The selector area's frame: tabs at the top on desktop and a fixed bar at the bottom on a phone (44 px tap targets,
- * no hover-only controls). Content gets bottom padding on a phone so the bar never covers it.
+ * no hover-only controls). The bar is fixed to the viewport, so it would also cover the site footer, which renders after this shell
+ * in the root layout: the page body gets bottom padding (bar height plus the home-indicator inset) on a phone while a selector page is shown.
  */
 export function SelectorShell({ name, signOut, children }: { name: string; signOut: React.ReactNode; children: React.ReactNode }) {
   const pathname = usePathname() ?? ''
   return (
-    <div className="pb-24 sm:pb-0">
+    <div>
+      <style>{`@media (max-width: 639px) { body { padding-bottom: calc(3.5rem + env(safe-area-inset-bottom)); } }`}</style>
       <div className="border-b border-brand-black/10 bg-brand-stone/60">
         <div className="container-site flex items-center justify-between gap-3 py-2">
           <p className="truncate text-sm text-brand-grey">Selectors{name ? ` · ${name}` : ''}</p>

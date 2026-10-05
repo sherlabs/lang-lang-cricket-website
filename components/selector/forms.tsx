@@ -53,16 +53,19 @@ export function ChoosePasswordForm({ action, token }: { action: Action; token: s
   )
 }
 
-export function ChangePasswordForm({ action }: { action: Action }) {
+/** `hasPassword` false: a Facebook-invited selector choosing their first password, so no current password is asked for. */
+export function ChangePasswordForm({ action, hasPassword = true }: { action: Action; hasPassword?: boolean }) {
   const [state, run, pending] = useActionState(action, {})
   return (
     <form action={run} className="space-y-4">
+      {hasPassword && (
+        <label className="block text-sm font-medium text-brand-black">
+          Current password
+          <input className={input} type="password" name="current" autoComplete="current-password" required />
+        </label>
+      )}
       <label className="block text-sm font-medium text-brand-black">
-        Current password
-        <input className={input} type="password" name="current" autoComplete="current-password" required />
-      </label>
-      <label className="block text-sm font-medium text-brand-black">
-        New password
+        {hasPassword ? 'New password' : 'Choose a password'}
         <input className={input} type="password" name="password" autoComplete="new-password" minLength={10} required />
       </label>
       <label className="block text-sm font-medium text-brand-black">
@@ -70,7 +73,7 @@ export function ChangePasswordForm({ action }: { action: Action }) {
         <input className={input} type="password" name="confirm" autoComplete="new-password" minLength={10} required />
       </label>
       <Message state={state} />
-      <button className={submit} type="submit" disabled={pending}>{pending ? 'Saving...' : 'Change password'}</button>
+      <button className={submit} type="submit" disabled={pending}>{pending ? 'Saving...' : hasPassword ? 'Change password' : 'Save password'}</button>
     </form>
   )
 }

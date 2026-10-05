@@ -8,20 +8,46 @@ import { isSelectionUser, isSelectorUser } from '@/payload/access'
  * `app/(frontend)/selector/**`). Every function takes the already-verified user and re-checks the role itself.
  */
 
-export type OwnAccount = { name: string; email: string; role: string; facebookLinked: boolean }
+export type OwnAccount = { name: string; email: string; role: string; facebookLinked: boolean; hasPassword: boolean }
 
 export async function getOwnAccount(user: TypedUser): Promise<OwnAccount | null> {
   if (!isSelectionUser(user)) return null
   const payload = await getPayloadClient()
-  const row = await payload.findByID({ collection: 'users', id: user.id, depth: 0, overrideAccess: true, select: { name: true, email: true, role: true, facebookLinkedAt: true } })
-  return { name: row.name ?? '', email: row.email, role: row.role, facebookLinked: Boolean(row.facebookLinkedAt) }
+  const row = await payload.findByID({ collection: 'users', id: user.id, depth: 0, overrideAccess: true, showHiddenFields: true, select: { name: true, email: true, role: true, facebookLinkedAt: true, passwordChosenAt: true } })
+  // Admins and editors always have a password; a selector only once they (or the committee for them) chose one.
+  return { name: row.name ?? '', email: row.email, role: row.role, facebookLinked: Boolean(row.facebookLinkedAt), hasPassword: row.role !== 'selector' || Boolean(row.passwordChosenAt) }
 }
 
-/** A selector removes their own Facebook link; they can still sign in with their password. */
-export async function unlinkOwnFacebook(user: TypedUser): Promise<void> {
-  if (!isSelectorUser(user)) return
+/** A selector removes their own Facebook link. Refused (false) when they have no password, which would lock them out. */
+export async function unlinkOwnFacebook(user: TypedUser): Promise<boolean> {
+  if (!isSelectorUser(user)) return false
   const payload = await getPayloadClient()
+  const account = await getOwnAccount(user)
+  if (!account?.hasPassword) return false
   await payload.update({ collection: 'users', id: user.id, data: { facebookId: null }, overrideAccess: true, context: { disableRevalidate: true } })
+  return true
+}
+
+/** True when `current` is this account's password. Counts towards the lockout like a login does. */
+export async function currentPasswordIsRight(payload: Payload, email: string, current: string): Promise<boolean> {
+  try {
+    await payload.login({ collection: 'users', data: { email, password: current } })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * A selector who never chose a password (a Facebook-invited one) chooses their first. The live session is the authority, so no
+ * current password is asked for; it is refused once one exists (they must then use the change form, which asks for it).
+ */
+export async function chooseFirstPassword(user: TypedUser, password: string): Promise<boolean> {
+  const account = await getOwnAccount(user)
+  if (!account || account.role !== 'selector' || account.hasPassword) return false
+  const payload = await getPayloadClient()
+  await payload.update({ collection: 'users', id: user.id, data: { password }, user, overrideAccess: true, context: { disableRevalidate: true, skipCurrentPassword: true } })
+  return true
 }
 
 /**

@@ -167,6 +167,11 @@ describe('selector users: privilege escalation, passwords, sessions, hidden fiel
       const good = await rest('POST', '/users/login', { body: { email: 'lock@example.com', password: PASS } })
       expect(good.status).toBe(401)
       expect(last.status).toBe(401)
+      // A locked account and an unknown email read the same: REST login does not reveal which accounts exist.
+      const unknown = await rest('POST', '/users/login', { body: { email: 'nobody-here@example.com', password: PASS } })
+      expect(unknown.status).toBe(401)
+      expect(good.json.errors[0].message).toBe(unknown.json.errors[0].message)
+      expect(last.json!.errors[0].message).toBe(unknown.json.errors[0].message)
     })
     it('the admin area refuses a selector (access.admin)', async () => {
       const users = payload.config.collections.find((c) => c.slug === 'users')!

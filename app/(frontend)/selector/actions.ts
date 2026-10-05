@@ -10,7 +10,8 @@ import { safeNext } from '@/lib/safe-next'
 import { requireSelection } from '@/lib/selector-auth'
 import type { FormState } from '@/lib/selector-form-state'
 import { consumeInvite, looksLikeInviteToken } from '@/lib/selector-invite'
-import { removeOwnSession, setPasswordFromInvite, unlinkOwnFacebook } from '@/lib/selector-queries'
+import { chooseFirstPassword, currentPasswordIsRight, getOwnAccount, removeOwnSession, setPasswordFromInvite, unlinkOwnFacebook } from '@/lib/selector-queries'
+import { mintSelectorSession } from '@/lib/selector-session'
 import { MIN_PASSWORD_LENGTH } from '@/lib/selector-status'
 import { ipHit } from '@/lib/throttle'
 
@@ -82,8 +83,9 @@ export async function chooseInvitePassword(_prev: FormState, formData: FormData)
   try {
     // The invitee has no password anyone knows yet; this is the first one (the spent invite is the authority).
     await setPasswordFromInvite(payload, invitee, password)
-    const result = await payload.login({ collection: 'users', data: { email: invitee.email, password } })
-    await setSessionCookie(result)
+    // Not `payload.login`: a lockout (five bad REST tries by someone else) must not turn a spent invite into a dead end. Minting resets it.
+    const session = await mintSelectorSession(payload, invitee.id, 'password')
+    await setSessionCookie(session)
   } catch {
     return { error: 'Something went wrong. Ask the committee for a new invite link.' }
   }
@@ -97,8 +99,17 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
   if (password.length < MIN_PASSWORD_LENGTH) return { error: `Use at least ${MIN_PASSWORD_LENGTH} characters for the password.` }
   if (password !== String(formData.get('confirm') ?? '')) return { error: 'The two passwords are not the same.' }
   const payload = await getPayloadClient()
+  const account = await getOwnAccount(user)
+  if (!account) return { error: 'Your current password is not right, or the new one is too short.' }
   try {
-    await payload.update({ collection: 'users', id: user.id, data: { password, currentPassword: current } as never, user, overrideAccess: false, context: { disableRevalidate: true } })
+    if (!account.hasPassword) {
+      // A Facebook-invited selector has no password yet: the signed-in session is enough to choose the first one.
+      if (!(await chooseFirstPassword(user, password))) return { error: 'Something went wrong. Please try again.' }
+      return { ok: 'Password saved. You can now sign in with your email and password too.' }
+    }
+    // Everyone else (staff included) proves the current password first; the collection hook only guards selectors.
+    if (!current || !(await currentPasswordIsRight(payload, account.email, current))) return { error: 'Your current password is not right, or the new one is too short.' }
+    await payload.update({ collection: 'users', id: user.id, data: { password }, user, overrideAccess: false, context: { disableRevalidate: true, skipCurrentPassword: true } })
   } catch {
     return { error: 'Your current password is not right, or the new one is too short.' }
   }
@@ -107,6 +118,7 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
 
 export async function unlinkFacebookAction(): Promise<void> {
   const user = await requireSelection(selectorPaths.account)
+  // Refused without a password: unlinking would leave no way to sign in.
   await unlinkOwnFacebook(user)
   redirect(selectorPaths.account)
 }

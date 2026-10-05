@@ -129,7 +129,7 @@ export function SelectorsPanel({ api, rows, facebookOn, inviteDays }: { api: str
                 <td>
                   <div className="club-actions">
                     <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => newInvite(r)}>New invite link</Button>
-                    {r.facebookLinked && <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('unlink', r, 'Facebook unlinked. Send a new invite link if they should link it again.', `Unlink Facebook for ${r.name || r.email}? They can still sign in with a password.`)}>Unlink Facebook</Button>}
+                    {r.facebookLinked && <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('unlink', r, 'Facebook unlinked. Send a new invite link if they should link it again.', `Unlink Facebook for ${r.name || r.email}? If they never chose a password they will have no way in until you send a new invite link or press Set a password.`)}>Unlink Facebook</Button>}
                     {r.status === 'disabled' ? (
                       <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('enable', r, 'Enabled.')}>Enable</Button>
                     ) : (

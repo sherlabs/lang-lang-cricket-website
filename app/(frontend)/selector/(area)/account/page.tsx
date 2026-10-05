@@ -19,8 +19,9 @@ export default async function AccountPage() {
       <p className="mt-2 text-sm text-brand-grey">{account?.name ? `${account.name} · ` : ''}{account?.email}</p>
 
       <section aria-labelledby="pw" className="mt-8">
-        <h2 id="pw" className="text-lg font-bold text-brand-black">Password</h2>
-        <div className="mt-3"><ChangePasswordForm action={changePasswordAction} /></div>
+        <h2 id="pw" className="text-lg font-bold text-brand-black">{account?.hasPassword ? 'Password' : 'Choose a password'}</h2>
+        {account && !account.hasPassword && <p className="mt-2 text-sm text-brand-grey">You signed up with Facebook, so you have no password yet. Choose one to have a way in if Facebook is not working.</p>}
+        <div className="mt-3"><ChangePasswordForm action={changePasswordAction} hasPassword={account?.hasPassword ?? true} /></div>
       </section>
 
       {facebook && (
@@ -28,8 +29,10 @@ export default async function AccountPage() {
           <h2 id="fb" className="text-lg font-bold text-brand-black">Facebook</h2>
           {account?.facebookLinked ? (
             <form action={unlinkFacebookAction} className="mt-3 space-y-3">
-              <p className="text-sm text-brand-grey">Facebook sign-in is linked. You can still sign in with your password.</p>
-              <button type="submit" className="flex min-h-12 w-full items-center justify-center rounded-lg border border-brand-black/20 px-4 text-base font-semibold text-brand-black">Unlink Facebook</button>
+              <p className="text-sm text-brand-grey">
+                {account.hasPassword ? 'Facebook sign-in is linked. If you unlink it you can still sign in with your password.' : 'Facebook sign-in is linked. Choose a password above before you can unlink it, or you would have no way to sign in.'}
+              </p>
+              {account.hasPassword && <button type="submit" className="flex min-h-12 w-full items-center justify-center rounded-lg border border-brand-black/20 px-4 text-base font-semibold text-brand-black">Unlink Facebook</button>}
             </form>
           ) : (
             <div className="mt-3 space-y-3">

@@ -215,6 +215,7 @@ export interface User {
   inviteExpiresAt?: string | null;
   invitedAt?: string | null;
   facebookId?: string | null;
+  passwordChosenAt?: string | null;
   /**
    * When a Facebook sign-in was linked.
    */
@@ -1497,6 +1498,7 @@ export interface UsersSelect<T extends boolean = true> {
   inviteExpiresAt?: T;
   invitedAt?: T;
   facebookId?: T;
+  passwordChosenAt?: T;
   facebookLinkedAt?: T;
   lastLoginAt?: T;
   lastLoginMethod?: T;

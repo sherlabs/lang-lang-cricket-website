@@ -188,4 +188,53 @@ describe('selector login, invite and account actions', () => {
     expect((await payload.auth({ headers: new Headers({ authorization: `JWT ${login.token}` }) })).user?.id).toBe(id)
     expect((await payload.auth({ headers: new Headers({ authorization: `JWT ${other.token}` }) })).user).toBeNull()
   })
+
+  describe('review fixes: no-password selectors, locked invitees, staff current password', () => {
+    const ctx = { seedAdmin: true, disableRevalidate: true }
+    const signedIn = async (email: string, password: string) => {
+      const login = await payload.login({ collection: 'users', data: { email, password } })
+      ctl.headers = new Headers({ cookie: `payload-token=${login.token}`, 'sec-fetch-site': 'same-origin' })
+    }
+
+    it('a spent invite still signs the person in when the account was locked by bad REST logins', async () => {
+      const row = await payload.create({ collection: 'users', data: { email: 'locked-invitee@example.com', password: 'placeholder-pass-1', role: 'selector' }, context: { ...ctx, randomPassword: true } })
+      for (let i = 0; i < 5; i++) await payload.login({ collection: 'users', data: { email: 'locked-invitee@example.com', password: `bad-${i}-xxxxxxx` } }).catch(() => null)
+      await expect(payload.login({ collection: 'users', data: { email: 'locked-invitee@example.com', password: 'placeholder-pass-1' } })).rejects.toThrow()
+      const token = newInviteToken()
+      await payload.update({ collection: 'users', id: row.id, data: {}, context: { disableRevalidate: true, selectorInvite: { hash: hashInviteToken(token), expiresAt: new Date(Date.now() + 86_400_000).toISOString(), invitedAt: new Date().toISOString() } } })
+      expect(await redirected(actions.chooseInvitePassword({}, form({ token, password: 'chosen-after-lock-1', confirm: 'chosen-after-lock-1' })))).toBe('/selector')
+      expect(ctl.cookieSet[0]).toMatchObject({ name: 'payload-token' })
+      expect((await payload.login({ collection: 'users', data: { email: 'locked-invitee@example.com', password: 'chosen-after-lock-1' } })).token).toBeTruthy()
+    })
+
+    it('a Facebook-invited selector has no password, may choose one on the live session alone, and then must give it to change it', async () => {
+      const queries = await import('@/lib/selector-queries')
+      const row = await payload.create({ collection: 'users', data: { email: 'fb-only@example.com', password: 'placeholder-pass-2', role: 'selector' }, context: { ...ctx, randomPassword: true } })
+      const user = { id: row.id, role: 'selector', email: row.email } as never
+      expect((await queries.getOwnAccount(user))?.hasPassword).toBe(false)
+      await payload.update({ collection: 'users', id: row.id, data: { facebookId: 'fb-nopass-1' }, overrideAccess: true, context: { disableRevalidate: true, facebookBind: true } })
+      // Unlinking would lock them out: refused.
+      expect(await queries.unlinkOwnFacebook(user)).toBe(false)
+      expect((await payload.findByID({ collection: 'users', id: row.id, overrideAccess: true, select: { facebookLinkedAt: true } })).facebookLinkedAt).toBeTruthy()
+      // The random placeholder is not a password anyone knows: the signed-in session chooses the first one.
+      const session = await payload.login({ collection: 'users', data: { email: 'fb-only@example.com', password: 'placeholder-pass-2' } })
+      ctl.headers = new Headers({ cookie: `payload-token=${session.token}`, 'sec-fetch-site': 'same-origin' })
+      expect((await actions.changePasswordAction({}, form({ password: 'first-chosen-pass-1', confirm: 'first-chosen-pass-1' }))).ok).toMatch(/saved/)
+      expect((await queries.getOwnAccount(user))?.hasPassword).toBe(true)
+      expect((await payload.login({ collection: 'users', data: { email: 'fb-only@example.com', password: 'first-chosen-pass-1' } })).token).toBeTruthy()
+      // From now on the current password is required, and the first-password route is closed.
+      expect(await queries.chooseFirstPassword(user, 'sneaky-second-pass-1')).toBe(false)
+      expect((await actions.changePasswordAction({}, form({ password: 'second-chosen-pass-1', confirm: 'second-chosen-pass-1' }))).error).toBeTruthy()
+      expect(await queries.unlinkOwnFacebook(user)).toBe(true)
+    })
+
+    it('an editor changing their password here must also give the current one', async () => {
+      await payload.create({ collection: 'users', data: { email: 'editor-pw@example.com', password: PASS, role: 'editor' }, context: ctx })
+      await signedIn('editor-pw@example.com', PASS)
+      expect((await actions.changePasswordAction({}, form({ password: 'editor-new-pass-1', confirm: 'editor-new-pass-1' }))).error).toBeTruthy()
+      expect((await actions.changePasswordAction({}, form({ current: 'not-the-password', password: 'editor-new-pass-1', confirm: 'editor-new-pass-1' }))).error).toBeTruthy()
+      await expect(payload.login({ collection: 'users', data: { email: 'editor-pw@example.com', password: 'editor-new-pass-1' } })).rejects.toThrow()
+      expect((await actions.changePasswordAction({}, form({ current: PASS, password: 'editor-new-pass-1', confirm: 'editor-new-pass-1' }))).ok).toMatch(/changed/)
+    })
+  })
 })
