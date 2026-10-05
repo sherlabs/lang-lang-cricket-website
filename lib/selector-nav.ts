@@ -6,6 +6,8 @@ export type SelectorTab = { key: string; label: string; href: string }
 
 export const selectorTabs: SelectorTab[] = [
   { key: 'overview', label: 'Overview', href: '/selector' },
+  { key: 'availability', label: 'Availability', href: '/selector/availability' },
+  { key: 'squads', label: 'Squads', href: '/selector/squads' },
   { key: 'account', label: 'My account', href: '/selector/account' },
 ]
 
