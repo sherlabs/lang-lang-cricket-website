@@ -42,7 +42,7 @@ describe('selector facebook sign-in', () => {
     handleCallback(get(`/selector/facebook/callback${query}`, { ...(cookie ? { cookie } : {}), ...headers }), deps(fetchImpl))
 
   const count = async () => (await payload.count({ collection: 'users', overrideAccess: true })).totalDocs
-  const row = async (id: number) => (await payload.db.findOne({ collection: 'users', where: { id: { equals: id } } })) as unknown as { facebookId?: string | null; inviteTokenHash?: string | null; sessions?: unknown[] }
+  const row = async (id: number) => (await payload.db.findOne({ collection: 'users', where: { id: { equals: id } } })) as unknown as { facebookId?: string | null; facebookLinkedAt?: string | null; inviteTokenHash?: string | null; sessions?: unknown[] }
   const makeInvite = async (id: number, hours = 48) => {
     const token = newInviteToken()
     await payload.update({ collection: 'users', id, data: {}, context: { disableRevalidate: true, selectorInvite: { hash: hashInviteToken(token), expiresAt: new Date(Date.now() + hours * 3_600_000).toISOString(), invitedAt: new Date().toISOString() } } })
@@ -175,6 +175,7 @@ describe('selector facebook sign-in', () => {
       expect(res.headers.getSetCookie().some((c) => c.startsWith('payload-token='))).toBe(true)
       const r = await row(ids.sel)
       expect(r.facebookId).toBe('4242')
+      expect(r.facebookLinkedAt).toBeTruthy()
       expect(r.inviteTokenHash ?? null).toBeNull()
       // The same token is dead on both paths.
       expect(await consumeInvite(payload, token)).toBeNull()
@@ -244,6 +245,10 @@ describe('selector facebook sign-in', () => {
       const res = await callback(`?code=C&state=${encodeURIComponent(s.state)}`, both, facebookAs('9100'))
       expect(res.status).toBe(302)
       expect((await row(ids.sel)).facebookId).toBe('9100')
+      // The Selectors view and the account page key off this stamp (set by the collection hook).
+      expect((await row(ids.sel)).facebookLinkedAt).toBeTruthy()
+      await unlink(ids.sel)
+      expect((await row(ids.sel)).facebookLinkedAt ?? null).toBeNull()
     })
     it('is refused when the current session belongs to someone else', async () => {
       const mine = await signedIn('sel')

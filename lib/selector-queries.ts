@@ -1,5 +1,5 @@
 import 'server-only'
-import type { TypedUser } from 'payload'
+import type { Payload, TypedUser } from 'payload'
 import { getPayloadClient } from '@/lib/payload/client'
 import { isSelectionUser, isSelectorUser } from '@/payload/access'
 
@@ -22,4 +22,21 @@ export async function unlinkOwnFacebook(user: TypedUser): Promise<void> {
   if (!isSelectorUser(user)) return
   const payload = await getPayloadClient()
   await payload.update({ collection: 'users', id: user.id, data: { facebookId: null }, overrideAccess: true, context: { disableRevalidate: true } })
+}
+
+/**
+ * Sets the very first password of a selector whose invite was just spent. The spent invite (an atomic, single-use token) is the
+ * authority, so this runs with the Local API's default access override; the collection hooks still apply the length rule.
+ */
+export async function setPasswordFromInvite(payload: Payload, invitee: { id: number }, password: string): Promise<void> {
+  await payload.update({ collection: 'users', id: invitee.id, data: { password }, overrideAccess: true, context: { disableRevalidate: true, skipCurrentPassword: true } })
+}
+
+/** Signs one browser out: removes only the caller's own session id, so a phone stays signed in when the laptop signs out. */
+export async function removeOwnSession(payload: Payload, user: TypedUser): Promise<void> {
+  const sid = (user as unknown as { _sid?: string })._sid
+  if (!sid) return
+  const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: user.id } } })) as { sessions?: Array<{ id: string }> } | null
+  if (!row) return
+  await payload.db.updateOne({ collection: 'users', id: user.id, data: { sessions: (row.sessions ?? []).filter((s) => s.id !== sid) }, returning: false })
 }

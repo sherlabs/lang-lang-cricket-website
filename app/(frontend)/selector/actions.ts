@@ -10,14 +10,14 @@ import { safeNext } from '@/lib/safe-next'
 import { requireSelection } from '@/lib/selector-auth'
 import type { FormState } from '@/lib/selector-form-state'
 import { consumeInvite, looksLikeInviteToken } from '@/lib/selector-invite'
-import { unlinkOwnFacebook } from '@/lib/selector-queries'
+import { removeOwnSession, setPasswordFromInvite, unlinkOwnFacebook } from '@/lib/selector-queries'
 import { MIN_PASSWORD_LENGTH } from '@/lib/selector-status'
 import { ipHit } from '@/lib/throttle'
 
 /**
  * Selector server actions. Each one is a public POST, so each re-derives who is calling (`requireSelection`) or, for the two
  * pre-login ones, validates its own input. No action in this folder passes `overrideAccess: true`: privileged writes live in
- * `lib/selector-queries.ts` (a guard test enforces it).
+ * `lib/selector-queries.ts` (a guard test enforces it: any create, update, delete, find or db call here must say `overrideAccess: false`).
  */
 const BAD_LOGIN = 'Email or password is not right.'
 const BUSY = 'Too many tries. Please wait a few minutes and try again.'
@@ -61,12 +61,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 export async function logoutAction(): Promise<void> {
   const payload = await getPayloadClient()
   const { user } = await payload.auth({ headers: await headers() })
-  if (user !== null) {
-    // Remove only this browser's session, so signing out here does not sign out the phone.
-    const sid = (user as { _sid?: string })._sid
-    const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: user.id } } })) as { sessions?: Array<{ id: string }> } | null
-    if (row && sid) await payload.db.updateOne({ collection: 'users', id: user.id, data: { sessions: (row.sessions ?? []).filter((s) => s.id !== sid) }, returning: false })
-  }
+  if (user !== null) await removeOwnSession(payload, user)
   const cfg = payload.collections.users.config
   const c = generateExpiredPayloadCookie({ collectionAuthConfig: cfg.auth, cookiePrefix: payload.config.cookiePrefix, returnCookieAsObject: true })
   ;(await cookies()).set({ name: c.name, value: '', path: c.path ?? '/', expires: new Date(0), httpOnly: true, secure: c.secure, sameSite: 'lax' })
@@ -85,9 +80,8 @@ export async function chooseInvitePassword(_prev: FormState, formData: FormData)
   const invitee = await consumeInvite(payload, token)
   if (!invitee) return { error: 'This link has expired. Ask the committee for a new one.' }
   try {
-    // The invitee has no password anyone knows yet; this is the first one. (`overrideAccess` is Payload's default for the Local API here:
-    // the spent invite is the authority, and the collection hooks still apply the length rule.)
-    await payload.update({ collection: 'users', id: invitee.id, data: { password }, context: { disableRevalidate: true, skipCurrentPassword: true } })
+    // The invitee has no password anyone knows yet; this is the first one (the spent invite is the authority).
+    await setPasswordFromInvite(payload, invitee, password)
     const result = await payload.login({ collection: 'users', data: { email: invitee.email, password } })
     await setSessionCookie(result)
   } catch {

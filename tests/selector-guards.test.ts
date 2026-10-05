@@ -15,6 +15,32 @@ const walk = (dir: string, out: string[] = []): string[] => {
 const code = (file: string) => fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').split('\n').map((l) => l.replace(/(^|[^:])\/\/.*$/, '$1')).join('\n')
 
 describe('selector area guards', () => {
+  it('no page, action or route under app/(frontend)/selector reaches data without overrideAccess: false (the Local API default is to override)', () => {
+    const files = walk(path.join(root, 'app/(frontend)/selector'))
+    const bad: string[] = []
+    for (const f of files) {
+      const text = code(f)
+      for (const m of text.matchAll(/\.(update|create|delete|find|findByID|count)\(\s*\{/g)) {
+        // Walk to the matching brace to get the call's options object.
+        let depth = 0
+        let end = m.index! + m[0].length - 1
+        for (; end < text.length; end++) {
+          if (text[end] === '{') depth++
+          else if (text[end] === '}' && --depth === 0) break
+        }
+        const call = text.slice(m.index!, end)
+        if (/payload|this/.test(text.slice(Math.max(0, m.index! - 12), m.index!)) && !/overrideAccess\s*:\s*false/.test(call)) bad.push(`${path.relative(root, f)}: ${call.slice(0, 70)}`)
+      }
+      if (/\.db\./.test(text)) bad.push(`${path.relative(root, f)}: payload.db access`)
+    }
+    expect(bad, 'privileged reads and writes belong in lib/selector-queries.ts').toEqual([])
+  })
+
+  it('the pattern really flags an omitted overrideAccess', () => {
+    const sample = "await payload.update({ collection: 'users', id: 1, data: {} })"
+    expect(/overrideAccess\s*:\s*false/.test(sample)).toBe(false)
+  })
+
   it('no page, action or route under app/(frontend)/selector passes overrideAccess: true', () => {
     const files = walk(path.join(root, 'app/(frontend)/selector'))
     expect(files.length).toBeGreaterThan(5)
