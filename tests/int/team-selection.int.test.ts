@@ -135,6 +135,7 @@ describe('team selection: save, publish, withdraw and the public read', () => {
     expect(anns.docs).toHaveLength(1)
     expect(anns.docs[0]).toMatchObject({ published: true, link: '/teams', linkLabel: 'See the teams' })
     expect(anns.docs[0].title).toMatch(/^Matchday .*\(updated\)$/)
+    expect(String(anns.docs[0].body)).not.toMatch(/Player[ABC] Test|Sam Guest/) // the stored text never names a player
     const after = await getPublishedTeam('game-a')
     expect(after?.updated).toBe(true)
     expect(after?.slots.map((s) => s.name)).toEqual(['PlayerC Test', 'PlayerA Test'])
@@ -153,6 +154,16 @@ describe('team selection: save, publish, withdraw and the public read', () => {
     const ok = await publishSheets(u(), { gameIds: ['game-a'], announce: false, acknowledged: true, expectedRevisions: { 'game-a': 1 } })
     expect(ok.ok).toBe(true)
     expect((await payload.find({ collection: 'announcements', where: { autoKey: { like: 'teams:' } }, overrideAccess: true, depth: 0, pagination: false, showHiddenFields: true })).docs).toHaveLength(0)
+  })
+
+  it('bulk publish needs every team to be marked Ready', async () => {
+    const { players } = await setup(2)
+    await save('game-a', 0, [slot(players[0].id)])
+    const notReady = await publishSheets(u(), { gameIds: ['game-a'], announce: false, acknowledged: true, requireReady: true })
+    expect(notReady.ok === false && notReady.error).toMatch(/not marked Ready/)
+    expect(await getPublishedTeam('game-a')).toBeNull()
+    await save('game-a', 1, [slot(players[0].id)], { markedReady: true })
+    expect((await publishSheets(u(), { gameIds: ['game-a'], announce: false, acknowledged: true, requireReady: true, expectedRevisions: { 'game-a': 2 } })).ok).toBe(true)
   })
 
   it('withdraw: the team and its announcement go; draft, withdrawn, removed and unknown ids all read as null', async () => {
@@ -221,7 +232,9 @@ describe('team selection: save, publish, withdraw and the public read', () => {
     const f = board.fixtures[0]
     expect(f.availability.tally).toEqual({ in: 1, maybe: 0, out: 1, none: 1 })
     expect(f.availability.noReply.map((n) => [n.name, n.phone])).toEqual([['PlayerC Test', '0400000011']])
-    expect(f.availability.keeperAvailable).toBe(true)
+    expect(f.availability.keeperAvailable).toBe(false) // the only keeper has not replied
+    await setAnswerFor(u(), players[2].id, fixture.id, 'maybe')
+    expect((await loadWeekendBoard(u())).fixtures[0].availability.keeperAvailable).toBe(true)
     expect(f.view.status).toBe('not-started')
     expect(f.reminder).toContain('PlayerC')
   })

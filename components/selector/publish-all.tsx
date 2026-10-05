@@ -7,7 +7,7 @@ import { btn, btnQuiet } from './styles'
 import { Sheet } from './ui'
 
 /** "Publish all ready": publishes every team marked Ready for the weekend in one go, after a confirm that names what becomes public. */
-export function PublishAll({ gameIds, grades, announceDefault }: { gameIds: string[]; grades: string[]; announceDefault: boolean }) {
+export function PublishAll({ gameIds, revisions, grades, announceDefault }: { gameIds: string[]; revisions: Record<string, number>; grades: string[]; announceDefault: boolean }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [announce, setAnnounce] = useState(announceDefault)
@@ -15,7 +15,7 @@ export function PublishAll({ gameIds, grades, announceDefault }: { gameIds: stri
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const go = () =>
     start(async () => {
-      const res = await publishTeamsAction({ gameIds, announce, acknowledged: false })
+      const res = await publishTeamsAction({ gameIds, announce, acknowledged: false, expectedRevisions: revisions, requireReady: true })
       setOpen(false)
       if (res.ok) {
         setMessage({ ok: true, text: `Published ${res.published.length} ${res.published.length === 1 ? 'team' : 'teams'}.` })

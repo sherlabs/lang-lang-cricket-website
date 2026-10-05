@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CLUB_LOCALE, selectorPaths } from '@/config/site'
+import { selectorPaths } from '@/config/site'
 import { ANSWER_DOT } from '@/lib/availability'
 import { formatMatchDay, formatMatchTime, personTag } from '@/lib/selection/lineup-text'
 import { telHref } from '@/lib/selection/phone'
@@ -15,7 +15,7 @@ const tone: Record<string, string> = {
   'needs-attention': 'bg-red-100 text-red-900',
 }
 
-const when = (f: BoardFixture['fixture']) => [formatMatchDay(f.localDate, CLUB_LOCALE), formatMatchTime(f.localTime)].filter(Boolean).join(' ')
+const when = (f: BoardFixture['fixture'], locale: string) => [formatMatchDay(f.localDate, locale), formatMatchTime(f.localTime)].filter(Boolean).join(' ')
 
 function Chips({ b }: { b: BoardFixture }) {
   return (
@@ -27,7 +27,7 @@ function Chips({ b }: { b: BoardFixture }) {
 }
 
 /** The all-teams view: one card per grade with the XI, status, warning count and who last edited. Not-started cards open the builder. */
-export function TeamCards({ board }: { board: WeekendBoard }) {
+export function TeamCards({ board, locale }: { board: WeekendBoard; locale: string }) {
   return (
     <ul className="mt-4 grid gap-4 md:grid-cols-2">
       {board.fixtures.map((b) => {
@@ -38,7 +38,7 @@ export function TeamCards({ board }: { board: WeekendBoard }) {
             <Link href={selectorPaths.team(f.gameId)} className="block rounded-xl bg-white p-4 ring-1 ring-brand-black/10 transition hover:ring-brand-gold-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
               <p className="text-sm font-semibold uppercase tracking-wide text-brand-grey">{f.gradeName}</p>
               <p className="mt-0.5 text-lg font-bold text-brand-black">v {f.opponentName}</p>
-              <p className="text-sm text-brand-grey">{[when(f), f.venueName].filter(Boolean).join(' · ')}</p>
+              <p className="text-sm text-brand-grey">{[when(f, locale), f.venueName].filter(Boolean).join(' · ')}</p>
               <div className="mt-2"><Chips b={b} /></div>
               {started ? (
                 <ol className="mt-3 space-y-0.5 text-sm text-brand-charcoal">
@@ -62,7 +62,7 @@ export function TeamCards({ board }: { board: WeekendBoard }) {
 }
 
 /** The match-day overview: per grade, replies, who has not replied (tap to call, copy a reminder), keeper and selection status. */
-export function OverviewCards({ board }: { board: WeekendBoard }) {
+export function OverviewCards({ board, locale }: { board: WeekendBoard; locale: string }) {
   return (
     <ul className="mt-4 grid gap-4 md:grid-cols-2">
       {board.fixtures.map((b) => {
@@ -73,7 +73,7 @@ export function OverviewCards({ board }: { board: WeekendBoard }) {
           <li key={f.id} className="rounded-xl bg-white p-4 ring-1 ring-brand-black/10">
             <p className="text-sm font-semibold uppercase tracking-wide text-brand-grey">{f.gradeName}</p>
             <p className="mt-0.5 text-lg font-bold text-brand-black">v {f.opponentName}</p>
-            <p className="text-sm text-brand-grey">{when(f)}</p>
+            <p className="text-sm text-brand-grey">{when(f, locale)}</p>
             <div className="mt-2"><Chips b={b} /></div>
             <dl className="mt-3 grid grid-cols-4 gap-2 text-center" aria-label="Replies">
               {([['in', 'In', t.in], ['maybe', 'Maybe', t.maybe], ['out', 'Out', t.out], ['none', 'No reply', t.none]] as const).map(([k, label, n]) => (

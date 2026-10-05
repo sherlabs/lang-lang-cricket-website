@@ -1,14 +1,14 @@
 import Link from 'next/link'
-import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
+import { CLUB_TIMEZONE } from '@/config/site'
 import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import type { PublicTeam } from '@/lib/teams-queries'
 
 const tag = 'ml-2 inline-flex items-center rounded-full bg-brand-gold px-2 py-0.5 text-xs font-bold text-brand-black'
 
 /** One published team: the game, then the XI. Server-rendered; names link to the public player page (a withheld player is plain text). */
-export function TeamCard({ team, heading = 'h2', linkTo }: { team: PublicTeam; heading?: 'h2' | 'h3'; linkTo?: string }) {
+export function TeamCard({ team, locale, heading = 'h2', linkTo }: { team: PublicTeam; locale: string; heading?: 'h2' | 'h3'; linkTo?: string }) {
   const H = heading
-  const when = [formatMatchDay(team.localDate, CLUB_LOCALE), formatMatchTime(team.localTime)].filter(Boolean).join(' ')
+  const when = [formatMatchDay(team.localDate, locale), formatMatchTime(team.localTime)].filter(Boolean).join(' ')
   const venue = [team.venueName, team.venueSuburb].filter(Boolean).join(', ')
   const List = team.showOrder ? 'ol' : 'ul'
   return (
@@ -20,7 +20,7 @@ export function TeamCard({ team, heading = 'h2', linkTo }: { team: PublicTeam; h
       <p className="mt-1 text-brand-grey">{[when, venue].filter(Boolean).join(' · ')}</p>
       {team.updated && (
         <p className="mt-2 inline-flex rounded-full bg-brand-gold-pale px-3 py-1 text-sm font-semibold text-brand-gold-deep ring-1 ring-brand-gold/30">
-          Updated <time dateTime={team.publishedAt} className="ml-1">{new Intl.DateTimeFormat(CLUB_LOCALE, { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: CLUB_TIMEZONE }).format(new Date(team.publishedAt))}</time>
+          Updated <time dateTime={team.publishedAt} className="ml-1">{new Intl.DateTimeFormat(locale, { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: CLUB_TIMEZONE }).format(new Date(team.publishedAt))}</time>
         </p>
       )}
       <List className="mt-4 divide-y divide-brand-black/10 border-y border-brand-black/10">

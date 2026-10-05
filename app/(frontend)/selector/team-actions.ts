@@ -21,7 +21,7 @@ export async function saveTeamAction(input: SaveTeamInput): Promise<SaveSheetRes
   return saveSheet(user, { gameId, expectedRevision: Number(input.expectedRevision), size: input.size, markedReady: input.markedReady === true, slots: input.slots.slice(0, 30).map((s) => ({ playerId: typeof s?.playerId === 'number' ? s.playerId : null, guestName: typeof s?.guestName === 'string' ? s.guestName : null, isCaptain: s?.isCaptain === true, isKeeper: s?.isKeeper === true })) })
 }
 
-export type PublishTeamsInput = { gameIds: string[]; announce: boolean; acknowledged: boolean; expectedRevisions?: Record<string, number> }
+export type PublishTeamsInput = { gameIds: string[]; announce: boolean; acknowledged: boolean; expectedRevisions?: Record<string, number>; requireReady?: boolean }
 
 export async function publishTeamsAction(input: PublishTeamsInput): Promise<PublishResult> {
   const user = await requireSelection(selectorPaths.teams)
@@ -29,7 +29,7 @@ export async function publishTeamsAction(input: PublishTeamsInput): Promise<Publ
   if (!ids.length) return { ok: false, error: BAD }
   const expected: Record<string, number> = {}
   for (const [k, v] of Object.entries(input.expectedRevisions ?? {})) if (gameIdOf(k) && Number.isInteger(v)) expected[k] = v
-  return publishSheets(user, { gameIds: ids, announce: input.announce === true, acknowledged: input.acknowledged === true, expectedRevisions: Object.keys(expected).length ? expected : undefined })
+  return publishSheets(user, { gameIds: ids, announce: input.announce === true, acknowledged: input.acknowledged === true, expectedRevisions: Object.keys(expected).length ? expected : undefined, requireReady: input.requireReady === true })
 }
 
 export async function withdrawTeamAction(input: { gameId: string }): Promise<WithdrawResult> {

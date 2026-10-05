@@ -13,7 +13,7 @@ export async function generateMetadata() {
   const description = weekend
     ? truncateDescription(weekend.teams.map((t) => `${t.gradeName} v ${t.opponentName}: ${t.slots.map((s) => s.name).join(', ')}`).join('. '))
     : `The teams for the next games at ${club.name}.`
-  const image = first ? [{ url: absoluteUrl(`/teams/${first.gameId}/lineup-image`, club.siteUrl), width: 1200, height: 630, alt: `${first.gradeName} team` }] : undefined
+  const image = first ? [{ url: absoluteUrl(`/teams/${first.gameId}/lineup-image?v=${Date.parse(first.publishedAt) || 0}`, club.siteUrl), width: 1200, height: 630, alt: `${first.gradeName} team` }] : undefined
   return {
     alternates: canonicalFor('/teams'),
     title: titleWithSuffix(club, 'Teams'),
@@ -24,7 +24,7 @@ export async function generateMetadata() {
 }
 
 export default async function TeamsPage() {
-  const weekend = await getPublishedWeekend()
+  const [club, weekend] = await Promise.all([getClub(), getPublishedWeekend()])
   return (
     <main>
       <PageHeader eyebrow="Teams" title="This week’s teams" intro="The sides picked for the next games. Tap a name for their stats." />
@@ -33,7 +33,7 @@ export default async function TeamsPage() {
           <p className="text-brand-grey">No teams have been announced yet. Check back later in the week.</p>
         ) : (
           <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
-            {weekend.teams.map((t) => <TeamCard key={t.gameId} team={t} linkTo={`/teams/${t.gameId}`} />)}
+            {weekend.teams.map((t) => <TeamCard key={t.gameId} team={t} locale={club.locale} linkTo={`/teams/${t.gameId}`} />)}
           </div>
         )}
       </section>

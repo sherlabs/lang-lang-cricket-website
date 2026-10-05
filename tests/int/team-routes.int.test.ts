@@ -95,9 +95,9 @@ describe('lineup image routes and the public team pages', () => {
     expect(before.robots).toEqual({ index: false, follow: false })
     await publishSheets(u(), { gameIds: ['game-img'], announce: false, acknowledged: true })
     const after = (await generateMetadata({ params: Promise.resolve({ gameId: 'game-img' }) })) as { openGraph?: { images?: { url: string; width: number }[] }; twitter?: { images?: string[] } }
-    expect(after.openGraph?.images?.[0].url).toMatch(/\/teams\/game-img\/lineup-image$/)
+    expect(after.openGraph?.images?.[0].url).toMatch(/\/teams\/game-img\/lineup-image\?v=\d+$/)
     expect(after.openGraph?.images?.[0].width).toBe(1200)
-    expect(after.twitter?.images?.[0]).toMatch(/lineup-image$/)
+    expect(after.twitter?.images?.[0]).toMatch(/lineup-image\?v=\d+$/)
   })
 
   it('the sitemap lists the published team and not the draft', async () => {

@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 
 // Explicit and short: a route-handler response is not purged by revalidatePath, so a withdrawn team ages out of the CDN within minutes.
 const OK_CACHE = 'public, s-maxage=300, stale-while-revalidate=600'
-const MISSING_CACHE = 'public, s-maxage=60'
+const MISSING_CACHE = 'no-store' // never cache the 404: a scrape just after publishing must not be served a stale one
 
 /** One identical answer for a draft, an unpublished edit, a withdrawn team, a removed game and an unknown id. */
 const notFound = () => new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': MISSING_CACHE, 'X-Robots-Tag': 'noindex' } })

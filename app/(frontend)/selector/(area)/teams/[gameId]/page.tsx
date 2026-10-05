@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TeamBuilder } from '@/components/selector/team-builder'
 import { TeamShare } from '@/components/selector/team-share'
-import { CLUB_LOCALE, selectorPaths } from '@/config/site'
+import { selectorPaths } from '@/config/site'
 import { getPayloadClient } from '@/lib/payload/client'
 import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import { getSelectionSettings } from '@/lib/selection/store'
+import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { loadBuilder } from '@/lib/selector-team-queries'
 import { postTextFor } from '@/lib/teams-queries'
@@ -19,6 +20,7 @@ type Props = { params: Promise<{ gameId: string }> }
 export default async function BuilderPage({ params }: Props) {
   const { gameId } = await params
   const user = await requireSelection(selectorPaths.team(gameId))
+  const { locale } = await getClub()
   const builder = await loadBuilder(user, gameId)
   if (!builder) notFound()
   const f = builder.view.fixture
@@ -29,7 +31,7 @@ export default async function BuilderPage({ params }: Props) {
       <p><Link href={`${selectorPaths.teams}?weekend=${builder.weekendKey}`} className="inline-flex min-h-11 items-center font-semibold text-brand-black underline underline-offset-4">All teams</Link></p>
       <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-brand-grey">{f.gradeName}{f.roundName ? ` · ${f.roundName}` : ''}</p>
       <h1 className="display text-3xl text-brand-black">v {f.opponentName}</h1>
-      <p className="mt-1 text-brand-grey">{[formatMatchDay(f.localDate, CLUB_LOCALE), formatMatchTime(f.localTime), [f.venueName, f.venueSuburb].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</p>
+      <p className="mt-1 text-brand-grey">{[formatMatchDay(f.localDate, locale), formatMatchTime(f.localTime), [f.venueName, f.venueSuburb].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</p>
       <div className="mt-4">
         <TeamBuilder builder={builder} gameId={gameId} announceDefault={settings.announceOnPublish} />
       </div>

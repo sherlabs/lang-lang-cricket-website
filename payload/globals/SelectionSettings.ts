@@ -23,6 +23,7 @@ export const SelectionSettings: GlobalConfig = {
       defaultValue: 11,
       min: 0,
       max: 13,
+      validate: (v: number | null | undefined) => (v == null || [0, 11, 12, 13].includes(v) ? true : 'Use 11, 12 or 13, or 0 for no limit.'),
       label: 'Players in a team (new teams)',
       admin: { description: '11, 12 or 13. A selector can change it for one game. 0 means no limit.' },
     },

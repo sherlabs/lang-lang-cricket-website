@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ANSWER_DOT, ANSWER_LABEL } from '@/lib/availability'
 import { CodeForm, FieldsForm, PhoneForm, PinForm } from '@/components/selector/player-forms'
-import { CLUB_COUNTRY, CLUB_LOCALE, selectorPaths } from '@/config/site'
+import { CLUB_COUNTRY, selectorPaths } from '@/config/site'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { formatPhone, telHref } from '@/lib/selection/phone'
 import { ROLE_LABEL } from '@/lib/selection/roles'
+import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { getPlayerCard } from '@/lib/selector-profile-queries'
 import { loadPlayerExtras } from '@/lib/selector-team-queries'
@@ -20,6 +21,7 @@ type Props = { params: Promise<{ slug: string }> }
 export default async function PlayerCardPage({ params }: Props) {
   const { slug } = await params
   const user = await requireSelection(selectorPaths.player(slug))
+  const { locale } = await getClub()
   const card = await getPlayerCard(user, slug)
   if (!card) notFound()
   const { player, profile } = card
@@ -54,7 +56,7 @@ export default async function PlayerCardPage({ params }: Props) {
               <li key={u.fixtureId} className="flex items-center gap-2 text-sm text-brand-charcoal">
                 <span aria-hidden className={`h-2.5 w-2.5 shrink-0 rounded-full ${ANSWER_DOT[u.answer]}`} />
                 <span className="font-semibold">{ANSWER_LABEL[u.answer]}</span>
-                <span className="text-brand-grey">{formatMatchDay(u.localDate, CLUB_LOCALE)} v {u.opponentName} ({u.gradeName}){u.note ? `, “${u.note}”` : ''}</span>
+                <span className="text-brand-grey">{formatMatchDay(u.localDate, locale)} v {u.opponentName} ({u.gradeName}){u.note ? `, “${u.note}”` : ''}</span>
               </li>
             ))}
           </ul>

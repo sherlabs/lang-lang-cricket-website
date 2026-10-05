@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { OverviewCards } from '@/components/selector/weekend-cards'
-import { CLUB_LOCALE, selectorPaths } from '@/config/site'
+import { selectorPaths } from '@/config/site'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
+import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { loadWeekendBoard } from '@/lib/selector-team-queries'
 
@@ -21,6 +22,7 @@ type Props = { searchParams: Promise<{ weekend?: string }> }
 /** The selector home and match-day overview: this weekend's games, replies, who to chase, keepers and selection status. */
 export default async function SelectorHome({ searchParams }: Props) {
   const user = await requireSelection()
+  const { locale } = await getClub()
   const sp = await searchParams
   const board = await loadWeekendBoard(user, { weekend: typeof sp.weekend === 'string' ? sp.weekend : null })
   const name = (user as { name?: string | null }).name?.trim().split(/\s+/)[0]
@@ -37,12 +39,12 @@ export default async function SelectorHome({ searchParams }: Props) {
             <nav aria-label="Weekends" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
               {board.weekends.map((w) => (
                 <Link key={w.key} href={`${selectorPaths.home}?weekend=${w.key}`} aria-current={w.key === board.selected ? 'page' : undefined} className={`inline-flex min-h-11 shrink-0 items-center rounded-lg px-4 text-sm font-semibold ${w.key === board.selected ? 'bg-brand-black text-white' : 'border border-brand-black/20 bg-white text-brand-black'}`}>
-                  {formatMatchDay(w.firstDate, CLUB_LOCALE)}
+                  {formatMatchDay(w.firstDate, locale)}
                 </Link>
               ))}
             </nav>
           )}
-          <OverviewCards board={board} />
+          <OverviewCards board={board} locale={locale} />
         </>
       )}
       {board.weekends.length === 0 && <p className="mt-6 rounded-xl bg-white p-5 text-brand-grey ring-1 ring-brand-black/10">There are no upcoming games stored yet. Open Availability and press Refresh fixtures to copy them from PlayHQ.</p>}

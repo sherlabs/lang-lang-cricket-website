@@ -214,13 +214,12 @@ export async function seedDemoTeams(payload: Payload): Promise<void> {
   else await payload.create({ collection: 'availability', data: { player: outPlayer, fixture: fixA2.id, status: 'out' } as never, overrideAccess: true, context: CTX })
 
   // The announcement a publish would have made for the first weekend.
-  const names = new Map((await payload.find({ collection: 'players', where: { id: { in: xiA } } as never, overrideAccess: true, pagination: false, depth: 0 })).docs.map((p) => [p.id, p.displayName?.trim() || `${p.firstName} ${p.lastName ?? ''}`.trim()]))
   const key = weekendKey(fixA1.localDate)
   await payload.create({
     collection: 'announcements',
     data: {
       title: announcementTitle({ label: DEFAULT_MATCHDAY_LABEL, firstLocalDate: fixA1.localDate, locale: 'en-AU', updated: false }),
-      body: announcementBody([{ gradeName: fixA1.gradeName, opponent: fixA1.opponentName, localDate: fixA1.localDate, localTime: fixA1.localTime ?? null, xi: xiA.map((id) => names.get(id) ?? '') }], 'en-AU'),
+      body: announcementBody([{ gradeName: fixA1.gradeName, opponent: fixA1.opponentName, localDate: fixA1.localDate, localTime: fixA1.localTime ?? null }], 'en-AU'),
       published: true,
       link: '/teams',
       linkLabel: 'See the teams',

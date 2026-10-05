@@ -271,7 +271,7 @@ async function noticesFor(payload: Payload): Promise<string[]> {
 // ---------------------------------------------------------------------------------------------------------------------
 // The builder
 
-export type Candidate = { id: number; slug: string; name: string; hidden: boolean; role: RoleOrUnknown; batting: string; bowling: string; answer: Answer; note: string; inTeam: boolean; phone: string | null }
+export type Candidate = { id: number; slug: string; name: string; hidden: boolean; role: RoleOrUnknown; batting: string; bowling: string; answer: Answer; note: string; inTeam: boolean }
 export type Builder = { view: SheetView; candidates: Candidate[]; published: PublicTeam | null; weekendKey: string; showOrder: boolean }
 
 async function fixtureByGameId(payload: Payload, gameId: string): Promise<FixtureStamped | null> {
@@ -314,7 +314,6 @@ export async function loadBuilder(user: TypedUser, gameId: string): Promise<Buil
         answer: answers.get(p.id)?.answer ?? 'none',
         note: answers.get(p.id)?.note ?? '',
         inTeam: inTeam.has(p.id),
-        phone: prof?.phone ?? null,
       }
     })
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -355,6 +354,7 @@ export type SaveInput = { gameId: string; expectedRevision: number; size: unknow
 export type SaveSheetResult = { ok: true; revision: number } | { ok: false; error: string; stale?: boolean }
 
 const STALE = 'Someone else changed this team. Reload to see their changes.'
+class StaleError extends Error {}
 const MAX_SLOTS = 20
 
 export async function saveSheet(user: TypedUser, input: SaveInput): Promise<SaveSheetResult> {
@@ -405,7 +405,7 @@ export async function saveSheet(user: TypedUser, input: SaveInput): Promise<Save
 // ---------------------------------------------------------------------------------------------------------------------
 // Publishing and withdrawing
 
-export type PublishInput = { gameIds: string[]; announce: boolean; acknowledged: boolean; expectedRevisions?: Record<string, number> }
+export type PublishInput = { gameIds: string[]; announce: boolean; acknowledged: boolean; expectedRevisions?: Record<string, number>; requireReady?: boolean }
 export type PublishResult =
   | { ok: true; published: string[]; announcementId: number | null }
   | { ok: false; error: string; needsAcknowledgement?: { gradeName: string; text: string }[] }
@@ -435,6 +435,7 @@ export async function publishSheets(user: TypedUser, input: PublishInput): Promi
     const expected = input.expectedRevisions?.[fx.gameId]
     if (expected != null && expected !== v.revision) return { ok: false, error: STALE }
     if (v.sheetId == null || v.slots.length === 0) return { ok: false, error: `${fx.gradeName} has nobody picked yet.` }
+    if (input.requireReady && !v.markedReady) return { ok: false, error: `${fx.gradeName} is not marked Ready. Reload to see the current teams.` }
     const blocking = blockingWarnings(v.warnings)
     if (blocking.length) return { ok: false, error: `${fx.gradeName}: ${blocking[0].text}` }
     for (const w of v.warnings) warned.push({ gradeName: fx.gradeName, text: w.text })
@@ -447,25 +448,34 @@ export async function publishSheets(user: TypedUser, input: PublishInput): Promi
     await initTransaction(req)
     for (const fx of fixtures) {
       const v = views.get(fx.id)!
+      // Re-check inside the transaction: a save that landed after the read above must not be published unseen.
+      const current = (await payload.findByID({ collection: 'team-sheets', id: v.sheetId!, depth: 0, req, overrideAccess: true })) as unknown as SheetDoc
+      if (Number(current.revision ?? 0) !== v.revision) throw new StaleError()
       const snapshot = buildSnapshot({ slots: v.slots.map((s) => ({ ...(s.playerId != null ? { player: s.playerId } : { guestName: s.guestName ?? '' }), order: s.order, isCaptain: s.isCaptain, isKeeper: s.isKeeper })), size: v.size, revision: v.revision }, publishedAt)
       await payload.update({ collection: 'team-sheets', id: v.sheetId!, data: { publishedSnapshot: snapshot, publishedAt, publishedBy: user.id, publishCount: v.publishCount + 1 } as never, req, overrideAccess: true, context: CTX })
     }
     await commitTransaction(req)
   } catch (err) {
     await killTransaction(req)
+    if (err instanceof StaleError) return { ok: false, error: STALE }
     console.error('[teams] publish failed', err instanceof Error ? err.message : err)
     return { ok: false, error: 'Something went wrong. Nothing was published. Please try again.' }
   }
 
   let announcementId: number | null = null
-  const settings = await getSelectionSettings(payload)
-  if (input.announce && settings.announceOnPublish) {
+  try {
+    const settings = await getSelectionSettings(payload)
+    if (input.announce && settings.announceOnPublish) {
     const keys = [...new Set(fixtures.map((f) => weekendKey(f.localDate)))]
     for (const key of keys) {
-      const changes = fixtures.filter((f) => weekendKey(f.localDate) === key).flatMap((f) => views.get(f.id)!.changes.map((c) => `${f.gradeName}: ${c}`))
+      const changes = fixtures.filter((f) => weekendKey(f.localDate) === key && views.get(f.id)!.changes.length > 0).map((f) => f.gradeName)
       const wasRepublish = fixtures.some((f) => weekendKey(f.localDate) === key && views.get(f.id)!.publishCount > 0)
       announcementId = (await upsertWeekendAnnouncement(payload, key, { updated: wasRepublish, changes })) ?? announcementId
     }
+    }
+  } catch (err) {
+    // The teams are already public: a failed announcement must not stop the caches being refreshed or turn this into an error.
+    console.error('[teams] announcement failed', err instanceof Error ? err.message : err)
   }
   await revalidateTeams(gameIds)
   return { ok: true, published: gameIds, announcementId }
@@ -485,7 +495,7 @@ async function upsertWeekendAnnouncement(payload: Payload, key: string, opts: { 
   const label = await matchdayLabel(payload)
   const data = {
     title: announcementTitle({ label, firstLocalDate: teams[0].localDate, locale: club.locale, updated: opts.updated && Boolean(found) }),
-    body: announcementBody(teams.map((t) => ({ gradeName: t.gradeName, opponent: t.opponentName, localDate: t.localDate, localTime: t.localTime, xi: t.slots.map((s) => s.name) })), club.locale, opts.updated ? opts.changes : []),
+    body: announcementBody(teams.map((t) => ({ gradeName: t.gradeName, opponent: t.opponentName, localDate: t.localDate, localTime: t.localTime, })), club.locale, opts.updated ? opts.changes : []),
     published: true,
     link: '/teams',
     linkLabel: 'See the teams',
@@ -513,7 +523,7 @@ async function matchdayLabel(payload: Payload): Promise<string> {
 }
 
 async function revalidateTeams(gameIds: readonly string[]): Promise<void> {
-  await revalidatePaths(['/', '/teams', ...gameIds.map((g) => `/teams/${g}`), '/announcements', '/sitemap.xml'], undefined, [TEAMS_TAG])
+  await revalidatePaths(['/', '/teams', ...gameIds.flatMap((g) => [`/teams/${g}`, `/teams/${g}/lineup-image`]), '/announcements', '/sitemap.xml'], undefined, [TEAMS_TAG])
 }
 
 export type WithdrawResult = { ok: true } | { ok: false; error: string }

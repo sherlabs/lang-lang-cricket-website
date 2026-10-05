@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props) {
   const { gameId } = await params
   const [club, team] = await Promise.all([getClub(), getPublishedTeam(gameId)])
   if (!team) return { title: titleWithSuffix(club, 'Page not found'), robots: { index: false, follow: false } }
-  const image = [{ url: absoluteUrl(`/teams/${team.gameId}/lineup-image`, club.siteUrl), width: 1200, height: 630, alt: `${team.gradeName} team` }]
+  const image = [{ url: absoluteUrl(`/teams/${team.gameId}/lineup-image?v=${Date.parse(team.publishedAt) || 0}`, club.siteUrl), width: 1200, height: 630, alt: `${team.gradeName} team` }]
   return {
     alternates: canonicalFor(`/teams/${team.gameId}`),
     title: titleWithSuffix(club, `${team.gradeName} team v ${team.opponentName}`),
@@ -27,14 +27,14 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function TeamPage({ params }: Props) {
   const { gameId } = await params
-  const team = await getPublishedTeam(gameId)
+  const [club, team] = await Promise.all([getClub(), getPublishedTeam(gameId)])
   if (!team) notFound()
   return (
     <main>
       <PageHeader eyebrow="Teams" title={`${team.gradeName} team`} />
       <section className="container-site py-12 lg:py-16">
         <div className="mx-auto max-w-xl">
-          <TeamCard team={team} heading="h2" />
+          <TeamCard team={team} locale={club.locale} heading="h2" />
           <p className="mt-6"><Link href="/teams" className="inline-flex min-h-11 items-center font-semibold text-brand-black underline underline-offset-4">All teams this week</Link></p>
         </div>
       </section>

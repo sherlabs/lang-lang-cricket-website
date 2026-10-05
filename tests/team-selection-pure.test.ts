@@ -192,9 +192,9 @@ describe('announcement', () => {
     expect(announcementKey('2026-10-10')).toBe('teams:2026-10-10')
     expect(announcementTitle({ label: 'Matchday', firstLocalDate: '2026-10-10', locale: 'en-AU', updated: false })).toBe('Matchday 10 October')
     expect(announcementTitle({ label: 'Matchday', firstLocalDate: '2026-10-10', locale: 'en-AU', updated: true })).toBe('Matchday 10 October (updated)')
-    const body = announcementBody([{ gradeName: 'B Grade', opponent: 'Rovers', localDate: '2026-10-10', localTime: '13:00', xi: ['A', 'B'] }], 'en-AU', ['A is in'])
-    expect(body).toContain('B Grade v Rovers (Sat 10 Oct 1:00pm)\nA, B')
-    expect(body).toContain('Changes: A is in.')
+    const body = announcementBody([{ gradeName: 'B Grade', opponent: 'Rovers', localDate: '2026-10-10', localTime: '13:00' }], 'en-AU', ['B Grade'])
+    expect(body).toContain('B Grade v Rovers (Sat 10 Oct 1:00pm)')
+    expect(body).toContain('Updated: B Grade.')
   })
   it('validates the link', () => {
     for (const ok of ['/teams', '/teams/abc?x=1', 'https://example.test/x']) expect(isSafeAnnouncementLink(ok), ok).toBe(true)

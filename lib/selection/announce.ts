@@ -7,7 +7,7 @@ import { formatMatchDay, formatMatchTime } from './lineup-text'
 export const announcementKey = (weekendKey: string): string => `teams:${weekendKey}`
 export const isTeamsAnnouncementKey = (k: unknown): k is string => typeof k === 'string' && k.startsWith('teams:')
 
-export type AnnounceSheet = { gradeName: string; opponent: string; localDate: string; localTime: string | null; xi: readonly string[] }
+export type AnnounceSheet = { gradeName: string; opponent: string; localDate: string; localTime: string | null }
 
 export function announcementTitle(i: { label: string; firstLocalDate: string; locale: string; updated: boolean }): string {
   const d = new Date(`${i.firstLocalDate}T00:00:00Z`)
@@ -15,12 +15,16 @@ export function announcementTitle(i: { label: string; firstLocalDate: string; lo
   return `${i.label} ${day}${i.updated ? ' (updated)' : ''}`
 }
 
-/** A plain list: one block per grade, a line for the game and a one-line XI; then the change list on an update. */
-export function announcementBody(sheets: readonly AnnounceSheet[], locale: string, changes: readonly string[] = []): string {
+/**
+ * A plain list: one line per grade with the opponent and time, then the grades that changed on an update. It never names a
+ * player: the announcement is stored text that nothing re-checks, so a player hidden after publishing (spec 5.4) must not be in it.
+ * The XI lives on the `/teams` page, which does withhold hidden players.
+ */
+export function announcementBody(sheets: readonly AnnounceSheet[], locale: string, updatedGrades: readonly string[] = []): string {
   const blocks = sheets.map((s) => {
     const when = [formatMatchDay(s.localDate, locale), formatMatchTime(s.localTime)].filter(Boolean).join(' ')
-    return `${s.gradeName} v ${s.opponent} (${when})\n${s.xi.join(', ')}`
+    return `${s.gradeName} v ${s.opponent} (${when})`
   })
-  const tail = changes.length ? [`Changes: ${changes.join('; ')}.`] : []
-  return [...blocks, ...tail].join('\n\n')
+  const tail = updatedGrades.length ? [`Updated: ${updatedGrades.join(', ')}.`] : []
+  return [...blocks, ...tail].join('\n')
 }

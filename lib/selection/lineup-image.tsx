@@ -14,10 +14,12 @@ export const LINEUP_IMAGE_SIZE = { width: 1200, height: 630 } as const
 
 export function renderLineup(team: PublicTeam, ctx: { theme: ResolvedTheme; crestDataUri: string | null }, opts: { clubName: string; locale: string; siteHost: string }): ReactElement {
   const c = ctx.theme.colors
-  const people = team.slots.length > 13 ? team.slots.slice(0, 13) : team.slots
-  const rows = Math.ceil(people.length / 2) || 1
-  const split = [people.slice(0, rows), people.slice(rows)]
-  const size = rows > 6 ? 30 : 34
+  // Every player is drawn: two columns up to 14 names, three for a bigger open-size team (up to 20).
+  const people = team.slots
+  const cols = people.length > 14 ? 3 : 2
+  const rows = Math.ceil(people.length / cols) || 1
+  const split = Array.from({ length: cols }, (_, i) => people.slice(i * rows, (i + 1) * rows))
+  const size = cols === 3 ? 28 : rows > 6 ? 30 : 34
   const title = `${team.roundName ? `${team.roundName} ` : ''}v ${team.opponentName}`
   const when = [formatMatchDay(team.localDate, opts.locale), formatMatchTime(team.localTime), team.venueName].filter(Boolean).join('  |  ')
   const trim = (n: string) => (n.length > LINEUP_NAME_MAX ? `${n.slice(0, LINEUP_NAME_MAX - 1)}…` : n)
@@ -44,11 +46,11 @@ export function renderLineup(team: PublicTeam, ctx: { theme: ResolvedTheme; cres
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
         {split.map((col, ci) => (
-          <div key={ci} style={{ display: 'flex', flexDirection: 'column', width: '48%' }}>
+          <div key={ci} style={{ display: 'flex', flexDirection: 'column', width: cols === 3 ? '32%' : '48%' }}>
             {col.map((p, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', height: size + 14, fontSize: size }}>
                 {team.showOrder && <div style={{ display: 'flex', width: 52, fontFamily: 'Display', color: c['gold-light'] }}>{p.order}</div>}
-                <div style={{ display: 'flex', maxWidth: 440, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: p.withheld ? WHITE_75 : WHITE }}>{trim(p.name)}</div>
+                <div style={{ display: 'flex', maxWidth: cols === 3 ? 290 : 440, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: p.withheld ? WHITE_75 : WHITE }}>{trim(p.name)}</div>
                 {p.isCaptain && badge('C')}
                 {p.isKeeper && badge('WK')}
               </div>

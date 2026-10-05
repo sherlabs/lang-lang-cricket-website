@@ -24,7 +24,7 @@ const team = (over: Partial<PublicTeam> = {}): PublicTeam => ({
   ],
   ...over,
 })
-const html = (t: PublicTeam) => renderToStaticMarkup(createElement(TeamCard, { team: t }))
+const html = (t: PublicTeam) => renderToStaticMarkup(createElement(TeamCard, { team: t, locale: 'en-AU' }))
 
 describe('TeamCard (the public team)', () => {
   it('shows the game, numbered names, tags and links only for real players', () => {
