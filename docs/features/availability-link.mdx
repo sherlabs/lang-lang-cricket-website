@@ -1,0 +1,57 @@
+---
+title: Availability link and PINs
+status: shipped
+routes: ["/availability/[token]", "/selector/availability", "/selector/link", "/selector/players/[slug]"]
+collections: [selection-fixtures, availability, player-selection-profiles, squads, squad-members, throttle-hits]
+admin: "Advanced > Selection settings (admin); everything else is in the selector area (/selector)"
+owner: "Selectors"
+related: [selector-accounts, squad-boards, safety-guards, players-directory-and-profiles]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player** who wants to tell the selectors, in a few taps and without an account, whether they can play on Saturday.
+- **A selector** who is tired of phoning round the squad and wants to see in one place who is in, maybe, out or has not replied, and to ring the ones who have not.
+- **The site admin** who needs this to be safe: nobody should be able to list the squad, see a phone number or guess their way into someone else's answers.
+
+## Why it was built
+
+Picking a team starts with knowing who is available (issue [#15](https://github.com/sherlabs/lang-lang-cricket-website/issues/15), part of the "announce teams" work tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). Players should answer once per game from their phone; selectors should see the answers next to the squad and be able to fill the gaps by phone.
+
+## What it does
+
+**One link for the whole club.** Selectors share one address (`/availability/<token>`) by text or WhatsApp. It is a secret derived from the site's secret key and a version number, so it is never stored in the database and can always be shown again to selectors. A wrong, switched-off or replaced link shows a plain "page not found"; the page is never cached, never indexed and never leaks the address in a referrer.
+
+**Name and PIN, no list.** The page never shows or returns a list of players. A player types their name (as it is on PlayHQ) and a PIN. The default PIN is the last four digits of the phone number a selector has saved for them; a selector can instead give a player their own 4 to 6 digit PIN, which is the better choice for anyone with no phone on file, for twins sharing a number and for clubs that want something stronger. Every wrong answer is the same message ("We could not match those details."), so a wrong name, a wrong PIN, no PIN set and a name shared by too many players cannot be told apart. Two players of the same name with the same PIN are refused and flagged: the Availability page tells the selectors "PIN clash between players called ..." until one of them gets a manual PIN. After a correct PIN the phone remembers the player for 90 days (a signed cookie holding only the player's id); "Not you? Switch player" clears it. One identity per device.
+
+**What a player sees.** Only their own answers and the upcoming games of the grade (or grades) of the squads they are in, with three big buttons (In, Maybe, Out) and an optional note of up to 140 characters. They cannot see other players, the squad, any selection or any phone number. Answers are always saved for the player named in the signed cookie, never for anything in the form. If a selector has set a cut-off in **Selection settings** ("close availability this many hours before a game", 0 means never), the page says "Selection has started; call a selector" after it.
+
+**Rate limits that work on serverless.** Counters live in the database (`throttle-hits`, one atomic statement per attempt), not in memory. Five wrong PINs for one name lock that name on that link for 15 minutes, doubling per repeat up to one hour; names that match nobody are hashed into 64 shared buckets so random guesses cannot grow the table and look exactly like real names; 300 failures an hour on the link pause new sign-ins for 15 minutes and put a warning on the Availability page. A remembered phone is never locked out, and a selector can make a **one-time code** for a player (shown once, valid 24 hours, usable once) that replaces the PIN, so a lock someone else caused never stops a real player. Per-address limits are used only on Vercel, where the caller's address can be trusted; anywhere else there is no address key at all.
+
+**For selectors.**
+- `/selector/availability` shows one game at a time on a phone (a tab per game with its tally of in, maybe, out and no reply; a list of players with a three-way control and a tap-to-call link; a "no reply only" filter) and, on a wide screen, an extra players-by-games matrix with a name column that stays put. A selector can set or clear any answer; it is recorded as theirs. Answers they set show "source: selector" in the data.
+- **Refresh fixtures** copies the club's upcoming senior games from PlayHQ into `selection-fixtures` (also done every night by the existing sync cron). Games are kept from 14 days back to 120 days ahead, never deleted (a game PlayHQ no longer lists is marked removed and its answers stay), and a rescheduled game keeps its answers.
+- `/selector/link` shows the link with **Copy link** and text and WhatsApp share buttons, **Switch off**, and **Make a new link** (asks first). Making a new link stops the old one and every remembered phone straight away and clears every lock.
+- `/selector/players/<name>` is the player's private card: phone (saved as digits, shown grouped, never public), the PIN (set a manual PIN, or go back to the last four digits), the one-time code button, and role, "can keep wicket" and notes for selection.
+
+**Privacy.** Phone numbers, PIN hashes and one-time codes live in `player-selection-profiles`, which only admins and editors can read over the API and which selectors reach only through the selector area. The PIN hash, its salt and the one-time code are not readable or writable over the API by anyone, and a filter on them is refused. Phones are never copied to the players, seasons or any CSV export. The PIN is stored as a salted scrypt hash with a pepper derived from the site secret.
+
+**Club-neutral.** The cookie name uses the club's cookie prefix, phone numbers follow the club's country (`CLUB_COUNTRY`, default the region of `CLUB_LOCALE`; an unknown country gets a permissive digits-only rule), and nothing here names the club.
+
+## How to use it
+
+1. A selector opens **Squads** and makes sure each player is in a grade (see [Squad boards](./squad-boards.mdx)). Open a player's card and save their mobile number (that sets their PIN) or a manual PIN.
+2. Open **Player link**, press **Copy link** and send it to the squads. Tell players their PIN is the last four digits of their mobile.
+3. Watch **Availability** fill in. Ring the people who have not replied (tap the number) and set their answer for them.
+4. If someone has forgotten their PIN or is locked out, make them a **one-time code** on their card and read it out.
+5. If the link has been shared too widely or you see the "someone is guessing PINs" warning, press **Make a new link** and send the new one.
+
+A short notice the club can show where it collects phone numbers (adjust to your club and law; for an Australian club this is covered by the Privacy Act and Australian Privacy Principles, and a parent's number held for a junior is still personal information): "We keep your mobile number so the selectors can contact you about selection. Only selectors can see it, it is never shown on the website or shared, and you can ask us to remove it at any time."
+
+## Not included / deferred
+
+- **Honest limits.** A 4-digit PIN has only 10,000 values, and the last four digits of a phone are known to teammates and shared within families, so anyone who knows a number knows the PIN. The rate limits and the rotating link only slow an online guesser; the pepper protects a stolen database without the site's secret. A club that worries about this should use manual 6-digit PINs. A player who shares their phone with family will identify as the last person to use it.
+- Availability ranges ("away until March") and overrides are not built; answers are per game only. A Contacts CSV import for phone numbers and a QR code for the link are not built (the link and Copy are enough for a first release). Net attendance is a separate issue ([#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)).
+- Merging two duplicate players does not yet move their answers, squad membership or contact details to the player that is kept; the selectors re-add them.
+- Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38). Team selection and the match-day overview that use these answers arrive with the next work package.
