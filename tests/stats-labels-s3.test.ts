@@ -127,6 +127,11 @@ describe('single source for names and labels', () => {
         // PlayHQ fixtures and ladders (not the stored data).
         'lib/matches-queries.ts', 'lib/domain.ts', 'app/(frontend)/fixtures/page.tsx', 'app/(frontend)/fixtures/[gameId]/page.tsx',
         'components/playhq/game-rows.tsx', 'components/playhq/team-grid.tsx',
+        // Selection: the grade names of PlayHQ fixtures and of squads made from them (shown as PlayHQ names them). The one place stored
+        // season rows are matched to them, squad-seed.ts, goes through the label map (`canonical`).
+        'app/(frontend)/selector/(area)/availability/page.tsx', 'app/(frontend)/selector/(area)/squads/page.tsx', 'components/availability/answer-list.tsx',
+        'components/selector/squad-grade.tsx', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
+        'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts',
       ].sort(),
     )
   })
