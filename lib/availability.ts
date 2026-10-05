@@ -30,7 +30,6 @@ export function tally(answers: readonly Answer[]): Tally {
 /** Plain-text note: trimmed, control characters removed, capped. Rendering escapes it (React), so this is only hygiene. */
 export function cleanNote(raw: unknown, max: number): string {
   if (typeof raw !== 'string') return ''
-  // eslint-disable-next-line no-control-regex -- stripping control characters is the point
   return raw.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max)
 }
 

@@ -192,9 +192,11 @@ function SeedSheet({ open, onClose, onDone }: { open: boolean; onClose: () => vo
   useEffect(() => {
     if (!open) return
     let live = true
-    setPreview(null)
     previewSeedAction().then((p) => live && setPreview(p))
-    return () => { live = false }
+    return () => {
+      live = false
+      setPreview(null)
+    }
   }, [open])
   const total = preview?.grades.reduce((n, g) => n + g.add.length, 0) ?? 0
   return (
