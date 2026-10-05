@@ -6,6 +6,8 @@ import { matchPlayers } from '../lib/selection/name-match'
 
 const S = 'a-test-secret-of-some-length-1234567'
 
+process.env.PAYLOAD_SECRET ??= 'test-secret-for-pure-tests-0123456789'
+
 describe('effectiveAvailability', () => {
   const rows = [{ fixtureId: 1, status: 'in' as const }, { fixtureId: '2', status: 'out' as const }]
   it('is the explicit answer, else no reply', () => {
@@ -87,6 +89,17 @@ describe('throttle keys and rules', () => {
     expect(nameKey(1, 'jo smith', true)).toContain('jo smith')
     expect(globalKey(5)).toContain(':5:')
     expect(nameBucket('x')).toBe(nameBucket('x'))
+  })
+  it('the unknown-name bucket is keyed with a server secret, so it cannot be computed from the name alone', () => {
+    const names = Array.from({ length: 200 }, (_, i) => `name ${i}`)
+    const a = names.map((n) => nameBucket(n))
+    const prev = process.env.PAYLOAD_SECRET
+    process.env.PAYLOAD_SECRET = 'a-different-secret-for-this-test-only'
+    try {
+      expect(names.map((n) => nameBucket(n))).not.toEqual(a)
+    } finally {
+      process.env.PAYLOAD_SECRET = prev
+    }
   })
 })
 

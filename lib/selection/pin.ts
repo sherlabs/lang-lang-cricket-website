@@ -53,12 +53,15 @@ export function validPin(raw: unknown): string | null {
 export const looksLikePin = (raw: string): boolean => /^\d+$/.test(raw.trim())
 
 const CODE_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
+const LETTERS = 'abcdefghjkmnpqrstuvwxyz'
 
 /** A one-time code a selector reads out to a player: 8 characters, no look-alikes (about 40 bits). */
 export function newOneTimeCode(): string {
   const bytes = randomBytes(8)
   let out = ''
   for (const b of bytes) out += CODE_ALPHABET[b % CODE_ALPHABET.length]
+  // An all-digit code would read as a PIN (and always fail), so make sure one character is a letter.
+  if (/^\d+$/.test(out)) out = LETTERS[bytes[0] % LETTERS.length] + out.slice(1)
   return out
 }
 

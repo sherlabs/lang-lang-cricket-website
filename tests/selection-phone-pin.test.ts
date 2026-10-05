@@ -67,6 +67,7 @@ describe('pin', () => {
   it('tells a PIN from a one-time code', () => {
     expect(looksLikePin('1234')).toBe(true)
     expect(looksLikePin('abcd2345')).toBe(false)
+    for (let i = 0; i < 3000; i++) expect(looksLikePin(newOneTimeCode())).toBe(false)
     const code = newOneTimeCode()
     expect(code).toMatch(/^[a-z2-9]{8}$/)
     expect(hashOneTimeCode(code.toUpperCase(), S)).toBe(hashOneTimeCode(` ${code} `, S))

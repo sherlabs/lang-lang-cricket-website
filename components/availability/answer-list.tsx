@@ -57,7 +57,7 @@ export function AnswerList({ token, fixtures }: { token: string; fixtures: Playe
                 </div>
                 <label className="mt-3 block text-sm font-medium text-brand-black">
                   A note for the selectors (optional)
-                  <input className={`${field} mt-1`} value={notes[f.id] ?? ''} maxLength={AVAILABILITY.noteMax} onChange={(e) => setNotes((n) => ({ ...n, [f.id]: e.target.value }))} onBlur={() => answers[f.id] !== 'none' && save(f, answers[f.id])} placeholder="For example: can only play if I can bat early" />
+                  <input className={`${field} mt-1`} value={notes[f.id] ?? ''} maxLength={AVAILABILITY.noteMax} onChange={(e) => setNotes((n) => ({ ...n, [f.id]: e.target.value }))} onBlur={() => (answers[f.id] !== 'none' ? save(f, answers[f.id]) : (notes[f.id] ?? '').trim() && setMessages((m) => ({ ...m, [f.id]: 'Tap In, Maybe or Out and your note is saved with it.' })))} placeholder="For example: can only play if I can bat early" />
                 </label>
               </>
             )}

@@ -169,17 +169,32 @@ export async function searchCandidates(user: TypedUser, squadId: number, opts: {
   const year = currentSeasonStartYear()
   const members = new Set((await membersBySquad(payload, [squadId])).get(squadId) ?? [])
   const q = (opts.q ?? '').trim().toLowerCase().slice(0, 60)
-  const where: Where = q ? { or: [{ firstName: { like: q } }, { lastName: { like: q } }, { displayName: { like: q } }] } : {}
-  const res = await payload.find({ collection: 'players', where, limit: 400, pagination: false, depth: 0, joins: false, sort: 'lastName', select: { slug: true, firstName: true, lastName: true, preferredName: true, displayName: true, hidden: true }, overrideAccess: true })
-  const candidates = res.docs.filter((p) => !members.has(p.id))
-  const seasons = await loadSeasonRows(payload, year, candidates.map((p) => p.id))
-  const years = playedYears(seasons.rows)
   const filter = opts.recency ?? 'all'
+  const and: Where[] = []
+  if (q) and.push({ or: [{ firstName: { like: q } }, { lastName: { like: q } }, { displayName: { like: q } }] })
+  if (members.size) and.push({ id: { not_in: [...members] } })
+  // The recency filter goes into the query (before the limit), so a long roster is never cut off alphabetically first.
+  let seasons: Seasons | null = null
+  if (filter !== 'all') {
+    seasons = await loadSeasonRows(payload, year)
+    const years = playedYears(seasons.rows)
+    if (filter === 'never') {
+      // "Never" is everyone the other tags do not cover, so it excludes rather than includes.
+      const seen = [...years.keys()].filter((id) => recencyOf(years.get(id), year) !== 'never')
+      and.push({ id: { not_in: seen } })
+    } else {
+      const ids = [...years.keys()].filter((id) => !members.has(id) && matchesRecency(recencyOf(years.get(id), year), filter))
+      if (!ids.length) return []
+      and.push({ id: { in: ids } })
+    }
+  }
+  const res = await payload.find({ collection: 'players', where: and.length ? { and } : {}, limit: 60, pagination: false, depth: 0, joins: false, sort: 'lastName', select: { slug: true, firstName: true, lastName: true, preferredName: true, displayName: true, hidden: true }, overrideAccess: true })
+  const candidates = res.docs
+  const rows = seasons ?? (await loadSeasonRows(payload, year, candidates.map((p) => p.id)))
+  const years = playedYears(rows.rows)
   return candidates
     .map((p) => ({ p: toPlayerLite(p as never), recency: recencyOf(years.get(p.id), year) }))
-    .filter((c) => matchesRecency(c.recency, filter))
-    .slice(0, 60)
-    .map((c) => ({ id: c.p.id, name: c.p.name, recency: c.recency, games: seasons.games.get(c.p.id) ?? 0, hidden: c.p.hidden }))
+    .map((c) => ({ id: c.p.id, name: c.p.name, recency: c.recency, games: rows.games.get(c.p.id) ?? 0, hidden: c.p.hidden }))
 }
 
 export type SeedPreview = { fromYear: number | null; grades: { squadId: number; gradeName: string; add: { id: number; name: string }[]; already: number }[]; unmatched: string[] }

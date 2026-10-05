@@ -129,6 +129,21 @@ describe('availability link', () => {
     expect(await identify(payload, ctx, 'Jo Smith', '0001')).toEqual({ ok: false, message: LOCKED_MESSAGE })
   })
 
+  it('a correct PIN hidden in a parallel burst is refused once the limit is spent', async () => {
+    const guesses = Array.from({ length: 40 }, (_, i) => (i === 20 ? '0001' : `30${String(i).padStart(2, '0')}`))
+    const results = await Promise.all(guesses.map((g) => identify(payload, ctx, 'Jo Smith', g)))
+    // At most four guesses (right or wrong) are ever checked; the other thirty-six are refused as locked.
+    expect(results.filter((r) => r.ok || r.message === NO_MATCH_MESSAGE).length).toBeLessThanOrEqual(4)
+    expect(await identify(payload, ctx, 'Jo Smith', '0001')).toEqual({ ok: false, message: LOCKED_MESSAGE })
+  })
+
+  it('wrong one-time codes are counted and finally locked, while the right code still needs no PIN lock to be clear', async () => {
+    const results = []
+    for (let i = 0; i < 25; i++) results.push(await identify(payload, ctx, 'Jo Smith', `wrongcd${String.fromCharCode(97 + (i % 26))}`))
+    expect(results.slice(0, 19).every((r) => !r.ok && r.message === NO_MATCH_MESSAGE)).toBe(true)
+    expect(results[24]).toEqual({ ok: false, message: LOCKED_MESSAGE })
+  })
+
   it('the whole-link pause blocks new identification but not a remembered phone, and a one-time code still works', async () => {
     await hit(payload, globalKey(1), { ...GLOBAL_RULE, limit: 0 }) // trips at once
     expect(await identify(payload, ctx, 'Jo Smith', '0001')).toEqual({ ok: false, message: LOCKED_MESSAGE })

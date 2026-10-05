@@ -101,6 +101,15 @@ describe('squads, board and selector-side availability', () => {
     expect((await searchCandidates(u(), sb.id, {})).map((c) => c.id)).not.toContain(member.id)
   })
 
+  it('the recency filter is applied before the cut-off, so a late-alphabet player in a long roster still shows', async () => {
+    const sb = await makeSquad(payload, year, 'grade-b', 'B Grade')
+    for (let i = 0; i < 70; i++) await makePlayer(payload, 'Filler', `Aaa${String(i).padStart(2, '0')}`)
+    const late = await makePlayer(payload, 'Zed', 'Zzzz')
+    await payload.create({ collection: 'player-seasons', data: { player: late.id, seasonName: `${year - 1}/${String(year).slice(2)}`, seasonOrder: 1, teamId: 't', teamName: 'T', gradeName: 'B Grade', games: 4 } as never, overrideAccess: true })
+    expect((await searchCandidates(u(), sb.id, { recency: 'last-season' })).map((c) => c.id)).toEqual([late.id])
+    expect((await searchCandidates(u(), sb.id, { recency: 'never' })).map((c) => c.id)).not.toContain(late.id)
+  })
+
   it('start from last season previews first, honours a grade rename, never removes anyone, and applying twice adds nothing new', async () => {
     const [a, b, c] = [await makePlayer(payload, 'A', 'One'), await makePlayer(payload, 'B', 'Two'), await makePlayer(payload, 'C', 'Three')]
     const sb = await makeSquad(payload, year, 'grade-b', 'Premier Grade')

@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 import type { Payload, Where } from 'payload'
 import { AVAILABILITY } from '@/config/site'
 import { changesClosed, cleanNote, isStatus, type Answer, type AvailabilityStatus } from '@/lib/availability'
-import { globalKey, GLOBAL_RULE, LOCKED_MESSAGE, NAME_RULE, nameKey, NO_MATCH_MESSAGE } from '@/lib/availability-throttle'
+import { CODE_RULE, codeKey, globalKey, GLOBAL_RULE, LOCKED_MESSAGE, NAME_RULE, nameKey, NO_MATCH_MESSAGE } from '@/lib/availability-throttle'
 import { tokenMatches, verifyAvailCookie } from '@/lib/availability-link'
 import { clubToday } from '@/lib/selection-fixtures'
 import { matchPlayers } from '@/lib/selection/name-match'
@@ -84,11 +84,12 @@ export async function identify(payload: Payload, ctx: { linkVersion: number; ip:
   const known = candidates.length > 0
   const keyName = nameKey(ctx.linkVersion, normName || '-', known)
 
-  // A one-time code (issued by a selector) is not blocked by a lock somebody else caused; a PIN is.
-  if (isPin) {
-    if ((await isLocked(payload, globalKey(ctx.linkVersion))).allowed === false) return LOCKED
-    if ((await isLocked(payload, keyName)).allowed === false) return LOCKED
-  }
+  // Take the throttle slot BEFORE checking the secret, in one atomic statement: a parallel burst cannot test more guesses than the
+  // limit allows, and a correct guess in the burst is refused once the key is locked. A PIN is also stopped by a whole-link pause;
+  // a one-time code (issued by a selector) counts on its own key and is not blocked by a lock somebody else caused.
+  if (isPin && (await isLocked(payload, globalKey(ctx.linkVersion))).allowed === false) return LOCKED
+  const attemptKey = isPin ? keyName : codeKey(ctx.linkVersion, normName || '-', known)
+  if (!(await hit(payload, attemptKey, isPin ? NAME_RULE : CODE_RULE)).allowed) return LOCKED
 
   let matched: PlayerLite[] = []
   if (bounded && candidates.length <= AVAILABILITY.maxCandidates) {
@@ -122,6 +123,7 @@ export async function identify(payload: Payload, ctx: { linkVersion: number; ip:
     const player = matched[0]
     if (isPin) await clear(payload, keyName)
     else {
+      await clear(payload, attemptKey)
       const p = (await profilesFor(payload, [player.id])).get(player.id)
       if (p) await payload.update({ collection: 'player-selection-profiles', id: p.id, data: { otcHash: null, otcExpiresAt: null } as never, overrideAccess: true, context: { disableRevalidate: true } })
     }
@@ -129,8 +131,8 @@ export async function identify(payload: Payload, ctx: { linkVersion: number; ip:
   }
 
   if (isPin || !bounded) {
-    const [byName, overall] = await Promise.all([hit(payload, keyName, NAME_RULE), hit(payload, globalKey(ctx.linkVersion), GLOBAL_RULE)])
-    if (!byName.allowed || !overall.allowed) return LOCKED
+    // The name key was already counted above; a failed PIN (or unusable input) also counts against the whole link.
+    if (!(await hit(payload, globalKey(ctx.linkVersion), GLOBAL_RULE)).allowed) return LOCKED
   }
   return FAIL
 }

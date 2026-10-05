@@ -19,7 +19,7 @@ export const hashKey = (key: string, secret?: string): string => createHmac('sha
 type Row = { locked: boolean; retry: number | string | null }
 
 const toResult = (row: Row | undefined): ThrottleResult => {
-  const retry = row?.retry == null ? 0 : Math.max(0, Math.ceil(Number(row.retry)))
+  const retry = row?.retry == null ? 0 : Math.max(0, Math.min(CAP_MS / 1000, Math.ceil(Number(row.retry) - 0.001)))
   return { allowed: !row?.locked, retryAfterSeconds: row?.locked ? retry : 0 }
 }
 
