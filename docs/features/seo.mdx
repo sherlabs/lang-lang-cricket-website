@@ -5,7 +5,7 @@ routes: ["/sitemap.xml", "/robots.txt", "(every public page)"]
 collections: [club, players, stories, events, yearbooks, pages, news]
 admin: "Club details, SEO tab (admin only): default title and description, share image, per-page titles and descriptions"
 owner: "Site admin; beneficiaries are people searching for the club and anyone sharing a link"
-related: [pages, news, club-and-site-settings, stat-cards, events-and-rsvps, club-history-stories, season-yearbooks]
+related: [pages, news, club-and-site-settings, stat-cards, events-and-rsvps, club-history-stories, season-yearbooks, team-selection-and-announce]
 added: feat/payload-cms
 ---
 
@@ -22,8 +22,8 @@ Commits `feat(seo)` add a sitemap, robots rules, canonical URLs and structured d
 ## What it does
 
 - **Canonical hosts**: `next.config.ts` redirects `www.langlangcricketclub.com` and the production `vercel.app` alias to `CANONICAL_HOST` with a 308. `/api/*` is excluded (cron and upload callbacks may use the alias). Hosts are set by `CANONICAL_HOST` and `REDIRECT_HOSTS`. Preview hosts are untouched.
-- **Sitemap** (`/sitemap.xml`, built per request): the static public pages with change frequency and priority, every non-hidden player, every published story, every event page, every published yearbook, the news feed, every published info page (`/info/<slug>`) and every news post whose date has come. Draft or hidden content is never listed. `/players/compare`, `/statlab/export` and RSVP and draft links are excluded.
-- **robots.txt**: allows `/` and `/api/public/players/` (so stat cards can be fetched), and disallows `/admin`, `/api`, `/history/drafts/`, `/events/rsvp/`, `/events/*/rsvp`, `/players/compare`, `/statlab/export`, `/statlab/saved` and `/preview` (the staff-only preview of drafts). It points at the sitemap.
+- **Sitemap** (`/sitemap.xml`, built per request): the static public pages with change frequency and priority, every non-hidden player, every published story, every event page, every published yearbook, the news feed, every published info page (`/info/<slug>`), every news post whose date has come, `/teams`, and the published, non-removed team pages (`/teams/<game>`) of the last 60 days. A draft or withdrawn team is never listed. Draft or hidden content is never listed. `/players/compare`, `/statlab/export` and RSVP and draft links are excluded.
+- **robots.txt**: allows `/`, `/api/public/players/` (so stat cards can be fetched) and `/teams/*/lineup-image` (so a crawler can load the lineup picture), and disallows `/admin`, `/api`, `/history/drafts/`, `/events/rsvp/`, `/events/*/rsvp`, `/players/compare`, `/statlab/export`, `/statlab/saved` and `/preview` (the staff-only preview of drafts), `/selector` and `/availability/` (private tools). It points at the sitemap.
 - **Metadata**: every page sets a title and description from the club SEO tab (with built-in defaults), a canonical URL, and Open Graph tags. Filtered or parameterised views (stats, honours, matches, compare) are `noindex`. Private token pages are `noindex`.
 - **Structured data (JSON-LD)**: `SportsOrganization` (home), `Event` (event pages, with the payment link as an offer), `Person` (player profiles), `Article` (stories and news posts), `WebPage` (info pages), `CreativeWork` (yearbooks), `ItemList` (leaderboards and player lists) and `BreadcrumbList` on inner pages (`lib/structured-data.ts`). Dates use the club timezone offset (`CLUB_TIMEZONE`).
 - `X-Powered-By` is switched off.

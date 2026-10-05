@@ -5,7 +5,7 @@ routes: ["/selector", "/selector/login", "/selector/invite/[token]", "/selector/
 collections: [users, throttle-hits]
 admin: "Advanced > Selectors (admin and editor), and the Add a selector tile on Home"
 owner: "Committee (editors) and the site admin"
-related: [users-and-authentication, committee-admin, safety-guards]
+related: [users-and-authentication, committee-admin, safety-guards, team-selection-and-announce, match-day-overview]
 added: feat/payload-cms
 ---
 
@@ -17,7 +17,7 @@ added: feat/payload-cms
 
 ## Why it was built
 
-Picking and announcing the teams is the weekly job that most needs a quick, private, phone-friendly login. The request was that selector logins are created from the admin panel and that the main website offers a Facebook login. This is the foundation (issue [#39](https://github.com/sherlabs/lang-lang-cricket-website/issues/39)); the availability, squad and team selection screens that fill the selector area arrive in later work (tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
+Picking and announcing the teams is the weekly job that most needs a quick, private, phone-friendly login. The request was that selector logins are created from the admin panel and that the main website offers a Facebook login. This is the foundation (issue [#39](https://github.com/sherlabs/lang-lang-cricket-website/issues/39)); the availability, squad and team selection screens that fill the selector area are described in their own docs (tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
 
 ## What it does
 
@@ -55,5 +55,5 @@ Only the production host and one stable preview address can use Facebook (Meta n
 
 - **Honest limits.** Facebook sign-in can fail inside the Messenger, Facebook or WhatsApp in-app browser, where invite links are often opened; the invite page shows an "open in Safari or Chrome" hint there, and the password path always works. Facebook Live mode and any Meta review are outside our control, so the password path means selecting never depends on Meta.
 - There is no email invitation (the site has no email adapter): the committee shares the link. There is no password reset by email. Selector sessions last 7 days (a longer selector-only session needs a custom session writer). PKCE and a QR code for the invite are not included.
-- Only the frame of the selector area (overview and My account) is built here. Availability, squad boards, team selection and the lineup graphic are the next work packages; best-player votes, net sessions and auto-posting to Facebook are out of scope for this work. Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Only the frame of the selector area (overview and My account) is built here; availability, squad boards, [team selection and the lineup picture](./team-selection-and-announce.mdx) and the [match-day overview](./match-day-overview.mdx) have their own docs. Best-player votes, net sessions and auto-posting to Facebook are out of scope for this work. Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
 - An editor-set password is shown only while typing it; tell the person in person or by phone.

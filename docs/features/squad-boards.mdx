@@ -5,7 +5,7 @@ routes: ["/selector/squads"]
 collections: [squads, squad-members, selection-fixtures, player-selection-profiles]
 admin: "None; managed in the selector area (/selector/squads)"
 owner: "Selectors"
-related: [availability-link, selector-accounts, name-and-grade-labels, players-directory-and-profiles]
+related: [availability-link, selector-accounts, name-and-grade-labels, players-directory-and-profiles, team-selection-and-announce]
 added: feat/payload-cms
 ---
 
@@ -41,6 +41,6 @@ Before anyone can pick a team they need to know the pool of players for each gra
 ## Not included / deferred
 
 - **Drag and drop** between grades is not built; the Move sheet is the only way to move a player (deferred follow-up under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
-- Form scores (last five innings), role suggestions from the stats and the "hot, steady, cold" read arrive with team selection, not here.
+- Form scores (the last five innings) and role suggestions now appear in the team builder and on the player card ([Team selection and announcing the teams](./team-selection-and-announce.mdx)); the "hot, steady, cold" trend scoring is not built.
 - Merging two duplicate players does not yet move their squad membership; re-add them.
 - Squads are by season only; there is no history view of past squads.

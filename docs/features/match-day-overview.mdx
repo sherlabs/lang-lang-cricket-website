@@ -1,0 +1,44 @@
+---
+title: Match-day overview and player card
+status: shipped
+routes: ["/selector", "/selector/players/[slug]"]
+collections: [selection-fixtures, availability, squads, squad-members, team-sheets, player-selection-profiles]
+admin: "None; the selector home page (/selector)"
+owner: "Selectors"
+related: [team-selection-and-announce, availability-link, squad-boards, selector-accounts]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector** on Tuesday night who needs to know, grade by grade, who has replied, who still has to be chased, whether a keeper is available and whether the team has been started.
+
+## Why it was built
+
+The match-day part of issue [#20](https://github.com/sherlabs/lang-lang-cricket-website/issues/20) (tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)): one screen that answers "where are we for this weekend" without opening every grade. Net sessions and net attendance are not part of it ([#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)).
+
+## What it does
+
+**The overview** is the selector home (`/selector`). For this weekend (tabs for later weekends) it shows one card per grade:
+
+- the opponent, day and time, and the team's status (Not started, In progress, Ready, Needs attention) with a Published chip when it is out;
+- the replies as four counts: **In, Maybe, Out, No reply** (each with a word as well as a colour);
+- **warnings in words**: "Selection not started", "No wicketkeeper available" (nobody marked as a keeper has said in or maybe), "No keeper tagged in the team", and "No squad for this grade yet";
+- **Who has not replied**: their names, each with a **Call** link when the selectors have a phone for them, and **Copy a reminder text** that writes a short message with the availability link;
+- a link to open the team.
+
+Above the cards, the notices the availability board already raises: two players of one name sharing a PIN, and someone guessing PINs on the availability link.
+
+**The player card** (`/selector/players/<name>`, private) gains the role (the selectors' own, or a guess from the stats, labelled as a guess), the last five batting and bowling scores from stored finished games (or "No data"), and the next month's availability for the squads the player is in, as a dot and a word per game with any note they left, next to the phone, PIN and notes that were already there. It links to the public profile when the player is not hidden.
+
+## How to use it
+
+1. Open the selector home. Check each grade's counts.
+2. Open **Who has not replied**, tap **Call**, or **Copy a reminder text** and send it to the group.
+3. Open the team to pick it, or tap a name to open their card.
+
+## Not included / deferred
+
+- Net attendance and net sessions ([#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)); best-player votes ([#18](https://github.com/sherlabs/lang-lang-cricket-website/issues/18)).
+- The overview shows only upcoming games from the stored fixtures; a game that PlayHQ no longer lists is hidden until it returns.
+- Reminders are copied, not sent; there is no SMS or email delivery from the site.

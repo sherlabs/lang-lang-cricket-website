@@ -5,7 +5,7 @@ routes: ["/availability/[token]", "/selector/availability", "/selector/link", "/
 collections: [selection-fixtures, availability, player-selection-profiles, squads, squad-members, throttle-hits]
 admin: "Advanced > Selection settings (admin); everything else is in the selector area (/selector)"
 owner: "Selectors"
-related: [selector-accounts, squad-boards, safety-guards, players-directory-and-profiles]
+related: [selector-accounts, squad-boards, safety-guards, players-directory-and-profiles, team-selection-and-announce, match-day-overview]
 added: feat/payload-cms
 ---
 
@@ -54,4 +54,4 @@ A short notice the club can show where it collects phone numbers (adjust to your
 - **Honest limits.** A 4-digit PIN has only 10,000 values, and the last four digits of a phone are known to teammates and shared within families, so anyone who knows a number knows the PIN. The rate limits and the rotating link only slow an online guesser; the pepper protects a stolen database without the site's secret. A club that worries about this should use manual 6-digit PINs. A player who shares their phone with family will identify as the last person to use it.
 - Availability ranges ("away until March") and overrides are not built; answers are per game only. A Contacts CSV import for phone numbers and a QR code for the link are not built (the link and Copy are enough for a first release). Net attendance is a separate issue ([#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)).
 - Merging two duplicate players does not yet move their answers, squad membership or contact details to the player that is kept; the selectors re-add them.
-- Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38). Team selection and the match-day overview that use these answers arrive with the next work package.
+- Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38). The answers feed [team selection](./team-selection-and-announce.mdx) and the [match-day overview](./match-day-overview.mdx).

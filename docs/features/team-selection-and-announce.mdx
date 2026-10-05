@@ -1,0 +1,66 @@
+---
+title: Team selection and announcing the teams
+status: shipped
+routes: ["/selector/teams", "/selector/teams/[gameId]", "/selector/teams/[gameId]/preview-image", "/teams", "/teams/[gameId]", "/teams/[gameId]/lineup-image"]
+collections: [team-sheets, selection-fixtures, availability, squads, squad-members, announcements, player-selection-profiles]
+admin: "Advanced > Selection settings (admin) for the defaults; picking and publishing teams is in the selector area (/selector/teams)"
+owner: "Selectors"
+related: [selector-accounts, availability-link, squad-boards, match-day-overview, announcements, seo, club-and-site-settings, players-directory-and-profiles]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector** who sits down on Wednesday night, on a phone or a laptop, to pick the XI for each grade from the people who said they are available, and then tells the club.
+- **A player or parent** who opens the club site on Thursday to see who is playing, and who may share the picture on Facebook.
+
+## Why it was built
+
+Picking teams happened in group chats and on paper, and the result was typed up by hand for Facebook (issue [#17](https://github.com/sherlabs/lang-lang-cricket-website/issues/17), with the lineup picture of [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21), part of the work tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). Selectors now pick the team where the availability and the squads already are, check it against the replies, and publish it in one step: the teams page, the announcement banner, a picture and the post text are all produced from the same published team.
+
+## What it does
+
+**All teams** (`/selector/teams`). The weekend's games (a Monday to Sunday week; tabs for later weekends), one card per grade with its status, the XI with captain (c) and keeper (wk) tags, the number of warnings and who last edited it. A card with no team yet says "Not started" and opens the builder. **Publish all ready** publishes every team marked Ready that is not already published, after a confirmation.
+
+**The builder** (`/selector/teams/<game>`). One column on a phone:
+
+- **Batting order** is a numbered list. Every row has **Up**, **Down** and **Remove** buttons (44 px tap targets), a number box to jump to a position, and **C** and **WK** toggles (one captain and one keeper at most). There is no drag and drop.
+- **Add players** opens a bottom sheet with the grade's squad grouped **Available / Maybe / No reply / Out**. Each person shows their role, their last five batting and bowling scores and any note they left. Adding someone who said they are out asks you to confirm. A person who is not on the list (a fill-in) is added as a **guest** by typing their name: letters only, 2 to 40 characters, no digits or `@`. A guest's name is shown on the public page.
+- **Team size** is 11, 12, 13 or no limit (the default comes from Selection settings).
+- **Warnings** are recomputed on every change by the same function the server runs when you publish: no keeper, no captain, fewer than five bowling options, fewer than five batters, more than three players with no role (the balance is a guess), a picked player who said they are **out**, a player picked in another grade the same day, a hidden or removed player, fewer picked than the size, and a game that was removed or changed on PlayHQ since the team was saved. Only these stop a publish: nobody picked, more places than the size, a hidden or removed player, an invalid guest name. Everything else is shown in the confirmation with a **Publish anyway** tick.
+- **Roles** come from what the selectors set on the player card; when nothing is set the site suggests one from the last two seasons (keeper if they can keep or have keeper catches or stumpings, bowler or all-rounder from balls bowled, batter from few balls bowled) and says it is a guess. **Form** is only the raw last five scores from stored finished games (for example "23, 4, 51*, 0, 12" and "2/31, 0/22"), newest first, within about 13 months. A player with no stored games shows "No data", never zero. It is a prompt, not a verdict.
+- **Save** and **Mark ready** keep the work private. Two selectors editing the same game cannot overwrite each other: a stale save is refused with "Someone else changed this team. Reload to see their changes."
+- **Status** chips: Not started, In progress, Ready (marked ready, full, with a captain and a keeper and nothing serious flagged) and Needs attention. A published team also shows **Published** or **Published, changes not published**, with the list of changes (in, out, order moved, tag changed).
+
+**Publishing** (`Publish teams`, or `Publish changes` for a team already out). A confirmation says the whole team, guest names included, becomes public and that a picture Facebook or anyone else has already copied cannot be recalled. Publishing:
+
+1. freezes the team as a snapshot. The public site only ever reads the snapshot, so edits stay private until you publish again;
+2. puts it on **`/teams`** (this weekend's published teams, one card per grade) and **`/teams/<game>`**. Names link to the public player page; a player hidden since publishing shows as "Player name withheld" so the batting order stays honest. If **Show the batting order** is switched off in Selection settings, the team is listed alphabetically without numbers (captain and keeper stay marked);
+3. posts one **site announcement per weekend** (unless you untick it) such as "Matchday 10 October", listing each grade, the opponent, the time and the XI, with a **See the teams** button to `/teams`. Publishing again updates the same announcement (so someone who dismissed the banner does not see it again) and adds "(updated)" and the list of changes; the teams page shows "Updated" and the picture carries an UPDATED tag;
+4. refreshes the caches for the teams pages, the home page, the announcements page and the sitemap.
+
+**Share material** (below the builder once a team is published). The **lineup picture** (1200 by 630, the size Facebook shows for a link) is drawn in the club's own colours, crest and heading font from the Site look settings, with the club name, "Round 5 v Opponent", date, venue and the numbered XI with C and WK badges. **Download picture** saves it. **Copy post text** copies a ready-to-paste post, for example "Club B Grade v Rovers, Sat 10 Oct, 1:00pm, Home Oval" then "1. A Smith (c)" and so on, then the sign-off line and the teams page address (all from the club settings), prefixed "UPDATED: " after a republish. The teams page and each team page also carry the picture as their link preview (Open Graph and Twitter), so pasting the address into Facebook shows it. **Preview picture** shows the working team's picture before you publish (selectors only).
+
+**Withdraw** takes a team off the site: the teams page and the picture return the same plain "not found" as a team that was never published, the weekend's announcement is updated or switched off, and the caches are refreshed.
+
+**Settings** (admin: Advanced > Selection settings and Site settings, Club details). *Players in a team* (default 11), *Show the batting order on the public teams page* (default on), *Post a site announcement when teams are published* (default on), **Matchday label** (Site settings, default "Matchday") and **Sign-off for team announcements** (Club details, default empty so nothing is added). Club name, crest, colours, font, site address and locale all come from the club's settings; nothing is written for one club.
+
+**What stays private.** Draft teams, unpublished edits, notes, availability and phones are never on a public page, in the sitemap or over the public API (there is none for these). The public pages read only the published snapshot and show only players who are not hidden. A draft, a withdrawn team, a game removed from PlayHQ and an unknown address all give the same not-found answer, from the page and from the picture. Writing a team is only possible through the selector area, which checks who is signed in, validates the team and records who saved or published it from the signed-in user, never from the request.
+
+**Caching, honestly.** The published data is cached for up to five minutes and is expired at once when you publish, withdraw or hide a player. The picture is sent with a five-minute CDN cache (`s-maxage=300`), so a withdrawn picture can stay visible for a few minutes. Facebook and other sites copy link pictures and keep them for a long time: withdrawing a team **cannot recall a picture that has already been scraped or saved.**
+
+## How to use it
+
+1. Open **Teams** (bottom bar on a phone). Pick the weekend, then tap a grade.
+2. Add players from the squad (check the replies and recent scores), set the order with Up and Down, tag the captain (C) and keeper (WK), and fix any red warning.
+3. Press **Save**, then **Mark ready** when you are happy. A second selector can look at the card in **Teams** and the weekend view.
+4. Press **Publish teams** (or **Publish all ready** on the weekend view) and confirm. Open the team again: **Download picture** and **Copy post text** are below, ready for the club's Facebook page.
+5. If a player drops out, change the order, press **Save**, then **Publish changes**. To take a team down, use **Withdraw this team**.
+
+## Not included / deferred
+
+- **Auto-posting to Facebook** is not built; selectors post the picture and text themselves ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+- Not built in this version: Autofill and "copy last week's side", hot/steady/cold form scoring (only the raw last five scores), drag and drop ordering, a sponsor strip and a second picture size for feeds, the other graphic types of [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21), best-player votes ([#18](https://github.com/sherlabs/lang-lang-cricket-website/issues/18)) and net sessions ([#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)). Each is a candidate follow-up under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Form uses only stored finished games, which start at the PlayHQ backfill window; before that a player shows "No data".
+- The teams pages are rendered per request (their data is cached by tag, see above), not served from the CDN as static pages.
+- Fill-ins must be added to a squad (Squads page) to appear in the Add players list; a one-off guest can be typed in instead.
