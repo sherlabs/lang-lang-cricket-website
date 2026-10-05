@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { PageHeader } from '@/components/page-header'
 import { listPublishedAnnouncements } from '@/lib/announcements-queries'
 import { bodyParagraphs, formatAnnouncementDate } from '@/lib/announcements-format'
@@ -47,6 +48,15 @@ export default async function AnnouncementsPage() {
                         </p>
                       ))}
                     </div>
+                  )}
+                  {a.link && (
+                    <p className="mt-5">
+                      {a.link.startsWith('/') ? (
+                        <Link href={a.link} className="inline-flex min-h-11 items-center rounded-lg bg-brand-black px-4 font-semibold text-brand-gold">{a.linkLabel || 'Read more'}</Link>
+                      ) : (
+                        <a href={a.link} rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-lg bg-brand-black px-4 font-semibold text-brand-gold">{a.linkLabel || 'Read more'}</a>
+                      )}
+                    </p>
                   )}
                 </article>
               )

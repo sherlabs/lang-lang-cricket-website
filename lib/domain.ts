@@ -57,6 +57,9 @@ export type Announcement = {
   title: string
   body: string
   published: boolean
+  /** Optional button: a path on this site or an https address (re-checked when read). */
+  link: string | null
+  linkLabel: string | null
   createdAt: Date
   updatedAt: Date
 }

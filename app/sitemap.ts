@@ -3,6 +3,7 @@ import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 import { listPublishedNewsSlugs } from '@/lib/news-queries'
 import { listPublishedPageSlugs } from '@/lib/pages-queries'
+import { listPublishedGamesForSitemap } from '@/lib/teams-queries'
 import { listPublishedYearbookSlugs } from '@/lib/yearbooks-queries'
 
 export const dynamic = 'force-dynamic' // DB-backed (Payload Local API): revalidate=3600 would bake a static-only sitemap at build
@@ -26,6 +27,7 @@ const STATIC: { path: string; changeFrequency: Entry['changeFrequency']; priorit
   { path: '/history/submit', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/people', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/announcements', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/teams', changeFrequency: 'daily', priority: 0.5 },
   { path: '/news', changeFrequency: 'weekly', priority: 0.6 },
   { path: '/gallery', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/sponsors', changeFrequency: 'monthly', priority: 0.5 },
@@ -97,6 +99,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
     for (const n of newsRows) {
       entries.push({ url: `${SITE_URL}/news/${n.slug}`, lastModified: n.updatedAt, changeFrequency: 'yearly', priority: 0.5 })
+    }
+    // Published, non-removed teams of the last 60 days (the query states its own filter; a draft is never listed).
+    for (const g of await listPublishedGamesForSitemap()) {
+      entries.push({ url: `${SITE_URL}/teams/${g.gameId}`, lastModified: g.lastModified, changeFrequency: 'daily', priority: 0.4 })
     }
     for (const e of eventRows) {
       entries.push({ url: `${SITE_URL}/events/${e.id}`, lastModified: e.createdAt, changeFrequency: 'weekly', priority: 0.6 })

@@ -1,6 +1,7 @@
 /**
  * Payload doc → domain type (spec §14). Pure; no Payload runtime import.
  */
+import { isSafeAnnouncementLink } from '@/lib/selection/announcement-link'
 import type { Announcement, DocumentItem, Event, EventRsvp, GalleryPhoto, NavPage, NewsSummary, NewsView, PageBlock, PageView, Person, Player, PlayerSeason, Sponsor, Story, StoryContent, StoryStatus } from '@/lib/domain'
 import type {
   Announcement as AnnouncementDoc,
@@ -72,6 +73,9 @@ export const toAnnouncement = (d: AnnouncementDoc): Announcement => ({
   title: d.title,
   body: d.body ?? '',
   published: Boolean(d.published),
+  // Re-checked on read as well as on write: an unsafe value (javascript:, //host) is never rendered as a link.
+  link: isSafeAnnouncementLink(d.link) ? d.link!.trim() : null,
+  linkLabel: d.linkLabel?.trim() || null,
   createdAt: date(d.createdAt),
   updatedAt: date(d.updatedAt),
 })

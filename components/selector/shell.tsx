@@ -24,7 +24,10 @@ export function SelectorShell({ name, signOut, children }: { name: string; signO
               </Link>
             ))}
           </nav>
-          <div className="shrink-0">{signOut}</div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Link href="/selector/account" aria-current={pathname === '/selector/account' ? 'page' : undefined} className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-brand-black underline-offset-4 hover:underline">My account</Link>
+            {signOut}
+          </div>
         </div>
       </div>
       {children}

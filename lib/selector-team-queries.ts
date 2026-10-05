@@ -13,7 +13,7 @@ import { effectiveRole, type Role, type RoleOrUnknown } from '@/lib/selection/ro
 import { reminderText } from '@/lib/selection/reminder'
 import { currentSquads, getSelectionSettings, idOf, loadPlayers, membersBySquad, type FixtureRow, type PlayerLite } from '@/lib/selection/store'
 import { TEAMS_TAG } from '@/lib/selection/tags'
-import { buildSnapshot, describeDiff, diffSnapshots, isXiSize, normaliseSlots, parseSnapshot, validateGuestName, validateSlots, type Slot, type Snapshot, type XiSize } from '@/lib/selection/team-sheet'
+import { buildSnapshot, describeDiff, diffSnapshots, isXiSize, normaliseSlots, parseSnapshot, validateGuestName, validateSlots, type Slot, type XiSize } from '@/lib/selection/team-sheet'
 import { blockingWarnings, teamWarnings, type Warning, type WarnSlot } from '@/lib/selection/warnings'
 import { groupByWeekend, weekendKey } from '@/lib/selection/weekend'
 import { linkToken } from '@/lib/availability-link'
@@ -67,6 +67,8 @@ export type SlotView = {
   batting: string
   bowling: string
   answer: Answer
+  /** Grade of another side this player is picked in the same day, if any. */
+  alsoPickedIn: string | null
 }
 
 export type SheetView = {
@@ -144,6 +146,9 @@ async function buildViews(payload: Payload, user: TypedUser, fixtures: readonly 
       answer: v.answer,
       alsoPickedIn: v.playerId != null ? (pickedOnDay.get(`${fx.localDate}:${v.playerId}`) ?? []).find((o) => o.fixtureId !== fx.id)?.gradeName ?? null : null,
     }))
+    warnSlots.forEach((w, i) => {
+      views[i].alsoPickedIn = w.alsoPickedIn ?? null
+    })
     const moved = Boolean(doc && slots.length && (fx as FixtureStamped).updatedAt && doc.updatedAt && new Date((fx as FixtureStamped).updatedAt!).getTime() > new Date(doc.updatedAt).getTime())
     const warnings = teamWarnings({ slots: warnSlots, size, fixtureStatus: fx.status, fixtureMovedSinceSave: moved })
     const markedReady = Boolean(doc?.markedReady)
@@ -171,7 +176,7 @@ async function buildViews(payload: Payload, user: TypedUser, fixtures: readonly 
 }
 
 function viewSlot(s: Slot, fixtureId: number, players: Map<number, PlayerLite>, profiles: Map<number, ProfileView>, insights: Map<number, PlayerInsight>, answers: Map<string, Answer>): SlotView {
-  if (s.player == null) return { key: `g:${s.guestName}`, order: s.order, playerId: null, guestName: s.guestName ?? '', name: s.guestName ?? '', slug: null, isCaptain: s.isCaptain, isKeeper: s.isKeeper, hidden: false, missing: false, role: 'unknown', batting: '', bowling: '', answer: 'none' }
+  if (s.player == null) return { key: `g:${s.guestName}`, order: s.order, playerId: null, guestName: s.guestName ?? '', name: s.guestName ?? '', slug: null, isCaptain: s.isCaptain, isKeeper: s.isKeeper, hidden: false, missing: false, role: 'unknown', batting: '', bowling: '', answer: 'none', alsoPickedIn: null }
   const p = players.get(s.player)
   const prof = profiles.get(s.player)
   const ins = insights.get(s.player)
@@ -191,6 +196,7 @@ function viewSlot(s: Slot, fixtureId: number, players: Map<number, PlayerLite>, 
     batting: ins?.batting ?? '',
     bowling: ins?.bowling ?? '',
     answer: answers.get(`${s.player}:${fixtureId}`) ?? 'none',
+    alsoPickedIn: null,
   }
 }
 
@@ -242,7 +248,7 @@ export async function loadWeekendBoard(user: TypedUser, opts: { weekend?: string
     return {
       fixture: fx,
       view: views.get(fx.id)!,
-      availability: { tally: tally(per.map((x) => x.answer)), noReply, keeperAvailable: per.some((x) => x.answer !== 'out' && (x.prof?.canKeep || x.prof?.role === 'keeper')), squadSize: per.length },
+      availability: { tally: tally(per.map((x) => x.answer)), noReply, keeperAvailable: per.some((x) => (x.answer === 'in' || x.answer === 'maybe') && (x.prof?.canKeep || x.prof?.role === 'keeper')), squadSize: per.length },
       reminder: reminderText({ gradeName: fx.gradeName, opponent: fx.opponentName, when: [formatMatchDay(fx.localDate, club.locale), formatMatchTime(fx.localTime)].filter(Boolean).join(' '), names: noReply.map((n) => n.name.split(' ')[0]), availabilityUrl: link }),
     }
   })

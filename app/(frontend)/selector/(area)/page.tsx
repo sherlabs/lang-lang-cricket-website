@@ -1,26 +1,53 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { selectorPaths } from '@/config/site'
+import { OverviewCards } from '@/components/selector/weekend-cards'
+import { CLUB_LOCALE, selectorPaths } from '@/config/site'
+import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { requireSelection } from '@/lib/selector-auth'
+import { loadWeekendBoard } from '@/lib/selector-team-queries'
 
 export const metadata: Metadata = { title: 'Selectors', robots: { index: false, follow: false } }
 
 const TOOLS = [
+  { href: selectorPaths.teams, title: 'Teams', text: 'Pick each grade’s team and announce it.' },
   { href: selectorPaths.availability, title: 'Availability', text: 'Who is in, maybe or out for each game, and who has not replied.' },
   { href: selectorPaths.squads, title: 'Squads', text: 'Who is in each grade this season. Add, move and remove players.' },
-  { href: selectorPaths.link, title: 'Player link', text: 'The one link players use to tell you if they can play. Copy it, switch it off or make a new one.' },
+  { href: selectorPaths.link, title: 'Player link', text: 'The one link players use to tell you if they can play.' },
   { href: selectorPaths.account, title: 'My account', text: 'Your password and Facebook sign-in.' },
 ] as const
 
-/** The selector home. Team selection and the match-day overview arrive with the next work package. */
-export default async function SelectorHome() {
+type Props = { searchParams: Promise<{ weekend?: string }> }
+
+/** The selector home and match-day overview: this weekend's games, replies, who to chase, keepers and selection status. */
+export default async function SelectorHome({ searchParams }: Props) {
   const user = await requireSelection()
+  const sp = await searchParams
+  const board = await loadWeekendBoard(user, { weekend: typeof sp.weekend === 'string' ? sp.weekend : null })
   const name = (user as { name?: string | null }).name?.trim().split(/\s+/)[0]
   return (
-    <main className="container-site py-8 sm:py-12">
+    <main className="container-site max-w-5xl py-6 sm:py-10">
       <h1 className="display text-3xl text-brand-black sm:text-4xl">{name ? `Hello, ${name}` : 'Hello'}</h1>
-      <p className="mt-3 max-w-prose text-base leading-relaxed text-brand-grey">You are signed in as a selector. Pick a tool.</p>
-      <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+      {board.notices.map((n) => (
+        <p key={n} role="alert" className="mt-3 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">{n}</p>
+      ))}
+      {board.weekends.length > 0 && (
+        <>
+          <h2 className="mt-6 text-xl font-bold text-brand-black">This weekend</h2>
+          {board.weekends.length > 1 && (
+            <nav aria-label="Weekends" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+              {board.weekends.map((w) => (
+                <Link key={w.key} href={`${selectorPaths.home}?weekend=${w.key}`} aria-current={w.key === board.selected ? 'page' : undefined} className={`inline-flex min-h-11 shrink-0 items-center rounded-lg px-4 text-sm font-semibold ${w.key === board.selected ? 'bg-brand-black text-white' : 'border border-brand-black/20 bg-white text-brand-black'}`}>
+                  {formatMatchDay(w.firstDate, CLUB_LOCALE)}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <OverviewCards board={board} />
+        </>
+      )}
+      {board.weekends.length === 0 && <p className="mt-6 rounded-xl bg-white p-5 text-brand-grey ring-1 ring-brand-black/10">There are no upcoming games stored yet. Open Availability and press Refresh fixtures to copy them from PlayHQ.</p>}
+      <h2 className="mt-10 text-xl font-bold text-brand-black">Tools</h2>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-2">
         {TOOLS.map((t) => (
           <li key={t.href}>
             <Link href={t.href} className="block min-h-11 rounded-xl bg-white p-4 ring-1 ring-brand-black/10 transition hover:ring-brand-gold-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">

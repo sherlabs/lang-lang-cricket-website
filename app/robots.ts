@@ -11,7 +11,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         userAgent: '*',
         // `/api/public/players/` is allowed explicitly (longest match beats `/api`) so share-card
         // fetchers and crawlers can load the player stat cards.
-        allow: ['/', '/api/public/players/'],
+        allow: ['/', '/api/public/players/', '/teams/*/lineup-image'],
         disallow: ['/admin', '/api', '/history/drafts/', '/events/rsvp/', '/events/*/rsvp', '/players/compare$', '/players/compare?', '/statlab/export', '/statlab/saved', '/preview', '/selector', '/availability/'],
       },
     ],

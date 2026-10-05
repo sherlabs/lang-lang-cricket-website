@@ -56,6 +56,8 @@ export default async function HomePage() {
           id={latestAnnouncement.id}
           title={latestAnnouncement.title}
           excerpt={excerpt(latestAnnouncement.body)}
+          link={latestAnnouncement.link}
+          linkLabel={latestAnnouncement.linkLabel}
         />
       )}
 

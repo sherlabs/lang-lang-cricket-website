@@ -27,7 +27,11 @@ const nextConfig: NextConfig = {
   experimental: { globalNotFound: true },
   // OG routes (the stat card is the reference) read the bundled crest and the bundled fonts from disk at render
   // time. Any new OG route adds itself here (docs/features/theme-editor.mdx).
-  outputFileTracingIncludes: { '/api/public/players/[slug]/card': [`./public${BRANDING.logo}`, './assets/fonts/**'] },
+  outputFileTracingIncludes: {
+    '/api/public/players/[slug]/card': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+    '/teams/[gameId]/lineup-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+    '/selector/teams/[gameId]/preview-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+  },
   async redirects() {
     return [
       // One canonical host for search engines: www and the production vercel.app

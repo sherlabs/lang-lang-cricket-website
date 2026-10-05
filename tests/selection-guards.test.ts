@@ -28,7 +28,7 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   })
 
   it('every exported function of the selector query files checks the caller\'s role first', () => {
-    for (const file of ['lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts']) {
+    for (const file of ['lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts']) {
       const text = code(read(file))
       const fns = [...text.matchAll(/export async function (\w+)\(([^)]*)\)[^{]*\{\n([\s\S]*?)\n\}/g)]
       expect(fns.length, file).toBeGreaterThan(3)
@@ -40,10 +40,12 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   })
 
   it('every selector server action starts with requireSelection()', () => {
-    const text = code(read('app/(frontend)/selector/board-actions.ts'))
-    const fns = [...text.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([\s\S]*?)\n\}/g)]
-    expect(fns.length).toBeGreaterThanOrEqual(12)
-    for (const [, name, body] of fns) expect(body.split('\n')[0], name).toMatch(/requireSelection\(/)
+    for (const [file, min] of [['app/(frontend)/selector/board-actions.ts', 12], ['app/(frontend)/selector/team-actions.ts', 3]] as const) {
+      const text = code(read(file))
+      const fns = [...text.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([\s\S]*?)\n\}/g)]
+      expect(fns.length, file).toBeGreaterThanOrEqual(min)
+      for (const [, name, body] of fns) expect(body.split('\n')[0], name).toMatch(/requireSelection\(/)
+    }
   })
 
   it('the availability link and the selector area are never cached and never leak the address in a referrer', async () => {
@@ -73,7 +75,7 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   })
 
   it('the new paths sit inside the roots the brand-hex and club-name guards scan', () => {
-    for (const p of ['app/(frontend)/availability', 'components/availability', 'components/selector', 'lib/availability.ts', 'lib/availability-link.ts', 'lib/availability-public.ts', 'lib/availability-throttle.ts', 'lib/selection', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts']) {
+    for (const p of ['app/(frontend)/availability', 'components/availability', 'components/selector', 'lib/availability.ts', 'lib/availability-link.ts', 'lib/availability-public.ts', 'lib/availability-throttle.ts', 'lib/selection', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts', 'lib/teams-queries.ts', 'lib/team-status.ts', 'app/(frontend)/teams', 'components/teams']) {
       expect(fs.existsSync(path.join(root, p)), p).toBe(true)
       expect(/^(app|components|lib|payload|config)\//.test(p), p).toBe(true)
     }
