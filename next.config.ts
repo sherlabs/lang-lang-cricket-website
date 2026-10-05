@@ -73,6 +73,15 @@ export default {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
         ],
       },
+      // The availability link is a bearer token in the address: same rules (never cached, never leaked through Referer).
+      {
+        source: '/availability/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
     ]
   },
 } satisfies NextConfig
