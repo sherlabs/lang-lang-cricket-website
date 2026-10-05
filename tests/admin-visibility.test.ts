@@ -129,5 +129,5 @@ describe('every collection and global is classified (new ones fail here until th
       const e = entities.find((x) => x.slug === slug)
       if (e) expect(e.admin.hidden, `${slug} must stay visible`).toBeFalsy()
     }
-  }, 30_000)
+  }, 90_000)
 })

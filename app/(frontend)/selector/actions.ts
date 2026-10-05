@@ -61,7 +61,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 export async function logoutAction(): Promise<void> {
   const payload = await getPayloadClient()
   const { user } = await payload.auth({ headers: await headers() })
-  if (user) {
+  if (user !== null) {
     // Remove only this browser's session, so signing out here does not sign out the phone.
     const sid = (user as { _sid?: string })._sid
     const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: user.id } } })) as { sessions?: Array<{ id: string }> } | null

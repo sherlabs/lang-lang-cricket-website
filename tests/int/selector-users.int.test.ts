@@ -30,6 +30,8 @@ describe('selector users: privilege escalation, passwords, sessions, hidden fiel
     selector = await make('sel@example.com', 'selector')
   })
   afterAll(async () => {
+    // Later files create their own users with the conventional `<role>@example.com` addresses and passwords.
+    await clearCollection(payload, 'users')
     await destroyTestPayload(payload)
   })
 

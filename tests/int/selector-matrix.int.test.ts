@@ -37,6 +37,8 @@ describe('selector is not staff (access matrix)', () => {
     await payload.create({ collection: 'players', data: { firstName: 'Hidden', lastName: 'Player', displayName: 'Hidden Player', slug: 'hidden-player', hidden: true } as never, context: { disableRevalidate: true } }).catch(() => undefined)
   })
   afterAll(async () => {
+    // Later files create their own users with the conventional `<role>@example.com` addresses and passwords.
+    await clearCollection(payload, 'users')
     await destroyTestPayload(payload)
   })
 

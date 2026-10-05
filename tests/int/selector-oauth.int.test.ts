@@ -70,6 +70,7 @@ describe('selector facebook sign-in', () => {
   })
   afterAll(async () => {
     vi.restoreAllMocks()
+    await clearCollection(payload, 'users')
     await destroyTestPayload(payload)
   })
 

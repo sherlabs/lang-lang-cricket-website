@@ -34,6 +34,6 @@ export async function getSelectionUser(incoming?: Headers): Promise<TypedUser | 
  */
 export async function requireSelection(next: string = selectorPaths.home): Promise<TypedUser> {
   const user = await getSelectionUser()
-  if (!user) redirect(`${selectorPaths.login}?next=${encodeURIComponent(safeNext(next))}`)
+  if (user === null) redirect(`${selectorPaths.login}?next=${encodeURIComponent(safeNext(next))}`)
   return user
 }

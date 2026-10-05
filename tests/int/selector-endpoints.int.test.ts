@@ -31,6 +31,8 @@ describe('selector endpoints and invites', () => {
     selector = await login('sel@example.com')
   })
   afterAll(async () => {
+    // Later files create their own users with the conventional `<role>@example.com` addresses and passwords.
+    await clearCollection(payload, 'users')
     await destroyTestPayload(payload)
   })
 

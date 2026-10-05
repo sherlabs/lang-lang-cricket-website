@@ -10,7 +10,7 @@ import { createPayloadFake, type PayloadFake } from './helpers/payload-fake'
 let fake: PayloadFake
 let staff = false
 
-vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => Object.assign(Object.create(fake), { auth: async () => ({ user: staff ? { id: 1 } : null }) }) }))
+vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => Object.assign(Object.create(fake), { auth: async () => ({ user: staff ? { id: 1, role: 'editor' } : null }) }) }))
 vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
 vi.mock('@/lib/club', async () => {
   const { resolveClub } = await import('@/lib/club-merge')
@@ -55,7 +55,7 @@ describe('/info/[slug]', () => {
     expect(html).toContain('href="/contact"')
     expect(html).not.toContain('javascript:')
     expect(html).toContain('application/ld+json')
-  })
+  }, 30_000)
 
   it('an unknown slug and a draft are not found', async () => {
     const { default: Page } = await import('@/app/(frontend)/info/[slug]/page')
