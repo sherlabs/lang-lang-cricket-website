@@ -37,6 +37,12 @@ export const SEASON_NAME_FORMAT: 'split' | 'single' = env.SEASON_NAME_FORMAT ===
 export const CLUB_LOCALE = env.CLUB_LOCALE || 'en-AU'
 
 /**
+ * Two-letter country code of the club (phone parsing, privacy notice wording). Env `CLUB_COUNTRY`; defaults to the region of
+ * `CLUB_LOCALE` (en-AU gives AU). An unknown country falls back to a permissive digits-only phone normaliser.
+ */
+export const CLUB_COUNTRY = (env.CLUB_COUNTRY?.trim() || CLUB_LOCALE.split('-')[1] || '').toUpperCase()
+
+/**
  * The canonical host (next.config redirects, seed-club's siteUrl check). Env `CANONICAL_HOST`.
  * The Lang Lang value is a development and test default only.
  */
@@ -128,4 +134,27 @@ export const selectorPaths = {
   facebookDataDeletion: '/selector/facebook/data-deletion',
   facebookDeauthorize: '/selector/facebook/deauthorize',
   facebookDeletionStatus: '/selector/facebook/deletion-status',
+  availability: '/selector/availability',
+  squads: '/selector/squads',
+  link: '/selector/link',
+  player: (slug: string) => `/selector/players/${slug}`,
 } as const
+
+/**
+ * Availability and squads (announce-teams spec section 4). Fixtures are kept from this many days back to this many days ahead;
+ * a PIN is 4 to 6 digits; the public availability link lives under `/availability/<token>`.
+ */
+export const AVAILABILITY = {
+  fixturesBackDays: 14,
+  fixturesAheadDays: 120,
+  pinMin: 4,
+  pinMax: 6,
+  noteMax: 140,
+  /** A name matching more candidates than this is refused (it would make every attempt cost too many password hashes). */
+  maxCandidates: 5,
+  rememberDays: 90,
+  oneTimeCodeHours: 24,
+  /** Unknown names are hashed into this many throttle buckets so random names cannot grow the table without bound. */
+  unknownNameBuckets: 64,
+} as const
+export const availabilityPath = (token: string): string => `/availability/${token}`
