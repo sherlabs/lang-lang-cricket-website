@@ -102,6 +102,7 @@ export interface Config {
     squads: Squad;
     'squad-members': SquadMember;
     'team-sheets': TeamSheet;
+    'best-player-ballots': BestPlayerBallot;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -154,6 +155,7 @@ export interface Config {
     squads: SquadsSelect<false> | SquadsSelect<true>;
     'squad-members': SquadMembersSelect<false> | SquadMembersSelect<true>;
     'team-sheets': TeamSheetsSelect<false> | TeamSheetsSelect<true>;
+    'best-player-ballots': BestPlayerBallotsSelect<false> | BestPlayerBallotsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1391,6 +1393,14 @@ export interface SelectionFixture {
   status: 'upcoming' | 'final' | 'removed';
   syncedAt?: string | null;
   /**
+   * Best-player voting for this game. Changed from the selector area (Votes).
+   */
+  votesState?: ('auto' | 'open' | 'closed') | null;
+  /**
+   * Untick for a game that should not count towards the awards (for example a washed-out game).
+   */
+  countsForAwards?: boolean | null;
+  /**
    * When PlayHQ last changed the day, time or venue of this game.
    */
   movedAt?: string | null;
@@ -1487,6 +1497,35 @@ export interface TeamSheet {
   publishedBy?: (number | null) | User;
   publishCount?: number | null;
   announcementId?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Votes for the best player of a game. Private: nobody can read who voted for whom.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "best-player-ballots".
+ */
+export interface BestPlayerBallot {
+  id: number;
+  fixture: number | SelectionFixture;
+  /**
+   * "player:<id>" for a player voting through the link, "selector:<userId>" for a ballot a selector entered.
+   */
+  voterKey: string;
+  voter?: (number | null) | Player;
+  picks?:
+    | {
+        place: number;
+        player: number | Player;
+        id?: string | null;
+      }[]
+    | null;
+  source: 'voter' | 'selector';
+  castBy?: (number | null) | User;
+  castAt?: string | null;
+  editedAt?: string | null;
+  revision?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1653,6 +1692,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'team-sheets';
         value: number | TeamSheet;
+      } | null)
+    | ({
+        relationTo: 'best-player-ballots';
+        value: number | BestPlayerBallot;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2381,6 +2424,8 @@ export interface SelectionFixturesSelect<T extends boolean = true> {
   isHome?: T;
   status?: T;
   syncedAt?: T;
+  votesState?: T;
+  countsForAwards?: T;
   movedAt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2449,6 +2494,29 @@ export interface TeamSheetsSelect<T extends boolean = true> {
   publishedBy?: T;
   publishCount?: T;
   announcementId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "best-player-ballots_select".
+ */
+export interface BestPlayerBallotsSelect<T extends boolean = true> {
+  fixture?: T;
+  voterKey?: T;
+  voter?: T;
+  picks?:
+    | T
+    | {
+        place?: T;
+        player?: T;
+        id?: T;
+      };
+  source?: T;
+  castBy?: T;
+  castAt?: T;
+  editedAt?: T;
+  revision?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2887,6 +2955,36 @@ export interface SelectionSetting {
    * Adds one announcement per weekend (updated if the teams change) that links to the teams page.
    */
   announceOnPublish?: boolean | null;
+  /**
+   * Players vote after a game from the availability link. Selectors change these in the selector area (Votes, Settings).
+   */
+  votes?: {
+    /**
+     * Off hides every vote screen. Before you switch it on, set a manual 6-digit PIN for players who use the default last-4 PIN.
+     */
+    enabled?: boolean | null;
+    allowSelfVote?: boolean | null;
+    /**
+     * From highest to lowest, at most 5, for example 3,2,1. Changing this changes every total, including past games.
+     */
+    ballotValues?: string | null;
+    /**
+     * Ties are first split by the most top votes. This also rewards players who played fewer games, so it is off by default.
+     */
+    tieBreakFewestGames?: boolean | null;
+    voteWindowDays?: number | null;
+    editWindowHours?: number | null;
+    /**
+     * A game with fewer votes counts nowhere, so a total cannot point at one voter. About 40% of the players in a typical game is a good number; fewer than 3 is not allowed.
+     */
+    minBallotsToCount?: number | null;
+    /**
+     * Shows season totals of games whose voting has closed. Never shows who voted for whom or how a single game went.
+     */
+    publicLeaderboard?: boolean | null;
+    publicScope?: ('club' | 'grade' | 'both') | null;
+    publicShowBreakdown?: boolean | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3213,6 +3311,20 @@ export interface SelectionSettingsSelect<T extends boolean = true> {
   defaultXiSize?: T;
   publishBattingOrder?: T;
   announceOnPublish?: T;
+  votes?:
+    | T
+    | {
+        enabled?: T;
+        allowSelfVote?: T;
+        ballotValues?: T;
+        tieBreakFewestGames?: T;
+        voteWindowDays?: T;
+        editWindowHours?: T;
+        minBallotsToCount?: T;
+        publicLeaderboard?: T;
+        publicScope?: T;
+        publicShowBreakdown?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

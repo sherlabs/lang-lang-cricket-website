@@ -34,6 +34,7 @@ import { PlayerSelectionProfiles } from './payload/collections/PlayerSelectionPr
 import { SelectionFixtures } from './payload/collections/SelectionFixtures'
 import { SquadMembers, Squads } from './payload/collections/Squads'
 import { TeamSheets } from './payload/collections/TeamSheets'
+import { BestPlayerBallots } from './payload/collections/BestPlayerBallots'
 import { SavedReports } from './payload/collections/SavedReports'
 import { Players } from './payload/collections/Players'
 import { PlayerSponsors } from './payload/collections/PlayerSponsors'
@@ -92,7 +93,7 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

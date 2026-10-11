@@ -73,7 +73,7 @@ export const internalCollections: string[] = ['matches', 'match-innings', 'match
  * rows in the admin. Hidden from the sidebar for every role, absent from both menus, and over REST readable by admins and editors
  * only (a selector is denied exactly like an anonymous visitor). `tests/admin-visibility.test.ts` enforces all of it.
  */
-export const selectionCollections: string[] = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets']
+export const selectionCollections: string[] = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets', 'best-player-ballots']
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {

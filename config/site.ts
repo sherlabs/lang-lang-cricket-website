@@ -161,3 +161,30 @@ export const AVAILABILITY = {
   unknownNameBuckets: 64,
 } as const
 export const availabilityPath = (token: string): string => `/availability/${token}`
+
+/**
+ * Best-player votes (wave B spec 3). `label` is the club's word for the award ("Best player", "Player of the match"); env
+ * `VOTE_LABEL` overrides it per club. The rest are fixed limits: the ballot, the window and the minimum are settings
+ * (`selection-settings`), these are only the guard rails around them.
+ */
+export const VOTES = {
+  label: env.VOTE_LABEL?.trim() || 'Best player',
+  /** At most this many values on a ballot (for example 3-2-1 or 5-3-2-1). */
+  maxPlaces: 5,
+  /** `minBallotsToCount` never goes below this: fewer ballots would let a total point at one voter. */
+  minBallotsFloor: 3,
+  /** Throttle caps (hits per hour). A clubhouse shares one link and one Wi-Fi address, so link and address are generous. */
+  perPlayerPerHour: 20,
+  perLinkPerHour: 600,
+  perIpPerHour: 120,
+  /** Races and the presenter show this many players. */
+  chartTop: 5,
+} as const
+export const votePaths = {
+  selector: '/selector/votes',
+  settings: '/selector/votes/settings',
+  fixture: (id: number | string) => `/selector/votes/${id}`,
+  present: '/selector/present/votes',
+  publicBoard: '/votes',
+  vote: (token: string, fixtureId: number | string) => `/availability/${token}/vote/${fixtureId}`,
+} as const

@@ -110,10 +110,12 @@ describe('every collection and global is classified (new ones fail here until th
         expect(e.admin.hidden, `${e.slug} must be admin.hidden === true`).toBe(true)
         const access = (e as { access?: Record<string, (a: { req: { user: unknown } }) => unknown> }).access!
         const codeOnly = e.slug === 'selection-fixtures'
+        // Ballots are private: not even an admin can read or write one over REST or in the admin (wave B spec 3.3).
+        const sealed = e.slug === 'best-player-ballots'
         for (const op of ['read', 'create', 'update', 'delete']) {
           const writes = op !== 'read'
-          expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} by an admin`).toBe(!(writes && codeOnly))
-          expect(access[op]({ req: { user: editor } }), `${e.slug} ${op} by an editor`).toBe(!(writes && codeOnly))
+          expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} by an admin`).toBe(sealed ? false : !(writes && codeOnly))
+          expect(access[op]({ req: { user: editor } }), `${e.slug} ${op} by an editor`).toBe(sealed ? false : !(writes && codeOnly))
           expect(access[op]({ req: { user: { id: 3, role: 'selector' } } }), `${e.slug} ${op} by a selector`).toBe(false)
           expect(access[op]({ req: { user: { id: 2, role: 'editor', disabled: true } } }), `${e.slug} ${op} by a disabled editor`).toBe(false)
           expect(access[op]({ req: { user: undefined } }), `${e.slug} ${op} anonymous`).toBe(false)

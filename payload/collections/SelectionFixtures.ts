@@ -1,5 +1,5 @@
 import { nobody } from '../access'
-import { selectionCollection } from './selectionCollection'
+import { codeOnlyAccess, selectionCollection } from './selectionCollection'
 
 /**
  * A durable copy of the club's upcoming senior games (announce-teams spec 4.3). PlayHQ is the source; `lib/selection-fixtures.ts`
@@ -31,6 +31,8 @@ export const SelectionFixtures = selectionCollection({
     { name: 'isHome', type: 'checkbox', defaultValue: false },
     { name: 'status', type: 'select', required: true, defaultValue: 'upcoming', index: true, options: [{ label: 'Upcoming', value: 'upcoming' }, { label: 'Final', value: 'final' }, { label: 'Removed', value: 'removed' }] },
     { name: 'syncedAt', type: 'date' },
+    { name: 'votesState', type: 'select', defaultValue: 'auto', options: [{ label: 'Automatic (open for the voting window)', value: 'auto' }, { label: 'Open', value: 'open' }, { label: 'Closed', value: 'closed' }], access: codeOnlyAccess, admin: { description: 'Best-player voting for this game. Changed from the selector area (Votes).' } },
+    { name: 'countsForAwards', type: 'checkbox', defaultValue: true, access: codeOnlyAccess, admin: { description: 'Untick for a game that should not count towards the awards (for example a washed-out game).' } },
     { name: 'movedAt', type: 'date', admin: { description: 'When PlayHQ last changed the day, time or venue of this game.' } },
   ],
 })
