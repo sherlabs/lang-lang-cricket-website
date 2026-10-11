@@ -25,5 +25,7 @@ describe('clientIp', () => {
   it('never uses x-forwarded-for', () => {
     expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9' }), { VERCEL: '1' })).toBeNull()
     expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9' }), {})).toBeNull()
+    expect(clientIp(h({ 'cf-connecting-ip': '7.7.7.7' }), { TRUSTED_IP_HEADER: 'CF-Connecting-IP' })).toBe('7.7.7.7')
+    expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9' }), { TRUSTED_IP_HEADER: 'cf-connecting-ip' })).toBeNull()
   })
 })

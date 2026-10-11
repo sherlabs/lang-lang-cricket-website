@@ -5,12 +5,13 @@ import { useMemo, useState, useTransition } from 'react'
 import { ANSWER_DOT, ANSWER_LABEL, tally, type Answer } from '@/lib/availability'
 import { formatLocalDate, formatLocalTime } from '@/lib/playhq/format'
 import { formatPhone, telHref } from '@/lib/selection/phone'
+import { ROLE_LABEL } from '@/lib/selection/roles'
 import type { AvailabilityBoard } from '@/lib/selector-availability-queries'
 import { setAnswerAction } from '@/app/(frontend)/selector/board-actions'
 import { field } from './styles'
 
 const ORDER = ['in', 'maybe', 'out'] as const
-const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-emerald-600 text-white', maybe: 'bg-amber-500 text-brand-black', out: 'bg-red-600 text-white' }
+const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-emerald-700 text-white', maybe: 'bg-amber-500 text-brand-black', out: 'bg-red-700 text-white' }
 const CELL: Record<Answer, string> = { in: 'bg-emerald-100 text-emerald-900', maybe: 'bg-amber-100 text-amber-900', out: 'bg-red-100 text-red-900', none: 'bg-brand-stone/60 text-brand-grey' }
 
 type Props = { board: Pick<AvailabilityBoard, 'fixtures' | 'players'>; country: string }
@@ -51,15 +52,15 @@ export function AvailabilityBoardView({ board, country }: Props) {
 
   return (
     <div>
-      <div role="tablist" aria-label="Games" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
+      <div role="group" aria-label="Games" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
         {board.fixtures.map((f) => {
           const ft = tallies[f.id]
           const on = f.id === fixture.id
           return (
-            <button key={f.id} type="button" role="tab" aria-selected={on} onClick={() => setSelected(f.id)} className={`min-h-14 shrink-0 rounded-lg px-3 py-2 text-left text-sm ${on ? 'bg-brand-black text-white' : 'border border-brand-black/20 bg-white text-brand-black'}`}>
+            <button key={f.id} type="button" aria-pressed={on} onClick={() => setSelected(f.id)} className={`min-h-14 shrink-0 rounded-lg px-3 py-2 text-left text-sm ${on ? 'bg-brand-black text-white' : 'border border-brand-black/20 bg-white text-brand-black'}`}>
               <span className="block font-semibold">{formatLocalDate(f.localDate, { weekday: true }).replace(/ \d{4}$/, '')}</span>
-              <span className="block max-w-[10rem] truncate opacity-80">v {f.opponentName}</span>
-              <span className="block text-xs opacity-80">{ft.in} in · {ft.maybe} maybe · {ft.out} out · {ft.none} no reply</span>
+              <span className="block max-w-[10rem] truncate">v {f.opponentName}</span>
+              <span className="block text-xs">{ft.in} in · {ft.maybe} maybe · {ft.out} out · {ft.none} no reply</span>
             </button>
           )
         })}
@@ -93,7 +94,7 @@ export function AvailabilityBoardView({ board, country }: Props) {
                   <div className="min-w-0">
                     <Link href={`/selector/players/${p.slug}`} className="block truncate font-semibold text-brand-black underline-offset-4 hover:underline">{p.name}</Link>
                     <p className="text-xs text-brand-grey">
-                      {p.role ? `${p.role} · ` : ''}
+                      {p.role ? `${ROLE_LABEL[p.role]} · ` : ''}
                       {current === 'none' ? 'No reply' : `Said ${ANSWER_LABEL[current].toLowerCase()}`}
                       {p.notes[fixture.id] ? ` · "${p.notes[fixture.id]}"` : ''}
                     </p>
@@ -104,11 +105,11 @@ export function AvailabilityBoardView({ board, country }: Props) {
                     <span className="text-xs text-brand-grey">No phone</span>
                   )}
                 </div>
-                <div role="radiogroup" aria-label={`Availability for ${p.name}`} className="mt-3 grid grid-cols-3 gap-2">
+                <div role="group" aria-label={`Availability for ${p.name}`} className="mt-3 grid grid-cols-3 gap-2">
                   {ORDER.map((s) => {
                     const on = current === s
                     return (
-                      <button key={s} type="button" role="radio" aria-checked={on} onClick={() => set(p.id, fixture.id, on ? 'none' : s)} className={`min-h-11 rounded-lg px-2 text-sm font-semibold ${on ? ON[s] : 'bg-white text-brand-black ring-1 ring-brand-black/20'}`}>
+                      <button key={s} type="button" aria-pressed={on} onClick={() => set(p.id, fixture.id, on ? 'none' : s)} className={`min-h-11 rounded-lg px-2 text-sm font-semibold ${on ? ON[s] : 'bg-white text-brand-black ring-1 ring-brand-black/20'}`}>
                         {ANSWER_LABEL[s]}
                       </button>
                     )

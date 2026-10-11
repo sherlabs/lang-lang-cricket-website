@@ -30,9 +30,14 @@ export function nameBucket(normalisedName: string, buckets: number = AVAILABILIT
 /** Known and unknown names look the same to the caller; only the key differs (the key itself is hashed before storage). */
 export const nameKey = (linkVersion: number, normalisedName: string, known: boolean): string =>
   known ? `avail:link:${linkVersion}:name:${normalisedName}` : `avail:link:${linkVersion}:bucket:${nameBucket(normalisedName)}`
+/**
+ * One counter per player (not per typed spelling): a player matches several spellings, and two players of one name share a
+ * spelling, so a spelling key would let guesses be multiplied or let one player's good login wipe another's counter.
+ */
+export const playerKey = (linkVersion: number, playerId: number): string => `avail:link:${linkVersion}:player:${playerId}`
 /** Same shape as `nameKey`, on the separate one-time-code counter. */
 export const codeKey = (linkVersion: number, normalisedName: string, known: boolean): string => `${nameKey(linkVersion, normalisedName, known)}:code`
 export const globalKey = (linkVersion: number): string => `avail:link:${linkVersion}:all`
 
-export const LOCKED_MESSAGE = 'Too many tries. Please try again later or ask a selector.'
-export const NO_MATCH_MESSAGE = 'We could not match those details.'
+export const LOCKED_MESSAGE = 'Too many tries. Please wait at least 15 minutes and try again, or ask a selector for a one-time code.'
+export const NO_MATCH_MESSAGE = 'Check your name and PIN, or ask a selector for a one-time code.'

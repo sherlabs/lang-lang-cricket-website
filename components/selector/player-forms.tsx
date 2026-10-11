@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import type { FormState } from '@/lib/selector-form-state'
 import type { ProfileView } from '@/lib/selector-profile-queries'
 import { btnPrimary, btnQuiet, field } from './styles'
+import { CopyButton } from './ui'
 
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>
 
@@ -57,6 +58,13 @@ export function CodeForm({ action, playerId, active }: { action: Action; playerI
       <input type="hidden" name="playerId" value={playerId} />
       <p className="text-sm text-brand-grey">If the player has forgotten their PIN or is locked out, give them a one-time code to type instead. It works once, for 24 hours.{active ? ' One is already waiting; making another replaces it.' : ''}</p>
       <Msg state={state} />
+      {state.secret && (
+        <div className="rounded-lg bg-white p-3 ring-1 ring-brand-black/20">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-grey">One-time code</p>
+          <p className="mt-1 select-all break-all font-mono text-3xl font-bold tracking-widest text-brand-black" aria-label={`One-time code ${state.secret.split('').join(' ')}`}>{state.secret}</p>
+          <div className="mt-2"><CopyButton text={state.secret} label="Copy code" /></div>
+        </div>
+      )}
       <button type="submit" className={btnQuiet} disabled={pending}>{pending ? 'Making...' : 'Make a one-time code'}</button>
     </form>
   )

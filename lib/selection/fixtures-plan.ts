@@ -108,7 +108,7 @@ export function planFixtureUpsert(incoming: readonly FixtureInput[], stored: rea
     const data: Partial<FixtureInput> = {}
     for (const f of FIELDS) if (norm(old[f]) !== norm(g[f])) (data as Record<string, unknown>)[f] = g[f]
     if (Object.keys(data).length === 0) plan.kept += 1
-    else plan.update.push({ id: old.id, data, moved: 'localDate' in data || 'localTime' in data || 'venueName' in data })
+    else plan.update.push({ id: old.id, data, moved: 'localDate' in data || 'localTime' in data || 'venueName' in data || 'venueSuburb' in data })
   }
   for (const s of stored) if (!seen.has(s.gameId) && s.status === 'upcoming') plan.remove.push(s.id)
   return plan

@@ -88,7 +88,7 @@ export async function savePhone(user: TypedUser, playerId: number, raw: string):
   const trimmed = raw.trim()
   if (!trimmed) {
     const data: Record<string, unknown> = { phone: null }
-    if (row.pinSource !== 'manual') Object.assign(data, { pinHash: null, pinSalt: null, pinSource: null, pinSetAt: null })
+    if (row.pinSource !== 'manual') Object.assign(data, { pinHash: null, pinSalt: null, pinSource: null, pinSetAt: new Date().toISOString() })
     await payload.update({ collection: 'player-selection-profiles', id: row.id, data: data as never, overrideAccess: true, context: CTX })
     return { ok: true }
   }
@@ -129,7 +129,7 @@ export async function clearManualPin(user: TypedUser, playerId: number): Promise
     const { hash, salt } = await hashPin(pin)
     await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { pinHash: hash, pinSalt: salt, pinSource: 'phone', pinSetAt: new Date().toISOString() } as never, overrideAccess: true, context: CTX })
   } else {
-    await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { pinHash: null, pinSalt: null, pinSource: null, pinSetAt: null } as never, overrideAccess: true, context: CTX })
+    await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { pinHash: null, pinSalt: null, pinSource: null, pinSetAt: new Date().toISOString() } as never, overrideAccess: true, context: CTX })
   }
   return { ok: true }
 }
@@ -141,7 +141,7 @@ export async function issueOneTimeCode(user: TypedUser, playerId: number): Promi
   const row = await ensureRow(payload, playerId)
   const code = newOneTimeCode()
   const expires = new Date(Date.now() + AVAILABILITY.oneTimeCodeHours * 3_600_000).toISOString()
-  await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { otcHash: hashOneTimeCode(code), otcExpiresAt: expires } as never, overrideAccess: true, context: CTX })
+  await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { otcHash: hashOneTimeCode(code), otcExpiresAt: expires, pinSetAt: new Date().toISOString() } as never, overrideAccess: true, context: CTX })
   return code
 }
 

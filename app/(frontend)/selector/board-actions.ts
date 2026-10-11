@@ -75,7 +75,7 @@ export async function issueCodeAction(_prev: FormState, formData: FormData): Pro
   if (playerId == null) return { error: 'Something went wrong. Please try again.' }
   const code = await issueOneTimeCode(user, playerId)
   // Shown once, here only. It works once, for 24 hours, instead of the PIN.
-  return { ok: `One-time code: ${code}. Give it to the player to type in place of the PIN. It works once, for 24 hours, and is not shown again.` }
+  return { ok: 'Give this code to the player to type in place of the PIN. It works once, for 24 hours, and is not shown again.', secret: code }
 }
 
 export async function saveFieldsAction(_prev: FormState, formData: FormData): Promise<FormState> {

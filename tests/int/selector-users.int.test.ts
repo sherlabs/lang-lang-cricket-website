@@ -136,6 +136,17 @@ describe('selector users: privilege escalation, passwords, sessions, hidden fiel
       expect((await rest('POST', '/users/login', { body: { email: 'sel@example.com', password: 'brand-new-pass-1' } })).status).toBe(200)
       expect((await rest('POST', '/users/login', { body: { email: 'sel@example.com', password: PASS } })).status).not.toBe(200)
     })
+    it('the current-password check does not look like a sign-in: the last sign-in method and time are left alone', async () => {
+      const stamp = '2026-01-02T03:04:05.000Z'
+      await payload.db.updateOne({ collection: 'users', id: selector.id, data: { lastLoginAt: stamp, lastLoginMethod: 'facebook' }, returning: false })
+      const login = await rest('POST', '/users/login', { body: { email: 'sel@example.com', password: 'brand-new-pass-1' } })
+      await payload.db.updateOne({ collection: 'users', id: selector.id, data: { lastLoginAt: stamp, lastLoginMethod: 'facebook' }, returning: false })
+      const ok = await rest('PATCH', `/users/${selector.id}`, { token: login.json.token, body: { password: 'brand-new-pass-2', currentPassword: 'brand-new-pass-1' } })
+      expect(ok.status).toBe(200)
+      const row = (await payload.db.findOne({ collection: 'users', where: { id: { equals: selector.id } } })) as unknown as { lastLoginMethod?: string; lastLoginAt?: string }
+      expect(row.lastLoginMethod).toBe('facebook')
+      expect(new Date(row.lastLoginAt!).toISOString()).toBe(stamp)
+    })
   })
 
   describe('sessions', () => {

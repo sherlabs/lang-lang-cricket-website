@@ -73,3 +73,12 @@ describe('planFixtureUpsert', () => {
     expect(plan).toMatchObject({ create: [], skippedOutOfWindow: 1 })
   })
 })
+
+describe('planFixtureUpsert moved flag', () => {
+  it('flags a venue suburb change as moved but not a result or opponent change', () => {
+    const moved = planFixtureUpsert([fixture({ venueSuburb: 'Elsewhere' })], [stored()], '2026-10-05')
+    expect(moved.update[0].moved).toBe(true)
+    const final = planFixtureUpsert([fixture({ status: 'final', opponentName: 'Renamed FC' })], [stored()], '2026-10-05')
+    expect(final.update[0].moved).toBe(false)
+  })
+})

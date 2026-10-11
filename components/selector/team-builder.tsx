@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { ANSWER_DOT, ANSWER_LABEL, type Answer } from '@/lib/availability'
 import { ROLE_LABEL } from '@/lib/selection/roles'
 import { SIZE_LABEL, validateGuestName, XI_SIZES, type XiSize } from '@/lib/selection/team-sheet'
@@ -51,10 +51,12 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
   const [ready, setReady] = useState(view.markedReady)
   const [revision, setRevision] = useState(view.revision)
   const [dirty, setDirty] = useState(false)
-  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string; stale?: boolean } | null>(null)
+  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string; stale?: boolean; toShare?: boolean } | null>(null)
   const [pending, startTransition] = useTransition()
   const [adding, setAdding] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [confirmOut, setConfirmOut] = useState<Builder['candidates'][number] | null>(null)
+  const scrollToShare = useRef(false)
   const [guest, setGuest] = useState('')
   const [guestError, setGuestError] = useState('')
   const [acknowledged, setAcknowledged] = useState(false)
@@ -86,7 +88,8 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
   const toggleCaptain = (i: number) => change(rows.map((r, n) => ({ ...r, isCaptain: n === i ? !r.isCaptain : false })))
   const toggleKeeper = (i: number) => change(rows.map((r, n) => ({ ...r, isKeeper: n === i ? !r.isKeeper : false })))
   const addCandidate = (c: Builder['candidates'][number]) => {
-    if (c.answer === 'out' && !window.confirm(`${c.name} said they are out for this game. Add them anyway?`)) return
+    if (c.answer === 'out' && confirmOut?.id !== c.id) return setConfirmOut(c)
+    setConfirmOut(null)
     change([...rows, { key: `p:${c.id}`, playerId: c.id, guestName: null, name: c.name, slug: c.slug, isCaptain: false, isKeeper: false, hidden: c.hidden, missing: false, role: c.role, batting: c.batting, bowling: c.bowling, answer: c.answer, alsoPickedIn: null }])
   }
   const addGuest = () => {
@@ -134,11 +137,27 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
         return setMessage({ tone: 'error', text: res.error })
       }
       setConfirming(false)
-      setMessage({ tone: 'ok', text: 'Teams published. Share the post and picture below.' })
+      setMessage({ tone: 'ok', text: 'Teams published.', toShare: true })
+      scrollToShare.current = true
       router.refresh()
     })
 
   const nonBlocking = warnings.filter((w) => !w.blocking)
+  const goToShare = () => {
+    const el = document.getElementById('share')
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.focus({ preventScroll: true })
+  }
+  // The share section appears after the refresh that follows a publish: bring it into view once it is there.
+  useEffect(() => {
+    if (scrollToShare.current && view.publishCount > 0) {
+      scrollToShare.current = false
+      goToShare()
+    }
+  }, [view.publishCount])
+  const publishBlockedBy = rows.length === 0 ? 'Pick at least one player before publishing.' : blocking[0]?.text ?? ''
+  const notReadyBecause = ready && status !== 'ready' ? (status === 'needs-attention' ? 'Marked ready, but this team needs attention first (see the warnings above).' : 'Marked ready, but it also needs a full team, a captain (C) and a wicketkeeper (WK) to count as Ready.') : ''
 
   return (
     <div className="pb-28 sm:pb-24">
@@ -210,22 +229,33 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={() => setAdding(true)} className={btnQuiet}>Add players</button>
-        <Link href={`/selector/teams/${gameId}/preview-image`} target="_blank" className={btnQuiet}>Preview picture</Link>
+        {dirty ? (
+          <span className="inline-flex flex-col">
+            <button type="button" disabled className={btnQuiet}>Preview picture</button>
+            <span className="mt-1 text-xs text-brand-grey">Save first: the picture shows the saved team.</span>
+          </span>
+        ) : (
+          <Link href={`/selector/teams/${gameId}/preview-image`} target="_blank" className={btnQuiet}>Preview picture</Link>
+        )}
       </div>
 
       {message && (
         <p role={message.tone === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-lg px-3 py-2 text-sm ring-1 ${message.tone === 'error' ? 'bg-red-50 text-red-900 ring-red-200' : 'bg-emerald-50 text-emerald-900 ring-emerald-200'}`}>
           {message.text}{' '}
+          {message.toShare && <button type="button" className="font-semibold underline" onClick={goToShare}>Go to the picture and Facebook post</button>}
           {message.stale && <button type="button" className="font-semibold underline" onClick={() => window.location.reload()}>Reload</button>}
         </p>
       )}
 
       <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 -mx-4 mt-6 border-t border-brand-black/10 bg-white/95 px-4 py-3 backdrop-blur sm:bottom-0">
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={onSave} disabled={pending || !dirty} className={dirty ? btnPrimary : btnQuiet}>{pending ? 'Saving…' : 'Save'}</button>
+          <button type="button" onClick={onSave} disabled={pending} className={dirty ? btnPrimary : btnQuiet}>{pending ? 'Saving…' : 'Save'}</button>
           <button type="button" onClick={onReady} disabled={pending || rows.length === 0} aria-pressed={ready} className={btnQuiet}>{ready ? 'Marked ready' : 'Mark ready'}</button>
-          <button type="button" onClick={onPublishClick} disabled={pending || rows.length === 0 || blocking.length > 0} className={`${btn} bg-brand-black text-brand-gold hover:bg-brand-charcoal ml-auto`}>{chip ? 'Publish changes' : 'Publish teams'}</button>
+          <button type="button" onClick={onPublishClick} disabled={pending || rows.length === 0 || blocking.length > 0} aria-describedby={publishBlockedBy ? 'publish-blocked' : undefined} className={`${btn} bg-brand-black text-brand-gold hover:bg-brand-charcoal ml-auto`}>{chip ? 'Publish changes' : 'Publish teams'}</button>
         </div>
+        {publishBlockedBy && <p id="publish-blocked" className="mt-2 text-sm font-semibold text-red-800">Cannot publish yet: {publishBlockedBy}</p>}
+        <p className="mt-2 text-xs text-brand-grey">Save keeps your work. Mark ready says you are happy with this team; it lets “Publish all ready” include it and does not publish anything. Publishing makes the team public.</p>
+        {notReadyBecause && <p className="mt-1 text-xs font-semibold text-brand-gold-deep">{notReadyBecause}</p>}
       </div>
 
       <Sheet open={adding} title="Add players" onClose={() => setAdding(false)}>
@@ -240,7 +270,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
                   {list.map((c) => {
                     const picked = rows.some((r) => r.playerId === c.id)
                     return (
-                      <li key={c.id} className={`flex items-center gap-3 rounded-lg p-2 ring-1 ring-brand-black/10 ${g.answer === 'out' ? 'opacity-60' : ''}`}>
+                      <li key={c.id} className="flex items-center gap-3 rounded-lg p-2 ring-1 ring-brand-black/10">
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-semibold text-brand-black">{c.name}</p>
                           <p className="text-xs text-brand-grey">{ROLE_LABEL[c.role]} · Bat: {c.batting || 'No data'} · Bowl: {c.bowling || 'No data'}</p>
@@ -265,6 +295,16 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
             </div>
             {guestError && <p role="alert" className="mt-1 text-sm text-red-800">{guestError}</p>}
           </section>
+        </div>
+      </Sheet>
+
+      <Sheet open={confirmOut != null} title="Add someone who is out?" onClose={() => setConfirmOut(null)}>
+        <div className="space-y-4">
+          <p className="text-brand-charcoal">{confirmOut?.name} said they are out for this game. Add them anyway?</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => confirmOut && addCandidate(confirmOut)} className={`${btn} bg-brand-black text-brand-gold hover:bg-brand-charcoal`}>Add anyway</button>
+            <button type="button" onClick={() => setConfirmOut(null)} className={btnQuiet}>Cancel</button>
+          </div>
         </div>
       </Sheet>
 

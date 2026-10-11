@@ -37,7 +37,7 @@ export async function refreshSelectionFixtures(payload: Payload, opts: { source?
   const ctx = { disableRevalidate: true }
   const syncedAt = now.toISOString()
   for (const row of plan.create) await payload.create({ collection: 'selection-fixtures', data: { ...row, syncedAt } as never, overrideAccess: true, context: ctx })
-  for (const u of plan.update) await payload.update({ collection: 'selection-fixtures', id: u.id, data: { ...u.data, syncedAt } as never, overrideAccess: true, context: ctx })
+  for (const u of plan.update) await payload.update({ collection: 'selection-fixtures', id: u.id, data: { ...u.data, syncedAt, ...(u.moved ? { movedAt: syncedAt } : {}) } as never, overrideAccess: true, context: ctx })
   for (const id of plan.remove) await payload.update({ collection: 'selection-fixtures', id, data: { status: 'removed', syncedAt } as never, overrideAccess: true, context: ctx })
   return { created: plan.create.length, updated: plan.update.length, moved: plan.update.filter((u) => u.moved).length, removed: plan.remove.length, kept: plan.kept, skipped: plan.skippedOutOfWindow }
 }

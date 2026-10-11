@@ -32,7 +32,8 @@ import { readPublishedTeams, type PublicTeam } from '@/lib/teams-queries'
  */
 const CTX = { disableRevalidate: true } as const
 
-type FixtureStamped = FixtureRow & { updatedAt?: string | null }
+/** `movedAt` is when PlayHQ last changed the game's day, time or venue (not any other change, such as the result). */
+type FixtureStamped = FixtureRow & { movedAt?: string | null }
 type SheetDoc = {
   id: number
   fixture: unknown
@@ -149,7 +150,7 @@ async function buildViews(payload: Payload, user: TypedUser, fixtures: readonly 
     warnSlots.forEach((w, i) => {
       views[i].alsoPickedIn = w.alsoPickedIn ?? null
     })
-    const moved = Boolean(doc && slots.length && (fx as FixtureStamped).updatedAt && doc.updatedAt && new Date((fx as FixtureStamped).updatedAt!).getTime() > new Date(doc.updatedAt).getTime())
+    const moved = Boolean(doc && slots.length && (fx as FixtureStamped).movedAt && doc.updatedAt && new Date((fx as FixtureStamped).movedAt!).getTime() > new Date(doc.updatedAt).getTime())
     const warnings = teamWarnings({ slots: warnSlots, size, fixtureStatus: fx.status, fixtureMovedSinceSave: moved })
     const markedReady = Boolean(doc?.markedReady)
     const chip = publishChip({ slots, size }, snapshot)
@@ -395,11 +396,25 @@ export async function saveSheet(user: TypedUser, input: SaveInput): Promise<Save
       return { ok: false, error: STALE, stale: true }
     }
   }
-  // Claim the next revision atomically: of two saves that started from the same revision, exactly one gets the row.
-  const claimed = await payload.db.drizzle.execute(sql`UPDATE "payload"."team_sheets" SET "revision" = "revision" + 1 WHERE "id" = ${existing.id} AND "revision" = ${expected} RETURNING "revision"`)
-  if (!claimed.rows.length) return { ok: false, error: STALE, stale: true }
-  await payload.update({ collection: 'team-sheets', id: existing.id, data: data as never, user: user as never, overrideAccess: true, context: CTX })
-  return { ok: true, revision: Number((claimed.rows[0] as { revision: string | number }).revision) }
+  // Claim the next revision and write the slots in ONE transaction: the claim takes the row lock, so of two saves that started from
+  // the same revision exactly one gets the row, and a publish reading meanwhile sees the old revision with the old slots or the new
+  // revision with the new slots, never a mix.
+  const req = await createLocalReq({ user: user as never }, payload)
+  try {
+    await initTransaction(req)
+    const session = (payload.db as unknown as { sessions?: Record<string, { db: typeof payload.db.drizzle }> }).sessions?.[String(await req.transactionID)]
+    const claimed = await (session?.db ?? payload.db.drizzle).execute(sql`UPDATE "payload"."team_sheets" SET "revision" = "revision" + 1 WHERE "id" = ${existing.id} AND "revision" = ${expected} RETURNING "revision"`)
+    if (!claimed.rows.length) {
+      await killTransaction(req)
+      return { ok: false, error: STALE, stale: true }
+    }
+    await payload.update({ collection: 'team-sheets', id: existing.id, data: data as never, user: user as never, overrideAccess: true, context: CTX, req })
+    await commitTransaction(req)
+    return { ok: true, revision: Number((claimed.rows[0] as { revision: string | number }).revision) }
+  } catch (err) {
+    await killTransaction(req)
+    throw err
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -470,7 +485,7 @@ export async function publishSheets(user: TypedUser, input: PublishInput): Promi
     for (const key of keys) {
       const changes = fixtures.filter((f) => weekendKey(f.localDate) === key && views.get(f.id)!.changes.length > 0).map((f) => f.gradeName)
       const wasRepublish = fixtures.some((f) => weekendKey(f.localDate) === key && views.get(f.id)!.publishCount > 0)
-      announcementId = (await upsertWeekendAnnouncement(payload, key, { updated: wasRepublish, changes })) ?? announcementId
+      announcementId = (await upsertWeekendAnnouncement(payload, key, { updated: wasRepublish && changes.length > 0, changes })) ?? announcementId
     }
     }
   } catch (err) {

@@ -37,11 +37,11 @@ export const effectiveRole = (stored: Role | null | undefined, suggested: RoleOr
 
 export type BalanceCounts = { batters: number; bowlers: number; keepers: number; unknown: number }
 
-/** Batters count batters and all-rounders; bowlers count bowlers and all-rounders; a tagged keeper counts as a keeper. */
+/** Batters count batters, all-rounders and keepers (a wicketkeeper bats); bowlers count bowlers and all-rounders; a keeper role or a WK tag counts as a keeper. */
 export function balanceCounts(players: readonly { role: RoleOrUnknown; isKeeper?: boolean }[]): BalanceCounts {
   const out: BalanceCounts = { batters: 0, bowlers: 0, keepers: 0, unknown: 0 }
   for (const p of players) {
-    if (p.role === 'batter' || p.role === 'all-rounder') out.batters += 1
+    if (p.role === 'batter' || p.role === 'all-rounder' || p.role === 'keeper') out.batters += 1
     if (p.role === 'bowler' || p.role === 'all-rounder') out.bowlers += 1
     if (p.role === 'keeper' || p.isKeeper) out.keepers += 1
     if (p.role === 'unknown') out.unknown += 1

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import { ANSWER_DOT, ANSWER_LABEL } from '@/lib/availability'
 import { formatLocalDate } from '@/lib/playhq/format'
+import { ROLE_LABEL } from '@/lib/selection/roles'
 import { RECENCY_LABEL, type Recency } from '@/lib/selection/squad-seed'
 import type { Candidate, GradeBoard, SeedPreview, SquadCard } from '@/lib/selector-squad-queries'
 import { addMembersAction, applySeedAction, moveMemberAction, previewSeedAction, removeMemberAction, searchCandidatesAction } from '@/app/(frontend)/selector/board-actions'
@@ -58,7 +59,7 @@ export function SquadGradeView({ grade, others }: Props) {
                 <div className="min-w-0">
                   <Link href={`/selector/players/${c.slug}`} className="block truncate font-semibold text-brand-black underline-offset-4 hover:underline">{c.name}</Link>
                   <p className="mt-0.5 text-xs text-brand-grey">
-                    {c.role ?? 'Role not set'} · {c.games} {c.games === 1 ? 'game' : 'games'} this season · {RECENCY_LABEL[c.recency]}
+                    {ROLE_LABEL[c.role ?? 'unknown']} · {c.games} {c.games === 1 ? 'game' : 'games'} this season · {RECENCY_LABEL[c.recency]}
                     {c.hidden ? ' · Hidden on the site' : ''}
                   </p>
                 </div>
@@ -122,6 +123,8 @@ function AddSheet({ open, grade, onClose, onAdded }: { open: boolean; grade: Gra
   const [q, setQ] = useState('')
   const [recency, setRecency] = useState<Recency | 'all'>('recent')
   const [found, setFound] = useState<Candidate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchError, setSearchError] = useState('')
   const [picked, setPicked] = useState<Set<number>>(new Set())
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
@@ -130,8 +133,18 @@ function AddSheet({ open, grade, onClose, onAdded }: { open: boolean; grade: Gra
     if (!open) return
     let live = true
     const timer = setTimeout(async () => {
-      const rows = await searchCandidatesAction({ squadId: grade.squadId, q, recency })
-      if (live) setFound(rows)
+      setLoading(true)
+      try {
+        const rows = await searchCandidatesAction({ squadId: grade.squadId, q, recency })
+        if (live) {
+          setFound(rows)
+          setSearchError('')
+        }
+      } catch {
+        if (live) setSearchError('Could not search just now. Check your connection and try again.')
+      } finally {
+        if (live) setLoading(false)
+      }
     }, 250)
     return () => {
       live = false
@@ -161,8 +174,11 @@ function AddSheet({ open, grade, onClose, onAdded }: { open: boolean; grade: Gra
           </select>
         </label>
         {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
-        {found.length === 0 ? (
-          <p className="text-sm text-brand-grey">No players match.</p>
+        {searchError && <p role="alert" className="text-sm text-red-800">{searchError}</p>}
+        {loading && found.length === 0 ? (
+          <p role="status" className="text-sm text-brand-grey">Searching…</p>
+        ) : found.length === 0 ? (
+          <p className="text-sm text-brand-grey">No players match.{recency !== 'all' ? ' Try “Everyone” in the Show list to widen the search.' : ''}</p>
         ) : (
           <ul className="divide-y divide-brand-black/10 rounded-lg ring-1 ring-brand-black/10">
             {found.map((c) => (

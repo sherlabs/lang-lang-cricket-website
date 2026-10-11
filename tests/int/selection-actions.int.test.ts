@@ -139,7 +139,7 @@ describe('selector and availability server actions', () => {
     bad.set('token', 'x'.repeat(43))
     bad.set('name', 'Jo Smith')
     bad.set('pin', '0001')
-    expect(await actions.identifyAction({}, bad)).toEqual({ error: 'We could not match those details.' })
+    expect(await actions.identifyAction({}, bad)).toEqual({ error: 'Check your name and PIN, or ask a selector for a one-time code.' })
   })
 
   it('"Not you? Switch" clears the remembered device', async () => {

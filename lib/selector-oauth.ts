@@ -93,7 +93,7 @@ export async function handleCallback(request: Request, deps: OAuthDeps): Promise
   // 3. An invite carried by the cookie is re-validated NOW, not trusted from /start.
   const back = cookie.invite ? selectorPaths.invite(cookie.invite) : selectorPaths.login
   if (cookie.invite && !(await findInvitee(deps.payload, cookie.invite))) return fail('failed', 'invite no longer open', selectorPaths.login)
-  if (url.searchParams.get('error')) return fail('cancelled', `facebook returned error=${url.searchParams.get('error')}`, back)
+  if (url.searchParams.get('error')) return fail('cancelled', `facebook returned error=${logSafe(url.searchParams.get('error'))}`, back)
   const code = url.searchParams.get('code')
   if (!code || code.length > 2000) return fail('failed', 'no code', back)
 
@@ -175,3 +175,6 @@ export async function handleDataCallback(request: Request, deps: OAuthDeps, kind
   const origin = deps.payload.config.serverURL
   return new Response(JSON.stringify({ url: `${origin}${selectorPaths.facebookDeletionStatus}?code=${confirmation}`, confirmation_code: confirmation }), { status: 200, headers: { 'Content-Type': 'application/json', ...NO_STORE } })
 }
+
+/** A value from the query string, safe to log: control characters removed, 40 characters at most. */
+const logSafe = (v: string | null): string => (v ?? '').replace(/[\u0000-\u001f\u007f-\u009f]/g, '').slice(0, 40)

@@ -35,7 +35,7 @@ export const PlayerSelectionProfiles = selectionCollection({
     { name: 'pinHash', type: 'text', hidden: true, access: codeOnlyAccess },
     { name: 'pinSalt', type: 'text', hidden: true, access: codeOnlyAccess },
     { name: 'pinSource', type: 'select', options: [{ label: 'Last four digits of the phone', value: 'phone' }, { label: 'Set by a selector', value: 'manual' }], access: { create: nobodyField, update: nobodyField } },
-    { name: 'pinSetAt', type: 'date', access: { create: nobodyField, update: nobodyField } },
+    { name: 'pinSetAt', type: 'date', access: { create: nobodyField, update: nobodyField }, admin: { description: 'When the PIN was last set, cleared or reset, or a one-time code was issued. A phone or browser the player signed in on before this must sign in again.' } },
     { name: 'needsManualPin', type: 'checkbox', defaultValue: false, access: { create: nobodyField, update: nobodyField }, admin: { description: 'Set when two players of one name share a PIN, until a selector gives one of them their own.' } },
     { name: 'otcHash', type: 'text', hidden: true, access: codeOnlyAccess },
     { name: 'otcExpiresAt', type: 'date', hidden: true, access: codeOnlyAccess },

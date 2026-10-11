@@ -1,6 +1,7 @@
 import 'server-only'
 import type { Payload, TypedUser } from 'payload'
 import { getPayloadClient } from '@/lib/payload/client'
+import { passwordIsRight } from '@/lib/password-check'
 import { isSelectionUser, isSelectorUser } from '@/payload/access'
 
 /**
@@ -30,12 +31,7 @@ export async function unlinkOwnFacebook(user: TypedUser): Promise<boolean> {
 
 /** True when `current` is this account's password. Counts towards the lockout like a login does. */
 export async function currentPasswordIsRight(payload: Payload, email: string, current: string): Promise<boolean> {
-  try {
-    await payload.login({ collection: 'users', data: { email, password: current } })
-    return true
-  } catch {
-    return false
-  }
+  return passwordIsRight(payload, email, current)
 }
 
 /**

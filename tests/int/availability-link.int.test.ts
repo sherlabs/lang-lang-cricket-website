@@ -153,6 +153,51 @@ describe('availability link', () => {
     expect(await identify(payload, ctx, 'Jo Smith', code)).toEqual({ ok: true, playerId: jo.id })
   })
 
+  it('guesses are counted per player, not per spelling of the name', async () => {
+    await payload.update({ collection: 'players', id: jo.id, data: { preferredName: 'Joey' }, overrideAccess: true, context: { disableRevalidate: true } })
+    const results = []
+    for (const name of ['Jo Smith', 'Joey Smith', 'Jo Smith', 'Joey Smith', 'Jo Smith']) results.push(await identify(payload, ctx, name, `10${results.length}0`))
+    expect(results.slice(0, 4).every((r) => !r.ok && r.message === NO_MATCH_MESSAGE)).toBe(true)
+    expect(results[4]).toEqual({ ok: false, message: LOCKED_MESSAGE })
+  })
+
+  it('one player of a shared name logging in does not clear the other player\'s counter', async () => {
+    const twin = await makePlayer(payload, 'Jo', 'Smith', { slug: 'jo-smith-2' })
+    const squad = (await payload.find({ collection: 'squads', limit: 1, overrideAccess: true })).docs[0]
+    await addToSquad(payload, squad.id, twin.id)
+    await setManualPin(selector, twin.id, '654321')
+    for (const pin of ['1111', '2222', '3333']) expect(await identify(payload, ctx, 'Jo Smith', pin)).toEqual({ ok: false, message: NO_MATCH_MESSAGE })
+    expect(await identify(payload, ctx, 'Jo Smith', '0001')).toEqual({ ok: true, playerId: jo.id })
+    // The twin's counter is at four: one more wrong guess locks it (a shared, cleared counter would let guesses restart).
+    expect(await identify(payload, ctx, 'Jo Smith', '4444')).toEqual({ ok: false, message: LOCKED_MESSAGE })
+  })
+
+  it('a hidden player cannot identify and is not told apart by the answer; a hidden player\'s remembered phone stops working', async () => {
+    const settings = await getSelectionSettings(payload)
+    const cookie = signAvailCookie({ playerId: sam.id, linkVersion: 1, iat: Date.now() })
+    expect((await rememberedPlayer(payload, cookie, settings))?.id).toBe(sam.id)
+    await payload.update({ collection: 'players', id: sam.id, data: { hidden: true }, overrideAccess: true, context: { disableRevalidate: true } })
+    expect(await identify(payload, ctx, 'Sam Jones', '0002')).toEqual({ ok: false, message: NO_MATCH_MESSAGE })
+    expect(await rememberedPlayer(payload, cookie, settings)).toBeNull()
+  })
+
+  it('a PIN reset or a one-time code ends the sign-in of a phone remembered earlier', async () => {
+    const settings = await getSelectionSettings(payload)
+    const fresh = () => signAvailCookie({ playerId: jo.id, linkVersion: 1, iat: Date.now() })
+    const wait = () => new Promise((r) => setTimeout(r, 15))
+    let cookie = fresh()
+    expect((await rememberedPlayer(payload, cookie, settings))?.id).toBe(jo.id)
+    await wait()
+    await setManualPin(selector, jo.id, '123456')
+    expect(await rememberedPlayer(payload, cookie, settings)).toBeNull()
+    await wait()
+    cookie = fresh()
+    expect((await rememberedPlayer(payload, cookie, settings))?.id).toBe(jo.id)
+    await wait()
+    await issueOneTimeCode(selector, jo.id)
+    expect(await rememberedPlayer(payload, cookie, settings)).toBeNull()
+  })
+
   it('lock doubling stops at the one-hour cap', async () => {
     const rule = { limit: 1, windowMs: 60_000, lockMs: 900_000 }
     await hit(payload, 'cap', rule)
@@ -223,7 +268,7 @@ describe('availability link', () => {
     const settings = await getSelectionSettings(payload)
     const view = await playerView(payload, jo.id, settings)
     expect(view?.fixtures[0].closed).toBe(true)
-    expect(await respond(payload, jo.id, { fixtureId: fixtureB.id, status: 'in' }, settings)).toEqual({ ok: false, message: 'Selection has started; call a selector.' })
+    expect(await respond(payload, jo.id, { fixtureId: fixtureB.id, status: 'in' }, settings)).toMatchObject({ ok: false, code: 'closed' })
   })
 
   it('a player in no squad sees no games and cannot answer', async () => {

@@ -23,7 +23,7 @@ describe('suggestRole', () => {
   })
   it('counts batters, bowlers, keepers and unknown', () => {
     const c = balanceCounts([{ role: 'batter' }, { role: 'all-rounder' }, { role: 'bowler' }, { role: 'keeper' }, { role: 'unknown', isKeeper: true }, { role: 'unknown' }])
-    expect(c).toEqual({ batters: 2, bowlers: 2, keepers: 2, unknown: 2 })
+    expect(c).toEqual({ batters: 3, bowlers: 2, keepers: 2, unknown: 2 })
   })
 })
 

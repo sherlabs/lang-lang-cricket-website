@@ -26,6 +26,7 @@ import * as migration_20261004_223250_wp_a_selectors from './20261004_223250_wp_
 import * as migration_20261005_004135_wp_a_password_chosen from './20261005_004135_wp_a_password_chosen';
 import * as migration_20261005_010249_wp_b_availability from './20261005_010249_wp_b_availability';
 import * as migration_20261005_021248_wp_c_selection from './20261005_021248_wp_c_selection';
+import * as migration_20261005_034438_wp_d_fixture_moved_at from './20261005_034438_wp_d_fixture_moved_at';
 
 export const migrations = [
   {
@@ -166,6 +167,11 @@ export const migrations = [
   {
     up: migration_20261005_021248_wp_c_selection.up,
     down: migration_20261005_021248_wp_c_selection.down,
-    name: '20261005_021248_wp_c_selection'
+    name: '20261005_021248_wp_c_selection',
+  },
+  {
+    up: migration_20261005_034438_wp_d_fixture_moved_at.up,
+    down: migration_20261005_034438_wp_d_fixture_moved_at.down,
+    name: '20261005_034438_wp_d_fixture_moved_at'
   },
 ];

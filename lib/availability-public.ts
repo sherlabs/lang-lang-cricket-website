@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 import type { Payload, Where } from 'payload'
 import { AVAILABILITY } from '@/config/site'
 import { changesClosed, cleanNote, isStatus, type Answer, type AvailabilityStatus } from '@/lib/availability'
-import { CODE_RULE, codeKey, globalKey, GLOBAL_RULE, LOCKED_MESSAGE, NAME_RULE, nameKey, NO_MATCH_MESSAGE } from '@/lib/availability-throttle'
+import { CODE_RULE, globalKey, GLOBAL_RULE, LOCKED_MESSAGE, NAME_RULE, nameKey, NO_MATCH_MESSAGE, playerKey } from '@/lib/availability-throttle'
 import { tokenMatches, verifyAvailCookie } from '@/lib/availability-link'
 import { clubToday } from '@/lib/selection-fixtures'
 import { matchPlayers } from '@/lib/selection/name-match'
@@ -29,14 +29,32 @@ export async function resolveLink(payload: Payload, token: string): Promise<Sele
 export async function rememberedPlayer(payload: Payload, cookieValue: string | undefined, settings: SelectionSettingsValues): Promise<PlayerLite | null> {
   const c = verifyAvailCookie(cookieValue)
   if (!c || c.linkVersion !== settings.linkVersion) return null
-  const found = await loadPlayers(payload, [c.playerId])
-  return found.get(c.playerId) ?? null
+  const found = (await loadPlayers(payload, [c.playerId])).get(c.playerId)
+  if (!found || found.hidden) return null
+  // A PIN set or reset, or a one-time code issued, after this device signed in ends the device's sign-in.
+  const profile = (await profilesFor(payload, [c.playerId])).get(c.playerId)
+  if (profile?.pinSetAt && new Date(profile.pinSetAt).getTime() > c.iat) return null
+  return found
 }
 
-type Profile = { id: number; player: number; pinHash?: string | null; pinSalt?: string | null; otcHash?: string | null; otcExpiresAt?: string | null }
+type Profile = { id: number; player: number; pinHash?: string | null; pinSalt?: string | null; otcHash?: string | null; otcExpiresAt?: string | null; pinSetAt?: string | null }
 
-/** Who may identify themselves: members of a current squad and anyone with a profile (a selector has dealt with them). */
+/**
+ * Who may identify themselves: members of a current squad and anyone with a profile (a selector has dealt with them), except
+ * hidden players (so a hidden player's name behaves like an unknown one). Kept for a short while per server instance: identify
+ * is reached without a login, and reading the whole roster on every try would let anyone make the database work for free.
+ * Off under test so a test that adds a player sees them at once.
+ */
+const ROSTER_TTL_MS = 45_000
+let rosterCache: { at: number; payload: Payload; players: PlayerLite[] } | null = null
 async function roster(payload: Payload): Promise<PlayerLite[]> {
+  if (process.env.NODE_ENV !== 'test' && rosterCache && rosterCache.payload === payload && Date.now() - rosterCache.at < ROSTER_TTL_MS) return rosterCache.players
+  const players = await loadRoster(payload)
+  if (process.env.NODE_ENV !== 'test') rosterCache = { at: Date.now(), payload, players }
+  return players
+}
+
+async function loadRoster(payload: Payload): Promise<PlayerLite[]> {
   const { squads } = await currentSquads(payload)
   const bySquad = await membersBySquad(payload, squads.map((s) => s.id))
   const ids = new Set<number>([...bySquad.values()].flat())
@@ -45,14 +63,14 @@ async function roster(payload: Payload): Promise<PlayerLite[]> {
     const id = idOf(p.player)
     if (id != null) ids.add(id)
   }
-  return [...(await loadPlayers(payload, [...ids])).values()]
+  return [...(await loadPlayers(payload, [...ids])).values()].filter((p) => !p.hidden)
 }
 
 async function profilesFor(payload: Payload, playerIds: readonly number[]): Promise<Map<number, Profile>> {
   const out = new Map<number, Profile>()
   if (!playerIds.length) return out
   const res = await payload.find({ collection: 'player-selection-profiles', where: { player: { in: [...playerIds] } }, limit: playerIds.length, pagination: false, depth: 0, showHiddenFields: true, overrideAccess: true })
-  for (const p of res.docs) out.set(idOf(p.player)!, { id: p.id, player: idOf(p.player)!, pinHash: (p as Profile).pinHash, pinSalt: (p as Profile).pinSalt, otcHash: (p as Profile).otcHash, otcExpiresAt: (p as Profile).otcExpiresAt })
+  for (const p of res.docs) out.set(idOf(p.player)!, { id: p.id, player: idOf(p.player)!, pinHash: (p as Profile).pinHash, pinSalt: (p as Profile).pinSalt, otcHash: (p as Profile).otcHash, otcExpiresAt: (p as Profile).otcExpiresAt, pinSetAt: (p as Profile).pinSetAt })
   return out
 }
 
@@ -82,14 +100,18 @@ export async function identify(payload: Payload, ctx: { linkVersion: number; ip:
   const isPin = looksLikePin(secret)
   const candidates = bounded ? matchPlayers(typedName, await roster(payload)) : []
   const known = candidates.length > 0
-  const keyName = nameKey(ctx.linkVersion, normName || '-', known)
+  // Counters are per player, so spelling a name differently gains no extra guesses and one player's good login never clears
+  // another's counter. A name no one has (or too many share) falls back to a name key (unknown names share fixed buckets).
+  const keyBase = candidates.length > 0 && candidates.length <= AVAILABILITY.maxCandidates ? candidates.map((c) => playerKey(ctx.linkVersion, c.id)) : [nameKey(ctx.linkVersion, normName || '-', known)]
 
   // Take the throttle slot BEFORE checking the secret, in one atomic statement: a parallel burst cannot test more guesses than the
   // limit allows, and a correct guess in the burst is refused once the key is locked. A PIN is also stopped by a whole-link pause;
   // a one-time code (issued by a selector) counts on its own key and is not blocked by a lock somebody else caused.
   if (isPin && (await isLocked(payload, globalKey(ctx.linkVersion))).allowed === false) return LOCKED
-  const attemptKey = isPin ? keyName : codeKey(ctx.linkVersion, normName || '-', known)
-  if (!(await hit(payload, attemptKey, isPin ? NAME_RULE : CODE_RULE)).allowed) return LOCKED
+  const attemptKeys = isPin ? keyBase : keyBase.map((k) => `${k}:code`)
+  let tripped = false
+  for (const k of attemptKeys) if (!(await hit(payload, k, isPin ? NAME_RULE : CODE_RULE)).allowed) tripped = true
+  if (tripped) return LOCKED
 
   let matched: PlayerLite[] = []
   if (bounded && candidates.length <= AVAILABILITY.maxCandidates) {
@@ -121,9 +143,10 @@ export async function identify(payload: Payload, ctx: { linkVersion: number; ip:
 
   if (matched.length === 1) {
     const player = matched[0]
-    if (isPin) await clear(payload, keyName)
+    const mineKey = candidates.length > 0 && candidates.length <= AVAILABILITY.maxCandidates ? playerKey(ctx.linkVersion, player.id) : keyBase[0]
+    if (isPin) await clear(payload, mineKey)
     else {
-      await clear(payload, attemptKey)
+      await clear(payload, `${mineKey}:code`)
       const p = (await profilesFor(payload, [player.id])).get(player.id)
       if (p) await payload.update({ collection: 'player-selection-profiles', id: p.id, data: { otcHash: null, otcExpiresAt: null } as never, overrideAccess: true, context: { disableRevalidate: true } })
     }
@@ -194,7 +217,8 @@ export async function playerGrades(payload: Payload, playerId: number): Promise<
   return squads.filter((s) => ids.has(s.id)).map((s) => ({ squadId: s.id, gradeId: s.gradeId, gradeName: s.gradeName }))
 }
 
-export type RespondResult = { ok: true } | { ok: false; message: string }
+/** `code: 'closed'` marks the game as past its change window, so the page can switch to its closed state without reading the message. */
+export type RespondResult = { ok: true } | { ok: false; message: string; code?: 'closed' }
 
 /**
  * Records one answer for `playerId` (taken from the signed cookie by the caller, never from the form). The game must be one of
@@ -207,7 +231,7 @@ export async function respond(payload: Payload, playerId: number, input: { fixtu
   const fixtures: FixtureRow[] = grades.length ? await upcomingFixtures(payload, clubToday(now), grades.map((g) => g.gradeId)) : []
   const fixture = fixtures.find((f) => f.id === fixtureId)
   if (!fixture) return { ok: false, message: 'That game is not open for your answer any more.' }
-  if (changesClosed(fixture.startsAt, settings.availabilityLockHours, now)) return { ok: false, message: 'Selection has started; call a selector.' }
+  if (changesClosed(fixture.startsAt, settings.availabilityLockHours, now)) return { ok: false, code: 'closed', message: 'Selection has started for this game. Please call a selector.' }
   await upsertAnswer(payload, playerId, fixtureId, input.status as AvailabilityStatus, cleanNote(input.note, AVAILABILITY.noteMax))
   return { ok: true }
 }

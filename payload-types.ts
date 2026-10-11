@@ -1343,6 +1343,9 @@ export interface PlayerSelectionProfile {
   pinHash?: string | null;
   pinSalt?: string | null;
   pinSource?: ('phone' | 'manual') | null;
+  /**
+   * When the PIN was last set, cleared or reset, or a one-time code was issued. A phone or browser the player signed in on before this must sign in again.
+   */
   pinSetAt?: string | null;
   /**
    * Set when two players of one name share a PIN, until a selector gives one of them their own.
@@ -1385,6 +1388,10 @@ export interface SelectionFixture {
   isHome?: boolean | null;
   status: 'upcoming' | 'final' | 'removed';
   syncedAt?: string | null;
+  /**
+   * When PlayHQ last changed the day, time or venue of this game.
+   */
+  movedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2370,6 +2377,7 @@ export interface SelectionFixturesSelect<T extends boolean = true> {
   isHome?: T;
   status?: T;
   syncedAt?: T;
+  movedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

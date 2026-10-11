@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { availabilityPath } from '@/config/site'
 import { availCookieName, availCookieOptions, signAvailCookie } from '@/lib/availability-link'
 import { NO_MATCH_MESSAGE } from '@/lib/availability-throttle'
-import { identify, rememberedPlayer, resolveLink, respond } from '@/lib/availability-public'
+import { identify, rememberedPlayer, resolveLink, respond, type RespondResult } from '@/lib/availability-public'
 import { clientIp } from '@/lib/client-ip'
 import { getPayloadClient } from '@/lib/payload/client'
 import type { FormState } from '@/lib/selector-form-state'
@@ -32,7 +32,7 @@ export async function forgetAction(formData: FormData): Promise<void> {
   redirect(availabilityPath(token))
 }
 
-export async function answerAction(input: { token: string; fixtureId: number; status: string; note: string }): Promise<{ ok: true } | { ok: false; message: string }> {
+export async function answerAction(input: { token: string; fixtureId: number; status: string; note: string }): Promise<RespondResult> {
   const payload = await getPayloadClient()
   const settings = await resolveLink(payload, String(input?.token ?? ''))
   if (!settings) return { ok: false, message: 'This link is not working any more. Ask a selector for the new one.' }

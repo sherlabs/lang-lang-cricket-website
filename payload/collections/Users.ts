@@ -1,5 +1,6 @@
 import { APIError, AuthenticationError, Forbidden, ValidationError, type CollectionAfterChangeHook, type CollectionBeforeChangeHook, type CollectionBeforeValidateHook, type CollectionConfig, type Where } from 'payload'
 import { clientIp } from '../../lib/client-ip'
+import { passwordIsRight } from '../../lib/password-check'
 import { MIN_PASSWORD_LENGTH } from '../../lib/selector-status'
 import { ipHit } from '../../lib/throttle'
 import { isAdminField, isAdminUser, isSelectorUser, isStaff, isStaffUser, isSignedIn, nobodyField, type Role } from '../access'
@@ -99,9 +100,7 @@ const requireCurrentPassword: CollectionBeforeValidateHook = async ({ data, oper
   if (!isSelectorUser(req.user) || req.context?.skipCurrentPassword) return data
   const email = (originalDoc as { email?: string } | undefined)?.email
   if (typeof current !== 'string' || !email) throw new ValidationError({ errors: [{ message: 'Enter your current password to choose a new one.', path: 'currentPassword' }] })
-  try {
-    await req.payload.login({ collection: 'users', data: { email, password: current } })
-  } catch {
+  if (!(await passwordIsRight(req.payload, email, current))) {
     throw new ValidationError({ errors: [{ message: 'Your current password is not right.', path: 'currentPassword' }] })
   }
   return data
@@ -174,6 +173,7 @@ const revokeSessions: CollectionAfterChangeHook = async ({ doc, previousDoc, ope
 }
 
 const stampLogin: NonNullable<NonNullable<CollectionConfig['hooks']>['afterLogin']>[number] = async ({ user, req }) => {
+  if (req.context?.passwordCheck) return user // a current-password check, not a sign-in
   await req.payload.db.updateOne({
     collection: 'users',
     id: (user as { id: number }).id,

@@ -130,11 +130,13 @@ describe('team selection: save, publish, withdraw and the public read', () => {
     // publish again: one announcement only, marked updated
     await payload.update({ collection: 'players', id: players[1].id, data: { hidden: false }, overrideAccess: true, context: { disableRevalidate: true } })
     expect((await publishSheets(u(), { gameIds: ['game-a'], announce: true, acknowledged: true })).ok).toBe(true)
+    const changed = await payload.find({ collection: 'announcements', where: { autoKey: { like: 'teams:' } }, overrideAccess: true, depth: 0, pagination: false, showHiddenFields: true })
+    expect(changed.docs[0].title).toMatch(/^Matchday .*\(updated\)$/) // the edit since the first publish is announced
     expect((await publishSheets(u(), { gameIds: ['game-a'], announce: true, acknowledged: true })).ok).toBe(true)
     const anns = await payload.find({ collection: 'announcements', where: { autoKey: { like: 'teams:' } }, overrideAccess: true, depth: 0, pagination: false, showHiddenFields: true })
     expect(anns.docs).toHaveLength(1)
     expect(anns.docs[0]).toMatchObject({ published: true, link: '/teams', linkLabel: 'See the teams' })
-    expect(anns.docs[0].title).toMatch(/^Matchday .*\(updated\)$/)
+    expect(anns.docs[0].title).toMatch(/^Matchday [^()]*$/) // a repeat that changes nothing keeps the plain title
     expect(String(anns.docs[0].body)).not.toMatch(/Player[ABC] Test|Sam Guest/) // the stored text never names a player
     const after = await getPublishedTeam('game-a')
     expect(after?.updated).toBe(true)

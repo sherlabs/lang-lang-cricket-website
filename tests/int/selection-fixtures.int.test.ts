@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Game } from '@/lib/playhq/types'
+import { expireTeamAnnouncements } from '@/lib/selection/announcement-expiry'
 import { refreshSelectionFixtures, type FixtureSource } from '@/lib/selection-fixtures'
 import { destroyTestPayload, getTestPayload } from './helpers'
 import { isoDate, resetSelection } from './selection-helpers'
@@ -52,6 +53,31 @@ describe('refreshSelectionFixtures (mocked PlayHQ)', () => {
     const [after] = await rows()
     expect(after.id).toBe(before.id)
     expect(after).toMatchObject({ localTime: '10:30:00', venueName: 'Away Park' })
+  })
+
+  it('stamps movedAt only when the day, time or venue changed, not for a result or opponent change', async () => {
+    await refreshSelectionFixtures(payload, { source: source([game('g1')]) })
+    expect((await rows())[0].movedAt).toBeFalsy()
+    await refreshSelectionFixtures(payload, { source: source([game('g1', { status: 'FINAL', opponent: { id: 'o1', name: 'Renamed FC', isHome: false, outcome: null, score: null } })]) })
+    expect((await rows())[0].movedAt).toBeFalsy()
+    await refreshSelectionFixtures(payload, { source: source([game('g1', { localTime: '10:30:00' })]) })
+    expect((await rows())[0].movedAt).toBeTruthy()
+  })
+
+  it('takes the automatic weekend announcement down from the Monday after, and leaves other announcements alone', async () => {
+    const mk = (autoKey: string | undefined, title: string) => payload.create({ collection: 'announcements', data: { title, published: true, ...(autoKey ? { autoKey } : {}) } as never, overrideAccess: true, context: { disableRevalidate: true } })
+    const past = await mk('teams:2026-10-10', 'Matchday 10 October')
+    const current = await mk('teams:2026-10-17', 'Matchday 17 October')
+    const manual = await mk(undefined, 'Presentation night')
+    const sunday = new Date('2026-10-11T12:00:00+11:00')
+    expect(await expireTeamAnnouncements(payload, sunday)).toBe(0)
+    const monday = new Date('2026-10-12T12:00:00+11:00')
+    expect(await expireTeamAnnouncements(payload, monday)).toBe(1)
+    const pub = async (id: number) => (await payload.findByID({ collection: 'announcements', id, overrideAccess: true, depth: 0 })).published
+    expect(await pub(past.id)).toBe(false)
+    expect(await pub(current.id)).toBe(true)
+    expect(await pub(manual.id)).toBe(true)
+    await payload.delete({ collection: 'announcements', id: manual.id, overrideAccess: true, context: { disableRevalidate: true } })
   })
 
   it('marks a game PlayHQ no longer lists as removed (never deletes), and restores it if it returns', async () => {

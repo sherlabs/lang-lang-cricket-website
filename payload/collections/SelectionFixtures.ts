@@ -31,5 +31,6 @@ export const SelectionFixtures = selectionCollection({
     { name: 'isHome', type: 'checkbox', defaultValue: false },
     { name: 'status', type: 'select', required: true, defaultValue: 'upcoming', index: true, options: [{ label: 'Upcoming', value: 'upcoming' }, { label: 'Final', value: 'final' }, { label: 'Removed', value: 'removed' }] },
     { name: 'syncedAt', type: 'date' },
+    { name: 'movedAt', type: 'date', admin: { description: 'When PlayHQ last changed the day, time or venue of this game.' } },
   ],
 })
