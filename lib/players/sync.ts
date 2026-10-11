@@ -119,7 +119,10 @@ export async function collectSeniorAggregates(): Promise<TeamAggregate[]> {
   return (await collectSeniorData()).aggregates
 }
 
-export type MatchStoreCounters = { matchesUpserted: number; matchesSkipped: number; matchMismatches: number; matchError: number; matchesDeferred?: number }
+const MAX_FAILURES_LISTED = 5
+export type MatchStoreCounters = { matchesUpserted: number; matchesSkipped: number; matchMismatches: number; matchError: number; matchesDeferred?: number
+  /** `gameId: message` of the first games that failed to save (capped), so the run summary names them. */
+  failures?: string[] }
 
 /**
  * Writes the collected bundles and reconciles them with the season aggregates. Never throws: a
@@ -151,7 +154,9 @@ export async function writeMatchStore(
       } catch (err) {
         counters.matchError++
         failed.add(pairKey(m.teamId, m.seasonName))
-        console.error('[matches] write failed', m.bundle.match.gameId, err instanceof Error ? err.message : err)
+        const message = (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 200)
+        console.error('[matches] write failed', m.bundle.match.gameId, message)
+        if ((counters.failures ??= []).length < MAX_FAILURES_LISTED) counters.failures.push(`${m.bundle.match.gameId}: ${message}`)
       }
     }
     if (outOfTime) console.warn('[matches] time budget reached; matches left for the next run:', outOfTime)
@@ -341,14 +346,19 @@ export async function syncPlayers(payload: Payload, now = new Date()): Promise<S
     // 7b. Per-match rows, in their own try/catch (never fails the sync). The alias map is read AFTER
     //     the new-player insert above, so a player first seen in this run resolves.
     const aliasNow: { nameKey: string; player: number }[] = await db.select({ nameKey: t.player_aliases.nameKey, player: t.player_aliases.player }).from(t.player_aliases)
-    const { matchesDeferred = 0, ...matchCounters } = await writeMatchStore(payload, data, new Map(aliasNow.map((a) => [a.nameKey, a.player])), {
+    const { matchesDeferred = 0, failures = [], ...matchCounters } = await writeMatchStore(payload, data, new Map(aliasNow.map((a) => [a.nameKey, a.player])), {
       index,
       deadlineAt: startedMs + WRITE_BUDGET_MS,
     })
-    const note =
+    const noteParts = [
       partial.size || matchesDeferred
         ? `Partial run: ${data.deferred} scorecards left for later by the time budget, ${data.partialPairs.length} team-seasons with a missing scorecard kept their previous season totals, ${matchesDeferred} matches not written yet. The next run continues.`
-        : null
+        : null,
+      failures.length
+        ? `Games that did not save (${matchCounters.matchError}${matchCounters.matchError > failures.length ? `, first ${failures.length} shown` : ''}): ${failures.join('; ')}`
+        : null,
+    ].filter((x): x is string => Boolean(x))
+    const note = noteParts.length ? noteParts.join(' ') : null
     if (note) console.warn('[players]', note)
 
     // 8. Mark the run.

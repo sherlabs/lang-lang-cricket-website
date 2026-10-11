@@ -42,14 +42,14 @@ export function buildImportedBundle(g: ImportedGame): MatchBundle {
   const total = (v: number | null) => v as unknown as number // stored as NULL when the file gives no total (the column is nullable)
   const innings: MatchBundle['innings'] = [
     {
-      sequenceNo: 1, periodName: '1st innings', battingTeamId: clubTeamId, bowlingTeamId: IMPORT_OPPONENT_TEAM_ID, isClubBatting: true, periodStatus: 'FINAL',
+      sequenceNo: 1, periodId: null, playhqSequenceNo: null, periodName: '1st innings', battingTeamId: clubTeamId, bowlingTeamId: IMPORT_OPPONENT_TEAM_ID, isClubBatting: true, periodStatus: 'FINAL',
       played: batters.length > 0 || g.teamRuns !== null, declared: false, allOut: g.teamWickets === 10,
       totalRuns: total(g.teamRuns), totalWickets: total(g.teamWickets), totalBalls: total(null),
       extrasTotal: total(null), wides: total(null), noBalls: total(null), byes: total(null), legByes: total(null), penalty: total(null),
       hasFallOfWickets: false, hasBowlingData: false, hasBallData: false,
     },
     {
-      sequenceNo: 2, periodName: '2nd innings', battingTeamId: IMPORT_OPPONENT_TEAM_ID, bowlingTeamId: clubTeamId, isClubBatting: false, periodStatus: 'FINAL',
+      sequenceNo: 2, periodId: null, playhqSequenceNo: null, periodName: '2nd innings', battingTeamId: IMPORT_OPPONENT_TEAM_ID, bowlingTeamId: clubTeamId, isClubBatting: false, periodStatus: 'FINAL',
       played: g.oppRuns !== null || hasBowling, declared: false, allOut: g.oppWickets === 10,
       totalRuns: total(g.oppRuns), totalWickets: total(g.oppWickets), totalBalls: total(null),
       extrasTotal: total(null), wides: total(null), noBalls: total(null), byes: total(null), legByes: total(null), penalty: total(null),

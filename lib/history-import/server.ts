@@ -3,6 +3,7 @@ import { and, eq, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { matchTables, MATCH_SCHEMA } from '@/lib/match-store/db'
 import { writeBundle } from '@/lib/match-store/write'
+import { assertUniqueInnings } from '@/lib/playhq/match-rows'
 import { chunk } from '@/lib/players/db'
 import { uniqueSlug } from '@/lib/players/plan'
 import { ballsToOvers } from '@/lib/playhq/players'
@@ -117,6 +118,9 @@ export async function applyImport(payload: Payload, kind: ImportKind, csvText: s
   const t = matchTables(payload)
   const { players, player_aliases, player_seasons } = payload.db.tables as Record<string, Table>
   const stamp = (opts.now ?? new Date()).toISOString()
+
+  // Before the transaction opens: a malformed game fails the import without writing anything.
+  if (kind === 'match-rows') for (const op of (plan as ImportPlan<MatchOp>).ops) if (op.action !== 'unchanged') assertUniqueInnings(op.bundle)
 
   let playersCreated = 0
   await db.transaction(async (tx) => {

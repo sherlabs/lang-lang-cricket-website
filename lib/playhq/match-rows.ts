@@ -15,7 +15,7 @@ import type { Game, RawGameSummary, RawPeriod, RawPeriodAppearance, RawPeriodTea
  */
 
 /** Bump when the mapping changes, so every stored game is re-written on the next sync. */
-export const MAPPER_VERSION = 1
+export const MAPPER_VERSION = 2
 
 export type MatchResult = 'won' | 'lost' | 'draw' | 'tie' | 'no_result' | 'abandoned'
 export type BattingStatus = 'out' | 'not_out' | 'did_not_bat' | 'unknown'
@@ -36,7 +36,13 @@ export type MatchRow = {
   playhqUpdatedAt: string | null
 }
 export type InningsRow = {
-  sequenceNo: number; periodName: string | null; battingTeamId: string | null; bowlingTeamId: string | null; isClubBatting: boolean
+  /** Our own ordinal 1..n, derived from the PlayHQ periods (PlayHQ numbers can repeat). Children point at this. */
+  sequenceNo: number
+  /** PlayHQ period id (the identity of an innings); null for imported games. */
+  periodId: string | null
+  /** The number PlayHQ gave the period; may repeat within one game. Null for imported games. */
+  playhqSequenceNo: number | null
+  periodName: string | null; battingTeamId: string | null; bowlingTeamId: string | null; isClubBatting: boolean
   periodStatus: string | null; played: boolean; declared: boolean; allOut: boolean
   /** Null when an imported game gives no team total (unknown, never 0). */
   totalRuns: number | null; totalWickets: number | null; totalBalls: number
@@ -144,6 +150,22 @@ export function hashBundle(b: Omit<MatchBundle, 'sourceHash' | 'warnings'>): str
     .digest('hex')
 }
 
+/**
+ * Throws (naming the game) when a bundle holds two innings with the same ordinal or the same PlayHQ period id. Runs before a
+ * transaction opens so a bad game fails on its own and never rolls back a half-written one.
+ */
+export function assertUniqueInnings(bundle: Pick<MatchBundle, 'match' | 'innings'>): void {
+  const seqs = new Set<number>(), periods = new Set<string>()
+  for (const i of bundle.innings) {
+    if (seqs.has(i.sequenceNo)) throw new Error(`Game ${bundle.match.gameId}: duplicate innings sequence ${i.sequenceNo}`)
+    seqs.add(i.sequenceNo)
+    if (i.periodId !== null) {
+      if (periods.has(i.periodId)) throw new Error(`Game ${bundle.match.gameId}: duplicate innings period ${i.periodId}`)
+      periods.add(i.periodId)
+    }
+  }
+}
+
 export function mapMatchBundle(raw: RawGameSummary, ctx: MatchCtx): MatchBundle | MatchSkip {
   if (raw.status !== 'FINAL') return { skip: 'not_final' }
   if (ctx.isJunior) return { skip: 'junior' }
@@ -175,14 +197,19 @@ export function mapMatchBundle(raw: RawGameSummary, ctx: MatchCtx): MatchBundle 
   const bowling: BowlingRow[] = []
   const fielding: FieldingRow[] = []
 
-  for (const p of [...(raw.periods ?? [])].sort((a, b) => a.sequenceNo - b.sequenceNo)) {
+  // Pass 1: one record per period, children keyed by period id. Pass 2 (below) ranks the periods and assigns our ordinals.
+  const periodOf = new Map<BattingRow | BowlingRow | FieldingRow, string>()
+  const periodSeqCount = new Map<number, number>()
+  for (const p of raw.periods ?? []) {
     const pTeams = p.teams ?? []
     const bat: RawPeriodTeam | undefined = pTeams.find((t) => t.discipline === 'BATTING')
     const bowl: RawPeriodTeam | undefined = pTeams.find((t) => t.discipline === 'BOWLING')
     if (!bat && !bowl) continue
     const battingTeamId = bat?.id ?? teams.find((t) => t.id !== bowl?.id)?.id ?? null
     const bowlingTeamId = bowl?.id ?? teams.find((t) => t.id !== bat?.id)?.id ?? null
-    const seq = p.sequenceNo
+    const seq = 0 // placeholder: the real ordinal is assigned in pass 2
+    periodSeqCount.set(p.sequenceNo, (periodSeqCount.get(p.sequenceNo) ?? 0) + 1)
+    const firstChild = { b: batting.length, w: bowling.length, f: fielding.length }
     const s = bat?.statistics ?? []
     const batList: RawPeriodAppearance[] = bat?.appearances ?? []
     const bowlList: RawPeriodAppearance[] = bowl?.appearances ?? []
@@ -241,7 +268,7 @@ export function mapMatchBundle(raw: RawGameSummary, ctx: MatchCtx): MatchBundle 
 
     const totalRuns = num(s, 'TOTAL_SCORE'), totalWickets = num(s, 'TOTAL_OUTS'), overs = num(s, 'TOTAL_OVERS')
     innings.push({
-      sequenceNo: seq, periodName: p.name ?? null, battingTeamId, bowlingTeamId, isClubBatting: battingTeamId === club.id,
+      sequenceNo: seq, periodId: p.id, playhqSequenceNo: p.sequenceNo, periodName: p.name ?? null, battingTeamId, bowlingTeamId, isClubBatting: battingTeamId === club.id,
       periodStatus: bat?.status ?? null,
       // Exactly the rule the season aggregates use (placeholder second innings of a two-day game is not played).
       played: isInningsPlayed({
@@ -256,7 +283,19 @@ export function mapMatchBundle(raw: RawGameSummary, ctx: MatchCtx): MatchBundle 
       hasBowlingData: bowlList.some((a) => a.statistics.length > 0),
       hasBallData: batList.some((a) => a.statistics.some((x) => x.type === 'BALLS_FACED')),
     })
+    for (const r of batting.slice(firstChild.b)) periodOf.set(r, p.id)
+    for (const r of bowling.slice(firstChild.w)) periodOf.set(r, p.id)
+    for (const r of fielding.slice(firstChild.f)) periodOf.set(r, p.id)
   }
+
+  // Pass 2: rank by (PlayHQ number, played first, period id). The period id, not array position, is the last tie-break so the order
+  // (and the hash) cannot flap if PlayHQ reorders the array. For unique, contiguous numbers this equals the PlayHQ number.
+  for (const [n, count] of periodSeqCount) if (count > 1) warnings.push(`duplicate_sequence:${n}`)
+  innings.sort((a, b) =>
+    (a.playhqSequenceNo ?? 0) - (b.playhqSequenceNo ?? 0) || Number(b.played) - Number(a.played) || (a.periodId ?? '').localeCompare(b.periodId ?? ''))
+  const ordinalOf = new Map<string, number>()
+  innings.forEach((i, idx) => { i.sequenceNo = idx + 1; ordinalOf.set(i.periodId!, idx + 1) })
+  for (const rows of [batting, bowling, fielding]) for (const r of rows) r.inningsSeq = ordinalOf.get(periodOf.get(r)!)!
 
   const surface = raw.playingSurfaces?.[0]
   const startsAt = raw.schedule?.[0]?.dateTime ?? null

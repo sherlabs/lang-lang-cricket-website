@@ -45,7 +45,7 @@ export function mkBundle(s: BundleSpec = {}): StoredBundle {
     byForfeit: s.forfeit ?? false, onFirstInnings: s.firstInnings ?? false, playhqUpdatedAt: null,
   }
   const inn: InningsRow[] = innings.map((i) => ({
-    sequenceNo: i.seq, periodName: null, battingTeamId: i.clubBatting ? 'ct' : 'ot', bowlingTeamId: i.clubBatting ? 'ot' : 'ct', isClubBatting: i.clubBatting, periodStatus: null,
+    sequenceNo: i.seq, periodId: null, playhqSequenceNo: null, periodName: null, battingTeamId: i.clubBatting ? 'ct' : 'ot', bowlingTeamId: i.clubBatting ? 'ot' : 'ct', isClubBatting: i.clubBatting, periodStatus: null,
     played: i.played ?? true, declared: i.declared ?? false, allOut: i.allOut ?? false, totalRuns: i.runs ?? 0, totalWickets: i.wickets ?? 0, totalBalls: 0,
     extrasTotal: 0, wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0,
     hasFallOfWickets: i.hasFow ?? false, hasBowlingData: i.hasBowling ?? true, hasBallData: i.hasBall ?? true,

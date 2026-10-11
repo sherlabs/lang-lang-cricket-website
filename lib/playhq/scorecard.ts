@@ -5,6 +5,17 @@ type Event = RawPeriod['sharedStatistics'][number]
 
 const stat = (stats: RawStat[], type: string, fallback = 0) => stats.find((s) => s.type === type)?.value ?? fallback
 
+/**
+ * A period with no appearances at all, no statistics, no fall of wickets and no events: an empty twin PlayHQ can send beside a real
+ * innings. A two-day placeholder lists its players as did-not-bat appearances, so it is not empty.
+ */
+export function isEmptyPeriod(p: RawPeriod): boolean {
+  return (
+    (p.sharedStatistics ?? []).length === 0 &&
+    (p.teams ?? []).every((t) => (t.appearances ?? []).length === 0 && (t.statistics ?? []).length === 0 && (t.fallOfWickets ?? []).length === 0)
+  )
+}
+
 export function dismissalText(event: Event | undefined, status: string | null, name: (id: string) => string): string {
   if (status === 'NOT_OUT') return 'not out'
   if (!event) return status === 'OUT' ? 'out' : ''
@@ -37,7 +48,7 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
   const teamName = (id: string) => raw.teams.find((t) => t.id === id)?.name ?? 'Unknown'
 
   const inningsCount = new Map<string, number>()
-  const innings: Innings[] = [...raw.periods].sort((a, b) => a.sequenceNo - b.sequenceNo).map((p) => {
+  const innings: Innings[] = [...raw.periods].filter((p) => !isEmptyPeriod(p)).sort((a, b) => a.sequenceNo - b.sequenceNo).map((p) => {
     const bat = p.teams.find((t) => t.discipline === 'BATTING') as RawPeriodTeam
     const bowl = p.teams.find((t) => t.discipline === 'BOWLING') as RawPeriodTeam
     const n = (inningsCount.get(bat.id) ?? 0) + 1

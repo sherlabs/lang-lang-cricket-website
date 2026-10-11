@@ -1,0 +1,2670 @@
+{
+  "data": {
+    "id": "2bede313-09c2-4a62-a00e-89b8d813c452",
+    "gradeId": "0d6f1f07-1753-45c6-bf2f-662a8ab9b9b4",
+    "grade": {
+      "id": "0d6f1f07-1753-45c6-bf2f-662a8ab9b9b4",
+      "name": "Test Senior Grade"
+    },
+    "organisation": {
+      "id": "18570db1-30ab-490f-bafa-793c4bd6eef2",
+      "name": "Casey Cardinia Cricket Association"
+    },
+    "round": {
+      "id": "f4abb06f-40e7-4272-ae0c-d433c406b5f5",
+      "name": "Round 4",
+      "abbreviatedName": "R4",
+      "isFinalRound": false
+    },
+    "status": "FINAL",
+    "type": "twoDay",
+    "schedule": [
+      {
+        "day": 1,
+        "dateTime": "2025-10-25T02:00:00.000Z",
+        "playingSurfaceId": "74cb8c38-cc8d-452a-a936-4a9db2211532"
+      },
+      {
+        "day": 2,
+        "dateTime": "2025-11-01T02:00:00.000Z",
+        "playingSurfaceId": "74cb8c38-cc8d-452a-a936-4a9db2211532"
+      }
+    ],
+    "appearances": [
+      {
+        "id": "d9b20007-b166-499a-ad89-5ea7153ad728",
+        "firstName": "Home",
+        "lastName": "Player 01",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+        "firstName": "Home",
+        "lastName": "Player 02",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "6fb4b2c2-8cdb-47b9-a872-423f2d3d2d44",
+        "firstName": "Away",
+        "lastName": "Player 01",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "3361c400-ad7f-4d63-ac6f-2b32a1c48a6f",
+        "firstName": "Home",
+        "lastName": "Player 03",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "bb90bb88-8d17-4dcd-a6c5-9c195aac220e",
+        "firstName": "Home",
+        "lastName": "Player 04",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+        "firstName": "Home",
+        "lastName": "Player 05",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+        "firstName": "Away",
+        "lastName": "Player 02",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+        "firstName": "Away",
+        "lastName": "Player 03",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+        "firstName": "Away",
+        "lastName": "Player 04",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+        "firstName": "Away",
+        "lastName": "Player 05",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "41298ed7-23ac-40f0-a3c4-ad28ee0646d8",
+        "firstName": "Away",
+        "lastName": "Player 06",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "1633ded5-7810-48b1-a5d2-01d2fc37f65a",
+        "firstName": "Away",
+        "lastName": "Player 07",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "081d4292-f1fa-4571-ac04-9543980b44dc",
+        "firstName": "Away",
+        "lastName": "Player 08",
+        "captainRole": "VICE_CAPTAIN",
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "383af1c8-bc75-4cf1-a917-92517275fc8d",
+        "firstName": "Away",
+        "lastName": "Player 09",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+        "firstName": "Away",
+        "lastName": "Player 10",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "a9b190c9-2bd0-4450-a62b-8fb6e8e4f98b",
+        "firstName": "Away",
+        "lastName": "Player 11",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": true,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+        "firstName": "Home",
+        "lastName": "Player 06",
+        "captainRole": "CAPTAIN",
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+        "firstName": "Home",
+        "lastName": "Player 07",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+        "firstName": "Home",
+        "lastName": "Player 08",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+        "firstName": "Home",
+        "lastName": "Player 09",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+        "firstName": "Home",
+        "lastName": "Player 10",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+        "firstName": "Home",
+        "lastName": "Player 11",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+        "firstName": "Home",
+        "lastName": "Player 12",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "playerPosition": null
+      },
+      {
+        "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+        "firstName": "Away",
+        "lastName": "Player 12",
+        "captainRole": "CAPTAIN",
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Player",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "30dcc87a-92ea-48c3-a531-7aa969ef601a",
+        "firstName": "Away",
+        "lastName": "Coach 01",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Coach",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      },
+      {
+        "id": "30dcc87a-92ea-48c3-a531-7aa969ef601a",
+        "firstName": "Away",
+        "lastName": "Coach 02",
+        "captainRole": null,
+        "playerNumber": null,
+        "isFillIn": false,
+        "isRegisteredPlayer": true,
+        "visible": true,
+        "roleType": "Coach",
+        "teamId": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "playerPosition": null
+      }
+    ],
+    "teams": [
+      {
+        "id": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+        "name": "Lang Lang B Grade",
+        "isHomeTeam": false,
+        "outcome": "LOST_ON_FIRST_INNINGS",
+        "organisation": {
+          "id": "484ced51-403a-466c-9a94-bd95eedf7319",
+          "name": "Lang Lang Cricket Club"
+        }
+      },
+      {
+        "id": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+        "name": "Nar Nar Goon B Grade",
+        "isHomeTeam": true,
+        "outcome": "WON_ON_FIRST_INNINGS",
+        "organisation": {
+          "id": "f5979a8d-d55a-4c0e-8104-8565a842cd56",
+          "name": "Nar Nar Goon - Maryknoll Cricket Club"
+        }
+      }
+    ],
+    "coinToss": {
+      "winningTeamId": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+      "preference": "BOWL"
+    },
+    "periods": [
+      {
+        "id": "e04ef9bf-8476-4fbf-a584-641120cb8583",
+        "name": "FIRST_INNINGS",
+        "sequenceNo": 1,
+        "teams": [
+          {
+            "id": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [
+              {
+                "id": "d9b20007-b166-499a-ad89-5ea7153ad728",
+                "displayOrder": 5,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5.2
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 5
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 26
+                  }
+                ]
+              },
+              {
+                "id": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+                "displayOrder": 9,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 5
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+                "displayOrder": 4,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 13
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 45
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 2
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 3.46
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "displayOrder": 7,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "ECONOMY",
+                    "value": 6
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 2
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 12
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+                "displayOrder": 2,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 1.2
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5.25
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 7
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 1
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "displayOrder": 3,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUN_OUTS_ASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 3
+                  },
+                  {
+                    "type": "STUMPINGS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 3.31
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 32
+                  },
+                  {
+                    "type": "RUN_OUTS_UNASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 9.4
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 1
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_RUN_OUTS",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_WICKET_KEEPER",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+                "displayOrder": 6,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 4
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 27
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 6.75
+                  }
+                ]
+              },
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "displayOrder": 0,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUN_OUTS_UNASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUN_OUTS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUN_OUTS_ASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_WICKET_KEEPER",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "STUMPINGS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "displayOrder": 1,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 18
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 52
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 2.88
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 2
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+                "displayOrder": 8,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 25
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 3
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 8.33
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 1
+                  }
+                ]
+              }
+            ],
+            "fallOfWickets": null
+          },
+          {
+            "id": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+            "discipline": "BATTING",
+            "status": "DECLARED",
+            "statistics": [
+              {
+                "type": "TOTALS",
+                "value": 237
+              },
+              {
+                "type": "EXTRA_PENALTY_RUNS",
+                "value": 0
+              },
+              {
+                "type": "EXTRA_WIDES",
+                "value": 8
+              },
+              {
+                "type": "TOTAL_EXTRAS",
+                "value": 18
+              },
+              {
+                "type": "EXTRA_LEG_BYES",
+                "value": 4
+              },
+              {
+                "type": "EXTRA_NO_BALLS",
+                "value": 4
+              },
+              {
+                "type": "EXTRA_BYES",
+                "value": 2
+              },
+              {
+                "type": "TOTAL_OVERS",
+                "value": 57
+              },
+              {
+                "type": "TOTAL_SCORE",
+                "value": 237
+              },
+              {
+                "type": "TOTAL_OUTS",
+                "value": 4
+              }
+            ],
+            "appearances": [
+              {
+                "id": "6fb4b2c2-8cdb-47b9-a872-423f2d3d2d44",
+                "displayOrder": 3,
+                "status": "NOT_OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 86
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 59
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 68.6
+                  }
+                ]
+              },
+              {
+                "id": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "displayOrder": 2,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 8
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 125
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 76
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 60.8
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "displayOrder": 4,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 16
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 75
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 12
+                  }
+                ]
+              },
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "displayOrder": 5,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "displayOrder": 7,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "41298ed7-23ac-40f0-a3c4-ad28ee0646d8",
+                "displayOrder": 8,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "1633ded5-7810-48b1-a5d2-01d2fc37f65a",
+                "displayOrder": 6,
+                "status": "NOT_OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 21
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 100
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 21
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "081d4292-f1fa-4571-ac04-9543980b44dc",
+                "displayOrder": 10,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+                "displayOrder": 11,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "383af1c8-bc75-4cf1-a917-92517275fc8d",
+                "displayOrder": 12,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "displayOrder": 1,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 103
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 51
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 49.51
+                  }
+                ]
+              },
+              {
+                "id": "a9b190c9-2bd0-4450-a62b-8fb6e8e4f98b",
+                "displayOrder": 9,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              }
+            ],
+            "fallOfWickets": [
+              {
+                "sequenceNo": 1,
+                "appearanceId": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "runs": 96
+              },
+              {
+                "sequenceNo": 2,
+                "appearanceId": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "runs": 168
+              },
+              {
+                "sequenceNo": 3,
+                "appearanceId": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "runs": 198
+              },
+              {
+                "sequenceNo": 4,
+                "appearanceId": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "runs": 200
+              }
+            ]
+          }
+        ],
+        "sharedStatistics": [
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "role": "FIELDING"
+              },
+              {
+                "id": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "role": "BATTING"
+              },
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "role": "BOWLING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "role": "FIELDING"
+              },
+              {
+                "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+                "role": "BOWLING"
+              },
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "role": "BOWLING"
+              },
+              {
+                "id": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "role": "BATTING"
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "role": "FIELDING"
+              }
+            ]
+          },
+          {
+            "type": "BOWLED",
+            "appearances": [
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "role": "BOWLING"
+              },
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "role": "BATTING"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4b469c59-c3e4-4946-a4a6-6bf4022a17f6",
+        "name": "FIRST_INNINGS",
+        "sequenceNo": 2,
+        "teams": [
+          {
+            "id": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+            "discipline": "BATTING",
+            "status": "ALL_OUT",
+            "statistics": [
+              {
+                "type": "EXTRA_LEG_BYES",
+                "value": 0
+              },
+              {
+                "type": "EXTRA_NO_BALLS",
+                "value": 0
+              },
+              {
+                "type": "EXTRA_PENALTY_RUNS",
+                "value": 0
+              },
+              {
+                "type": "TOTALS",
+                "value": 83
+              },
+              {
+                "type": "EXTRA_BYES",
+                "value": 5
+              },
+              {
+                "type": "TOTAL_EXTRAS",
+                "value": 6
+              },
+              {
+                "type": "EXTRA_WIDES",
+                "value": 1
+              },
+              {
+                "type": "TOTAL_OVERS",
+                "value": 55.3
+              },
+              {
+                "type": "TOTAL_SCORE",
+                "value": 83
+              },
+              {
+                "type": "TOTAL_OUTS",
+                "value": 10
+              }
+            ],
+            "appearances": [
+              {
+                "id": "d9b20007-b166-499a-ad89-5ea7153ad728",
+                "displayOrder": 9,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 2
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+                "displayOrder": 8,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 29
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 14
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 48.27
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+                "displayOrder": 4,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 12
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 36
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 33.33
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "displayOrder": 7,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 3.12
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 32
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "3361c400-ad7f-4d63-ac6f-2b32a1c48a6f",
+                "displayOrder": 12,
+                "status": null,
+                "statistics": []
+              },
+              {
+                "id": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+                "displayOrder": 1,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 0
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 32
+                  }
+                ]
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "displayOrder": 2,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 8.69
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 2
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 23
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+                "displayOrder": 11,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 1
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 0
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "displayOrder": 3,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 41
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 26.82
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 11
+                  }
+                ]
+              },
+              {
+                "id": "bb90bb88-8d17-4dcd-a6c5-9c195aac220e",
+                "displayOrder": 6,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 25
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 29.06
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 86
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "displayOrder": 5,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 23.25
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 43
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 10
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+                "displayOrder": 10,
+                "status": "NOT_OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 28.57
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 2
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 7
+                  }
+                ]
+              }
+            ],
+            "fallOfWickets": [
+              {
+                "sequenceNo": 1,
+                "appearanceId": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "runs": 2
+              },
+              {
+                "sequenceNo": 2,
+                "appearanceId": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+                "runs": 7
+              },
+              {
+                "sequenceNo": 3,
+                "appearanceId": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "runs": 21
+              },
+              {
+                "sequenceNo": 4,
+                "appearanceId": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+                "runs": 25
+              },
+              {
+                "sequenceNo": 5,
+                "appearanceId": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "runs": 41
+              },
+              {
+                "sequenceNo": 6,
+                "appearanceId": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "runs": 54
+              },
+              {
+                "sequenceNo": 7,
+                "appearanceId": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+                "runs": 78
+              },
+              {
+                "sequenceNo": 8,
+                "appearanceId": "d9b20007-b166-499a-ad89-5ea7153ad728",
+                "runs": 78
+              },
+              {
+                "sequenceNo": 9,
+                "appearanceId": "bb90bb88-8d17-4dcd-a6c5-9c195aac220e",
+                "runs": 83
+              },
+              {
+                "sequenceNo": 10,
+                "appearanceId": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+                "runs": 83
+              }
+            ]
+          },
+          {
+            "id": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "displayOrder": 3,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 1
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 1
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 0.5
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 2
+                  }
+                ]
+              },
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "displayOrder": 2,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "MAIDENS",
+                    "value": 13
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 20
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 22
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 0.9
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 4
+                  }
+                ]
+              },
+              {
+                "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+                "displayOrder": 1,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "WICKETS",
+                    "value": 2
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 17
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 26
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 1.52
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 6
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "383af1c8-bc75-4cf1-a917-92517275fc8d",
+                "displayOrder": 4,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 1
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "displayOrder": 5,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 12
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 2.4
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 1
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 5
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "a9b190c9-2bd0-4450-a62b-8fb6e8e4f98b",
+                "displayOrder": 6,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "ECONOMY",
+                    "value": 2.23
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 19
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 2
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 8.3
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  }
+                ]
+              }
+            ],
+            "fallOfWickets": null
+          }
+        ],
+        "sharedStatistics": [
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "role": "BOWLING"
+              },
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "BOWLED",
+            "appearances": [
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "role": "BOWLING"
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "role": "BOWLING"
+              },
+              {
+                "id": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "a9b190c9-2bd0-4450-a62b-8fb6e8e4f98b",
+                "role": "BOWLING"
+              },
+              {
+                "id": "bb90bb88-8d17-4dcd-a6c5-9c195aac220e",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "BOWLED",
+            "appearances": [
+              {
+                "id": "d9b20007-b166-499a-ad89-5ea7153ad728",
+                "role": "BATTING"
+              },
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "role": "BOWLING"
+              }
+            ]
+          },
+          {
+            "type": "LEG_BEFORE_WICKET",
+            "appearances": [
+              {
+                "id": "a9b190c9-2bd0-4450-a62b-8fb6e8e4f98b",
+                "role": "BOWLING"
+              },
+              {
+                "id": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "role": "BOWLING"
+              },
+              {
+                "id": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+                "role": "BOWLING"
+              },
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "role": "BOWLING"
+              },
+              {
+                "id": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "BOWLED",
+            "appearances": [
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "role": "BATTING"
+              },
+              {
+                "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+                "role": "BOWLING"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "48bf6313-982b-431a-a3ae-743088dd4efd",
+        "name": "SECOND_INNINGS",
+        "sequenceNo": 3,
+        "teams": [
+          {
+            "id": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [
+              {
+                "id": "d9b20007-b166-499a-ad89-5ea7153ad728",
+                "displayOrder": 5,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5.2
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 5
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 26
+                  }
+                ]
+              },
+              {
+                "id": "c6b537fe-de8a-4349-aa99-a74b56c279d5",
+                "displayOrder": 9,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 5
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "568d0f67-b98b-496b-a824-9ae7d9cff27e",
+                "displayOrder": 4,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 13
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 45
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 2
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 3.46
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "displayOrder": 7,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "ECONOMY",
+                    "value": 6
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 2
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 12
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "4f784b99-84cd-43b2-af2b-580c18b0a43e",
+                "displayOrder": 2,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 1.2
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 5.25
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 7
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 1
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "displayOrder": 3,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUN_OUTS_ASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 3
+                  },
+                  {
+                    "type": "STUMPINGS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 3.31
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 32
+                  },
+                  {
+                    "type": "RUN_OUTS_UNASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 9.4
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 1
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_RUN_OUTS",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_WICKET_KEEPER",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "fd27b3c7-a34a-4988-adfc-f28f9e0517bb",
+                "displayOrder": 6,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 4
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 27
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 0
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 6.75
+                  }
+                ]
+              },
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "displayOrder": 0,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUN_OUTS_UNASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_FIELDER",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUN_OUTS",
+                    "value": 0
+                  },
+                  {
+                    "type": "RUN_OUTS_ASSISTED",
+                    "value": 0
+                  },
+                  {
+                    "type": "CATCHES_AS_WICKET_KEEPER",
+                    "value": 1
+                  },
+                  {
+                    "type": "TOTAL_CATCHES",
+                    "value": 1
+                  },
+                  {
+                    "type": "STUMPINGS",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "displayOrder": 1,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "OVERS",
+                    "value": 18
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 1
+                  },
+                  {
+                    "type": "RUNS",
+                    "value": 52
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 2.88
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 2
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+                "displayOrder": 8,
+                "status": null,
+                "statistics": [
+                  {
+                    "type": "RUNS",
+                    "value": 25
+                  },
+                  {
+                    "type": "OVERS",
+                    "value": 3
+                  },
+                  {
+                    "type": "MAIDENS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WICKETS",
+                    "value": 1
+                  },
+                  {
+                    "type": "ECONOMY",
+                    "value": 8.33
+                  },
+                  {
+                    "type": "NO_BALLS",
+                    "value": 0
+                  },
+                  {
+                    "type": "WIDES",
+                    "value": 1
+                  }
+                ]
+              }
+            ],
+            "fallOfWickets": null
+          },
+          {
+            "id": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+            "discipline": "BATTING",
+            "status": "ALL_OUT",
+            "statistics": [
+              {
+                "type": "TOTALS",
+                "value": 237
+              },
+              {
+                "type": "EXTRA_PENALTY_RUNS",
+                "value": 0
+              },
+              {
+                "type": "EXTRA_WIDES",
+                "value": 8
+              },
+              {
+                "type": "TOTAL_EXTRAS",
+                "value": 18
+              },
+              {
+                "type": "EXTRA_LEG_BYES",
+                "value": 4
+              },
+              {
+                "type": "EXTRA_NO_BALLS",
+                "value": 4
+              },
+              {
+                "type": "EXTRA_BYES",
+                "value": 2
+              },
+              {
+                "type": "TOTAL_OVERS",
+                "value": 57
+              },
+              {
+                "type": "TOTAL_SCORE",
+                "value": 237
+              },
+              {
+                "type": "TOTAL_OUTS",
+                "value": 4
+              }
+            ],
+            "appearances": [
+              {
+                "id": "6fb4b2c2-8cdb-47b9-a872-423f2d3d2d44",
+                "displayOrder": 3,
+                "status": "NOT_OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 86
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 59
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 68.6
+                  }
+                ]
+              },
+              {
+                "id": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "displayOrder": 2,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 8
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 125
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 76
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 60.8
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "id": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "displayOrder": 4,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 16
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 75
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 12
+                  }
+                ]
+              },
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "displayOrder": 5,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 0
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "id": "9ddfa9c4-3eba-4c5c-a846-35ec69cd62e1",
+                "displayOrder": 7,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "41298ed7-23ac-40f0-a3c4-ad28ee0646d8",
+                "displayOrder": 8,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "1633ded5-7810-48b1-a5d2-01d2fc37f65a",
+                "displayOrder": 6,
+                "status": "NOT_OUT",
+                "statistics": [
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 21
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 100
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 21
+                  },
+                  {
+                    "type": "FOURS",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "id": "081d4292-f1fa-4571-ac04-9543980b44dc",
+                "displayOrder": 10,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "bb866f68-9ba4-412b-a2b4-1e37044a9446",
+                "displayOrder": 11,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "383af1c8-bc75-4cf1-a917-92517275fc8d",
+                "displayOrder": 12,
+                "status": "DID_NOT_BAT",
+                "statistics": []
+              },
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "displayOrder": 1,
+                "status": "OUT",
+                "statistics": [
+                  {
+                    "type": "FOURS",
+                    "value": 0
+                  },
+                  {
+                    "type": "BALLS_FACED",
+                    "value": 103
+                  },
+                  {
+                    "type": "TOTAL_RUNS",
+                    "value": 51
+                  },
+                  {
+                    "type": "SIXES",
+                    "value": 0
+                  },
+                  {
+                    "type": "STRIKE_RATE",
+                    "value": 49.51
+                  }
+                ]
+              }
+            ],
+            "fallOfWickets": [
+              {
+                "sequenceNo": 1,
+                "appearanceId": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "runs": 96
+              },
+              {
+                "sequenceNo": 2,
+                "appearanceId": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "runs": 168
+              },
+              {
+                "sequenceNo": 3,
+                "appearanceId": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "runs": 198
+              },
+              {
+                "sequenceNo": 4,
+                "appearanceId": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "runs": 200
+              }
+            ]
+          }
+        ],
+        "sharedStatistics": [
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "role": "FIELDING"
+              },
+              {
+                "id": "6979fc78-258b-4aff-a4b7-8b3d3191b300",
+                "role": "BATTING"
+              },
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "role": "BOWLING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "30fc41ca-6d3d-4bc4-ad02-7703beb34c8c",
+                "role": "FIELDING"
+              },
+              {
+                "id": "7df05cdd-c92d-4716-ac3f-0ca685f8acc2",
+                "role": "BOWLING"
+              },
+              {
+                "id": "220d21b5-30ca-4522-a81d-d81750763aba",
+                "role": "BATTING"
+              }
+            ]
+          },
+          {
+            "type": "CAUGHT",
+            "appearances": [
+              {
+                "id": "cbf5f0aa-3afd-4a56-aa24-af1b41bf632a",
+                "role": "BOWLING"
+              },
+              {
+                "id": "b818be99-23d3-477d-ae14-dd6a7c0bbf11",
+                "role": "BATTING"
+              },
+              {
+                "id": "e86bc0b6-5eb2-4919-a8bf-ce443e08567d",
+                "role": "FIELDING"
+              }
+            ]
+          },
+          {
+            "type": "BOWLED",
+            "appearances": [
+              {
+                "id": "2a97b918-a566-4ab8-acb5-81c9e31baf81",
+                "role": "BOWLING"
+              },
+              {
+                "id": "a45edeb8-e7cc-4e4d-a3e8-56faaa9857d9",
+                "role": "BATTING"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "93a2ba5e-279c-4148-a426-f9a3e63a1f63",
+        "name": "SECOND_INNINGS",
+        "sequenceNo": 3,
+        "teams": [
+          {
+            "id": "61e6c836-a80b-49f1-ae65-625bd0f55016",
+            "discipline": "BATTING",
+            "status": null,
+            "statistics": [],
+            "appearances": [],
+            "fallOfWickets": []
+          },
+          {
+            "id": "24a3079f-1d19-4fc6-984e-28df1ed4256d",
+            "discipline": "BOWLING",
+            "status": null,
+            "statistics": [],
+            "appearances": [],
+            "fallOfWickets": []
+          }
+        ],
+        "sharedStatistics": []
+      }
+    ],
+    "playingSurfaces": [
+      {
+        "id": "74cb8c38-cc8d-452a-a936-4a9db2211532",
+        "name": "Main oval",
+        "abbreviatedName": "TEST",
+        "longitude": "145.573031902313",
+        "latitude": "-38.0842264998545",
+        "venue": {
+          "id": "207c4750-32fc-40e9-ad6c-dabc30256bfd",
+          "name": "Test Recreation Reserve",
+          "timezone": "Australia/Melbourne"
+        }
+      }
+    ]
+  }
+}

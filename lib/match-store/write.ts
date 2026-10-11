@@ -1,7 +1,7 @@
 import { and, count, eq, max, notInArray, or, sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { chunk } from '@/lib/players/db'
-import type { MatchBundle } from '@/lib/playhq/match-rows'
+import { assertUniqueInnings, type MatchBundle } from '@/lib/playhq/match-rows'
 import { MATCH_SCHEMA, matchTables } from './db'
 
 /**
@@ -37,6 +37,8 @@ export async function upsertMatchBundle(payload: Payload, bundle: MatchBundle, a
   const t = matchTables(payload)
   const db = payload.db.drizzle
   const { match } = bundle
+  // Before anything is read or written: a bad game fails alone and never rolls back a half-written one.
+  assertUniqueInnings(bundle)
 
   // Unchanged rows: no transaction and no write (a changed fixture stamp alone only touches two columns,
   // so the nightly sync does not refetch an unchanged scorecard every night).

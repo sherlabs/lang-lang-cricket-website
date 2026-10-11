@@ -8,6 +8,7 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
+import dup from '../fixtures/playhq/game-summary-duplicate-sequence.json'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
 import { matchTables } from '@/lib/match-store/db'
 import { playerTables } from '@/lib/players/db'
@@ -27,6 +28,7 @@ const phq = vi.hoisted(() => ({
   raw: {} as Record<string, unknown>,
   calls: [] as { id: string; fresh: boolean | undefined }[],
   fail: new Set<string>(),
+  extraB: [] as string[],
 }))
 
 vi.mock('@/lib/playhq/queries', async () => {
@@ -42,7 +44,8 @@ vi.mock('@/lib/playhq/queries', async () => {
     }),
     getTeamGames: vi.fn(async (t: { id: string }) => {
       const id = t.id === B_GRADE ? twoDay.data.id : oneDay.data.id
-      return [{ id, status: 'FINAL', updatedAt: phq.stamps[id] }]
+      const ids = t.id === B_GRADE ? [id, ...phq.extraB] : [id]
+      return ids.map((gid) => ({ id: gid, status: 'FINAL', updatedAt: phq.stamps[gid] }))
     }),
     getRawGameSummary: vi.fn(async (id: string, opts?: { fresh?: boolean }) => {
       phq.calls.push({ id, fresh: opts?.fresh })
@@ -68,6 +71,7 @@ beforeEach(async () => {
   phq.raw = { [twoDay.data.id]: clone(twoDay.data), [oneDay.data.id]: clone(oneDay.data) }
   phq.calls = []
   phq.fail = new Set()
+  phq.extraB = []
   cache.revalidateTag.mockClear()
   await resetPlayers(payload)
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -82,6 +86,19 @@ const matchRows = async () => {
 const count = async (table: string) => Number((await payload.db.drizzle.execute(sql.raw(`SELECT count(*)::int AS n FROM "payload"."${table}"`))).rows[0].n)
 
 describe('players sync writes the match store', () => {
+  it('a game with two periods sharing a PlayHQ sequence number saves, counts as upserted, reconciles, and is unchanged next run', async () => {
+    const { syncPlayers } = await import('@/lib/players/sync')
+    phq.extraB = [dup.data.id]
+    phq.stamps[dup.data.id] = '2025-11-03T00:00:00.000Z'
+    phq.raw[dup.data.id] = clone(dup.data)
+    expect((await syncPlayers(payload)).status).toBe('ok')
+    expect(await count('matches')).toBe(3)
+    expect(await count('match_innings')).toBe(10)
+    expect(await latestRun()).toMatchObject({ status: 'ok', matchesUpserted: 3, matchError: 0, matchMismatches: 0 })
+    await syncPlayers(payload)
+    expect(await latestRun()).toMatchObject({ matchesUpserted: 0, matchError: 0, matchMismatches: 0 })
+  })
+
   it('the first run stores both games, links club rows to players, records the counters and fetches uncached', async () => {
     const { syncPlayers } = await import('@/lib/players/sync')
     expect((await syncPlayers(payload)).status).toBe('ok')
@@ -167,7 +184,8 @@ describe('players sync writes the match store', () => {
     const run = await latestRun()
     expect(run.status).toBe('ok')
     expect(run.matchError).toBeGreaterThan(0)
-    expect(run.error ?? null).toBeNull()
+    expect(run.error).toContain('Games that did not save (2)')
+    expect(run.error).toContain(twoDay.data.id)
     expect(await count('player_seasons')).toBeGreaterThan(0)
     expect(await count('matches')).toBe(0) // each game's transaction rolled back as a whole
     // The next healthy run recovers.

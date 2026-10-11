@@ -264,6 +264,8 @@ type Spec = {
   club?: number[]            // indexes into MATCH_SEED_CLUB_PLAYERS (11 expected)
   fillIn?: boolean; dan?: boolean; samePair?: boolean
   inn?: Partial<InningsOpts>[]; skipPlay?: 'forfeit_lost' | 'forfeit_won' | 'abandoned' | 'no_result'
+  /** PlayHQ sent an empty fourth period numbered 3 beside the real third innings (WP-0 of wave B). */
+  dupSequence?: boolean
   twoInnings?: boolean; toss?: 'bat' | 'bowl' | null
 }
 
@@ -307,6 +309,8 @@ const SPECS: Spec[] = [
   { season: 1, date: '2026-03-28', kind: 'oneDay', opp: 2, round: 'Round 19', club: squad(2), outcome: ['LOST', 'WON'] },
   { season: 1, date: '2026-04-04', kind: 'oneDay', opp: 0, round: 'Round 20', club: squad(3), outcome: ['WON', 'LOST'] },
   { season: 1, date: '2026-04-11', kind: 'oneDay', opp: 1, round: 'Round 21', club: squad(4), outcome: ['LOST', 'WON'] },
+  // Added for wave B (WP-0), appended so every game above is generated exactly as before.
+  { season: 1, date: '2026-04-18', kind: 'twoDay', opp: 2, round: 'Round 22', club: squad(5), outcome: ['WON', 'LOST'], dupSequence: true, inn: [{ declared: true, wickets: 6 }, { wickets: 10 }, { wickets: 4 }], edge: 'duplicate PlayHQ period number: empty fourth period numbered 3' },
 ]
 
 const GRADE = { id: uuid(5, 1), name: 'Seed A Grade' }
@@ -363,6 +367,8 @@ export function generateMatchSeed(clubOrgId: string): SeedGame[] {
       const p2 = playInnings(rng, { seq: 2, name: 'FIRST_INNINGS', bat: second, bowl: first, ...o(1) })
       if (spec.twoInnings) {
         periods = [p1, p2, placeholderInnings(3, 'SECOND_INNINGS', first, second), emptyPeriod(4, 'SECOND_INNINGS', second, first)]
+      } else if (spec.dupSequence) {
+        periods = [p1, p2, playInnings(rng, { seq: 3, name: 'SECOND_INNINGS', bat: first, bowl: second, ...o(2) }), { ...emptyPeriod(4, 'SECOND_INNINGS', second, first), sequenceNo: 3 }]
       } else {
         periods = [p1, p2, playInnings(rng, { seq: 3, name: 'SECOND_INNINGS', bat: first, bowl: second, ...o(2) }), playInnings(rng, { seq: 4, name: 'SECOND_INNINGS', bat: second, bowl: first, ...o(3) })]
       }

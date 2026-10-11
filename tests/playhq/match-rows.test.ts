@@ -197,7 +197,8 @@ describe('visibility, skips and tolerance', () => {
     ]
     raw.coinToss = null
     const b = bundle(raw)
-    expect(b.innings.map((i) => i.sequenceNo)).toEqual([1, 4])
+    expect(b.innings.map((i) => i.sequenceNo)).toEqual([1, 2]) // our own ordinals, even though PlayHQ numbered them 1 and 4
+    expect(b.innings.map((i) => i.playhqSequenceNo)).toEqual([1, 4])
     expect(b.innings[0].bowlingTeamId).not.toBeNull()
     expect(b.match).toMatchObject({ clubWonToss: null, tossChoice: null })
     expect(bundle({ ...clone(oneDay.data), periods: [] }).innings).toEqual([])

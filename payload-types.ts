@@ -1118,6 +1118,8 @@ export interface MatchInning {
   id: number;
   match: number | Match;
   sequenceNo: number;
+  periodId?: string | null;
+  playhqSequenceNo?: number | null;
   periodName?: string | null;
   battingTeamId?: string | null;
   bowlingTeamId?: string | null;
@@ -2186,6 +2188,8 @@ export interface MatchesSelect<T extends boolean = true> {
 export interface MatchInningsSelect<T extends boolean = true> {
   match?: T;
   sequenceNo?: T;
+  periodId?: T;
+  playhqSequenceNo?: T;
   periodName?: T;
   battingTeamId?: T;
   bowlingTeamId?: T;

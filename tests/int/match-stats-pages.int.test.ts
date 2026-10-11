@@ -86,7 +86,7 @@ describe('/records/partnerships and /records', () => {
     const one = await render(Page({ searchParams: Promise.resolve({ season: 'Summer 2024/25' }) }))
     const all = await render(Page({ searchParams: Promise.resolve({ season: 'Nope' }) }))
     expect(one).toMatch(/From \d+ \w+ 2024, \d+ games stored/)
-    expect(all).toMatch(/From 12 Oct 2024, 32 games stored/)
+    expect(all).toMatch(/From 12 Oct 2024, 33 games stored/)
   })
 
   it('the records page has the match-data lists with captions', async () => {
@@ -103,7 +103,7 @@ describe('/stats leaderboards with match metrics', () => {
     const { default: Page } = await import('@/app/(frontend)/stats/page')
     const html = await render(Page({ searchParams: Promise.resolve({ metric: 'fifties' }) }))
     expect(html).toContain('Fifties')
-    expect(html).toMatch(/From match data\. From 12 Oct 2024, 32 games stored/)
+    expect(html).toMatch(/From match data\. From 12 Oct 2024, 33 games stored/)
     expect(html).toContain('Counts recorded innings only')
   })
 })

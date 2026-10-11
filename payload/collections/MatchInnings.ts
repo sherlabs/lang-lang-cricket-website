@@ -1,16 +1,18 @@
 import { flag, internalCollection, num, rel, text } from './internalCollection'
 
-/** Match innings (WP-M, M2): one row per PlayHQ period, including the placeholder second innings (`played: false`). */
+/** Match innings (WP-M, M2): one row per PlayHQ period (identified by its period id; `sequenceNo` is our own 1..n order), including the placeholder second innings (`played: false`). */
 export const MatchInnings = internalCollection({
   slug: 'match-innings',
   singular: 'Match innings',
   plural: 'Match innings (data)',
   description: 'Innings totals for each stored match. Written by the PlayHQ sync. Read only.',
   defaultColumns: ['match', 'sequenceNo', 'totalRuns', 'totalWickets'],
-  indexes: [{ fields: ['match', 'sequenceNo'], unique: true }],
+  indexes: [{ fields: ['match', 'sequenceNo'], unique: true }, { fields: ['match', 'periodId'], unique: true }],
   fields: [
     rel('match', 'matches', { required: true, index: true }),
     num('sequenceNo', { required: true }),
+    text('periodId'),
+    num('playhqSequenceNo'),
     text('periodName'),
     text('battingTeamId'),
     text('bowlingTeamId'),
