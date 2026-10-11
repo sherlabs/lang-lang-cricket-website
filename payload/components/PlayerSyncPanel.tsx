@@ -50,11 +50,10 @@ export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
         ) : (
           <p className="club-muted">No sync has run yet.</p>
         )}
-        {status === 'error' && run?.error && <p className="club-error">{run.error}</p>}
+        {run?.error && <p className={status === 'ok' && (run.matchError ?? 0) === 0 ? 'club-muted' : 'club-error'}>{run.error}</p>}
         {status === 'ok' && (run?.matchError ?? 0) > 0 && (
           <p className="club-error">
             Season totals updated, but {run?.matchError} game{run?.matchError === 1 ? '' : 's'} could not be saved to the match store. The next sync retries.
-            {run?.error ? <> {run.error}</> : null}
           </p>
         )}
         {status === 'ok' && (run?.matchMismatches ?? 0) > 0 && (

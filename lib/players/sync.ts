@@ -154,8 +154,11 @@ export async function writeMatchStore(
       } catch (err) {
         counters.matchError++
         failed.add(pairKey(m.teamId, m.seasonName))
-        const message = (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 200)
-        console.error('[matches] write failed', m.bundle.match.gameId, message)
+        // Only our own invariant errors are safe to store; driver errors embed the failed query and its params (player names, ids), so they stay in the server log.
+        const raw = (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 200)
+        const known = err instanceof Error && /^Game \S+: duplicate innings (sequence|period) \S+$/.test(err.message)
+        const message = known ? raw : 'write failed'
+        console.error('[matches] write failed', m.bundle.match.gameId, raw)
         if ((counters.failures ??= []).length < MAX_FAILURES_LISTED) counters.failures.push(`${m.bundle.match.gameId}: ${message}`)
       }
     }
