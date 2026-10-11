@@ -26,6 +26,8 @@ PlayHQ has no player id, so one person can appear under two spellings and one na
 - **Undo.** Every merge writes a log row (with a small snapshot of the source player's identity) in the same transaction. *Undo* puts the player back with the original profile address, aliases (so the next update routes the name to them again), honours, committee entry and sponsor links. The kept profile's photo, bio and active flag revert only if nobody has changed them since. **PlayHQ season totals are rebuilt, not restored:** until the next PlayHQ update (or *Update now*) the restored player shows no PlayHQ season totals. Imported history (season rows added by a CSV import) is restored by the undo itself, because no update recreates it; where it was combined into one of the kept player's rows, that row goes back to its earlier counts unless it was changed since. and stored match appearances relink by name immediately. Undo is refused when the player it was merged into has since been merged away (undo that later merge first) and when it was already undone. The log keeps one year of merge history; "not the same person" decisions are kept for good, even if one of the two players is later deleted. A confirmed merge of two players who shared a game leaves the source's row in that game unlinked, and later updates do not relink it.
 - Undo, dismiss and the list are admin only. The merge itself stays available to staff as before.
 
+Merging also moves the [best-player votes](./best-player-votes.mdx) cast by the merged player and the picks that name them. If both players had voted in the same game, the earlier ballot is kept and the other is deleted; an undo restores the moved ballots but not the deleted one.
+
 ## How to use it
 
 1. Open **Advanced, Player data tools** and scroll to **Duplicate players**.
@@ -37,5 +39,3 @@ PlayHQ has no player id, so one person can appear under two spellings and one na
 - No nickname dictionary: "Bill" and "William" are not matched by name alone.
 - Undo does not restore PlayHQ season rows or appearance links from before the merge (they are rebuilt from PlayHQ, so nothing stale is written back). Imported season rows are restored.
 - The list is cached for an hour and refreshed by every merge, undo, dismissal and sync. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
-
-Merging also moves the [best-player votes](./best-player-votes.mdx) cast by the merged player and the picks that name them. If both players had voted in the same game, the earlier ballot is kept and the other is deleted; an undo restores the moved ballots but not the deleted one.
