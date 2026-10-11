@@ -37,3 +37,5 @@ PlayHQ has no player id, so one person can appear under two spellings and one na
 - No nickname dictionary: "Bill" and "William" are not matched by name alone.
 - Undo does not restore PlayHQ season rows or appearance links from before the merge (they are rebuilt from PlayHQ, so nothing stale is written back). Imported season rows are restored.
 - The list is cached for an hour and refreshed by every merge, undo, dismissal and sync. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+Merging also moves the [best-player votes](./best-player-votes.mdx) cast by the merged player and the picks that name them. If both players had voted in the same game, the earlier ballot is kept and the other is deleted; an undo restores the moved ballots but not the deleted one.

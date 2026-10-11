@@ -5,7 +5,7 @@ routes: ["/selector", "/selector/login", "/selector/invite/[token]", "/selector/
 collections: [users, throttle-hits]
 admin: "Advanced > Selectors (admin and editor), and the Add a selector tile on Home"
 owner: "Committee (editors) and the site admin"
-related: [users-and-authentication, committee-admin, safety-guards, team-selection-and-announce, match-day-overview]
+related: [best-player-votes, users-and-authentication, committee-admin, safety-guards, team-selection-and-announce, match-day-overview]
 added: feat/payload-cms
 ---
 
@@ -57,3 +57,5 @@ Only the production host and one stable preview address can use Facebook (Meta n
 - There is no email invitation (the site has no email adapter): the committee shares the link. There is no password reset by email. Selector sessions last 7 days (a longer selector-only session needs a custom session writer). PKCE and a QR code for the invite are not included.
 - Only the frame of the selector area (overview and My account) is built here; availability, squad boards, [team selection and the lineup picture](./team-selection-and-announce.mdx) and the [match-day overview](./match-day-overview.mdx) have their own docs. Best-player votes, net sessions and auto-posting to Facebook are out of scope for this work. Everything is tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
 - An editor-set password is shown only while typing it; tell the person in person or by phone.
+
+The Overview also links to [Best player votes](./best-player-votes.mdx) (`/selector/votes`) while voting is switched on; it is not a fifth tab, so the bottom bar keeps its four entries.

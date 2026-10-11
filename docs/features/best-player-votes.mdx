@@ -1,0 +1,58 @@
+---
+title: Best player votes
+status: shipped
+routes: ["/availability/[token]/vote/[fixtureId]", "/selector/votes", "/selector/votes/[fixtureId]", "/selector/votes/settings", "/selector/present/votes", "/votes", "/api/admin/votes-export"]
+collections: [best-player-ballots, selection-fixtures, team-sheets, players]
+admin: "None for ballots (they cannot be read by anyone). Options are edited in the selector area (Votes > Settings) by the committee; the same fields are in Advanced > Selection settings (admin)"
+owner: "Selectors and the committee"
+related: [availability-link, selector-accounts, team-selection-and-announce, squad-boards, duplicate-players-and-undo, match-data-store, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player** who wants to say who played best after a game, from the phone they already use for availability, without another login.
+- **A selector** who wants to see who has voted, chase the rest, and run awards night.
+- **The committee** who decide whether the leaderboard is public, and who need it to be fair and not embarrassing.
+- **The admin**, who needs the votes to stay private even from them.
+
+## Why it was built
+
+Clubs give a best-player award and count the votes by hand (issue [#18](https://github.com/sherlabs/lang-lang-cricket-website/issues/18), tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). This keeps a 3-2-1 ballot per game, a season leaderboard and a small presentation mode in the tools the selectors already use. The award's name (for example "Best player" or "Player of the match") is the club's word: set it with the `VOTE_LABEL` environment variable.
+
+## What it does
+
+**Off until switched on.** Everything below is hidden (and the public page is a plain 404) until the committee switches voting on.
+
+**Voting.** After a game is final in PlayHQ and the fixtures have refreshed, each player who was in the team sees a "Vote for ..." card on their availability page. They choose a different player for each place with plain drop-down lists (so it works with no JavaScript) and send. They can change their vote for a while (24 hours by default, never past the end of voting). Players are the people on the published team sheet; if no team was published, the club-side players of the stored match. Hidden players and guests are never listed. A player cannot vote for themselves unless the setting allows it. Who is voting always comes from the signed cookie the availability link sets, never from the form.
+
+**Voting window.** Voting stays open for a number of days after the game (7 by default) and then closes by itself at the end of that club-local day; nothing is written when it closes. A selector can close a game early, reopen it, or leave a game out of the awards (for example a washed-out game).
+
+**Selectors** see games needing votes ("7 of 12 voted", "3 of 5 votes needed to count"), a chase list of who has not voted with a **Copy a reminder text** button that reuses the availability link, a private leaderboard (whole club or by grade, clearly labelled as including games still open), and can enter a ballot on someone's behalf (a phone call, a coach, an umpire): it is recorded as "entered by a selector" and its picks are never shown back, even to the selector who entered it. The Overview has a Votes tile and the Selectors page in the admin links to it.
+
+**The leaderboard.** Points come from the stored place of each pick and the current ballot values (3,2,1 by default; up to five places, for example 5,3,1). Ties are split by the most top-place votes, then by the next place, and what is still level is shown as a shared rank; an optional setting ranks fewer games higher. Each row shows the games the player was in, so a row with few games reads differently. Movement since the previous round is written as words ("Up 2", "New"). The race chart shows the top five (ties at fifth included) as cumulative points after each closed weekend, with a different dash and marker for every line and a table of the numbers under it, so colour is never the only signal.
+
+**Public leaderboard (optional).** `/votes` is off by default. When on, it shows season totals for the whole club and/or each grade, only for games whose voting has closed, with the ballot values used and a line such as "2 games are not counted yet" (never saying which). It never shows who voted for whom, never a single game's result and never a hidden player. A whole weekend is held back while any game in it is still open.
+
+**Awards night.** `/selector/present/votes` (behind the selector login, no tab bar) steps through the title, the table after each closed weekend, then the top five counted down from fifth to the winner. Next and Back buttons or the Right/Space and Left keys, **F** or the button for full screen; a reload carries on from the same step. The data on the page is the same closed-round totals as the public page, never ballots.
+
+**Privacy and honest limits.**
+- Nobody, including an admin, can read a ballot over the API or in the admin; the picks are not even filterable. The admin can see **who** has voted for a game (never for whom; each look is logged) and can delete one player's ballot so they can vote again, which is how a dispute is settled. The totals CSV (`/api/admin/votes-export`) is admin only, holds season totals per player and the ballot values used, never individual ballots, and neutralises spreadsheet formulas in names.
+- Votes are **anonymous at normal club sizes, not guaranteed for small groups.** A game counts only with at least 5 votes (adjustable, never under 3); a small number lowers the protection. Public numbers come only from closed games, are cumulative, and do not change when a vote is cast in an open game.
+- A player's PIN is usually the last four digits of their phone, which family members may know. The settings screen shows how many players are in that position and recommends manual 6-digit PINs before voting is switched on.
+- Changing the ballot values changes every total, past games included.
+- Votes are throttled per player, per link and per address (a clubhouse shares one link and one Wi-Fi, so the link and address limits are generous). An unknown game, a wrong link, a game the player was not in and a closed game all give the same plain "page not found".
+- Merging two players moves their ballots and the picks that name them; if both had voted in one game only the earlier ballot is kept, and an undo does not bring that deleted ballot back.
+- Games under the minimum or still open are left out of totals, so players from sparsely voted games can be under-ranked; the page says how many games are not counted.
+
+## How to use it
+
+1. Open **Selectors** in the admin (or the Overview in the selector area) and go to **Votes > Settings**. Read the PIN warning, set manual 6-digit PINs for anyone on a default PIN if you can, then tick **Voting is switched on**.
+2. After a game, players open the availability link and tap **Vote**. Chase with **Votes** > the game > **Copy a reminder text**.
+3. Watch the **Leaderboard (private)**. To show it on the site, tick **Show a public leaderboard** and choose whole club, grades or both.
+4. On awards night open **Awards night mode** and press Next. Admins download the totals with **Download totals (CSV)**.
+5. If a player says someone voted as them, an admin opens the game, deletes that ballot and asks them to vote again.
+
+## Not included / deferred
+
+Tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38): a shareable image of the leaderboard, voting for umpires or coaches, a squad-members voter rule, configurable tie-break order, presenter shortcuts (help overlay, jump to step, `#step=` links), per-game results (deliberately not shown), repointing availability, squad and team-sheet rows when players are merged, and a separate club-global field for the award's name (it is the `VOTE_LABEL` environment variable for now). Player availability and team selection are in [Availability link and PINs](./availability-link.mdx) and [Team selection](./team-selection-and-announce.mdx).

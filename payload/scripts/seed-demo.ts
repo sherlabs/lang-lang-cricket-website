@@ -32,6 +32,7 @@ import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
 import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedDemoSelection, seedDemoTeams } from '../seed/demo-selection'
+import { seedDemoVotes } from '../seed/demo-votes'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
@@ -487,6 +488,7 @@ async function main() {
     await seedDemoSelectors(payload)
     await seedDemoSelection(payload)
     await seedDemoTeams(payload)
+    await seedDemoVotes(payload)
   } finally {
     await payload.destroy()
   }
