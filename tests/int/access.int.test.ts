@@ -525,7 +525,7 @@ describe('access: every collection and global (WP6)', () => {
   let before: Record<string, number>
 
   const PUBLIC_READ = new Set(['media', 'documents', 'gallery-photos', 'sponsors', 'people', 'announcements', 'events', 'event-photos', 'stories', 'players', 'player-seasons', 'player-sponsors', 'yearbooks', 'pages', 'news'])
-  const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs', 'matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'saved-reports', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets'])
+  const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs', 'matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'saved-reports', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets', 'best-player-ballots'])
   const INTERNAL = /^payload-/
 
   beforeAll(async () => {

@@ -132,6 +132,8 @@ describe('single source for names and labels', () => {
         'app/(frontend)/selector/(area)/availability/page.tsx', 'app/(frontend)/selector/(area)/squads/page.tsx', 'components/availability/answer-list.tsx',
         'components/selector/publish-all.tsx', 'components/selector/squad-grade.tsx', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
         'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts',
+        // Best-player votes: the PlayHQ grade name of the stored fixture, as for availability and team sheets.
+        'app/(frontend)/selector/(area)/votes/[fixtureId]/page.tsx', 'app/(frontend)/selector/(area)/votes/page.tsx', 'app/(frontend)/votes/page.tsx', 'app/(frontend)/availability/[token]/vote/[fixtureId]/page.tsx', 'lib/selector-votes-queries.ts', 'lib/votes-queries.ts',
         // Team sheets and the public teams pages: the PlayHQ grade name of the game, as for availability and squads.
         'app/(frontend)/selector/(area)/players/[slug]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/page.tsx', 'app/(frontend)/selector/(area)/teams/page.tsx',
         'app/(frontend)/teams/[gameId]/lineup-image/route.tsx', 'app/(frontend)/teams/[gameId]/page.tsx', 'app/(frontend)/teams/page.tsx',

@@ -29,7 +29,7 @@ export const placesRequired = (valuesCount: number, pickable: number): number =>
 
 export type BallotError = 'no_nominees' | 'missing' | 'duplicate' | 'not_nominee' | 'self' | 'bad_input'
 export type BallotResult = { ok: true; picks: BallotPick[] } | { ok: false; code: BallotError; message: string }
-const MESSAGES: Record<BallotError, string> = {
+export const BALLOT_MESSAGES: Record<BallotError, string> = {
   no_nominees: 'There is nobody to vote for in this game.',
   missing: 'Please choose a player for every vote.',
   duplicate: 'Please choose a different player for each vote.',
@@ -37,7 +37,7 @@ const MESSAGES: Record<BallotError, string> = {
   self: 'You cannot vote for yourself.',
   bad_input: 'Something went wrong. Please try again.',
 }
-const fail = (code: BallotError): BallotResult => ({ ok: false, code, message: MESSAGES[code] })
+const fail = (code: BallotError): BallotResult => ({ ok: false, code, message: BALLOT_MESSAGES[code] })
 
 /** Checks a ballot against the nominees and the places, and returns the picks sorted by place. */
 export function validateBallot(picks: readonly BallotPick[], nomineeIds: readonly number[], valuesCount: number, voterPlayerId: number | null, allowSelfVote: boolean): BallotResult {

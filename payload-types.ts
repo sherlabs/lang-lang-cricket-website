@@ -1501,7 +1501,7 @@ export interface TeamSheet {
   createdAt: string;
 }
 /**
- * Votes for the best player of a game. Private: nobody can read who voted for whom.
+ * Player votes for one game. Private: nobody can read who voted for whom.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "best-player-ballots".
