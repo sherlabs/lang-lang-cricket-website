@@ -11,7 +11,7 @@ import type { Apparel } from '@/lib/club-merge'
 import { cn } from '@/lib/utils'
 
 // Pages that live under the Stats item without sharing its URL prefix.
-const STATS_FAMILY = ['/stats', '/records', '/honours', '/statlab', '/yearbooks', '/matches', '/players/compare']
+const STATS_FAMILY = ['/stats', '/records', '/honours', '/statlab', '/yearbooks', '/matches', '/players/compare', '/votes']
 const isActivePath = (pathname: string, href: string) => {
   if (href === '/') return pathname === '/'
   if (href === '/stats') return STATS_FAMILY.some((p) => pathname === p || pathname.startsWith(`${p}/`))

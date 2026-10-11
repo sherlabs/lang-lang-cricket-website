@@ -1,9 +1,14 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { AnswerList } from '@/components/availability/answer-list'
 import { IdentifyForm } from '@/components/availability/identify-form'
 import { AuthCard } from '@/components/selector/auth-card'
+import { VOTES, votePaths } from '@/config/site'
+import { getClub } from '@/lib/club'
+import { formatMatchDay } from '@/lib/selection/lineup-text'
+import { getVoteSettings, votableGames } from '@/lib/votes-queries'
 import { btnQuiet } from '@/components/selector/styles'
 import { availCookieName } from '@/lib/availability-link'
 import { playerView, rememberedPlayer, resolveLink } from '@/lib/availability-public'
@@ -33,10 +38,29 @@ export default async function AvailabilityPage({ params }: Props) {
     )
   }
   const first = view.player.name.split(/\s+/)[0]
+  // Voting is off until the committee switches it on; then each finished game this player was in and can still vote on is listed.
+  const voteSettings = await getVoteSettings(payload)
+  const votable = voteSettings.enabled ? await votableGames(payload, view.player.id, voteSettings) : []
+  const { locale } = votable.length ? await getClub() : { locale: '' }
   return (
     <main className="container-site max-w-xl py-8 sm:py-12">
       <h1 className="display text-3xl text-brand-black">Hi {first}</h1>
       <p className="mt-2 text-sm text-brand-grey">Tell the selectors if you can play. Only you can see your answers here.</p>
+      {votable.length > 0 && (
+        <section aria-labelledby="vote-heading" className="mt-6 rounded-xl bg-white p-5 ring-1 ring-brand-black/10">
+          <h2 id="vote-heading" className="text-lg font-bold text-brand-black">Vote for {VOTES.label.toLowerCase()}</h2>
+          <ul className="mt-3 space-y-2">
+            {votable.map((g) => (
+              <li key={g.id}>
+                <Link href={votePaths.vote(token, g.id)} className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-brand-black/15 px-3 py-2 text-sm text-brand-black hover:bg-brand-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
+                  <span>{g.roundName ? `${g.roundName} ` : ''}v {g.opponentName}<span className="block text-xs text-brand-grey">Vote by {formatMatchDay(g.closesOn, locale)}</span></span>
+                  <span className="shrink-0 font-semibold">{g.voted ? 'Change vote' : 'Vote'}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {!view.inSquad ? (
         <p className="mt-6 rounded-xl bg-white p-5 text-sm text-brand-black ring-1 ring-brand-black/10">You are not in a squad yet, so there are no games to answer. Ask a selector to add you.</p>
       ) : view.fixtures.length === 0 ? (

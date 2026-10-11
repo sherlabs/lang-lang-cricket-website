@@ -1,3 +1,4 @@
+import { VOTES } from '../../config/site'
 import { nobody } from '../access'
 import { codeOnlyAccess, selectionCollection } from './selectionCollection'
 
@@ -10,9 +11,9 @@ import { codeOnlyAccess, selectionCollection } from './selectionCollection'
  */
 export const BestPlayerBallots = selectionCollection({
   slug: 'best-player-ballots',
-  singular: 'Best player ballot',
-  plural: 'Best player ballots',
-  description: 'Votes for the best player of a game. Private: nobody can read who voted for whom.',
+  singular: `${VOTES.label} ballot`,
+  plural: `${VOTES.label} ballots`,
+  description: 'Player votes for one game. Private: nobody can read who voted for whom.',
   defaultColumns: ['fixture', 'source', 'castAt'],
   read: nobody,
   create: nobody,

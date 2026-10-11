@@ -1,4 +1,5 @@
 import type { MergePlan } from './merge'
+import type { VotesMergeSnapshot } from './merge-votes'
 import type { SeasonCounts } from './season-math'
 
 /**
@@ -26,6 +27,8 @@ export type MergeSnapshot = {
   peopleIds: number[]
   playerSponsorIds: number[]
   importedSeasons?: ImportedSeasonsSnapshot
+  /** Best-player ballots moved by the merge (additive; absent on older snapshots). */
+  votes?: VotesMergeSnapshot
 }
 
 export type ImportedSeasonsSnapshot = {

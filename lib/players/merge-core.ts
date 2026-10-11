@@ -4,6 +4,8 @@ import { relinkMatchPlayers } from '@/lib/match-store/write'
 import { revalidateStats } from '@/lib/stats/tags'
 import { playerTables } from './db'
 import { planMerge } from './merge'
+import { repointBallots, restoreBallots, type VotesMergeCounts } from './merge-votes'
+import { settingsFrom } from '@/lib/votes/settings'
 import { buildMergeSnapshot, revertTargetPatch, type ImportedSeasonsSnapshot, type MergeSnapshot, type SnapshotPlayer } from './merge-snapshot'
 import { sameGameMessage } from './same-game'
 import { pickCounts } from './season-math'
@@ -47,7 +49,7 @@ export async function sharedGamesOf(payload: Payload, a: number, b: number): Pro
 }
 
 export type MergeResult =
-  | { ok: true; targetId: number; sourceSlug: string; targetSlug: string; logId: number }
+  | { ok: true; targetId: number; sourceSlug: string; targetSlug: string; logId: number; votes: VotesMergeCounts }
   | { ok: false; status: number; message: string; code?: 'same_game'; sharedGames?: SharedGame[] }
 
 export async function mergePlayerInto(
@@ -79,6 +81,8 @@ export async function mergePlayerInto(
 
   const t = playerTables(payload)
   const stamp = new Date().toISOString()
+  const allowSelfVote = settingsFrom(await payload.findGlobal({ slug: 'selection-settings', depth: 0, overrideAccess: true })).allowSelfVote
+  let votesCounts: VotesMergeCounts = { ballotsMoved: 0, collisionsDeleted: 0, picksDuplicatesDropped: 0, selfPicksDropped: 0, ballotsDeleted: 0 }
   const sourceName = source.displayName || `${source.firstName} ${source.lastName}`.trim()
   const logId = await payload.db.drizzle.transaction(async (tx) => {
     // 0. Snapshot, before any write.
@@ -128,10 +132,14 @@ export async function mergePlayerInto(
       await tx.update(t.match_appearances).set({ player: null, updatedAt: stamp }).where(and(eq(t.match_appearances.player, sId), inArray(t.match_appearances.match, shared.matchIds)))
     }
     await tx.update(t.match_appearances).set({ player: tId, updatedAt: stamp }).where(eq(t.match_appearances.player, sId))
+    // 6d. Best-player ballots follow the identity: keys rewritten, same-game collisions keep the earlier ballot.
+    const voteMove = await repointBallots(tx, t, sId, tId, allowSelfVote, stamp)
+    votesCounts = voteMove.counts
+    const withVotes = voteMove.counts.ballotsMoved || voteMove.snapshot.picksMoved.length ? { ...snapshot, votes: voteMove.snapshot } : snapshot
     // 7. The log row (inside the transaction, so it exists exactly when the merge happened), then the source and anything still pointing at it.
     const [log] = await tx
       .insert(t.merge_log)
-      .values({ kind: 'merge', status: 'applied', sourcePlayerId: sId, sourceName, targetPlayer: tId, snapshot, createdBy: o.userId, createdAt: stamp, updatedAt: stamp })
+      .values({ kind: 'merge', status: 'applied', sourcePlayerId: sId, sourceName, targetPlayer: tId, snapshot: withVotes, createdBy: o.userId, createdAt: stamp, updatedAt: stamp })
       .returning({ id: t.merge_log.id })
     await tx.delete(t.player_aliases).where(eq(t.player_aliases.player, sId))
     await tx.delete(t.player_seasons).where(eq(t.player_seasons.player, sId))
@@ -141,7 +149,7 @@ export async function mergePlayerInto(
 
   await purgeOldMergeLog(payload)
   await revalidateAfterMergeChange([`/players/${source.slug}`, `/players/${target.slug}`])
-  return { ok: true, targetId: tId, sourceSlug: String(source.slug ?? ''), targetSlug: String(target.slug ?? ''), logId }
+  return { ok: true, targetId: tId, sourceSlug: String(source.slug ?? ''), targetSlug: String(target.slug ?? ''), logId, votes: votesCounts }
 }
 
 export type UndoResult = { ok: true; playerId: number; relinked: number } | { ok: false; status: number; message: string }
@@ -194,6 +202,8 @@ export async function undoMerge(payload: Payload, logId: number, userId: number 
         }
       }
     }
+    // Best-player ballots: only what is provably unchanged goes back.
+    if (snap.votes) await restoreBallots(tx, t, sId, tId, snap.votes, stamp)
     // The target patch is reverted only for fields still holding the merged value.
     const patch = revertTargetPatch(snap, { photo: target.photo === null || target.photo === undefined ? null : int(target.photo), bio: target.bio ?? '', isActiveDerived: target.isActiveDerived === true })
     if (Object.keys(patch).length) await tx.update(t.players).set({ ...patch, updatedAt: stamp }).where(eq(t.players.id, tId))

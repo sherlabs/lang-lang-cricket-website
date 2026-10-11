@@ -29,7 +29,7 @@ export function DuplicatePlayersPanel({ api, adminRoute, pairs, merges }: { api:
     const targetId = keep[p.key] ?? p.keepId
     const target = targetId === p.a.id ? p.a : p.b
     const source = target === p.a ? p.b : p.a
-    if (!window.confirm(`Merge ${source.name} into ${target.name}? Their seasons, honours and links move to ${target.name}. You can undo this afterwards.`)) return
+    if (!window.confirm(`Merge ${source.name} into ${target.name}? Their seasons, honours, links and best-player votes move to ${target.name}. You can undo this afterwards (if both had voted in the same game, only the earlier vote is kept and the other is not restored).`)) return
     setBusy(true)
     try {
       let { res, json } = await post(`/players/${source.id}/merge`, { targetId })

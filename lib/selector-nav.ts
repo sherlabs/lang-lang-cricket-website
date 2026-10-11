@@ -11,4 +11,8 @@ export const selectorTabs: SelectorTab[] = [
   { key: 'teams', label: 'Teams', href: '/selector/teams' },
 ]
 
-export const isTabActive = (tab: SelectorTab, pathname: string): boolean => (tab.href === '/selector' ? pathname === '/selector' : pathname === tab.href || pathname.startsWith(`${tab.href}/`))
+// Votes are reached from the Overview (no fifth tab), so the Overview stays lit while a vote page is open.
+const OVERVIEW_CHILDREN = ['/selector/votes']
+
+export const isTabActive = (tab: SelectorTab, pathname: string): boolean =>
+  tab.href === '/selector' ? pathname === '/selector' || OVERVIEW_CHILDREN.some((p) => pathname === p || pathname.startsWith(`${p}/`)) : pathname === tab.href || pathname.startsWith(`${tab.href}/`)

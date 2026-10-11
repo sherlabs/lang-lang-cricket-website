@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { OverviewCards } from '@/components/selector/weekend-cards'
-import { selectorPaths } from '@/config/site'
+import { VOTES, selectorPaths, votePaths } from '@/config/site'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { loadWeekendBoard } from '@/lib/selector-team-queries'
+import { votesOverview } from '@/lib/selector-votes-queries'
 
 export const metadata: Metadata = { title: 'Selectors', robots: { index: false, follow: false } }
 
@@ -25,6 +26,8 @@ export default async function SelectorHome({ searchParams }: Props) {
   const { locale } = await getClub()
   const sp = await searchParams
   const board = await loadWeekendBoard(user, { weekend: typeof sp.weekend === 'string' ? sp.weekend : null })
+  const votes = await votesOverview(user)
+  const tools = votes.enabled ? [{ href: votePaths.selector, title: `${VOTES.label} votes`, text: votes.openGames ? `${votes.openGames} ${votes.openGames === 1 ? 'game is' : 'games are'} open for voting. See who has voted and chase the rest.` : 'See who has voted, the leaderboard and awards night.' }, ...TOOLS] : TOOLS
   const name = (user as { name?: string | null }).name?.trim().split(/\s+/)[0]
   return (
     <main className="container-site max-w-5xl py-6 sm:py-10">
@@ -50,7 +53,7 @@ export default async function SelectorHome({ searchParams }: Props) {
       {board.weekends.length === 0 && <p className="mt-6 rounded-xl bg-white p-5 text-brand-grey ring-1 ring-brand-black/10">There are no upcoming games stored yet. Open Availability and press Refresh fixtures to copy them from PlayHQ.</p>}
       <h2 className="mt-10 text-xl font-bold text-brand-black">Tools</h2>
       <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-        {TOOLS.map((t) => (
+        {tools.map((t) => (
           <li key={t.href}>
             <Link href={t.href} className="block min-h-11 rounded-xl bg-white p-4 ring-1 ring-brand-black/10 transition hover:ring-brand-gold-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
               <span className="block text-lg font-bold text-brand-black">{t.title}</span>

@@ -29,7 +29,7 @@ export const mergePlayersEndpoint: Endpoint = {
     // Compare after coercion: ('5', 5) would otherwise fold a player into itself and delete it.
     const res = await mergePlayerInto(req.payload, { sourceId: sId, targetId: tId, userId: userId(req), confirmSameGame: body.confirmSameGame === true })
     if (!res.ok) return Response.json({ errors: [{ message: res.message }], code: res.code, sharedGames: res.sharedGames }, { status: res.status })
-    return Response.json({ ok: true, targetId: res.targetId, logId: res.logId })
+    return Response.json({ ok: true, targetId: res.targetId, logId: res.logId, votes: res.votes })
   },
 }
 

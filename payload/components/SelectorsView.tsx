@@ -1,6 +1,6 @@
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
-import { CLUB_LOCALE, SELECTOR_INVITE_DAYS } from '@/config/site'
+import { CLUB_LOCALE, SELECTOR_INVITE_DAYS, VOTES, votePaths } from '@/config/site'
 import { facebookConfig } from '@/lib/facebook-login'
 import { selectorStatus, STATUS_LABEL } from '@/lib/selector-status'
 import { isStaffUser } from '../access'
@@ -51,6 +51,9 @@ export async function SelectorsView(view: AdminViewServerProps) {
       <SetStepNav nav={[{ label: 'Selectors' }]} />
       <h1 className="club-page__title">Selectors</h1>
       <p className="club-page__lead">Selectors pick the team for each grade and announce it. They sign in on the website, never here. Add a name and email, then send them the link.</p>
+      <p className="club-page__lead">
+        Run the player votes, see who has voted and open the leaderboard: <a href={votePaths.selector}>{VOTES.label} votes</a> (opens the selector area).
+      </p>
       <SelectorsPanel api={api} rows={rows} facebookOn={Boolean(facebookConfig())} inviteDays={SELECTOR_INVITE_DAYS} />
     </AdminPage>
   )
