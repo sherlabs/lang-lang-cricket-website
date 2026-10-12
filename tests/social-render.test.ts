@@ -9,7 +9,7 @@ import { FIXTURE_DATA, TINY_PNG } from './helpers/social-fixtures'
 
 const theme = resolveTheme(null)
 
-/** 9 types x 3 sizes x 3 styles = 81 real renders; each is checked for its PNG dimensions (the IHDR chunk). */
+/** 10 types x 3 sizes x 3 styles = 90 real renders; each is checked for its PNG dimensions (the IHDR chunk). */
 describe('social graphics render', () => {
   it('renders every type in every size and style to a PNG of the stated size', async () => {
     const fonts = await loadThemeFonts(theme)
@@ -27,7 +27,7 @@ describe('social graphics render', () => {
         }
       }
     }
-    expect(count).toBe(81)
+    expect(count).toBe(90)
     expect(Date.now() - started).toBeLessThan(60_000)
   }, 90_000)
 })

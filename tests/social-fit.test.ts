@@ -49,7 +49,8 @@ describe('graphic layouts fit the page', () => {
   })
 
   it('the sponsor logo grid shrinks for a crowded wide page and keeps all sponsors', () => {
-    const layout = SPECS['sponsor-thanks'].layout(sponsors(4) as never, 'bold', 'landscape')
+    const all = sponsors(4)
+    const layout = SPECS['sponsor-thanks'].layout({ ...all, sponsors: all.sponsors.map((s) => ({ ...s, logo: TINY_PNG })) } as never, 'bold', 'landscape')
     const grid = logosFor(layout, 'landscape', 'bold', room(layout, 'landscape', 'bold'))
     expect(grid?.columns).toBe(4)
     const block = layout.blocks.find((b) => b.kind === 'logos')

@@ -28,7 +28,25 @@ async function seedSponsors(payload: Payload): Promise<number> {
     await payload.create({ collection: 'sponsors', data: { name: s.name, tier: s.tier, logo: media.id, linkUrl: '', sortOrder: 50 + n }, overrideAccess: true, context: CTX })
     n++
   }
+  // One sponsor with no logo at all, so the name-only thank-you (and the composer's note about it) can be seen. Not named "Demo ...":
+  // the demo posting queue picks its sponsors by that prefix and all of them have logos.
+  const bare = 'Sample Garage'
+  if ((await payload.count({ collection: 'sponsors', where: { name: { equals: bare } }, overrideAccess: true })).totalDocs === 0) {
+    await payload.create({ collection: 'sponsors', data: { name: bare, tier: 'Bronze', linkUrl: '', sortOrder: 60 }, overrideAccess: true, context: CTX })
+    n++
+  }
   return n
+}
+
+/**
+ * Toss details for the demo game (the club won the toss and chose to bat), so the Toss picture has one game to draw. The games the
+ * selection demo stores have no toss at all, so the chooser lists exactly one game. Idempotent: only a game with no toss yet is touched.
+ */
+async function seedDemoToss(payload: Payload): Promise<void> {
+  const { docs } = await payload.find({ collection: 'matches', where: { and: [{ importBatch: { equals: 'imp-demo-social' } }, { clubWonToss: { exists: false } }] }, limit: 1, depth: 0, overrideAccess: true })
+  if (!docs[0]) return
+  await payload.update({ collection: 'matches', id: docs[0].id, data: { clubWonToss: true, tossChoice: 'bat' }, overrideAccess: true, context: CTX })
+  console.log('[seed-demo] social demo game: toss details added (club won the toss, chose to bat)')
 }
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10)
@@ -47,6 +65,7 @@ export async function seedDemoSocial(payload: Payload): Promise<void> {
   }
   if ((await payload.count({ collection: 'players', where: { slug: { equals: 'riley-starr' } }, overrideAccess: true })).totalDocs > 0) {
     console.log('[seed-demo] social demo game: already present, skipped')
+    await seedDemoToss(payload)
     return
   }
   const season = MATCH_SEED_SEASONS[MATCH_SEED_SEASONS.length - 1]
@@ -85,6 +104,7 @@ export async function seedDemoSocial(payload: Payload): Promise<void> {
     writeBundle(tx, matchTables(payload), buildImportedBundle(game), new Map([['riley|starr', riley], ['jamie|junior', jamie], ['casey|consent', casey]]), { source: 'import', importBatch: 'imp-demo-social' }),
   )
   console.log('[seed-demo] social demo game: 1 stored game with a 112 not out, and two juniors (one with the social opt-in) created')
+  await seedDemoToss(payload)
 }
 
 type SeedTarget = { network: string; size: string; status: string; attempts?: number; finalText?: string | null; nextAttemptAt?: string | null; lastError?: string; errorCode?: string; remoteId?: string; manual?: boolean; publishedAt?: string }

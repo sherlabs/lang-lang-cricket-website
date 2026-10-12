@@ -15,6 +15,7 @@ export const CAPTION_VARS: Record<GraphicType, readonly string[]> = {
   'event-promo': ['club', 'event', 'date', 'time', 'place', 'link'],
   'sponsor-thanks': ['club', 'sponsor', 'tier', 'link'],
   'season-wrap': ['club', 'season', 'record', 'link'],
+  toss: ['club', 'winner', 'choice', 'opponent', 'round', 'grade', 'date', 'link'],
 }
 
 /** Generic English defaults. A club's own voice is saved in the settings (seed defaults), never written here. */
@@ -28,6 +29,7 @@ export const DEFAULT_CAPTIONS: Record<GraphicType, string> = {
   'event-promo': '{event}\n{date} {time}\n{place}\n{link}',
   'sponsor-thanks': 'Thank you to {sponsor}.\n{tier} sponsor of {club}.\n{link}',
   'season-wrap': '{season} at {club}: {record}\n{link}',
+  toss: '{club} {grade} v {opponent}\n{winner} won the toss.\n{choice}\n{link}',
 }
 
 /**

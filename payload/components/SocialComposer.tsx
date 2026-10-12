@@ -110,7 +110,7 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
       setPreviews((p) => ({ ...p, [key]: { state: 'loading' } }))
       try {
         const res = await fetch(`${api}/graphic?${params()}`, { credentials: 'include' })
-        if (!res.ok) throw new Error(ERRORS[res.status] ?? 'The picture could not be made. Please try again.')
+        if (!res.ok) throw new Error((res.status === 404 && type === 'toss' ? 'Toss details are not in yet for this game.' : ERRORS[res.status]) ?? 'The picture could not be made. Please try again.')
         const blob = await res.blob()
         const entry: Preview = { state: 'ready', url: URL.createObjectURL(blob), blob }
         cache.current[key] = entry
@@ -223,7 +223,7 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
                     ) : (
                       <input type="radio" name="social-source" checked={selected?.id === c.id} onChange={() => choose(c)} />
                     )}
-                    <span>{c.label}</span>
+                    <span>{c.label}{c.note && <small className="club-muted">{` ${c.note}`}</small>}</span>
                   </label>
                 ))}
                 {list.multi && <p className="club-muted">Choose up to four.</p>}

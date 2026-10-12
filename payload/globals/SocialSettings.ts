@@ -17,6 +17,7 @@ const TYPE_LABELS: Record<(typeof TYPE_KEYS)[number], string> = {
   'event-promo': 'Event promo',
   'sponsor-thanks': 'Sponsor thank-you',
   'season-wrap': 'Season wrap',
+  toss: 'The toss',
 }
 
 const validateClock = (v: unknown): true | string => (v == null || v === '' || (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)) ? true : 'Use 24-hour time like 07:00.')

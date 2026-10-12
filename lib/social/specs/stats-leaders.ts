@@ -1,5 +1,6 @@
 import { cutRows, rowName } from '../density'
-import type { GraphicSpec, Row } from '../types'
+import { fillRowsScale } from '../fit'
+import type { Block, GraphicSpec, Row } from '../types'
 import { isLabelToken, sourceParts } from './helpers'
 
 export type LeadersData = {
@@ -20,11 +21,16 @@ export const leadersSpec: GraphicSpec<LeadersParams, LeadersData> = {
     if (!p || !/^[a-zA-Z]{2,20}$/.test(p[0]) || !isLabelToken(p[1]) || !/^[a-z]{3,10}$/.test(p[2]) || (p[3] !== '3' && p[3] !== '5')) return null
     return { metric: p[0], season: p[1], cat: p[2], count: p[3] === '3' ? 3 : 5 }
   },
-  layout(d, _style, size) {
+  layout(d, style, size) {
     if (!d.rows.length) return { blocks: [], empty: 'No one has qualified for this table yet.' }
     const rows: Row[] = d.rows.map((r) => ({ lead: String(r.rank), text: rowName(r.name, size), value: r.value, sub: size === 'landscape' ? undefined : r.context }))
     const cut = cutRows(rows, size, 0)
-    return { blocks: [{ kind: 'kicker', text: [d.seasonLabel, d.scopeLabel].filter(Boolean).join('  |  ') }, { kind: 'headline', text: d.metric }, { kind: 'rows', rows: cut.rows, more: cut.more }] }
+    const blocks: Block[] = [{ kind: 'kicker', text: [d.seasonLabel, d.scopeLabel].filter(Boolean).join('  |  ') }, { kind: 'headline', text: d.metric }, { kind: 'rows', rows: cut.rows, more: cut.more }]
+    // Minimal has the most room (corner crest, plain frame) and the row count is fixed at 3 or 5, so its rows grow to use the space
+    // instead of leaving it blank. Bold and Classic are unchanged.
+    if (style !== 'minimal') return { blocks }
+    const scale = fillRowsScale(blocks, size, style)
+    return { blocks: scale > 1 ? blocks.map((b) => (b.kind === 'rows' ? { ...b, scale } : b)) : blocks }
   },
   captionVars: (d) => ({ metric: d.metric, season: d.seasonLabel, grade: d.scopeLabel, leader: d.rows[0] ? `${d.rows[0].name} (${d.rows[0].value})` : '' }),
   describe: (d) => `${d.metric} leaders, ${d.seasonLabel}`,

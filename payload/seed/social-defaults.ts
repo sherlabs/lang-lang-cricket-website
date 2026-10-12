@@ -16,6 +16,7 @@ export const SOCIAL_DEFAULTS = {
     statsLeaders: '{metric} leaders for {season}. {leader} is out in front!\n{link}',
     eventPromo: '{event}\n{date} {time}\n{place}\nAll welcome. See you there!\n{link}',
     sponsorThanks: 'A big thank you to {sponsor}.\n{tier} sponsor of {club}.\nWe could not do it without you.\n{link}',
+    toss: '{winner} won the toss v {opponent}.\n{choice}\nGood luck, everyone!\n{link}',
     seasonWrap: '{season} wrap-up from {club}: {record}\nThank you to every player, volunteer and supporter.\n{link}',
   },
 }

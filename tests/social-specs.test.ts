@@ -16,7 +16,7 @@ const textOf = (blocks: Block[]): string[] =>
       case 'versus': return [b.club.name, b.opp.name, b.club.score, b.opp.score]
       case 'rows': return b.rows.flatMap((r) => [r.text, r.value ?? '', r.sub ?? ''])
       case 'photo': return [b.title, ...b.lines]
-      case 'logos': return b.items.map((i) => i.name)
+      case 'logos': case 'names': return b.items.map((i) => i.name)
     }
   })
 
@@ -32,6 +32,7 @@ describe('graphic specs: parse', () => {
     'event-promo': { source: '7' },
     'sponsor-thanks': { source: '1,2,3' },
     'season-wrap': { source: 'summer-2025-26' },
+    toss: { source: G },
   }
   const bad: Record<string, Record<string, string>[]> = {
     result: [{}, { source: 'single|' }, { source: 'nope|x' }, { source: 'round|2026-13-45' }, { source: 'single|a b' }, { source: `single|${'x'.repeat(100)}` }],
@@ -43,6 +44,7 @@ describe('graphic specs: parse', () => {
     'event-promo': [{}, { source: 'abc' }, { source: '-1' }],
     'sponsor-thanks': [{}, { source: '1,2,3,4,5' }, { source: '1;2' }, { source: 'a' }],
     'season-wrap': [{}, { source: 'A B' }, { source: '' }],
+    toss: [{}, { source: '' }, { source: '../etc/passwd' }, { source: 'a b' }, { source: `x${'y'.repeat(100)}` }],
   }
   for (const type of TYPE_KEYS) {
     it(`${type}: accepts good input and rejects bad input`, () => {
@@ -60,7 +62,7 @@ describe('graphic specs: parse', () => {
 })
 
 describe('graphic specs: layout', () => {
-  it('returns blocks for every type in every size and style (81 combinations)', () => {
+  it('returns blocks for every type in every size and style (90 combinations)', () => {
     let n = 0
     for (const type of TYPE_KEYS) {
       for (const size of SIZE_KEYS) {
@@ -72,7 +74,7 @@ describe('graphic specs: layout', () => {
         }
       }
     }
-    expect(n).toBe(81)
+    expect(n).toBe(90)
   })
 
   it('cuts a long list at a whole row with "+ N more" and keeps the cut inside the size', () => {

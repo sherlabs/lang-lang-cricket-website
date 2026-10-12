@@ -3,7 +3,7 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import { WHITE } from '@/lib/theme/neutral'
 import type { ResolvedTheme } from '@/lib/theme/resolve'
 import { headlineSize, METRICS, type Metrics } from './density'
-import { availableHeight, detailRowHeight, footerHeight, logosFor, photoHeight, type LogoGrid } from './fit'
+import { availableHeight, detailRowHeight, footerHeight, logosFor, NAME_CELL_MAX, nameSize, nameTierSize, namesStacked, photoHeight, scaleMetrics, tierInline, type LogoGrid } from './fit'
 import { STYLE_KITS, type StyleKit } from './kits'
 import { rgba, styleTokens, type StyleTokens } from './style'
 import { SIZES, type Block, type GraphicLayout, type Row, type SizeKey, type StyleKey } from './types'
@@ -80,7 +80,9 @@ function RowLine({ r, c, compact }: { r: Row; c: Ctx; compact: boolean }) {
   )
 }
 
-function Rows({ b, c }: { b: Extract<Block, { kind: 'rows' }>; c: Ctx }) {
+function Rows({ b, c: base }: { b: Extract<Block, { kind: 'rows' }>; c: Ctx }) {
+  // A list with room to spare is drawn larger (see `fillRowsScale`); every row, and the "+ N more" line, use the scaled metrics.
+  const c: Ctx = b.scale ? { ...base, m: scaleMetrics(base.m, b.scale) } : base
   const { m, t } = c
   const cols = Math.max(1, b.columns ?? 1)
   const per = Math.ceil(b.rows.length / cols) || 1
@@ -172,22 +174,34 @@ function renderBlock(b: Block, i: number, c: Ctx, last: boolean): ReactElement |
       )
     case 'logos': {
       const g = c.grid
-      if (!g) return null
+      if (!g || !b.items.length) return null
       const cellWidth = `${Math.floor(100 / g.columns)}%`
       return (
         <div key={i} style={row({ width: '100%', marginTop: m.gap, justifyContent: center ? 'center' : 'flex-start', flexWrap: 'wrap' })}>
           {b.items.map((l, k) => (
             <div key={k} style={col({ alignItems: center ? 'center' : 'flex-start', width: g.columns === 1 ? '100%' : cellWidth, paddingRight: g.columns === 1 ? 0 : 14, marginBottom: 14 })}>
-              {/* A sponsor without a usable logo still gets a tile (its initial), so the grid stays even. */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: l.src ? WHITE : t.surfaceAlt, padding: 12, borderRadius: 14, height: g.logo + 24, minWidth: g.logo + 24 }}>
-                {l.src ? (
-                  <img src={l.src} height={g.logo} style={{ height: g.logo, maxWidth: g.columns === 1 ? 640 : Math.floor((SIZES[c.size].width - 2 * m.pad) / g.columns) - 60, objectFit: 'contain' }} alt="" />
-                ) : (
-                  <Text style={{ fontFamily: 'Display', fontSize: Math.round(g.logo * 0.6), color: t.accentText }}>{l.name.slice(0, 1).toUpperCase()}</Text>
-                )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: WHITE, padding: 12, borderRadius: 14, height: g.logo + 24, minWidth: g.logo + 24 }}>
+                <img src={l.src} height={g.logo} style={{ height: g.logo, maxWidth: g.columns === 1 ? 640 : Math.floor((SIZES[c.size].width - 2 * m.pad) / g.columns) - 60, objectFit: 'contain' }} alt="" />
               </div>
               {l.name && <Text style={{ marginTop: 6, fontSize: g.name, fontWeight: 700, color: t.text, maxWidth: '100%', ...ellipsis }}>{l.name}</Text>}
               {l.tier && <Text style={{ fontSize: g.tier, color: t.accentText }}>{l.tier}</Text>}
+            </div>
+          ))}
+        </div>
+      )
+    }
+    case 'names': {
+      // Sponsors without a logo we can draw: the name itself is the picture. One per line for three or fewer, a wrapped line otherwise.
+      const stacked = namesStacked(b.items.length)
+      return (
+        <div key={i} style={row({ width: '100%', marginTop: m.gap, ...(stacked ? { flexDirection: 'column', alignItems: center ? 'center' : 'flex-start' } : { flexWrap: 'wrap', justifyContent: center ? 'center' : 'flex-start', alignItems: 'flex-start' }) })}>
+          {b.items.map((n, k) => (
+            <div key={k} style={col({ alignItems: center ? 'center' : 'flex-start', maxWidth: stacked ? '100%' : `${NAME_CELL_MAX * 100}%`, marginRight: stacked ? 0 : 28, marginBottom: 8 })}>
+              <div style={row({ alignItems: 'baseline', maxWidth: '100%' })}>
+                <Text style={{ fontFamily: 'Display', fontSize: nameSize(c.size), lineHeight: 1.25, color: t.text, minWidth: 0, ...ellipsis }}>{n.name}</Text>
+                {n.tier && tierInline(c.size) && <Text style={{ flexShrink: 0, marginLeft: 12, fontSize: nameTierSize(c.size), color: t.accentText }}>{n.tier}</Text>}
+              </div>
+              {n.tier && !tierInline(c.size) && <Text style={{ fontSize: nameTierSize(c.size), color: t.accentText }}>{n.tier}</Text>}
             </div>
           ))}
         </div>

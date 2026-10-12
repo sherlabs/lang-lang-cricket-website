@@ -3,6 +3,7 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { listUpcomingItems } from '@/lib/events-queries'
 import { toSponsor } from '@/lib/payload/mappers'
 import { TIER_ORDER } from '@/lib/sponsors'
+import { isDrawableImageType } from '@/lib/stats/card'
 import { loadImageDataUri } from '@/lib/theme/og'
 import type { EventPromoData, EventPromoParams } from '../specs/event-promo'
 import type { SponsorThanksData, SponsorThanksParams } from '../specs/sponsor-thanks'
@@ -36,7 +37,13 @@ async function publicSponsors() {
 
 export async function sponsorChoices(): Promise<SourceList> {
   const docs = await publicSponsors()
-  return { multi: true, choices: docs.map((d) => ({ id: String(d.id), label: `${d.name} (${d.tier})` })), empty: 'No sponsors have been added yet.' }
+  // A logo that is missing or is not a PNG or JPG cannot be drawn; the picture then shows the name, and the composer says so.
+  const drawable = (d: (typeof docs)[number]): boolean => typeof d.logo === 'object' && d.logo !== null && isDrawableImageType(d.logo.mimeType)
+  return {
+    multi: true,
+    choices: docs.map((d) => ({ id: String(d.id), label: `${d.name} (${d.tier})`, ...(drawable(d) ? {} : { note: `${d.name} has no logo we can draw, so the name is shown.` }) })),
+    empty: 'No sponsors have been added yet.',
+  }
 }
 
 export async function loadSponsors(p: SponsorThanksParams): Promise<SponsorThanksData | null> {

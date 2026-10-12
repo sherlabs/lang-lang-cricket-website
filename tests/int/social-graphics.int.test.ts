@@ -142,9 +142,16 @@ describe('social graphics', () => {
     'event-promo': () => '',
     'sponsor-thanks': () => '',
     'season-wrap': () => 'summer-2025-26',
+    toss: () => gameId,
+  }
+
+  async function setToss(data: Record<string, unknown>) {
+    const m = await payload.find({ collection: 'matches', where: { gameId: { equals: gameId } }, limit: 1, depth: 0, overrideAccess: true })
+    await payload.update({ collection: 'matches', id: m.docs[0].id, data: data as never, overrideAccess: true, context: CTX })
   }
 
   it('every graphic type draws a PNG of the stated size for the committee, in all three sizes', async () => {
+    await setToss({ clubWonToss: true, tossChoice: 'bat' })
     await publishedTeam()
     await makeFixture(payload, { gameId: 'game-next', localDate: '2026-10-17', opponentName: 'Next Rovers' })
     const ev = await payload.create({ collection: 'events', data: { type: 'one_time', title: 'Presentation night', description: '', location: 'Clubrooms', eventTime: '18:00', eventDate: new Date(Date.now() + 14 * 86_400_000).toISOString() } as never, overrideAccess: true, context: CTX })
@@ -253,6 +260,55 @@ describe('social graphics', () => {
     expect(json.text).toMatch(/https?:\/\/[^\s]+\/matches$/)
     expect(json.unknown).toEqual([])
   }, 60_000)
+
+  it('toss: only a game whose winner is known is offered or drawn, and a stale link is the same plain 404', async () => {
+    const ids = async () => ((await (await sources('type=toss', editor)).json()) as { choices: { id: string; label: string }[] }).choices
+    // No toss details stored: the chooser is empty and the picture is not found.
+    expect(await ids()).toEqual([])
+    const none = await graphic(`type=toss&size=square&source=${enc(gameId)}`, editor)
+    expect(none.status).toBe(404)
+    // A winner id that matches neither team cannot be named: still hidden.
+    await setToss({ tossWinnerTeamId: 'someone-else', clubTeamId: 'team-b', opponentTeamId: 'team-r' })
+    expect(await ids()).toEqual([])
+    // The opponent won and chose to bowl, known only from the team ids (clubWonToss is empty).
+    await setToss({ tossWinnerTeamId: 'team-r', tossChoice: 'bowl' })
+    const listed = await ids()
+    expect(listed.map((c) => c.id)).toEqual([gameId])
+    expect(listed[0].label).toMatch(/v Rovers/)
+    expect((await graphic(`type=toss&size=landscape&source=${enc(gameId)}`, editor)).status).toBe(200)
+    const cap = await (await captionRoute(`type=toss&source=${enc(gameId)}`, editor)).json()
+    expect(JSON.stringify(cap)).toMatch(/Rovers won the toss/)
+    expect(JSON.stringify(cap)).toMatch(/Chose to bowl/)
+    // Everyone outside the committee gets the one plain 404.
+    for (const token of [undefined, selector, disabled]) expect((await sources('type=toss', token)).status).toBe(404)
+    expect((await graphic(`type=toss&size=square&source=${enc(gameId)}`, selector)).status).toBe(404)
+    // A game that is not finished never has a toss picture.
+    await payload.create({ collection: 'matches', data: { gameId: 'toss-upcoming', status: 'UPCOMING', clubWonToss: true, tossChoice: 'bat', localDate: '2026-10-17' } as never, overrideAccess: true, context: CTX })
+    expect((await graphic(`type=toss&size=square&source=toss-upcoming`, editor)).status).toBe(404)
+    expect((await ids()).map((c) => c.id)).toEqual([gameId])
+    await payload.delete({ collection: 'matches', where: { gameId: { equals: 'toss-upcoming' } }, overrideAccess: true, context: CTX })
+  }, 90_000)
+
+  it('sponsor thank-you: a sponsor whose logo cannot be drawn is flagged in the chooser and drawn by name', async () => {
+    const mk = async (name: string, mimetype: string | null, file: string) => {
+      const media = mimetype ? await payload.create({ collection: 'media', data: { alt: name }, file: { data: png, mimetype, name: file, size: png.length }, overrideAccess: true, context: CTX }) : null
+      return payload.create({ collection: 'sponsors', data: { name, tier: 'Gold', ...(media ? { logo: media.id } : {}), linkUrl: '' } as never, overrideAccess: true, context: CTX })
+    }
+    const ok = await mk('Png Sponsor', 'image/png', 'ok-one.png')
+    const webp = await mk('Webp Sponsor', 'image/webp', 'ok-two.webp')
+    const bare = await mk('Bare Sponsor', null, '')
+    // The upload sniffs the real bytes (a PNG), so mark the stored type as WebP the way a real WebP upload would be recorded.
+    await payload.db.drizzle.execute(sql.raw(`UPDATE "payload"."media" SET "mime_type" = 'image/webp' WHERE "filename" = 'ok-two.webp'`))
+    const list = (await (await sources('type=sponsor-thanks', editor)).json()) as { choices: { id: string; note?: string }[] }
+    const noteOf = (id: number) => list.choices.find((c) => c.id === String(id))?.note
+    expect(noteOf(ok.id)).toBeUndefined()
+    expect(noteOf(webp.id)).toBe('Webp Sponsor has no logo we can draw, so the name is shown.')
+    expect(noteOf(bare.id)).toBe('Bare Sponsor has no logo we can draw, so the name is shown.')
+    // Mixed, all name-only and a single name-only sponsor all draw in every size.
+    for (const source of [`${ok.id},${webp.id},${bare.id}`, `${webp.id},${bare.id}`, `${bare.id}`]) {
+      for (const size of ['square', 'story', 'landscape']) expect((await graphic(`type=sponsor-thanks&size=${size}&style=minimal&source=${enc(source)}`, editor)).status, `${source} ${size}`).toBe(200)
+    }
+  }, 120_000)
 
   it('sponsor logos: only the configured host is fetched, a WebP is skipped without an error, and no logo at all just drops the strip', async () => {
     const mk = async (name: string, mimetype: string, file: string, tier = 'Platinum') => {

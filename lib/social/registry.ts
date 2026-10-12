@@ -3,6 +3,7 @@ import { SPECS } from './specs'
 import { eventChoices, loadEvent, loadSponsors, sponsorChoices } from './sources/content'
 import { loadPotm, loadResult, potmGames, potmPlayers, resultChoices } from './sources/result'
 import { fixturesChoices, lineupChoices, loadFixtures, loadLineup } from './sources/schedule'
+import { loadToss, tossChoices } from './sources/toss'
 import { leadersChoices, loadLeaders, loadMilestone, loadSeasonWrap, milestoneChoices, seasonWrapChoices } from './sources/stats'
 import { isGameId, type GraphicSpec, type GraphicType, type RawParams, type SourceList } from './types'
 
@@ -22,4 +23,5 @@ export const GRAPHICS: Record<GraphicType, Graphic> = {
   'event-promo': { spec: SPECS['event-promo'], choices: () => eventChoices(), load: loadEvent as Graphic['load'] },
   'sponsor-thanks': { spec: SPECS['sponsor-thanks'], choices: () => sponsorChoices(), load: loadSponsors as Graphic['load'] },
   'season-wrap': { spec: SPECS['season-wrap'], choices: () => seasonWrapChoices(), load: loadSeasonWrap as Graphic['load'] },
+  toss: { spec: SPECS.toss, choices: () => tossChoices(), load: loadToss as Graphic['load'] },
 }

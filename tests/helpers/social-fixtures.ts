@@ -6,6 +6,7 @@ import type { PotmData } from '@/lib/social/specs/potm'
 import type { ResultData, ResultGame } from '@/lib/social/specs/result'
 import type { SeasonWrapData } from '@/lib/social/specs/season-wrap'
 import type { SponsorThanksData } from '@/lib/social/specs/sponsor-thanks'
+import type { TossData } from '@/lib/social/specs/toss'
 import type { LeadersData } from '@/lib/social/specs/stats-leaders'
 import type { GraphicType } from '@/lib/social/types'
 
@@ -29,6 +30,7 @@ export const FIXTURE_DATA: Record<GraphicType, unknown> = {
   'event-promo': { title: 'Season presentation night with a very long title that wraps', dateLabel: 'Sat 22 Nov', timeLabel: '6:30pm', place: 'The clubrooms', cover: TINY_PNG } satisfies EventPromoData,
   'sponsor-thanks': { sponsors: [{ name: 'Smith Hardware', tier: 'Platinum', logo: TINY_PNG }, { name: 'No Logo Plumbing', tier: 'Gold', logo: null }], line: 'Thank you for backing the club this season.' } satisfies SponsorThanksData,
   'season-wrap': { title: '2025/26 yearbook', seasonLabel: '2025/26', premiership: 'B Grade premiers', cover: TINY_PNG, record: '12 wins, 3 losses', topRuns: { name: 'Alex Brown', value: '612' }, topWickets: { name: 'Sam Carter', value: '31' } } satisfies SeasonWrapData,
+  toss: { winner: 'Club', clubWon: true, choice: 'bat', opponent: 'Rivals United', grade: 'B Grade', round: 'Round 4', dateLabel: 'Sat 11 Oct', venue: 'Home Oval, Lang Lang' } satisfies TossData,
 }
 
 export const EMPTY_DATA: Partial<Record<GraphicType, unknown>> = {
@@ -37,4 +39,5 @@ export const EMPTY_DATA: Partial<Record<GraphicType, unknown>> = {
   lineup: { ...(FIXTURE_DATA.lineup as LineupData), players: [] },
   'stats-leaders': { ...(FIXTURE_DATA['stats-leaders'] as LeadersData), rows: [] },
   'sponsor-thanks': { sponsors: [], line: '' },
+  toss: { ...(FIXTURE_DATA.toss as TossData), winner: '' },
 }

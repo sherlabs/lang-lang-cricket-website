@@ -3334,6 +3334,10 @@ export interface SocialSetting {
      * Leave empty to use the standard wording shown here.
      */
     seasonWrap?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    toss?: string | null;
   };
   /**
    * Optional. Added to the end of every caption.
@@ -3724,6 +3728,7 @@ export interface SocialSettingsSelect<T extends boolean = true> {
         eventPromo?: T;
         sponsorThanks?: T;
         seasonWrap?: T;
+        toss?: T;
       };
   signOff?: T;
   lastCronRunAt?: T;

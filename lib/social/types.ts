@@ -15,7 +15,7 @@ export const STYLE_KEYS = ['bold', 'classic', 'minimal'] as const
 export type StyleKey = (typeof STYLE_KEYS)[number]
 export const STYLE_LABELS: Record<StyleKey, string> = { bold: 'Bold', classic: 'Classic', minimal: 'Minimal' }
 
-export const TYPE_KEYS = ['result', 'fixtures', 'lineup', 'potm', 'milestone', 'stats-leaders', 'event-promo', 'sponsor-thanks', 'season-wrap'] as const
+export const TYPE_KEYS = ['result', 'fixtures', 'lineup', 'potm', 'milestone', 'stats-leaders', 'event-promo', 'sponsor-thanks', 'season-wrap', 'toss'] as const
 export type GraphicType = (typeof TYPE_KEYS)[number]
 
 export const isSizeKey = (v: unknown): v is SizeKey => typeof v === 'string' && (SIZE_KEYS as readonly string[]).includes(v)
@@ -32,11 +32,13 @@ export type Block =
   | { kind: 'subhead'; text: string }
   | { kind: 'versus'; club: { name: string; score: string }; opp: { name: string; score: string }; note?: string }
   | { kind: 'bigNumber'; value: string; label?: string }
-  | { kind: 'rows'; rows: Row[]; more: number; title?: string; /** Columns, filled top to bottom; 1 when omitted. */ columns?: number }
+  | { kind: 'rows'; rows: Row[]; more: number; title?: string; /** Columns, filled top to bottom; 1 when omitted. */ columns?: number; /** Row height and text size multiplier (1 when omitted), set by a layout that has room to spare. */ scale?: number }
   | { kind: 'text'; text: string; muted?: boolean }
   /** A cover photo. Text is only ever drawn on the scrim below it, never on the photo itself. */
   | { kind: 'photo'; src: string | null; title: string; lines: string[] }
-  | { kind: 'logos'; items: { src: string | null; name: string; tier?: string }[] }
+  | { kind: 'logos'; items: { src: string; name: string; tier?: string }[] }
+  /** Names drawn as large text, for sponsors that have no logo we can draw. */
+  | { kind: 'names'; items: { name: string; tier?: string }[] }
 
 export type GraphicLayout = { blocks: Block[]; /** Shown instead of the blocks when there is nothing to draw. */ empty?: string; /** Leave the sponsor strip off (a graphic that already shows the sponsors). */ noStrip?: boolean }
 
@@ -59,7 +61,7 @@ export type GraphicSpec<P = unknown, D = unknown> = {
 }
 
 /** A choice offered in the composer. Ids and labels only: no statistics. */
-export type SourceChoice = { id: string; label: string; /** Other ways to draw the same choice (for a result: with or without the top performers). `id` is the default. */ variants?: { id: string; label: string }[] }
+export type SourceChoice = { id: string; label: string; /** A short plain-English caution shown beside the choice (for example a sponsor whose logo cannot be drawn). */ note?: string; /** Other ways to draw the same choice (for a result: with or without the top performers). `id` is the default. */ variants?: { id: string; label: string }[] }
 export type SourceList = { /** More than one may be picked (sponsors). */ multi?: boolean; choices: SourceChoice[]; /** Plain sentence shown when there is nothing to pick. */ empty: string }
 
 export const FREE_TEXT_MAX = 80

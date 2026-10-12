@@ -21,7 +21,7 @@ The site could only make one player card and the lineup picture. Posting a resul
 
 ## What it does
 
-**Nine kinds of picture** (a chooser lists real choices, newest first; a type with nothing to show says so):
+**Ten kinds of picture** (a chooser lists real choices, newest first; a type with nothing to show says so):
 
 | Kind | Drawn from |
 | --- | --- |
@@ -32,7 +32,8 @@ The site could only make one player card and the lineup picture. Posting a resul
 | Milestone | A milestone reached this season, or one a player is close to. Only real milestones from the milestone board can be drawn. |
 | Season leaders | The top 3 or 5 for runs, wickets, catches, sixes or games, for the current season or all seasons. A choice is listed only when it would show someone, so nothing in the list draws "No one has qualified". |
 | Event promo | An upcoming event, with its cover picture if it has one. |
-| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. The logos shrink to fit the page, a sponsor with no usable logo gets a tile with its initial, and the footer sponsor strip is left off because the sponsors are the picture. The caption names a sponsor's level only when one sponsor is thanked. |
+| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. The logos shrink to fit the page, a sponsor with no logo we can draw (no logo, or a WebP or SVG) is shown by name in large type with its level beneath, never as a grey tile or an initial, and the composer says which sponsors will be shown that way. A single sponsor without a logo appears once, as the headline, with its level beside "Thank you". The footer sponsor strip is left off because the sponsors are the picture. The caption names a sponsor's level only when one sponsor is thanked. |
+| The toss | Who won the toss and what they chose ("X won the toss and chose to bat"), against which opponent, on which round or date, with the venue when stored. Drawn from the stored toss details of a finished game; no player names appear, so the junior rule is untouched. A game with no known toss winner is not listed, and opening one by a stale link says "Toss details are not in yet for this game." |
 | Season wrap | A published yearbook: cover, record, top run scorer and top wicket taker. The cover is left out on the wide size, and when the yearbook has none the title is drawn as text instead of an empty box. |
 
 **Three sizes**: Square 1080 x 1080, Story 1080 x 1920 and Wide 1200 x 630. **Three styles**: Bold (your main colour, big type), Classic (a light card with a coloured band carrying the crest) and Minimal (plain and airy). The picture is composed from shared building blocks, not drawn by hand per combination, so a long list is always cut at a whole row with "+ N more" and long names are shortened by length.
@@ -43,16 +44,18 @@ The site could only make one player card and the lineup picture. Posting a resul
 
 **The composer** (`/admin/social`, three steps on one page, phone first): pick a kind and what it is about; preview one size at a time (only the selected size is made, and a size already seen is kept for the session) with a style switcher and, for some kinds, one editable line (stat line, thank-you line); then **Share or save to Photos** (the phone's share sheet, with Save Image going to Photos; a plain download on desktop), **Download picture (PNG)** and a caption you can edit and copy. The choice lives in the address (`?type=&source=&style=&size=`), so a refresh keeps it.
 
-**Captions.** (Saving the wording from the composer stores only wording that differs from the standard text, so later improvements to the standard reach the club.) Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
+**Captions.** (Saving the wording from the composer stores only wording that differs from the standard text, so later improvements to the standard reach the club.) Season leaders in the Minimal style draw larger rows (up to 35% bigger, the 3 or 5 rows you asked for are unchanged) so the plain page does not leave a blank band; Bold and Classic are unchanged. Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
 
 **Settings** (Advanced, admin only: Social graphics settings): the default style, the sponsor logo strip (which levels, how many; PNG and JPG logos only, a WebP or SVG logo is skipped quietly and the strip simply does not show if none can be drawn), whether the website address shows, and a small line under the footer.
 
 **Access and limits.** The picture, chooser and caption routes answer only the committee (admin or editor). Signed out, a selector, a disabled account, an unknown kind, a bad id and a picture nobody may see all get the same plain "Not found", never cached or indexed. A person can make 300 pictures in 10 minutes; after that "Slow down for a minute" for a minute. Logos and covers are fetched only from the site's own media host, with a 2 second limit.
 
+**Wave D additions.** These three changes finish the picture half of [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): the toss picture, the name-only sponsor thank-you and the Minimal leaders spacing. The toss caption wording is one more box in the "Captions and hashtags" panel (a small database column was added for it).
+
 ## How to use it
 
 1. Open **Social posts** (Advanced, or the Home tile "Make a social post").
-2. Pick what to post, then the game, player, event or sponsor it is about.
+2. Pick what to post, then the game, player, event or sponsor it is about. For The toss, only finished games with a known toss winner are listed.
 3. Check the preview in the size you need; change the style if you like.
 4. On a phone, tap **Share or save to Photos**. On a computer, **Download picture**. Tap **Copy caption** and paste it into the post.
 5. Admins: change the look in Site look (colours, crest, font) and Social graphics settings (style, sponsor logos).
