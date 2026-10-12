@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, selectionCollections, socialCollections } from '../payload/admin/navigation'
+import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, officeCollections, selectionCollections, socialCollections } from '../payload/admin/navigation'
 import { adminOnlyCondition, hiddenFromEditors, isAdminUser } from '../payload/admin/visibility'
 import { helpSections } from '../payload/admin/helpContent'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -46,7 +46,11 @@ describe('navigation', () => {
     expect(navFor('selector').advanced).toEqual([])
     // 12 -> 14: Player sponsors and Club apparel link each need an everyday entry (editors must reach them).
     // 14 -> 16: Pages and News are committee-run content (WP-P); hiding them under Advanced was rejected.
-    expect(nav.everyday.length).toBeLessThanOrEqual(16)
+    // 16 -> 17: Club office (wave D). One entry replaces the seven it would otherwise take (members, fees, volunteers, meetings,
+    // diary, email, stock); every module is a tile on its page. It is the only new everyday entry of the wave.
+    expect(nav.everyday.length).toBeLessThanOrEqual(17)
+    expect(nav.everyday.map((e) => e.key)).toContain('office')
+    expect(navFor(null).everyday.map((e) => e.key)).toContain('office') // the sidebar only renders for a signed-in user; the view itself refuses non-staff
     expect(nav.everyday.map((e) => e.path)).not.toContain('/collections/users')
   })
 
@@ -109,6 +113,25 @@ describe('every collection and global is classified (new ones fail here until th
         expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(e.slug !== 'merge-log' && e.slug !== 'throttle-hits')
         expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(true)
         expect(access.read({ req: { user: undefined } }), `${e.slug} read is staff only`).toBe(false)
+      } else if (officeCollections.some((c) => c.slug === e.slug)) {
+        // Club office data (wave D): never in a menu, reached through the Club office pages. Admin collections are hidden from editors
+        // (which also blocks the native routes) and denied to them over REST; staff collections stay visible by route but off the menus.
+        const entry = officeCollections.find((c) => c.slug === e.slug)!
+        expect(navSlugs.has(e.slug), `${e.slug} is an office collection and must not be in a nav list`).toBe(false)
+        const access = (e as { access?: Record<string, (a: { req: { user: unknown } }) => unknown> }).access!
+        if (entry.role === 'admin') {
+          expect(typeof e.admin.hidden, `${e.slug} should use hiddenFromEditors`).toBe('function')
+          expect((e.admin.hidden as (a: { user: unknown }) => boolean)({ user: editor })).toBe(true)
+          expect((e.admin.hidden as (a: { user: unknown }) => boolean)({ user: admin })).toBe(false)
+          for (const op of ['read', 'create', 'update', 'delete']) {
+            expect(access[op]({ req: { user: editor } }), `${e.slug} ${op} by an editor`).toBe(false)
+            expect(access[op]({ req: { user: { id: 3, role: 'selector' } } }), `${e.slug} ${op} by a selector`).toBe(false)
+            expect(access[op]({ req: { user: undefined } }), `${e.slug} ${op} anonymous`).toBe(false)
+          }
+          expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(true)
+        } else {
+          expect(e.admin.hidden, `${e.slug} is a staff office collection and stays reachable`).toBeFalsy()
+        }
       } else if (selectionCollections.includes(e.slug)) {
         // Selection data: hidden for every role, in no menu, managed in the selector area. Over REST only admin and editor may read or
         // write (never a selector or an anonymous visitor); `selection-fixtures` is written by code only.
@@ -131,6 +154,7 @@ describe('every collection and global is classified (new ones fail here until th
       }
     }
     for (const slug of selectionCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a selection collection but is not a collection`).toBe(true)
+    for (const { slug } of officeCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as an office collection but is not a collection`).toBe(true)
     for (const slug of socialCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a social collection but is not a collection`).toBe(true)
     for (const slug of internalCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as internal but is not a collection`).toBe(true)
     // Entities listed under Advanced must be hidden from editors unless they are a deliberate upload target.

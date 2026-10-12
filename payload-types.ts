@@ -107,6 +107,8 @@ export interface Config {
     'net-attendance': NetAttendance;
     'social-posts': SocialPost;
     'social-post-targets': SocialPostTarget;
+    members: Member;
+    'office-audit-log': OfficeAuditLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -164,6 +166,8 @@ export interface Config {
     'net-attendance': NetAttendanceSelect<false> | NetAttendanceSelect<true>;
     'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
     'social-post-targets': SocialPostTargetsSelect<false> | SocialPostTargetsSelect<true>;
+    members: MembersSelect<false> | MembersSelect<true>;
+    'office-audit-log': OfficeAuditLogSelect<false> | OfficeAuditLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -180,6 +184,7 @@ export interface Config {
     theme: Theme;
     'selection-settings': SelectionSetting;
     'social-settings': SocialSetting;
+    'office-settings': OfficeSetting;
   };
   globalsSelect: {
     club: ClubSelect<false> | ClubSelect<true>;
@@ -188,6 +193,7 @@ export interface Config {
     theme: ThemeSelect<false> | ThemeSelect<true>;
     'selection-settings': SelectionSettingsSelect<false> | SelectionSettingsSelect<true>;
     'social-settings': SocialSettingsSelect<false> | SocialSettingsSelect<true>;
+    'office-settings': OfficeSettingsSelect<false> | OfficeSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1688,6 +1694,117 @@ export interface SocialPostTarget {
   createdAt: string;
 }
 /**
+ * The club’s members with their contact details. Open this from Club office, then Members. Only admins can see it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members".
+ */
+export interface Member {
+  id: number;
+  displayName?: string | null;
+  /**
+   * Pick the player when this member plays for the club. The name then comes from the player, so you do not type it twice.
+   */
+  player?: (number | null) | Player;
+  /**
+   * Optional: the committee or coach record for the same person.
+   */
+  person?: (number | null) | Person;
+  /**
+   * Needed only when no player is linked.
+   */
+  firstName?: string | null;
+  lastName?: string | null;
+  /**
+   * A nickname to show instead of the full name.
+   */
+  preferredName?: string | null;
+  /**
+   * One person can have several roles.
+   */
+  roles: (
+    | 'player'
+    | 'parent'
+    | 'life-member'
+    | 'volunteer'
+    | 'sponsor-contact'
+    | 'committee'
+    | 'coach'
+    | 'supporter'
+    | 'other'
+  )[];
+  /**
+   * Choose Past member for someone who has left. Their links stop working and they drop off mailing lists.
+   */
+  status: 'active' | 'past';
+  membershipSince?: string | null;
+  lifeMemberSince?: number | null;
+  email?: string | null;
+  phone?: string | null;
+  /**
+   * The labels for these four lines can be renamed in Club office settings.
+   */
+  addressLine?: string | null;
+  locality?: string | null;
+  region?: string | null;
+  postalCode?: string | null;
+  /**
+   * Optional. Used only to know who is under 18.
+   */
+  dateOfBirth?: string | null;
+  /**
+   * For a junior without their own email: their parent’s email is used for mail.
+   */
+  guardians?: (number | Member)[] | null;
+  emergencyContact?: {
+    name?: string | null;
+    phone?: string | null;
+    relationship?: string | null;
+  };
+  /**
+   * Tick when this person has asked not to get club emails.
+   */
+  doNotEmail?: boolean | null;
+  /**
+   * Do not record medical details here. Never type card numbers.
+   */
+  notes?: string | null;
+  erasedAt?: string | null;
+  importedFrom?: ('manual' | 'players' | 'csv') | null;
+  volunteerLinkVersion?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every export, email send, removal of personal details and bulk member change, with who did it. Opening one member is not logged.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-audit-log".
+ */
+export interface OfficeAuditLog {
+  id: number;
+  at: string;
+  user?: (number | null) | User;
+  action: 'export' | 'email-send' | 'erase' | 'bulk-change';
+  module: string;
+  /**
+   * Filter keys and counts only.
+   */
+  summary?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  rowCount?: number | null;
+  includedSensitive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1870,6 +1987,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'social-post-targets';
         value: number | SocialPostTarget;
+      } | null)
+    | ({
+        relationTo: 'members';
+        value: number | Member;
+      } | null)
+    | ({
+        relationTo: 'office-audit-log';
+        value: number | OfficeAuditLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2781,6 +2906,59 @@ export interface SocialPostTargetsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members_select".
+ */
+export interface MembersSelect<T extends boolean = true> {
+  displayName?: T;
+  player?: T;
+  person?: T;
+  firstName?: T;
+  lastName?: T;
+  preferredName?: T;
+  roles?: T;
+  status?: T;
+  membershipSince?: T;
+  lifeMemberSince?: T;
+  email?: T;
+  phone?: T;
+  addressLine?: T;
+  locality?: T;
+  region?: T;
+  postalCode?: T;
+  dateOfBirth?: T;
+  guardians?: T;
+  emergencyContact?:
+    | T
+    | {
+        name?: T;
+        phone?: T;
+        relationship?: T;
+      };
+  doNotEmail?: T;
+  notes?: T;
+  erasedAt?: T;
+  importedFrom?: T;
+  volunteerLinkVersion?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-audit-log_select".
+ */
+export interface OfficeAuditLogSelect<T extends boolean = true> {
+  at?: T;
+  user?: T;
+  action?: T;
+  module?: T;
+  summary?: T;
+  rowCount?: T;
+  includedSensitive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3349,6 +3527,34 @@ export interface SocialSetting {
   createdAt?: string | null;
 }
 /**
+ * Currency, language and the names of the address lines used across the club office. Later modules add their own settings here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-settings".
+ */
+export interface OfficeSetting {
+  id: number;
+  /**
+   * A three-letter code such as AUD, NZD, GBP or USD.
+   */
+  currency?: string | null;
+  /**
+   * For example en-AU, en-GB or en-US.
+   */
+  locale?: string | null;
+  /**
+   * What each address line is called where you live. These words appear on the member form and the directory.
+   */
+  addressLabels?: {
+    addressLine?: string | null;
+    locality?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "club_select".
  */
@@ -3733,6 +3939,25 @@ export interface SocialSettingsSelect<T extends boolean = true> {
   signOff?: T;
   lastCronRunAt?: T;
   observedCronIntervalMinutes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-settings_select".
+ */
+export interface OfficeSettingsSelect<T extends boolean = true> {
+  currency?: T;
+  locale?: T;
+  addressLabels?:
+    | T
+    | {
+        addressLine?: T;
+        locality?: T;
+        region?: T;
+        postalCode?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

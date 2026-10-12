@@ -38,6 +38,8 @@ import { ApprovalsView as ApprovalsView_6fd9fb6bf2a22c9cee6bed03081abd5b } from 
 import { PlayerDataToolsView as PlayerDataToolsView_7d618be963cf6a04be442e5ea954ba37 } from '../../../payload/components/PlayerDataToolsView'
 import { SelectorsView as SelectorsView_a80db3794351fa57dc67dec92df72d81 } from '../../../payload/components/SelectorsView'
 import { SocialView as SocialView_d440a7306e1da5f903b91907a0acd22c } from '../../../payload/components/SocialView'
+import { OfficeView as OfficeView_02d9eb8379f522ab9fa2c2bf4a3eff7d } from '../../../payload/components/OfficeView'
+import { OfficeMembersView as OfficeMembersView_6460107d220dcb467884fb13590a52d2 } from '../../../payload/components/OfficeMembersView'
 import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
@@ -84,6 +86,8 @@ export const importMap = {
   "/payload/components/PlayerDataToolsView#PlayerDataToolsView": PlayerDataToolsView_7d618be963cf6a04be442e5ea954ba37,
   "/payload/components/SelectorsView#SelectorsView": SelectorsView_a80db3794351fa57dc67dec92df72d81,
   "/payload/components/SocialView#SocialView": SocialView_d440a7306e1da5f903b91907a0acd22c,
+  "/payload/components/OfficeView#OfficeView": OfficeView_02d9eb8379f522ab9fa2c2bf4a3eff7d,
+  "/payload/components/OfficeMembersView#OfficeMembersView": OfficeMembersView_6460107d220dcb467884fb13590a52d2,
   "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e

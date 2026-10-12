@@ -37,6 +37,13 @@ export const SEASON_NAME_FORMAT: 'split' | 'single' = env.SEASON_NAME_FORMAT ===
 export const CLUB_LOCALE = env.CLUB_LOCALE || 'en-AU'
 
 /**
+ * Club back office defaults (wave D). The office settings global is the editable copy; these are only what it starts with.
+ * Env `OFFICE_CURRENCY` (ISO 4217 code, default AUD) and `OFFICE_LOCALE` (BCP 47, default `CLUB_LOCALE`).
+ */
+export const OFFICE_CURRENCY = (env.OFFICE_CURRENCY || 'AUD').trim().toUpperCase()
+export const OFFICE_LOCALE = env.OFFICE_LOCALE?.trim() || CLUB_LOCALE
+
+/**
  * Two-letter country code of the club (phone parsing, privacy notice wording). Env `CLUB_COUNTRY`; defaults to the region of
  * `CLUB_LOCALE` (en-AU gives AU). An unknown country falls back to a permissive digits-only phone normaliser.
  */

@@ -37,6 +37,8 @@ import { TeamSheets } from './payload/collections/TeamSheets'
 import { BestPlayerBallots } from './payload/collections/BestPlayerBallots'
 import { NetAttendance } from './payload/collections/NetAttendance'
 import { NetSessions } from './payload/collections/NetSessions'
+import { Members } from './payload/collections/Members'
+import { OfficeAuditLog } from './payload/collections/OfficeAuditLog'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -55,6 +57,7 @@ import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
 import { SelectionSettings } from './payload/globals/SelectionSettings'
 import { SiteSettings } from './payload/globals/SiteSettings'
+import { OfficeSettings } from './payload/globals/OfficeSettings'
 import { SocialSettings } from './payload/globals/SocialSettings'
 import { Theme } from './payload/globals/Theme'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
@@ -93,14 +96,16 @@ export default buildConfig({
         playerDataTools: { Component: '/payload/components/PlayerDataToolsView#PlayerDataToolsView', path: '/player-data-tools', meta: { title: 'Player data tools' } },
         selectors: { Component: '/payload/components/SelectorsView#SelectorsView', path: '/selectors', meta: { title: 'Selectors' } },
         social: { Component: '/payload/components/SocialView#SocialView', path: '/social', meta: { title: 'Social posts' } },
+        office: { Component: '/payload/components/OfficeView#OfficeView', path: '/office', meta: { title: 'Club office' } },
+        officeMembers: { Component: '/payload/components/OfficeMembersView#OfficeMembersView', path: '/office/members', meta: { title: 'Members' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets],
-  globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog],
+  globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
   onInit: restrictBuiltinCollections,

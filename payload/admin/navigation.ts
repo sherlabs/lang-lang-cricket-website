@@ -40,6 +40,8 @@ export const everydayNav: NavEntry[] = [
   { key: 'player-sponsors', label: 'Player sponsors', path: '/collections/player-sponsors' },
   { key: 'club-apparel', label: 'Club apparel link', path: '/globals/club-apparel' },
   { key: 'approvals', label: 'Waiting for approval', path: '/approvals', badge: 'approvals' },
+  // Wave D: ONE entry for the whole club back office (members, fees, volunteers, meetings, diary, email, stock); every module is a tile on its page, so the menu grows by one, not seven.
+  { key: 'office', label: 'Club office', path: '/office', matches: ['/office'] },
   { key: 'help', label: 'Help', path: '/help' },
 ]
 
@@ -50,6 +52,7 @@ export const advancedNav: NavEntry[] = [
   // Posting a result is a weekly job for editors, so Social posts is reachable by them here and from a Home tile (wave C spec 3.6).
   { key: 'social', label: 'Social posts', path: '/social', forEditors: true },
   { key: 'social-settings', label: 'Social graphics settings', path: '/globals/social-settings' },
+  { key: 'office-settings', label: 'Club office settings', path: '/globals/office-settings' },
   { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings' },
   { key: 'club', label: 'Club details', path: '/globals/club' },
   { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
@@ -84,6 +87,18 @@ export const selectionCollections: string[] = ['player-selection-profiles', 'sel
  * (the lease fields never) and nobody can write: the composer's server actions and the publisher's SQL do all the writing.
  */
 export const socialCollections: string[] = ['social-posts', 'social-post-targets']
+
+/**
+ * Club office collections (wave D spec 3.3): the back office's data. Never in a menu; the committee and admins reach them through the
+ * Club office pages (`lib/office/modules.ts`). `admin` collections are hidden from editors with `hiddenFromEditors` (which also blocks
+ * the native list and edit routes) and denied to them over REST; `staff` collections are open to the committee by access rules.
+ * `tests/admin-visibility.test.ts` classifies each one.
+ */
+export type OfficeCollection = { slug: string; role: 'admin' | 'staff' }
+export const officeCollections: OfficeCollection[] = [
+  { slug: 'members', role: 'admin' },
+  { slug: 'office-audit-log', role: 'admin' },
+]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {
