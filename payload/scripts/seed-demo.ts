@@ -33,6 +33,9 @@
  * It also writes demo committee seats, the standard meeting agendas, three meetings (two closed, one with a restricted finance item, and a
  * planned yearly general meeting), a few committee actions (one overdue) and two office-bearer documents when there are no seats yet.
  *
+ * It also writes the standard season diary jobs for the current season (two overdue, one blocked, several done, the rest ahead) and the
+ * starter strategic plan with progress on two objectives when there are no diary jobs yet.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -54,6 +57,7 @@ import { seedDemoMembers } from '../seed/demo-members'
 import { seedDemoFees } from '../seed/demo-fees'
 import { seedDemoVolunteers } from '../seed/demo-volunteers'
 import { seedDemoMeetings } from '../seed/demo-meetings'
+import { seedDemoDiary } from '../seed/demo-diary'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
@@ -518,6 +522,7 @@ async function main() {
     console.log(`[seed:demo] club office fees: ${await seedDemoFees(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office volunteers: ${await seedDemoVolunteers(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office meetings: ${await seedDemoMeetings(payload, currentClubDate())}`)
+    console.log(`[seed:demo] club office diary and plan: ${await seedDemoDiary(payload, currentClubDate())}`)
   } finally {
     await payload.destroy()
   }

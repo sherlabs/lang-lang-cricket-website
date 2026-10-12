@@ -46,6 +46,7 @@ import { VolunteerAssignments, VolunteerAvailability, VolunteerHours, VolunteerS
 import { CommitteeSeats } from './payload/collections/CommitteeSeats'
 import { CommitteeDocuments, MeetingActions, MeetingAttendance, MeetingItems, MeetingMotions, MeetingTemplates, Meetings } from './payload/collections/meetings'
 import { OfficeFiles } from './payload/collections/OfficeFiles'
+import { DiaryJobs, PlanObjectives, PlanPillars } from './payload/collections/diary'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -115,13 +116,15 @@ export default buildConfig({
         officeMeetingDocuments: { Component: '/payload/components/OfficeMeetingDocumentsView#OfficeMeetingDocumentsView', path: '/office/meetings/documents', meta: { title: 'Office-bearer documents' } },
         officeMeetingMinutes: { Component: '/payload/components/OfficeMeetingMinutesView#OfficeMeetingMinutesView', path: '/office/meetings/:id/minutes', meta: { title: 'Minutes' } },
         officeMeeting: { Component: '/payload/components/OfficeMeetingView#OfficeMeetingView', path: '/office/meetings/:id', meta: { title: 'Meeting' } },
+        officeDiary: { Component: '/payload/components/OfficeDiaryView#OfficeDiaryView', path: '/office/diary', exact: true, meta: { title: 'Season diary' } },
+        officePlan: { Component: '/payload/components/OfficePlanView#OfficePlanView', path: '/office/plan', exact: true, meta: { title: 'Strategic plan' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

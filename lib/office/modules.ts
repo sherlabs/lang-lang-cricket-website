@@ -2,7 +2,7 @@
  * The club office module registry (wave D spec section 1). One list drives the landing page, its stat lines, the help section and
  * the tests, so a module cannot appear in one place and not another. A module is added here in the same change that builds it.
  */
-export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings'
+export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings' | 'diary'
 export type OfficeModule = {
   key: OfficeModuleKey
   label: string
@@ -54,6 +54,15 @@ export const officeModules: OfficeModule[] = [
     role: 'staff',
     doc: 'committee-meetings',
     collections: ['committee-seats', 'meeting-templates', 'meetings', 'meeting-items', 'meeting-attendance', 'meeting-motions', 'meeting-actions', 'committee-documents', 'office-files'],
+  },
+  {
+    key: 'diary',
+    label: 'Diary & plan',
+    hint: 'The jobs the club does each season, who owns them, and the strategic plan they belong to.',
+    path: '/office/diary',
+    role: 'staff',
+    doc: 'season-diary-and-plan',
+    collections: ['diary-jobs', 'plan-pillars', 'plan-objectives'],
   },
 ]
 

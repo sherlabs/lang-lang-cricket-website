@@ -99,6 +99,18 @@ export const officeCopy = {
     fewer: 'Fewer than 3 people',
     withheld: 'Some figures are not shown because a small group could be worked out from them, for example by taking one table away from another.',
   },
+  diary: {
+    excludes: 'Done jobs are not counted. Jobs of every season are counted, so finish or move an old job to clear it. A job counts as having no owner when no seat or person is named, or the seat has nobody in it.',
+    stat: (overdue: number, blocked: number, unowned: number) =>
+      overdue + blocked + unowned === 0
+        ? 'No club jobs are overdue, blocked or without an owner (done jobs are not counted)'
+        : `${overdue} club ${plural(overdue, 'job is', 'jobs are')} overdue, ${blocked} blocked, ${unowned} without an owner (done jobs are not counted)`,
+    overdue: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} overdue (done jobs are not counted)`,
+    blocked: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} blocked (done jobs are not counted)`,
+    unowned: (n: number) => `${n} club ${plural(n, 'job has', 'jobs have')} no owner (done jobs are not counted; a seat with nobody in it counts as no owner)`,
+    overBudget: 'Over budget',
+    budgetWarning: 'The budgets of the jobs add up to more than the objective\u2019s budget',
+  },
   meetings: {
     excludes: 'Done and dropped actions are not counted. Restricted actions are counted only for office-bearers.',
     stat: (next: string | null, overdue: number) =>

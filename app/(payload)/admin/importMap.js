@@ -51,6 +51,8 @@ import { OfficeMeetingActionsView as OfficeMeetingActionsView_9073a232bbcd8f0dd3
 import { OfficeMeetingDocumentsView as OfficeMeetingDocumentsView_40e05f91bc381378fc5a55d8e58fda4e } from '../../../payload/components/OfficeMeetingDocumentsView'
 import { OfficeMeetingMinutesView as OfficeMeetingMinutesView_302b35cd928e4c066992a2ff4ce55401 } from '../../../payload/components/OfficeMeetingMinutesView'
 import { OfficeMeetingView as OfficeMeetingView_c0df34f826197593ec44d135ecf7dba1 } from '../../../payload/components/OfficeMeetingView'
+import { OfficeDiaryView as OfficeDiaryView_459141c5a7330f788ec497fab96f6c6a } from '../../../payload/components/OfficeDiaryView'
+import { OfficePlanView as OfficePlanView_64e74536fc1c21159f9b48f7d8e3d499 } from '../../../payload/components/OfficePlanView'
 import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
@@ -110,6 +112,8 @@ export const importMap = {
   "/payload/components/OfficeMeetingDocumentsView#OfficeMeetingDocumentsView": OfficeMeetingDocumentsView_40e05f91bc381378fc5a55d8e58fda4e,
   "/payload/components/OfficeMeetingMinutesView#OfficeMeetingMinutesView": OfficeMeetingMinutesView_302b35cd928e4c066992a2ff4ce55401,
   "/payload/components/OfficeMeetingView#OfficeMeetingView": OfficeMeetingView_c0df34f826197593ec44d135ecf7dba1,
+  "/payload/components/OfficeDiaryView#OfficeDiaryView": OfficeDiaryView_459141c5a7330f788ec497fab96f6c6a,
+  "/payload/components/OfficePlanView#OfficePlanView": OfficePlanView_64e74536fc1c21159f9b48f7d8e3d499,
   "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e

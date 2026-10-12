@@ -41,6 +41,17 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'club-diary',
+    title: 'Keep the season diary and the strategic plan',
+    steps: [
+      'Click "Club office", then "Diary & plan". The first time, press "Add the standard jobs for" the season, then rename or delete the ones that do not suit your club.',
+      'Each job has a due date and an owner (a committee seat, so it stays with the role when the committee changes). Press "Done" when it is finished, or "Mark blocked" and say why if it is stuck.',
+      'The chips at the top show what is overdue, blocked, due soon, without an owner, or yours. The same counts appear on Home under "Needs your attention".',
+      'At the end of the season press "Copy repeating jobs" to set up next year\u2019s diary.',
+      '"Strategic plan" holds your pillars and objectives. Link a diary job to an objective (use "Add a job to this objective") and its progress and spend fill in by themselves.',
+    ],
+  },
+  {
     id: 'club-office',
     title: 'Look after the club members (admins)',
     steps: [

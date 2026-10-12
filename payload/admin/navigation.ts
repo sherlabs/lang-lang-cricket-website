@@ -121,6 +121,10 @@ export const officeCollections: OfficeCollection[] = [
   { slug: 'meeting-actions', role: 'staff' },
   { slug: 'committee-documents', role: 'staff' },
   { slug: 'office-files', role: 'staff' },
+  // Season diary and plan (WP-5): club figures, not personal data, so the committee edits them natively as the fallback to the Diary & plan pages.
+  { slug: 'plan-pillars', role: 'staff' },
+  { slug: 'plan-objectives', role: 'staff' },
+  { slug: 'diary-jobs', role: 'staff' },
 ]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */

@@ -3,6 +3,7 @@ import { isAdmin, isAdminField } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
 import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPES } from '../../lib/office/settings-defaults'
 import { validateShiftTypes } from '../../lib/office/volunteers'
+import { DEFAULT_CATEGORY_LABELS, DEFAULT_DIARY_LEAD_DAYS, DIARY_CATEGORIES, MAX_DIARY_LEAD_DAYS } from '../../lib/office/diary'
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '../../config/site'
 
 const admin = { read: isAdminField, create: isAdminField, update: isAdminField } as const
@@ -63,6 +64,24 @@ export const OfficeSettings: GlobalConfig = {
       ],
     },
     { name: 'annualMeetingName', label: 'Name of the yearly meeting', type: 'text', maxLength: 60, defaultValue: DEFAULT_ANNUAL_MEETING_NAME, access: admin, admin: { description: 'What your club calls the yearly general meeting. It is the name shown on the Meetings page for that kind of meeting.' } },
+    {
+      name: 'diaryLeadDays',
+      label: 'Days of warning for jobs that are coming up',
+      type: 'number',
+      min: 1,
+      max: MAX_DIARY_LEAD_DAYS,
+      defaultValue: DEFAULT_DIARY_LEAD_DAYS,
+      access: admin,
+      admin: { description: 'The season diary marks a job “Due soon” when it falls due within this many days.', width: '50%' },
+    },
+    {
+      name: 'diaryCategoryLabels',
+      label: 'Names of the season diary groups',
+      type: 'group',
+      access: admin,
+      admin: { description: 'What each group of jobs in the season diary is called. Rename them to suit your club; the jobs keep their group.' },
+      fields: DIARY_CATEGORIES.map((key) => ({ name: key, label: DEFAULT_CATEGORY_LABELS[key], type: 'text' as const, maxLength: 40, defaultValue: DEFAULT_CATEGORY_LABELS[key], access: admin })),
+    },
     {
       name: 'shiftTypes',
       label: 'Volunteer jobs',

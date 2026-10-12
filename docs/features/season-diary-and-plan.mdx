@@ -1,0 +1,51 @@
+---
+title: Season diary and strategic plan
+status: shipped
+routes: ["/admin/office/diary", "/admin/office/plan", "/api/admin/office/diary/:action"]
+collections: [diary-jobs, plan-pillars, plan-objectives, committee-seats, office-settings]
+admin: "Club office, then Diary & plan (the committee: admin and editor)"
+owner: "The club secretary (a committee member)"
+related: [club-office, committee-meetings, admin-notifications, committee-admin, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary or president** who wants one list of the jobs the club has to do every year (insurance, registration, permits, the yearly general meeting) with a date and an owner for each, so nothing is missed when the committee changes.
+- **Committee members** who want to see what is theirs, what is late and what is stuck.
+- **The committee as a whole** when it sets a strategic plan and wants to see whether the year's work is moving it forward.
+
+## Why it was built
+
+The annual jobs lived in someone's head or an old spreadsheet and were lost at each handover, and the strategic plan was a document nobody checked against the year's work. This is issue [#28](https://github.com/sherlabs/lang-lang-cricket-website/issues/28). The diary keeps each job with the committee **seat** that owns it (so it stays when the person changes), and the plan is built from the same jobs, so there is one overdue and blocked mechanism and no second list.
+
+## What it does
+
+- **Season diary** (`/admin/office/diary`). The season's jobs by month. Each job has a title, a group, a due date, an owner (a committee seat, or a named person from Committee &amp; contacts if the job belongs to someone without a seat), an optional budget and spend, a status (to do, in progress, blocked, done) and notes. Status is always written in words, never by colour alone.
+- **Chips:** Everything, Overdue, Blocked, Due soon, No owner, Mine (jobs on a seat that has your login). Each shows a count. Overdue means the due date has passed (in the club's time zone, `CLUB_TIMEZONE`) and the job is not done; a late blocked job counts as overdue and as blocked. Due soon means due within the number of days set in Club office settings (default 14). With a chip chosen and no season picked, every season is shown, so a link from the Home page finds every job it counted.
+- **Quick actions on each job:** Done, Start, Back to to do, Reopen, Mark blocked (a short reason is required), and Set owner for a job with none. Finishing a job records the day (club time); reopening clears it. A blocked job shows why. The same rules are enforced when a job is edited in the full form (**Edit all details**), where an admin or editor can change everything else.
+- **Add a job** (one small form): title, season, due date, owner seat, group and an optional budget.
+- **Standard jobs.** When a season has no jobs, **Add the standard jobs for {season}** adds a dozen generic yearly jobs (open player registration, pay fees to the governing body, insurance renewal, permit and licence renewals, a food and venue permit check, ground and pitch preparation, equipment check, working bee, tax and reporting returns, the yearly general meeting, awards event, season review), each dated by counting months from the **first month of the club's season** (`SEASON_START_MONTH`), so it fits a southern or northern calendar. They have no owner yet. The wording is deliberately neutral: a club adds its own local requirements as jobs. Adding them again adds only what is missing and never changes a job you have edited, renamed or finished (each is matched by a hidden stable code, and a job you typed yourself with the same title counts as already there).
+- **Copy repeating jobs to the next season.** Jobs ticked "Repeats every season" are copied a year on, as to do, keeping the owner seat, budget and notes (not the spend). Running it again, or adding the standard jobs afterwards, does not duplicate anything.
+- **Strategic plan** (`/admin/office/plan`). Pillars (themes) with objectives under them. Each objective has an owner seat, a target date, a status (not started, on track, at risk, done, dropped), a budget, a progress note and the diary jobs linked to it. Progress is written in words ("3 of 5 jobs done, 1,200.00 spent of 3,000.00") with a bar and the linked jobs listed. A warning shows when the budgets of the linked jobs add up to more than the objective's budget. **Add a job to this objective** creates a diary job linked to it. **Add a starter plan** (when the plan is empty) adds five generic pillars (participation and growth, facilities and ground, finance and sustainability, community and culture, governance and people), each with two or three example objectives marked "Example, edit me". Adding it again adds only what is missing and never changes an edit. Use the browser's Print, then Save as PDF, for a copy to share (the editing forms are hidden when printing).
+- **Where it shows up:** a **Diary & plan** tile on Club office ("2 club jobs are overdue, 1 blocked, 4 without an owner (done jobs are not counted)"), and lines on the admin Home page under "Needs your attention" for overdue jobs, blocked jobs and jobs with no owner. Each line says what is not counted: done jobs are never counted, jobs of every season are counted, and a seat with nobody in it counts as no owner. Over-budget is a badge on the diary only.
+- **Seats and handover.** Jobs belong to the seat. When the yearly general meeting hands a seat over ([Committee meetings](./committee-meetings.mdx)), the jobs stay with the seat and now show the new holder; if the seat is left vacant the jobs count as having no owner. "Mine" follows the login linked to the seat.
+- **Access:** the committee (admin and editor) reads and edits the diary and plan, and may use the starter and copy buttons; only an admin can delete a job, pillar or objective. Selectors and the public see nothing and have no API access. These are club figures, not personal data, so editors may edit budgets. Every form is a server action that re-checks who is signed in and validates the season name, dates, seat and amounts; the full edit form is checked by the same rules. `tests/int/office-diary.int.test.ts` runs these against a real database and `tests/int/office-matrix.int.test.ts` holds the access table.
+- **Settings (admin, Club office settings):** "Days of warning for jobs that are coming up" and the names of the eight diary groups (neutral defaults: Registration, Governance, Insurance, Permits, Finance, Ground, Events, Other). The group names can be renamed to suit a club; jobs keep their group.
+- **Demo data:** `pnpm seed:demo` adds the standard jobs for the current season with a spread of states (two overdue, one blocked, several done) and the starter plan with progress on two objectives, when there are no diary jobs yet. The invented content is generic.
+
+## How to use it
+
+1. Sign in as an admin or editor. **Club office**, then **Diary & plan**.
+2. The first time press **Add the standard jobs for {season}**. Rename or remove what does not apply, add your own local jobs, and set an owner for each (the chip **No owner** lists the ones still to assign).
+3. Work through the month list. Press **Done** when a job is finished, or **Mark blocked** with a reason if it is stuck. The Home page tells you what is overdue.
+4. At the end of the season press **Copy repeating jobs to {next season}**.
+5. Open **Strategic plan**, press **Add a starter plan** or add your own pillars, edit the objectives, and use **Add a job to this objective** so progress fills in by itself.
+
+## Not included / deferred
+
+- Reminder emails or text messages for due jobs: not built (it depends on the email module, [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29)). The Home page and the diary are where overdue jobs show.
+- Recurring jobs other than a yearly copy, sub-tasks, attachments, comments and a calendar feed: not built.
+- Budget and spend are plain figures typed by a person; they are not connected to the fees or any accounts. Over-spend is a badge on the diary, not a Home page line.
+- The standard jobs and starter plan are generic. Local requirements (licences, returns, grants and similar) are for the club to add; they are not built in on purpose so the setup suits any club. Follow-ups are tracked in [#28](https://github.com/sherlabs/lang-lang-cricket-website/issues/28) and [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- A job can name a seat or a person but not several owners.

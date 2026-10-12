@@ -1,4 +1,5 @@
 import 'server-only'
+import { diaryFigures } from '@/lib/diary-office-queries'
 import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { memberCompleteness } from '@/lib/members-queries'
 import { meetingStats } from '@/lib/meetings-office-queries'
@@ -28,6 +29,10 @@ export async function landingStats(user: unknown, keys: readonly OfficeModuleKey
   if (keys.includes('meetings')) {
     const m = await meetingStats(user)
     if (m) out.meetings = officeCopy.meetings.stat(m.next ? m.next.when : null, m.overdue)
+  }
+  if (keys.includes('diary')) {
+    const d = await diaryFigures(user)
+    if (d) out.diary = officeCopy.diary.stat(d.overdue, d.blocked, d.unowned)
   }
   if (keys.includes('fees')) {
     const f = await feeOwingSummary(user)

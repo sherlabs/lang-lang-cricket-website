@@ -1,11 +1,12 @@
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '@/config/site'
 
 import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPES, type AddressLabels, type ShiftType } from './settings-defaults'
+import { DEFAULT_CATEGORY_LABELS, DEFAULT_DIARY_LEAD_DAYS, DIARY_CATEGORIES, MAX_DIARY_LEAD_DAYS, type DiaryCategory } from './diary'
 import { isHoursKind, isShiftKey } from './volunteers'
 
 export { DEFAULT_ADDRESS_LABELS, DEFAULT_SHIFT_TYPES, type AddressLabels, type ShiftType }
 
-export type OfficeSettings = { currency: string; locale: string; chargeFillIns: boolean; addressLabels: AddressLabels; shiftTypes: ShiftType[]; annualMeetingName: string }
+export type OfficeSettings = { currency: string; locale: string; chargeFillIns: boolean; addressLabels: AddressLabels; shiftTypes: ShiftType[]; annualMeetingName: string; diaryLeadDays: number; diaryCategoryLabels: Record<DiaryCategory, string> }
 
 const text = (v: unknown, max = 60): string | null => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null)
 
@@ -44,5 +45,7 @@ export function resolveOfficeSettings(doc: unknown): OfficeSettings {
     },
     shiftTypes: resolveShiftTypes(d.shiftTypes),
     annualMeetingName: text(d.annualMeetingName, 60) ?? DEFAULT_ANNUAL_MEETING_NAME,
+    diaryLeadDays: Number.isInteger(Number(d.diaryLeadDays)) && Number(d.diaryLeadDays) >= 1 && Number(d.diaryLeadDays) <= MAX_DIARY_LEAD_DAYS ? Number(d.diaryLeadDays) : DEFAULT_DIARY_LEAD_DAYS,
+    diaryCategoryLabels: Object.fromEntries(DIARY_CATEGORIES.map((k) => [k, text((d.diaryCategoryLabels as Record<string, unknown> | undefined)?.[k], 40) ?? DEFAULT_CATEGORY_LABELS[k]])) as Record<DiaryCategory, string>,
   }
 }

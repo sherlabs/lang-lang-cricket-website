@@ -37,6 +37,7 @@ const OFFICE_SOURCE = [
   'payload/collections/meetings.ts',
   'payload/collections/CommitteeSeats.ts',
   'payload/collections/OfficeFiles.ts',
+  'payload/collections/diary.ts',
   'payload/access/officeBearer.ts',
   'lib/volunteer-link.ts',
   'lib/volunteer-public.ts',
@@ -67,6 +68,7 @@ describe('office guards', () => {
       const text = read(r)
       if (r.includes('/export/')) expect(text, r).toContain('auditedExport')
       else if (r.includes('/meetings/')) expect(text, r).toContain('requireOfficeStaff') // the committee runs meetings; restricted items, documents and seat handover are checked inside the queries
+      else if (r.includes('/diary/')) expect(text, r).toContain('requireOfficeStaff') // the season diary and plan are the committee's to edit; the queries re-check the caller
       else if (r.includes('/volunteers/')) expect(text, r).toContain('requireOfficeStaff') // the roster is the committee's; hours and paid status are admin-checked inside the queries
       else expect(text, r).toContain('requireOfficeAdmin')
       expect(text, r).toMatch(/export async function POST/)
@@ -186,5 +188,41 @@ describe('office guards', () => {
     expect(text).toContain('staffReadsMeetingChild')
     expect(text).toContain('bearerOnly')
     expect(read('payload/access/officeBearer.ts')).toContain('isOfficeBearer')
+  })
+
+  it('the season diary and plan: committee edits, only an admin deletes, and every action checks the caller first', async () => {
+    const config = await loadSanitizedConfig()
+    const editor = { req: { user: { id: 2, role: 'editor' } } }
+    const selector = { req: { user: { id: 3, role: 'selector' } } }
+    for (const slug of ['diary-jobs', 'plan-pillars', 'plan-objectives']) {
+      const access = config.collections.find((c) => c.slug === slug)!.access as unknown as Record<string, (a: unknown) => unknown>
+      for (const op of ['read', 'create', 'update']) {
+        expect(access[op](editor), `${slug} ${op} editor`).toBe(true)
+        expect(access[op](selector), `${slug} ${op} selector`).toBe(false)
+        expect(access[op]({ req: { user: undefined } }), `${slug} ${op} anonymous`).toBe(false)
+      }
+      expect(access.delete(editor), `${slug} delete editor`).toBe(false)
+      expect(access.delete({ req: { user: { id: 1, role: 'admin' } } }), `${slug} delete admin`).toBe(true)
+    }
+    const queries = read('lib/diary-office-queries.ts')
+    for (const fn of ['addJob', 'setJobStatus', 'setJobOwner', 'addStarterJobs', 'copyRepeatingJobs', 'addPillar', 'addObjective', 'saveObjective', 'addStarterPlan']) {
+      const at = queries.indexOf(`export async function ${fn}(`)
+      expect(at, fn).toBeGreaterThan(-1)
+      expect(queries.slice(at, at + 450), fn).toContain('staffOnly(user)')
+    }
+    // The stable starter code can never be set from a form or the native editor.
+    const sourceKey = config.collections.find((c) => c.slug === 'diary-jobs')!.fields.find((f) => 'name' in f && f.name === 'sourceKey') as { access?: Record<string, (a: unknown) => unknown> }
+    expect(sourceKey.access?.update?.({ req: { user: { id: 1, role: 'admin' } } })).toBe(false)
+    expect(sourceKey.access?.create?.({ req: { user: { id: 1, role: 'admin' } } })).toBe(false)
+  }, 60_000)
+
+  it('the starter diary and plan are club-neutral: no club or place name, no regional word', () => {
+    const text = (read('lib/office/starter-diary.ts') + read('lib/office/starter-plan.ts')).replace(/\/\*[\s\S]*?\*\//g, '')
+    const banned = /\b(affiliation|canteen licen[cs]e|suburb|state|postcode|spam act|agm|lang ?lang|caldermeade|victoria|melbourne|australia|gippsland|cricket victoria|playhq)\b/i
+    const hits = text.split('\n').filter((l) => banned.test(l))
+    expect(hits).toEqual([])
+    // Default labels and settings text are neutral too.
+    const settings = read('lib/office/diary.ts') + read('payload/globals/OfficeSettings.ts')
+    expect(settings.split('\n').filter((l) => banned.test(l) && !/^\s*(\/\/|\*)/.test(l))).toEqual([])
   })
 })

@@ -29,6 +29,8 @@ export type NotificationInput = {
   /** Committee-visible: empty volunteer places for a game day within three days, with the sentence already worded. */
   volunteers?: { empty: number; text: string } | null
   /** Committee-visible: overdue and blocked committee actions this person can see, with the sentences already worded. */
+  /** Committee-visible: overdue, blocked and unowned season diary jobs, with the sentences already worded. */
+  diary?: { overdue: number; blocked: number; unowned: number; overdueText: string; blockedText: string; unownedText: string } | null
   meetings?: { overdue: number; blocked: number; overdueText: string; blockedText: string } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
@@ -79,6 +81,9 @@ export function notificationLines(
     if (social.dueSoon > 0) lines.push({ key: 'social-today', tone: 'info', text: copy.committee.socialToday(social.dueSoon), href: `${r}/social?tab=scheduled` })
   }
   if (input.volunteers && input.volunteers.empty > 0) lines.push({ key: 'volunteers-empty', tone: 'warn', text: input.volunteers.text, href: `${r}/office/volunteers`, linkText: 'Open Volunteers' })
+  if (input.diary && input.diary.overdue > 0) lines.push({ key: 'jobs-overdue', tone: 'warn', text: input.diary.overdueText, href: `${r}/office/diary?filter=overdue`, linkText: 'Open the season diary' })
+  if (input.diary && input.diary.blocked > 0) lines.push({ key: 'jobs-blocked', tone: 'warn', text: input.diary.blockedText, href: `${r}/office/diary?filter=blocked`, linkText: 'Open the season diary' })
+  if (input.diary && input.diary.unowned > 0) lines.push({ key: 'jobs-unowned', tone: 'info', text: input.diary.unownedText, href: `${r}/office/diary?filter=unowned`, linkText: 'Open the season diary' })
   if (input.meetings && input.meetings.overdue > 0) lines.push({ key: 'actions-overdue', tone: 'warn', text: input.meetings.overdueText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
   if (input.meetings && input.meetings.blocked > 0) lines.push({ key: 'actions-blocked', tone: 'warn', text: input.meetings.blockedText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
   if (o.isAdmin) {

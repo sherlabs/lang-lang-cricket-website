@@ -129,6 +129,9 @@ export interface Config {
     'meeting-actions': MeetingAction;
     'office-files': OfficeFile;
     'committee-documents': CommitteeDocument;
+    'plan-pillars': PlanPillar;
+    'plan-objectives': PlanObjective;
+    'diary-jobs': DiaryJob;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -208,6 +211,9 @@ export interface Config {
     'meeting-actions': MeetingActionsSelect<false> | MeetingActionsSelect<true>;
     'office-files': OfficeFilesSelect<false> | OfficeFilesSelect<true>;
     'committee-documents': CommitteeDocumentsSelect<false> | CommitteeDocumentsSelect<true>;
+    'plan-pillars': PlanPillarsSelect<false> | PlanPillarsSelect<true>;
+    'plan-objectives': PlanObjectivesSelect<false> | PlanObjectivesSelect<true>;
+    'diary-jobs': DiaryJobsSelect<false> | DiaryJobsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2299,6 +2305,109 @@ export interface CommitteeDocument {
   createdAt: string;
 }
 /**
+ * A theme of your strategic plan, such as facilities or participation. Edit the plan from Club office, then Diary & plan.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-pillars".
+ */
+export interface PlanPillar {
+  id: number;
+  title: string;
+  summary?: string | null;
+  sortOrder?: number | null;
+  /**
+   * Set by the system for standard items, so adding them again never makes a copy.
+   */
+  sourceKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What the club wants to achieve under a pillar. Jobs in the season diary are linked to an objective to show progress.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-objectives".
+ */
+export interface PlanObjective {
+  id: number;
+  pillar: number | PlanPillar;
+  title: string;
+  /**
+   * Jobs follow the seat when its holder changes.
+   */
+  ownerSeat?: (number | null) | CommitteeSeat;
+  targetDate?: string | null;
+  /**
+   * Whole cents, for example 120000 for 1,200.00. Leave empty if there is none.
+   */
+  budgetCents?: number | null;
+  status: 'not-started' | 'on-track' | 'at-risk' | 'done' | 'dropped';
+  progressNote?: string | null;
+  sortOrder?: number | null;
+  /**
+   * Set by the system for standard items, so adding them again never makes a copy.
+   */
+  sourceKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The jobs the club does every year, with who owns them and when they are due. Work with them from Club office, then Diary & plan.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diary-jobs".
+ */
+export interface DiaryJob {
+  id: number;
+  title: string;
+  /**
+   * The season it belongs to, written like the rest of the site, for example 2026/27.
+   */
+  season: string;
+  /**
+   * The group names can be renamed in Club office settings.
+   */
+  category: 'registration' | 'governance' | 'insurance' | 'permits' | 'finance' | 'ground' | 'events' | 'other';
+  due?: string | null;
+  /**
+   * The job follows the seat when its holder changes at the yearly meeting. A seat with nobody in it counts as having no owner.
+   */
+  ownerSeat?: (number | null) | CommitteeSeat;
+  /**
+   * Only if the job belongs to someone who does not hold a seat.
+   */
+  ownerPerson?: (number | null) | Person;
+  /**
+   * Whole cents, for example 25000 for 250.00.
+   */
+  budgetCents?: number | null;
+  actualCents?: number | null;
+  status: 'todo' | 'in-progress' | 'blocked' | 'done';
+  /**
+   * Required when the status is Blocked.
+   */
+  blockedReason?: string | null;
+  /**
+   * Filled in when the job is marked Done.
+   */
+  doneOn?: string | null;
+  /**
+   * Link the job to an objective of the strategic plan to count it as progress.
+   */
+  objective?: (number | null) | PlanObjective;
+  /**
+   * Jobs that repeat can be copied to the next season in one go.
+   */
+  repeatsYearly?: boolean | null;
+  notes?: string | null;
+  /**
+   * Set by the system for standard items, so adding them again never makes a copy.
+   */
+  sourceKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2569,6 +2678,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'committee-documents';
         value: number | CommitteeDocument;
+      } | null)
+    | ({
+        relationTo: 'plan-pillars';
+        value: number | PlanPillar;
+      } | null)
+    | ({
+        relationTo: 'plan-objectives';
+        value: number | PlanObjective;
+      } | null)
+    | ({
+        relationTo: 'diary-jobs';
+        value: number | DiaryJob;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3866,6 +3987,58 @@ export interface CommitteeDocumentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-pillars_select".
+ */
+export interface PlanPillarsSelect<T extends boolean = true> {
+  title?: T;
+  summary?: T;
+  sortOrder?: T;
+  sourceKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-objectives_select".
+ */
+export interface PlanObjectivesSelect<T extends boolean = true> {
+  pillar?: T;
+  title?: T;
+  ownerSeat?: T;
+  targetDate?: T;
+  budgetCents?: T;
+  status?: T;
+  progressNote?: T;
+  sortOrder?: T;
+  sourceKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diary-jobs_select".
+ */
+export interface DiaryJobsSelect<T extends boolean = true> {
+  title?: T;
+  season?: T;
+  category?: T;
+  due?: T;
+  ownerSeat?: T;
+  ownerPerson?: T;
+  budgetCents?: T;
+  actualCents?: T;
+  status?: T;
+  blockedReason?: T;
+  doneOn?: T;
+  objective?: T;
+  repeatsYearly?: T;
+  notes?: T;
+  sourceKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -4467,6 +4640,23 @@ export interface OfficeSetting {
    */
   annualMeetingName?: string | null;
   /**
+   * The season diary marks a job “Due soon” when it falls due within this many days.
+   */
+  diaryLeadDays?: number | null;
+  /**
+   * What each group of jobs in the season diary is called. Rename them to suit your club; the jobs keep their group.
+   */
+  diaryCategoryLabels?: {
+    registration?: string | null;
+    governance?: string | null;
+    insurance?: string | null;
+    permits?: string | null;
+    finance?: string | null;
+    ground?: string | null;
+    events?: string | null;
+    other?: string | null;
+  };
+  /**
    * The jobs you roster on a game day, such as canteen or gate. The code is a short word that never changes once a job has been rostered; the name can be changed at any time. Mark a job “Paid” only if the people doing it are paid: paid and volunteer hours are kept apart in reports.
    */
   shiftTypes?:
@@ -4891,6 +5081,19 @@ export interface OfficeSettingsSelect<T extends boolean = true> {
         postalCode?: T;
       };
   annualMeetingName?: T;
+  diaryLeadDays?: T;
+  diaryCategoryLabels?:
+    | T
+    | {
+        registration?: T;
+        governance?: T;
+        insurance?: T;
+        permits?: T;
+        finance?: T;
+        ground?: T;
+        events?: T;
+        other?: T;
+      };
   shiftTypes?:
     | T
     | {
