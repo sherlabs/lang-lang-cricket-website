@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { BallotForm } from '@/components/votes/ballot-form'
 import { RACE_DASHES, RACE_FILLS, RACE_MARKERS, RACE_STROKES } from '@/components/votes/race-chart'
+import { checkTheme } from '@/lib/theme/contrast'
+import { resolveTheme } from '@/lib/theme/resolve'
 
 const root = path.resolve(__dirname, '..')
 const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8')
@@ -70,6 +72,20 @@ describe('best-player votes: club vocabulary and config (wave B spec 1)', () => 
   it('the chart colour cycle has five different tokens, dash patterns and marker shapes, and no hex', () => {
     for (const set of [RACE_STROKES, RACE_FILLS, RACE_DASHES, RACE_MARKERS]) expect(new Set(set).size).toBe(5)
     for (const t of [...RACE_STROKES, ...RACE_FILLS]) expect(t).toMatch(/^(stroke|fill)-brand-[a-z-]+$/)
+  })
+
+  it('every chart line colour is a token whose contrast against white the theme checks already enforce (so a re-themed club is warned)', () => {
+    // black / ink: white text on them (white-primary, white-ink); charcoal, grey, accent-deep: text on white (text-, muted-, deep-white).
+    const enforced = { black: 'white-primary', ink: 'white-ink', charcoal: 'text-white', grey: 'muted-white', 'gold-deep': 'deep-white' } as const
+    const results = checkTheme(resolveTheme(null).colors)
+    for (const t of RACE_STROKES) {
+      const key = t.replace('stroke-brand-', '') as keyof typeof enforced
+      const spec = results.find((r) => r.id === enforced[key])
+      expect(spec, t).toBeDefined()
+      expect(spec!.level).toBe('error')
+      expect(spec!.min).toBeGreaterThanOrEqual(3)
+      expect(spec!.pass, t).toBe(true)
+    }
   })
 
   it('the ballot form is plain HTML: native selects with labels and a submit button, no script needed', () => {

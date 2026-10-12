@@ -1,4 +1,6 @@
 import type { Payload, TypedUser, Where } from 'payload'
+import { revalidatePaths } from '@/payload/hooks/revalidate'
+import { VOTES_TAG } from '@/lib/votes/tags'
 import { currentSeasonStartYear } from '@/lib/selection/season'
 import { clubToday } from '@/lib/selection-fixtures'
 import { getPayloadClient } from '@/lib/payload/client'
@@ -48,7 +50,7 @@ export type VoteGameRow = {
   needed: number
 }
 
-type Participation = { name: string; playerId: number | null; source: 'voter' | 'selector'; castAt: string | null }
+type Participation = { name: string; playerId: number | null; source: 'voter' | 'selector'; castAt: string | null; ballotKey: string }
 
 /** Who voted in a game: names and source only. `picks` is not selected. */
 async function participation(payload: Payload, fixtureIds: readonly number[]): Promise<Map<number, Participation[]>> {
@@ -57,20 +59,20 @@ async function participation(payload: Payload, fixtureIds: readonly number[]): P
   const res = await payload.find({
     collection: 'best-player-ballots',
     where: { fixture: { in: [...fixtureIds] } } as Where,
-    select: { fixture: true, voter: true, source: true, castAt: true },
+    select: { fixture: true, voter: true, voterKey: true, source: true, castAt: true },
     limit: 20000,
     pagination: false,
     depth: 0,
     overrideAccess: true,
   })
-  const rows = res.docs as unknown as { fixture: unknown; voter: unknown; source: string; castAt?: string | null }[]
+  const rows = res.docs as unknown as { fixture: unknown; voter: unknown; voterKey?: string | null; source: string; castAt?: string | null }[]
   const voterIds = rows.map((r) => idOf(r.voter)).filter((n): n is number => n != null)
   const names = await loadPlayers(payload, voterIds)
   for (const r of rows) {
     const fid = idOf(r.fixture)
     if (fid == null) continue
     const pid = idOf(r.voter)
-    out.set(fid, [...(out.get(fid) ?? []), { name: pid != null ? (names.get(pid)?.name ?? 'Unknown') : 'A selector', playerId: pid, source: r.source === 'selector' ? 'selector' : 'voter', castAt: r.castAt ?? null }])
+    out.set(fid, [...(out.get(fid) ?? []), { name: pid != null ? (names.get(pid)?.name ?? 'Unknown') : 'A selector', playerId: pid, source: r.source === 'selector' ? 'selector' : 'voter', castAt: r.castAt ?? null, ballotKey: r.voterKey ?? (pid != null ? `player:${pid}` : '') }])
   }
   return out
 }
@@ -210,6 +212,7 @@ export async function setGameVotes(user: TypedUser, fixtureId: number, patch: { 
   const fixture = await findVoteFixture(payload, fixtureId)
   if (!fixture || fixture.status !== 'final') return WRONG
   await payload.update({ collection: 'selection-fixtures', id: fixture.id, data: data as never, overrideAccess: true, context: CTX })
+  await revalidatePaths([], undefined, [VOTES_TAG])
   return { ok: true }
 }
 
@@ -298,6 +301,8 @@ export async function saveVoteSettings(user: TypedUser, input: SettingsInput): P
     overrideAccess: true,
     context: CTX,
   })
+  // The writes above carry `disableRevalidate`, so expire the public board and menu-link cache here.
+  await revalidatePaths([], undefined, [VOTES_TAG])
   return { ok: true, warning: flag(input.enabled) ? pinWarning(await defaultPinCount(payload)) : null }
 }
 
@@ -305,7 +310,7 @@ export async function saveVoteSettings(user: TypedUser, input: SettingsInput): P
 // Admin only: audit of who voted (never for whom), delete one ballot, season totals CSV.
 // ---------------------------------------------------------------------------------------------------------------------------
 
-export type AuditRow = { name: string; playerId: number | null; source: 'voter' | 'selector'; castAt: string | null }
+export type AuditRow = { name: string; playerId: number | null; source: 'voter' | 'selector'; castAt: string | null; ballotKey: string }
 
 /** Who has voted in a game. Never selects `picks`. Logs who looked, because it is the only view of voter identities. */
 export async function auditVoters(user: TypedUser, fixtureId: number): Promise<AuditRow[] | null> {
@@ -314,18 +319,23 @@ export async function auditVoters(user: TypedUser, fixtureId: number): Promise<A
   const payload = await getPayloadClient()
   const rows = (await participation(payload, [fixtureId])).get(fixtureId) ?? []
   console.info(`[votes] audit of voters for fixture ${fixtureId} by user ${user.id}`)
-  return rows.map((r) => ({ name: r.name, playerId: r.playerId, source: r.source, castAt: r.castAt })).sort((a, b) => a.name.localeCompare(b.name))
+  return rows.map((r) => ({ name: r.name, playerId: r.playerId, source: r.source, castAt: r.castAt, ballotKey: r.ballotKey })).sort((a, b) => a.name.localeCompare(b.name))
 }
 
-/** Deletes one player's ballot for a game (a dispute) so they can vote again inside the window. Does not read the picks. */
-export async function deleteBallot(user: TypedUser, fixtureId: number, playerId: number): Promise<Done> {
+/**
+ * Deletes one ballot for a game (a dispute, or a mistaken selector entry) so the voter can vote again inside the window. The ballot is
+ * named by a player id or by its key from the audit list (`player:<id>` or `selector:<userId>`), so a ballot a departed selector entered
+ * can be removed too. Does not read the picks.
+ */
+export async function deleteBallot(user: TypedUser, fixtureId: number, which: number | string): Promise<Done> {
   assertSelection(user)
   if (!isAdminUser(user)) return NOT_ALLOWED
   const payload = await getPayloadClient()
-  if (!Number.isInteger(fixtureId) || !Number.isInteger(playerId)) return WRONG
-  const res = await payload.delete({ collection: 'best-player-ballots', where: { and: [{ fixture: { equals: fixtureId } }, { voterKey: { equals: `player:${playerId}` } }] } as Where, overrideAccess: true, context: CTX })
-  console.info(`[votes] ballot of player ${playerId} for fixture ${fixtureId} deleted by user ${user.id}`)
-  return res.docs.length ? { ok: true } : { ok: false, error: 'That player has not voted in this game.' }
+  const key = typeof which === 'number' ? (Number.isInteger(which) ? `player:${which}` : '') : which
+  if (!Number.isInteger(fixtureId) || !/^(player|selector):\d{1,9}$/.test(key)) return WRONG
+  const res = await payload.delete({ collection: 'best-player-ballots', where: { and: [{ fixture: { equals: fixtureId } }, { voterKey: { equals: key } }] } as Where, overrideAccess: true, context: CTX })
+  console.info(`[votes] ballot ${key} for fixture ${fixtureId} deleted by user ${user.id}`)
+  return res.docs.length ? { ok: true } : { ok: false, error: 'That voter has no ballot in this game.' }
 }
 
 /** Season totals per player (never individual ballots), admin only. Counts every counted game, closed or not, as the private board does. */

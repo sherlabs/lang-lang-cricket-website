@@ -1,8 +1,12 @@
 import type { RaceData } from '@/lib/votes/chart'
 
-/** Fixed token cycles: colour is never the only signal, so every series also has its own dash pattern and marker shape. */
-export const RACE_STROKES = ['stroke-brand-black', 'stroke-brand-gold-dark', 'stroke-brand-charcoal', 'stroke-brand-gold', 'stroke-brand-ink'] as const
-export const RACE_FILLS = ['fill-brand-black', 'fill-brand-gold-dark', 'fill-brand-charcoal', 'fill-brand-gold', 'fill-brand-ink'] as const
+/**
+ * Fixed token cycles: colour is never the only signal, so every series also has its own dash pattern and marker shape. Only tokens
+ * whose contrast on white the theme checks already enforce (`lib/theme/contrast.ts`, at least 4.5:1) are used, so a re-themed club
+ * with a pale accent colour cannot make a line vanish: black, accent-deep, charcoal, grey, ink.
+ */
+export const RACE_STROKES = ['stroke-brand-black', 'stroke-brand-gold-deep', 'stroke-brand-charcoal', 'stroke-brand-grey', 'stroke-brand-ink'] as const
+export const RACE_FILLS = ['fill-brand-black', 'fill-brand-gold-deep', 'fill-brand-charcoal', 'fill-brand-grey', 'fill-brand-ink'] as const
 export const RACE_DASHES = ['', '8 4', '2 4', '10 3 2 3', '5 5'] as const
 export const RACE_MARKERS = ['circle', 'square', 'triangle', 'diamond', 'cross'] as const
 

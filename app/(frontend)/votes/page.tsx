@@ -2,19 +2,19 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { PageHeader } from '@/components/page-header'
+import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { LeaderboardTable } from '@/components/votes/leaderboard-table'
 import { RaceChart } from '@/components/votes/race-chart'
 import { VOTES, votePaths } from '@/config/site'
 import { getClub } from '@/lib/club'
-import { getPayloadClient } from '@/lib/payload/client'
 import { canonicalFor, titleWithSuffix } from '@/lib/site-metadata'
-import { firstPublicGradeId, getPublicBoard } from '@/lib/votes-queries'
+import { getCachedPublicBoard, getCachedPublicOptions } from '@/lib/votes-queries'
 import { buildRace } from '@/lib/votes/chart'
 import { ballotValuesLabel } from '@/lib/votes/settings'
 import { cn } from '@/lib/utils'
 
-// Switched on and off by the committee, so never cached: the moment it is off the page is a plain 404.
-export const dynamic = 'force-dynamic'
+// Rendered per request (it reads searchParams), but the data behind it is cached for a few minutes under the `votes-public` tag, which
+// the vote settings expire: switching the board off is a plain 404 at once, and a cast vote shows after the cache window.
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? ''
@@ -40,16 +40,21 @@ const pill = (active: boolean) =>
 export default async function VotesPage({ searchParams }: Props) {
   const sp = await searchParams
   const club = await getClub()
-  const payload = await getPayloadClient()
+  const options = await getCachedPublicOptions()
+  if (!options) notFound()
   const seasonRaw = one(sp.season)
   const gradeRaw = one(sp.grade)
-  const board = await getPublicBoard(payload, { season: /^\d{4}$/.test(seasonRaw) ? Number(seasonRaw) : null, gradeId: gradeRaw && gradeRaw.length <= 120 ? gradeRaw : null, locale: club.locale })
-  if (!board) {
+  // Only values the page really offers reach the board, so arbitrary query strings cannot build or cache anything.
+  const season = /^\d{4}$/.test(seasonRaw) && options.seasons.includes(Number(seasonRaw)) ? Number(seasonRaw) : null
+  if (gradeRaw && !options.gradeIds.includes(gradeRaw)) notFound()
+  if (!gradeRaw && options.scope === 'grade') {
     // Grade-only scope has no whole-club board: send visitors to the first grade rather than a dead end.
-    const first = gradeRaw ? null : await firstPublicGradeId(payload)
+    const first = options.gradeIds[0]
     if (first) redirect(`${votePaths.publicBoard}?${new URLSearchParams({ grade: first })}`)
     notFound()
   }
+  const board = await getCachedPublicBoard(season, gradeRaw || null, club.locale)
+  if (!board) notFound()
   const { settings, result } = board
   const href = (grade: string | null, season: number) => `${votePaths.publicBoard}?${new URLSearchParams({ ...(grade ? { grade } : {}), ...(season !== board.seasons[0] ? { season: String(season) } : {}) })}`.replace(/\?$/, '')
   const showGrades = settings.publicScope !== 'club' && board.grades.length > 0
@@ -59,6 +64,7 @@ export default async function VotesPage({ searchParams }: Props) {
     <main>
       <PageHeader eyebrow="Stats" title={`${VOTES.label} leaderboard`} intro={`Season ${seasonLabel}. Points ${ballotValuesLabel(settings.ballotValues)} from player votes after each game.`} />
       <section className="container-site space-y-8 py-12 lg:py-16">
+        <StatsSubNav current={votePaths.publicBoard} />
         {(showGrades || board.seasons.length > 1) && (
           <div className="space-y-3">
             {showGrades && (

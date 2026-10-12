@@ -3,12 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
 import { resetSelection } from './selection-helpers'
+import { sql } from '@payloadcms/db-postgres/drizzle'
 import { ballotCount, makeFinalGame, makeTeam, settingsPatch, votesOn } from './votes-helpers'
 import { auditVoters, deleteBallot, enterSelectorBallot, exportVotesCsv, loadPresentSnapshot, loadPrivateBoard, loadVoteGame, loadVoteSettingsView, loadVotesHome, saveVoteSettings, setGameVotes } from '@/lib/selector-votes-queries'
 import { computeBoard, firstPublicGradeId, getPublicBoard, publicLeaderboardIndexable, publicLeaderboardOn, writeBallot } from '@/lib/votes-queries'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
 vi.mock('next/cache', () => cache)
+// An async server component cannot be rendered to static markup; the menu is covered by its own test.
+vi.mock('@/components/stats/stats-sub-nav', () => ({ StatsSubNav: () => null }))
 const ctl = vi.hoisted(() => ({ headers: new Headers() }))
 vi.mock('next/headers', () => ({ headers: async () => ctl.headers, cookies: async () => ({ get: () => undefined, set: () => undefined }) }))
 vi.mock('next/navigation', async (orig) => ({
@@ -111,7 +114,7 @@ describe('best-player votes: the board, the public page and who can see what', (
     it('admin sees who voted and from where, never picks; editor and selector are refused', async () => {
       const rows = await auditVoters(admin, closedGame.id)
       expect(rows).toHaveLength(6)
-      expect(rows![0]).toEqual({ name: expect.any(String), playerId: expect.any(Number), source: 'voter', castAt: expect.any(String) })
+      expect(rows![0]).toEqual({ name: expect.any(String), playerId: expect.any(Number), source: 'voter', castAt: expect.any(String), ballotKey: expect.stringMatching(/^player:\d+$/) })
       expect(JSON.stringify(rows)).not.toMatch(/picks|place/)
       expect(await auditVoters(editor, closedGame.id)).toBeNull()
       expect(await auditVoters(selector, closedGame.id)).toBeNull()
@@ -124,6 +127,29 @@ describe('best-player votes: the board, the public page and who can see what', (
       expect(await deleteBallot(admin, closedGame.id, voter(3))).toEqual({ ok: true })
       expect(await ballotCount(payload, closedGame.id)).toBe(5)
       expect(await deleteBallot(admin, closedGame.id, voter(3))).toMatchObject({ ok: false })
+    })
+
+    it('admin deletes a ballot a selector entered by its key, and only well-formed keys are accepted', async () => {
+      await votesOn(payload, { minBallotsToCount: 5, publicLeaderboard: true })
+      expect(await enterSelectorBallot(selector, openGame.id, [{ place: 1, playerId: voter(0) }, { place: 2, playerId: voter(1) }, { place: 3, playerId: voter(2) }])).toEqual({ ok: true })
+      const entered = (await auditVoters(admin, openGame.id))!.find((r) => r.source === 'selector')!
+      expect(entered.ballotKey).toMatch(/^selector:\d+$/)
+      expect(await deleteBallot(editor, openGame.id, entered.ballotKey)).toMatchObject({ ok: false })
+      expect(await deleteBallot(admin, openGame.id, "player:1 OR 1=1")).toMatchObject({ ok: false })
+      expect(await deleteBallot(admin, openGame.id, entered.ballotKey)).toEqual({ ok: true })
+      expect(await ballotCount(payload, openGame.id)).toBe(6)
+    })
+  })
+
+  describe('deleting a player who has received votes', () => {
+    it('removes the picks that name the player and keeps the ballots (no NOT NULL violation)', async () => {
+      // voter(7) is named in the thin and the open game's ballots.
+      const named = async () => (await payload.db.drizzle.execute(sql`SELECT count(*)::int AS n FROM "payload"."best_player_ballots_picks" WHERE "player_id" = ${voter(7)}`)).rows[0] as { n: number }
+      expect((await named()).n).toBeGreaterThan(0)
+      const before = await ballotCount(payload)
+      await payload.delete({ collection: 'players', id: voter(7), overrideAccess: true, context: { disableRevalidate: true } })
+      expect((await named()).n).toBe(0)
+      expect(await ballotCount(payload)).toBe(before)
     })
   })
 
@@ -275,6 +301,9 @@ describe('best-player votes: the board, the public page and who can see what', (
       expect(html).toContain('2 games are not counted yet')
       expect(html).toContain(team[0].name)
       expect(html).not.toContain(team[9].name)
+      // an address the page does not offer is a plain 404, and builds nothing
+      await expect(VotesPage({ searchParams: Promise.resolve({ grade: 'nope' }) })).rejects.toMatchObject({ digest: expect.stringContaining('404') })
+      expect(renderToStaticMarkup(await VotesPage({ searchParams: Promise.resolve({ season: '1999' }) }))).toContain('Points 3-2-1')
       await settingsPatch(payload, { publicLeaderboard: false })
       await expect(VotesPage({ searchParams: Promise.resolve({}) })).rejects.toMatchObject({ digest: expect.stringContaining('404') })
     })

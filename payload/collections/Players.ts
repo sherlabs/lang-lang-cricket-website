@@ -6,6 +6,7 @@ import { TEAMS_TAG } from '../../lib/selection/tags'
 import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { maxChars } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
+import { deletePlayerPicks } from '../hooks/deletePlayerPicks'
 import { displayName, fullName } from '../hooks/displayName'
 import { keepStored, playerSource, refusePlayhqDelete, unlinkPeople } from '../hooks/playerGuards'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
@@ -67,6 +68,7 @@ export const Players: CollectionConfig = {
         { collection: 'player-sponsors', field: 'player' },
         { collection: 'net-attendance', field: 'player' },
       ]),
+      deletePlayerPicks,
       unlinkPeople,
     ],
     afterChange: [revalidateAfterChange(paths, [...ALL_STATS_TAGS, TEAMS_TAG])],

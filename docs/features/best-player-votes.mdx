@@ -44,15 +44,17 @@ Clubs give a best-player award and count the votes by hand (issue [#18](https://
 - Changing the ballot values changes every total, past games included.
 - Votes are throttled per player, per link and per address (a clubhouse shares one link and one Wi-Fi, so the link and address limits are generous). An unknown game, a wrong link, a game the player was not in and a closed game all give the same plain "page not found".
 - Merging two players moves their ballots and the picks that name them; if both had voted in one game only the earlier ballot is kept, and an undo does not bring that deleted ballot back.
+- The private leaderboard and the "Who has voted" and "Not voted yet" lists are visible to every selector, and the private board counts games still open. A selector who looks at the private board before and after one named player votes can work out that player's picks, and the lists show who has voted. Votes are only anonymous towards the public, the presenter and players, not towards selectors; do not give the selector role to anyone you would not trust with that. The totals CSV and the admin voter list are admin only.
+- The public leaderboard is cached for up to five minutes (a cast vote or a closing window shows after that; switching the board off or changing the options takes effect at once). Only grades and seasons the page offers are accepted; any other address is a plain 404.
 - Games under the minimum or still open are left out of totals, so players from sparsely voted games can be under-ranked; the page says how many games are not counted.
 
 ## How to use it
 
 1. Open **Selectors** in the admin (or the Overview in the selector area) and go to **Votes > Settings**. Read the PIN warning, set manual 6-digit PINs for anyone on a default PIN if you can, then tick **Voting is switched on**.
 2. After a game, players open the availability link and tap **Vote**. Chase with **Votes** > the game > **Copy a reminder text**.
-3. Watch the **Leaderboard (private)**. To show it on the site, tick **Show a public leaderboard** and choose whole club, grades or both. When it is on, a link appears in the Stats section menu; with grades only, `/votes` sends visitors to the first grade and is left out of the sitemap.
+3. Watch the **Leaderboard (private)**. To show it on the site, tick **Show a public leaderboard** and choose whole club, grades or both. When it is on, a link appears in the Stats section menu on every stats page (it follows the setting within a minute or so, and at most five minutes); with grades only, `/votes` sends visitors to the first grade and is left out of the sitemap.
 4. On awards night open **Awards night mode** and press Next. Admins download the totals with **Download totals (CSV)**.
-5. If a player says someone voted as them, an admin opens the game, deletes that ballot and asks them to vote again.
+5. If a player says someone voted as them, an admin opens the game, deletes that ballot (a second tap confirms; it cannot be undone) and asks them to vote again. A ballot a selector entered by mistake can be deleted the same way, even if that selector has left.
 
 ## Not included / deferred
 

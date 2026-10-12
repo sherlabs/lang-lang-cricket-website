@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { roundView } from '@/lib/nets/rotation'
 import type { NetSnapshot } from '@/lib/nets/snapshot'
 import { clock, timerView, type TimerInput } from '@/lib/nets/timer'
+import { ConfirmButton } from '@/components/selector/confirm-button'
 import { btnPrimary, btnQuiet } from '@/components/selector/styles'
 
 /**
@@ -213,7 +214,7 @@ export function RotationTimer({ initial, actions, statePath, canBuild }: { initi
         {snap.state === 'running' && <button type="button" className={btnQuiet} disabled={busy} onClick={() => run(actions.pause)}>Pause</button>}
         {snap.state === 'paused' && <button type="button" className={btnPrimary} disabled={busy} onClick={() => run(actions.resume)}>Resume</button>}
         {(snap.state === 'running' || snap.state === 'paused') && view.nextRound != null && <button type="button" className={btnPrimary} disabled={busy} onClick={() => run(actions.next)}>Next round</button>}
-        {snap.state !== 'planned' && snap.state !== 'finished' && <button type="button" className={btnQuiet} disabled={busy} onClick={() => run(actions.finish)}>Finish</button>}
+        {snap.state !== 'planned' && snap.state !== 'finished' && <div className="col-span-2"><ConfirmButton label="Finish" confirmLabel="Really finish?" className={btnQuiet} disabled={busy} onConfirm={() => run(actions.finish)} /></div>}
       </div>
       {snap.state === 'finished' && <p className="mt-3 text-sm text-brand-grey">This session is finished.</p>}
       {message && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{message}</p>}

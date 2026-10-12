@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { VOTES, votePaths } from '@/config/site'
+import { getCachedPublicLeaderboardOn } from '@/lib/votes-queries'
 import { cn } from '@/lib/utils'
 
 const LINKS = [
@@ -13,9 +14,15 @@ const LINKS = [
   { href: '/matches', label: 'Matches' },
 ] as const
 
-/** Section navigation as links (not a tablist: there are no tab panels). Scrolls inside its own box on phones. */
-export function StatsSubNav({ current, showVotes = false }: { current: (typeof LINKS)[number]['href']; showVotes?: boolean }) {
-  // The best-player leaderboard exists only while the committee has switched it on, so the caller says whether to list it.
+type Current = (typeof LINKS)[number]['href'] | typeof votePaths.publicBoard
+
+/**
+ * Section navigation as links (not a tablist: there are no tab panels). Scrolls inside its own box on phones. The best-player
+ * leaderboard link is added here, for every stats page alike, while the committee has the public board switched on; the flag is
+ * cached under the `votes-public` tag, which the vote settings expire, so the link does not wait for a page's own revalidation.
+ */
+export async function StatsSubNav({ current }: { current: Current }) {
+  const showVotes = await getCachedPublicLeaderboardOn().catch(() => false)
   const links: { href: string; label: string }[] = showVotes ? [...LINKS, { href: votePaths.publicBoard, label: VOTES.label }] : [...LINKS]
   return (
     <nav aria-label="Stats sections" className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">

@@ -3,6 +3,8 @@ import { isAdmin, isSelection } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
 import { DEFAULT_VOTE_SETTINGS, validateBallotValues } from '../../lib/votes/settings'
 import { VOTES } from '../../config/site'
+import { VOTES_TAG } from '../../lib/votes/tags'
+import { revalidatePaths } from '../hooks/revalidate'
 
 /**
  * Settings for the selector tools (announce-teams spec 4.5). `linkVersion` is the availability link: rotating it (the selector
@@ -15,6 +17,8 @@ export const SelectionSettings: GlobalConfig = {
   label: 'Selection settings',
   admin: { group: false, hidden: hiddenFromEditors, description: 'The availability link and selection options. Selectors change the link from the selector area.' },
   access: { read: isSelection, update: isAdmin },
+  // The public leaderboard and the stats menu link read the vote options through a short cache; a change expires it at once.
+  hooks: { afterChange: [async ({ doc, context }) => { await revalidatePaths([], context, [VOTES_TAG]); return doc }] },
   fields: [
     { name: 'linkEnabled', type: 'checkbox', defaultValue: true, label: 'Availability link is switched on', admin: { description: 'Untick to turn the link off: everyone who opens it sees a "page not found".' } },
     { name: 'linkVersion', type: 'number', defaultValue: 1, min: 1, required: true, label: 'Link version', admin: { description: 'Add one to give everyone a new link. The old link, and every remembered phone, stops working at once.' } },

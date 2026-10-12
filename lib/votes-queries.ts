@@ -1,13 +1,16 @@
+import { unstable_cache } from 'next/cache'
 import type { Payload, Where } from 'payload'
 import { SEASON_START_MONTH, VOTES } from '@/config/site'
 import { LOCKED_MESSAGE } from '@/lib/availability-throttle'
 import { rememberedPlayer, resolveLink } from '@/lib/availability-public'
+import { getPayloadClient } from '@/lib/payload/client'
 import { clubToday } from '@/lib/selection-fixtures'
 import { parseSnapshot } from '@/lib/selection/team-sheet'
 import { currentSeasonStartYear } from '@/lib/selection/season'
 import { idOf, loadPlayers, type PlayerLite } from '@/lib/selection/store'
 import { weekendKey } from '@/lib/selection/weekend'
 import { hit, type ThrottleRule } from '@/lib/throttle'
+import { VOTES_BOARD_REVALIDATE_SECONDS, VOTES_TAG } from '@/lib/votes/tags'
 import { BALLOT_MESSAGES, nomineesFor, pickableFor, placesRequired, validateBallot, type BallotError, type BallotPick } from '@/lib/votes/ballot'
 import { settingsFrom, type VoteSettings } from '@/lib/votes/settings'
 import { addDays, editWindowOpen, isCounting, seasonStartYearOfDate, voteStatus, type VoteFixture } from '@/lib/votes/status'
@@ -248,6 +251,29 @@ export async function getPublicBoard(payload: Payload, o: { season?: number | nu
   if (wantsGrade && !board.scope.gradeId) return null
   return { ...board, seasons: await seasonsWithGames(payload, o.now) }
 }
+
+export type PublicOptions = { scope: VoteSettings['publicScope']; seasons: number[]; gradeIds: string[] }
+
+/** What the public page may be asked for: null when it is off. Every `?grade=` and `?season=` is checked against this before any board is built. */
+export async function getPublicOptions(payload: Payload): Promise<PublicOptions | null> {
+  const settings = await getVoteSettings(payload)
+  if (!settings.enabled || !settings.publicLeaderboard) return null
+  const [board, seasons] = await Promise.all([computeBoard(payload, { audience: 'public', locale: 'en', settings }), seasonsWithGames(payload)])
+  return { scope: settings.publicScope, seasons, gradeIds: board.grades.map((g) => g.gradeId) }
+}
+
+/**
+ * Cached for a few minutes (tag `votes-public`, expired when the vote settings change): the board loads every fixture and ballot of a
+ * season, and the public page can be asked for it by anyone. Callers pass only values `getPublicOptions` accepted, so the number of
+ * cache entries is bounded by seasons x grades.
+ */
+// Built on each call (not at import) so modules that import this file never need the Next cache at load time.
+const cacheOpts = { tags: [VOTES_TAG], revalidate: VOTES_BOARD_REVALIDATE_SECONDS }
+export const getCachedPublicOptions = () => unstable_cache(async () => getPublicOptions(await getPayloadClient()), ['votes-public-options', 'v1'], cacheOpts)()
+export const getCachedPublicBoard = (season: number | null, gradeId: string | null, locale: string) =>
+  unstable_cache(async () => getPublicBoard(await getPayloadClient(), { season, gradeId, locale }), ['votes-public-board', 'v1', String(season), String(gradeId), locale], cacheOpts)()
+/** The same flag for the stats menu, cached so every stats page can ask without a query each time. */
+export const getCachedPublicLeaderboardOn = () => unstable_cache(async () => publicLeaderboardOn(await getPayloadClient()), ['votes-public-on', 'v1'], cacheOpts)()
 
 /** Is the public leaderboard on? (Sitemap and navigation.) */
 export async function publicLeaderboardOn(payload: Payload): Promise<boolean> {

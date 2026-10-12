@@ -10,6 +10,7 @@ import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { requireSelection } from '@/lib/selector-auth'
 import { getLinkInfo } from '@/lib/selector-availability-queries'
 import { auditVoters, loadVoteGame } from '@/lib/selector-votes-queries'
+import { ConfirmButton } from '@/components/selector/confirm-button'
 import { reminderText } from '@/lib/selection/reminder'
 import { deleteBallotAction, enterBallotAction, setGameStateAction } from '../../../votes-actions'
 
@@ -30,7 +31,7 @@ export default async function VoteGamePage({ params }: Props) {
   const { game, settings } = detail
   const link = await getLinkInfo(user)
   const url = link.enabled ? `${siteUrl.replace(/\/$/, '')}${link.path}` : null
-  const reminder = reminderText({ gradeName: game.gradeName, opponent: game.opponentName, when: formatMatchDay(game.localDate, locale), names: detail.chase.map((c) => c.name), availabilityUrl: url }).replace('can you let the selectors know if you can play', `please vote for ${VOTES.label.toLowerCase()} in`).replace(/\?(\s|$)/, '.$1')
+  const reminder = reminderText({ gradeName: game.gradeName, opponent: game.opponentName, when: formatMatchDay(game.localDate, locale), names: detail.chase.map((c) => c.name), availabilityUrl: url, kind: 'vote', voteLabel: VOTES.label })
   const audit = await auditVoters(user, id)
   return (
     <main className="container-site max-w-3xl py-6 sm:py-10">
@@ -97,16 +98,16 @@ export default async function VoteGamePage({ params }: Props) {
               </li>
             ))}
           </ul>
-          {audit.some((a) => a.playerId != null) && (
+          {audit.some((a) => a.ballotKey) && (
             <form action={deleteBallotAction} className="mt-3 flex flex-wrap items-end gap-3">
               <input type="hidden" name="fixtureId" value={game.id} />
               <label className="text-sm font-medium text-brand-black">Delete the ballot of
-                <select name="playerId" required defaultValue="" className="mt-1 block h-12 rounded-lg border border-brand-black/20 bg-white px-3">
-                  <option value="">Choose a player</option>
-                  {audit.map((a) => a.playerId != null ? <option key={a.playerId} value={a.playerId}>{a.name}</option> : null)}
+                <select name="ballot" required defaultValue="" className="mt-1 block h-12 rounded-lg border border-brand-black/20 bg-white px-3">
+                  <option value="">Choose a ballot</option>
+                  {audit.map((a) => a.ballotKey ? <option key={a.ballotKey} value={a.ballotKey}>{a.name}{a.source === 'selector' ? ' (entered by a selector)' : ''}</option> : null)}
                 </select>
               </label>
-              <button type="submit" className={btnQuiet}>Delete ballot</button>
+              <ConfirmButton label="Delete ballot" confirmLabel="Really delete it?" className={btnQuiet} />
             </form>
           )}
         </section>

@@ -21,6 +21,7 @@ import { isStaffUser } from '@/payload/access'
  */
 const CTX = { disableRevalidate: true } as const
 const WRONG = 'Something went wrong. Please try again.'
+const FINISHED = 'This session is finished, so attendance can no longer change.'
 const STALE = 'Someone else just changed this session. The latest is shown, please try again.'
 
 type SessionRow = {
@@ -253,6 +254,7 @@ export async function checkIn(user: TypedUser, sessionId: number, playerId: numb
   const row = await loadSession(payload, sessionId)
   const player = Number.isInteger(playerId) ? (await loadPlayers(payload, [playerId])).get(playerId) : undefined
   if (!row || !player) return { ok: false, error: WRONG }
+  if (row.state === 'finished') return { ok: false, error: FINISHED }
   await insertAttendance(payload, user, sessionId, { playerKey: playerKey(playerId), player: playerId })
   await syncPlan(payload, sessionId, { add: { key: playerKey(playerId), name: player.name } })
   return { ok: true }
@@ -264,6 +266,7 @@ export async function checkOut(user: TypedUser, sessionId: number, key: string):
   const payload = await getPayloadClient()
   const row = await loadSession(payload, sessionId)
   if (!row || !/^(player:\d{1,9}|guest:.{1,120})$/.test(key)) return { ok: false, error: WRONG }
+  if (row.state === 'finished') return { ok: false, error: FINISHED }
   await payload.delete({ collection: 'net-attendance', where: { and: [{ session: { equals: sessionId } }, { playerKey: { equals: key } }] }, overrideAccess: true, context: CTX })
   await syncPlan(payload, sessionId, { removeKey: key })
   return { ok: true }
@@ -276,6 +279,7 @@ export async function addGuest(user: TypedUser, sessionId: number, rawName: unkn
   const payload = await getPayloadClient()
   const row = await loadSession(payload, sessionId)
   if (!row) return { ok: false, error: WRONG }
+  if (row.state === 'finished') return { ok: false, error: FINISHED }
   const key = guestKey(name)
   const att = await attendanceOf(payload, sessionId)
   if (att.some((a) => a.playerKey === key)) return { ok: true }

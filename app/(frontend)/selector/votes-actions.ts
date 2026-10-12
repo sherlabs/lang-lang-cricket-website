@@ -56,8 +56,11 @@ export async function saveVoteSettingsAction(_prev: FormState, formData: FormDat
 export async function deleteBallotAction(formData: FormData): Promise<void> {
   const user = await requireSelection(votePaths.selector)
   const fixtureId = asInt(formData.get('fixtureId'))
+  // `ballot` is the audit list's key (`player:<id>` or `selector:<userId>`); the older `playerId` field still works.
+  const ballot = formData.get('ballot')
   const playerId = asInt(formData.get('playerId'))
-  if (fixtureId == null || playerId == null) redirect(votePaths.selector)
-  await deleteBallot(user, fixtureId, playerId)
+  const which = typeof ballot === 'string' && /^(player|selector):\d{1,9}$/.test(ballot) ? ballot : playerId
+  if (fixtureId == null || which == null) redirect(votePaths.selector)
+  await deleteBallot(user, fixtureId, which)
   redirect(votePaths.fixture(fixtureId))
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ConfirmButton } from '@/components/selector/confirm-button'
 import { CheckIn } from '@/components/nets/check-in'
 import { RotationTimer } from '@/components/nets/rotation-timer'
 import { SessionForm } from '@/components/nets/session-form'
@@ -30,6 +31,34 @@ export default async function NetSessionPage({ params }: Props) {
   const s = d.snapshot
   const notHere = d.squad.filter((p) => !p.present)
   const time = d.startTime ? ` at ${formatMatchTime(`${d.startTime}:00`)}` : ''
+  // While a session runs, the timer and its buttons come first: the check-in roster is 20 to 30 tall rows.
+  const live = s.state === 'running' || s.state === 'paused'
+  const checkInSection = (
+  <section aria-labelledby="checkin" className="mt-8">
+    <h2 id="checkin" className="text-xl font-bold text-brand-black">Check in</h2>
+    <p className="mt-1 text-sm text-brand-grey">Tap a name when they turn up. This records attendance only.</p>
+    <div className="mt-3">
+      <CheckIn sessionId={s.id} squad={d.squad} others={d.others} guestsLeft={d.guestsLeft} actions={{ checkIn: checkInAction, checkOut: checkOutAction, addGuest: addGuestAction, search: searchPlayersAction }} />
+    </div>
+  </section>
+  )
+  const rotationSection = (
+  <section aria-labelledby="rotation" className="mt-6">
+    <h2 id="rotation" className="text-xl font-bold text-brand-black">Rotation</h2>
+    {d.planStale && <p role="status" className="mt-2 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">Check-ins have changed since the rotation was built. Build it again before you start.</p>}
+    {s.state !== 'planned' && s.state !== 'finished' && <p className="mt-1 text-sm text-brand-grey">Anyone who checks in now joins a later round. Rounds already started are not changed.</p>}
+    <div className="mt-3">
+      <RotationTimer
+        key={s.id}
+        initial={s}
+        statePath={selectorPaths.netState(s.id)}
+        canBuild={s.state === 'planned'}
+        actions={{ build: buildRotationAction, start: startSessionAction, pause: pauseSessionAction, resume: resumeSessionAction, next: nextRoundAction, finish: finishSessionAction }}
+      />
+    </div>
+    <p className="mt-3 text-xs text-brand-grey">The timer is a convenience. A phone may show a stale countdown until you return to this tab, and not every browser can keep the screen on.</p>
+  </section>
+  )
   return (
     <main className="container-site max-w-xl py-6 sm:py-10">
       <AvailabilitySectionNav current="nets" />
@@ -38,29 +67,9 @@ export default async function NetSessionPage({ params }: Props) {
       <p className="mt-1 text-sm text-brand-grey">{formatMatchDay(s.date, locale)}{time} · {s.nets} {s.nets === 1 ? 'net' : 'nets'}, {s.minutesPerTurn} minutes each, up to {s.groupSize} per net · <span className="font-semibold text-brand-black">{STATE_LABEL[s.state]}</span></p>
       {d.notes && <p className="mt-2 text-sm text-brand-charcoal">{d.notes}</p>}
 
-      <section aria-labelledby="checkin" className="mt-6">
-        <h2 id="checkin" className="text-xl font-bold text-brand-black">Check in</h2>
-        <p className="mt-1 text-sm text-brand-grey">Tap a name when they turn up. This records attendance only.</p>
-        <div className="mt-3">
-          <CheckIn sessionId={s.id} squad={d.squad} others={d.others} guestsLeft={d.guestsLeft} actions={{ checkIn: checkInAction, checkOut: checkOutAction, addGuest: addGuestAction, search: searchPlayersAction }} />
-        </div>
-      </section>
-
-      <section aria-labelledby="rotation" className="mt-8">
-        <h2 id="rotation" className="text-xl font-bold text-brand-black">Rotation</h2>
-        {d.planStale && <p role="status" className="mt-2 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">Check-ins have changed since the rotation was built. Build it again before you start.</p>}
-        {s.state !== 'planned' && s.state !== 'finished' && <p className="mt-1 text-sm text-brand-grey">Anyone who checks in now joins a later round. Rounds already started are not changed.</p>}
-        <div className="mt-3">
-          <RotationTimer
-            key={s.id}
-            initial={s}
-            statePath={selectorPaths.netState(s.id)}
-            canBuild={s.state === 'planned'}
-            actions={{ build: buildRotationAction, start: startSessionAction, pause: pauseSessionAction, resume: resumeSessionAction, next: nextRoundAction, finish: finishSessionAction }}
-          />
-        </div>
-        <p className="mt-3 text-xs text-brand-grey">The timer is a convenience. A phone may show a stale countdown until you return to this tab, and not every browser can keep the screen on.</p>
-      </section>
+      {live && rotationSection}
+      {s.state !== 'finished' && checkInSection}
+      {!live && rotationSection}
 
       <section aria-labelledby="summary" className="mt-8">
         <h2 id="summary" className="text-xl font-bold text-brand-black">Summary</h2>
@@ -87,7 +96,7 @@ export default async function NetSessionPage({ params }: Props) {
           {d.canDelete && (
             <form action={deleteSessionAction} className="mt-4">
               <input type="hidden" name="sessionId" value={s.id} />
-              <button type="submit" className={btnQuiet}>Delete this session</button>
+              <ConfirmButton label="Delete this session" confirmLabel="Really delete it and its check-ins?" className={btnQuiet} />
             </form>
           )}
         </details>

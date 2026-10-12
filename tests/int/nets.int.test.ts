@@ -143,6 +143,11 @@ describe('net sessions and the editable player card', () => {
     const done = await a.finishSessionAction({ sessionId: id })
     expect(done).toMatchObject({ ok: true, snapshot: { state: 'finished' } })
     expect(await a.finishSessionAction({ sessionId: id })).toMatchObject({ ok: false })
+    // A finished session's attendance is frozen.
+    expect(await a.checkInAction({ sessionId: id, playerId: team[0].id })).toMatchObject({ ok: false })
+    expect(await a.checkOutAction({ sessionId: id, key: `player:${team[0].id}` })).toMatchObject({ ok: false })
+    expect(await attendance(id)).toHaveLength(9)
+    expect(await a.addGuestAction({ sessionId: id, name: 'Late Guest' })).toMatchObject({ ok: false })
     expect(await a.updateSessionAction({}, Object.assign(new FormData(), {}) as FormData)).toMatchObject({ error: 'Something went wrong. Please try again.' })
   })
 

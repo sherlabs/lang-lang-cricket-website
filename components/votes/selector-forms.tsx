@@ -46,7 +46,7 @@ export function VoteSettingsForm({ action, s, canEdit, hasWarning }: { action: A
       <fieldset disabled={dis} className="space-y-5">
         <label className={row}><input type="checkbox" name="enabled" defaultChecked={s.enabled} className={check} /><span><b>Voting is switched on</b><span className="block text-xs text-brand-grey">Off hides every vote screen.{hasWarning ? ' Read the PIN warning above before you switch it on.' : ''}</span></span></label>
         <label className="block text-sm font-medium text-brand-black">Points for 1st, 2nd, 3rd...
-          <input name="ballotValues" defaultValue={s.ballotValues} className={`${field} mt-1`} inputMode="text" pattern="[0-9, ]+" required />
+          <input name="ballotValues" defaultValue={s.ballotValues} className={`${field} mt-1`} inputMode="text" pattern="[0-9, \-]+" title="Whole numbers from highest to lowest, for example 3,2,1 or 3-2-1" required />
           <span className="mt-1 block text-xs font-normal text-brand-grey">Highest to lowest, at most 5, for example 3,2,1. Changing this changes every total, including past games.</span>
         </label>
         <label className="block text-sm font-medium text-brand-black">Days voting stays open after a game

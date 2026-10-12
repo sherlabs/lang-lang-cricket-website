@@ -14,6 +14,8 @@ import { seedMatchSeasonRows, seedMatchStore } from '../../payload/scripts/fixtu
 import { destroyTestPayload, getTestPayload, resetGlobal } from './helpers'
 import { resetMatches } from './match-helpers'
 
+// The stats menu is an async server component (it asks whether the vote board is on); it cannot render to static markup here.
+vi.mock('@/components/stats/stats-sub-nav', () => ({ StatsSubNav: () => null }))
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: <T,>(fn: () => Promise<T>) => fn }))
 
 const ORG = '484ced51-403a-466c-9a94-bd95eedf7319'
