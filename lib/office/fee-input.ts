@@ -182,6 +182,8 @@ export const FEE_NOTICE_TEXT = {
   joined: 'Membership added.',
   copied: 'Last season’s membership types were copied.',
   adjusted: 'Adjustment added.',
+  tierAdded: 'Membership type added.',
+  removed: 'Membership removed.',
 } as const
 export type FeeNotice = keyof typeof FEE_NOTICE_TEXT
 export const isFeeNotice = (v: unknown): v is FeeNotice => typeof v === 'string' && v in FEE_NOTICE_TEXT

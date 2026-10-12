@@ -298,7 +298,7 @@ export async function removeMembership(user: unknown, id: number): Promise<Actio
     console.warn('[office] remove membership refused:', (err as Error).message)
     return fail('closed')
   }
-  return { ok: true, notice: 'joined' }
+  return { ok: true, notice: 'removed' }
 }
 
 export async function addTier(user: unknown, raw: { season: unknown; name: unknown; kind: unknown; upfront: unknown; perMatch: unknown }): Promise<ActionResult> {
@@ -319,7 +319,7 @@ export async function addTier(user: unknown, raw: { season: unknown; name: unkno
     console.warn('[office] add tier failed:', (err as Error).message)
     return fail('save')
   }
-  return { ok: true, notice: 'joined' }
+  return { ok: true, notice: 'tierAdded' }
 }
 
 /** Copies last season's membership types into `season` (rates unfrozen). Types already there by name are skipped. */
