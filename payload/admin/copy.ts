@@ -111,6 +111,13 @@ export const officeCopy = {
     overBudget: 'Over budget',
     budgetWarning: 'The budgets of the jobs add up to more than the objective\u2019s budget',
   },
+  stock: {
+    excludes: 'Switched-off items and items with no reorder level are not checked for low stock. Voided entries are not counted. Things given away are never counted as owed back.',
+    stat: (low: number, out: number, overdue: number) =>
+      `${low === 0 ? 'No items are low' : `${low} ${plural(low, 'item is', 'items are')} low`}; ${out === 0 ? 'nothing is out with people' : `${out} ${plural(out, 'item is', 'items are')} out with people`}${overdue > 0 ? `, ${overdue} overdue` : ''} (switched-off items, items with no reorder level, things given away and voided entries are not counted)`,
+    low: (n: number) => `${n} ${plural(n, 'item is', 'items are')} low (switched-off items are not counted; items with no reorder level are not checked)`,
+    overdue: (n: number) => `${n} issued ${plural(n, 'item is', 'items are')} overdue back (items with no due date, things given away, and anything already returned, lost or voided are not counted)`,
+  },
   meetings: {
     excludes: 'Done and dropped actions are not counted. Restricted actions are counted only for office-bearers.',
     stat: (next: string | null, overdue: number) =>

@@ -49,6 +49,7 @@ import { CommitteeDocuments, MeetingActions, MeetingAttendance, MeetingItems, Me
 import { EmailCampaigns, EmailRecipients, EmailSuppressions } from './payload/collections/email'
 import { OfficeFiles } from './payload/collections/OfficeFiles'
 import { DiaryJobs, PlanObjectives, PlanPillars } from './payload/collections/diary'
+import { StockIssues, StockItems, StockMovements } from './payload/collections/stock'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -121,6 +122,10 @@ export default buildConfig({
         officeEmail: { Component: '/payload/components/OfficeEmailView#OfficeEmailView', path: '/office/email', exact: true, meta: { title: 'Email' } },
         officeEmailCampaign: { Component: '/payload/components/OfficeEmailCampaignView#OfficeEmailCampaignView', path: '/office/email/:id', meta: { title: 'Email' } },
         officeDiary: { Component: '/payload/components/OfficeDiaryView#OfficeDiaryView', path: '/office/diary', exact: true, meta: { title: 'Season diary' } },
+        officeStock: { Component: '/payload/components/OfficeStockView#OfficeStockView', path: '/office/stock', exact: true, meta: { title: 'Stock' } },
+        officeStockStocktake: { Component: '/payload/components/OfficeStockStocktakeView#OfficeStockStocktakeView', path: '/office/stock/stocktake', exact: true, meta: { title: 'Stocktake' } },
+        officeStockPerson: { Component: '/payload/components/OfficeStockPersonView#OfficeStockPersonView', path: '/office/stock/people/:id', meta: { title: 'Kit held' } },
+        officeStockItem: { Component: '/payload/components/OfficeStockItemView#OfficeStockItemView', path: '/office/stock/item/:id', meta: { title: 'Stock item' } },
         officePlan: { Component: '/payload/components/OfficePlanView#OfficePlanView', path: '/office/plan', exact: true, meta: { title: 'Strategic plan' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
@@ -130,7 +135,7 @@ export default buildConfig({
   graphQL: { disable: true },
   // Present only when outbound mail is configured (EMAIL_PROVIDER, key, from address); otherwise forgot-password stays refused.
   email: emailAdapterForPayload(),
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions, StockItems, StockIssues, StockMovements],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

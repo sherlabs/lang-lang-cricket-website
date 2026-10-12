@@ -37,6 +37,9 @@
  * It also writes the standard season diary jobs for the current season (two overdue, one blocked, several done, the rest ahead) and the
  * starter strategic plan with progress on two objectives when there are no diary jobs yet.
  *
+ * It also writes demo stock (shirts in sizes, caps, helmets, bats, a ball machine, consumables) with seven issues (two overdue back, one
+ * returned, one part returned, some given away) and one low item when there are no stock items yet.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -59,6 +62,7 @@ import { seedDemoFees } from '../seed/demo-fees'
 import { seedDemoVolunteers } from '../seed/demo-volunteers'
 import { seedDemoMeetings } from '../seed/demo-meetings'
 import { seedDemoDiary } from '../seed/demo-diary'
+import { seedDemoStock } from '../seed/demo-stock'
 import { seedDemoEmail } from '../seed/demo-email'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
@@ -525,6 +529,7 @@ async function main() {
     console.log(`[seed:demo] club office volunteers: ${await seedDemoVolunteers(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office meetings: ${await seedDemoMeetings(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office diary and plan: ${await seedDemoDiary(payload, currentClubDate())}`)
+    console.log(`[seed:demo] club office stock: ${await seedDemoStock(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office email: ${await seedDemoEmail(payload)}`)
   } finally {
     await payload.destroy()

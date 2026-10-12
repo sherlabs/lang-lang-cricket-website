@@ -52,6 +52,17 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'club-stock',
+    title: 'Keep track of kit, equipment and supplies',
+    steps: [
+      'Click "Club office", then "Stock". Press "Add an item" for each thing and size you hold, and tick how low is too low if you want a warning.',
+      'When new stock arrives press "Add stock received". To hand kit to someone open the item and press "Issue to a person". Say when it is due back if it should come back.',
+      'When someone brings kit back, open their name under "Owed back" and press "Returned". Type a smaller number for a part return, or choose "Lost instead".',
+      'Items that are low and kit that is overdue show on Home under "Needs your attention". Use "Stocktake" a few times a year: type what you counted, check the differences, then save.',
+      'A mistake is never deleted: open the item and press "Void this" on the entry, with a reason, and the count goes back the way it was.',
+    ],
+  },
+  {
     id: 'club-office',
     title: 'Look after the club members (admins)',
     steps: [

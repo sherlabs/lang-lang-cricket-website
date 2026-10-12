@@ -38,6 +38,7 @@ const OFFICE_SOURCE = [
   'payload/collections/CommitteeSeats.ts',
   'payload/collections/OfficeFiles.ts',
   'payload/collections/diary.ts',
+  'payload/collections/stock.ts',
   'payload/access/officeBearer.ts',
   'lib/volunteer-link.ts',
   'lib/volunteer-public.ts',
@@ -74,6 +75,7 @@ describe('office guards', () => {
       const text = read(r)
       if (r.includes('/export/')) expect(text, r).toContain('auditedExport')
       else if (r.includes('/meetings/')) expect(text, r).toContain('requireOfficeStaff') // the committee runs meetings; restricted items, documents and seat handover are checked inside the queries
+      else if (r.includes('/stock/')) expect(text, r).toContain('requireOfficeStaff') // stock is the committee's; the owed download has names and is the one admin-only door (its export route goes through auditedExport)
       else if (r.includes('/diary/')) expect(text, r).toContain('requireOfficeStaff') // the season diary and plan are the committee's to edit; the queries re-check the caller
       else if (r.includes('/volunteers/')) expect(text, r).toContain('requireOfficeStaff') // the roster is the committee's; hours and paid status are admin-checked inside the queries
       else expect(text, r).toContain('requireOfficeAdmin')
@@ -230,5 +232,48 @@ describe('office guards', () => {
     // Default labels and settings text are neutral too.
     const settings = read('lib/office/diary.ts') + read('payload/globals/OfficeSettings.ts')
     expect(settings.split('\n').filter((l) => banned.test(l) && !/^\s*(\/\/|\*)/.test(l))).toEqual([])
+  })
+
+  it('stock: committee reads and edits items, only an admin deletes, nobody writes the ledger, and every action checks the caller first', async () => {
+    const config = await loadSanitizedConfig()
+    const editor = { req: { user: { id: 2, role: 'editor' } } }
+    const selector = { req: { user: { id: 3, role: 'selector' } } }
+    const admin = { req: { user: { id: 1, role: 'admin' } } }
+    const accessOf = (slug: string) => config.collections.find((c) => c.slug === slug)!.access as unknown as Record<string, (a: unknown) => unknown>
+    for (const slug of ['stock-items', 'stock-issues', 'stock-movements']) {
+      const access = accessOf(slug)
+      expect(access.read(editor), `${slug} read editor`).toBe(true)
+      expect(access.read(selector), `${slug} read selector`).toBe(false)
+      expect(access.read({ req: { user: undefined } }), `${slug} read anonymous`).toBe(false)
+    }
+    for (const slug of ['stock-issues', 'stock-movements']) for (const op of ['create', 'update', 'delete']) for (const who of [editor, admin]) expect(accessOf(slug)[op](who), `${slug} ${op}`).toBe(false)
+    expect(accessOf('stock-items').create(editor)).toBe(true)
+    expect(accessOf('stock-items').update(editor)).toBe(true)
+    expect(accessOf('stock-items').delete(editor)).toBe(false)
+    expect(accessOf('stock-items').delete(admin)).toBe(true)
+    const queries = read('lib/stock-office-queries.ts')
+    for (const fn of ['addItem', 'receiveStock', 'issueStock', 'returnStock', 'markLost', 'removeStock', 'voidMovement', 'postStocktake', 'getStockPage', 'getItemPage', 'getPersonPage', 'getStocktakePage', 'stockFigures']) {
+      const at = queries.indexOf(`export async function ${fn}(`)
+      expect(at, fn).toBeGreaterThan(-1)
+      expect(queries.slice(at, at + 400), fn).toContain('staffOnly(user)')
+    }
+    expect(queries.slice(queries.indexOf('export async function owedExportTable('), queries.indexOf('export async function owedExportTable(') + 200)).toContain('isAdminUser')
+    // The lock must run on the transaction's own connection, and every change to the count goes through a locked transaction.
+    expect(queries).toContain('FOR UPDATE')
+    expect(queries).toContain('sessions')
+    for (const fn of ['issueStock', 'removeStock', 'voidMovement', 'postStocktake']) {
+      const at = queries.indexOf(`export async function ${fn}(`)
+      expect(queries.slice(at, at + 2600), fn).toContain('lockItems(')
+    }
+    // The names screen is the one place member names come from: no direct read of the members collection's contact fields.
+    expect(/select:\s*\{[^}]*(email|phone|addressLine)/.test(queries)).toBe(false)
+  }, 60_000)
+
+  it('stock wording and starter text name no club or regional term', () => {
+    const banned = /\b(lang ?lang|caldermeade|victoria|melbourne|australia|gippsland|canteen|suburb|postcode|affiliation)\b/i
+    const text = ['lib/office/stock.ts', 'lib/stock-office-queries.ts', 'payload/collections/stock.ts', ...walk('payload/components').filter((f) => path.basename(f).startsWith('OfficeStock'))]
+      .map((f) => read(f).replace(/\/\*[\s\S]*?\*\//g, ''))
+      .join('\n')
+    expect(text.split('\n').filter((l) => banned.test(l) && !/^\s*\/\//.test(l))).toEqual([])
   })
 })

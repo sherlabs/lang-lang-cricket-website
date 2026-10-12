@@ -125,6 +125,10 @@ export const officeCollections: OfficeCollection[] = [
   { slug: 'plan-pillars', role: 'staff' },
   { slug: 'plan-objectives', role: 'staff' },
   { slug: 'diary-jobs', role: 'staff' },
+  // Stock and merch (WP-7): items are club figures the committee edits; the movements ledger and the issues are read-only (the Stock pages write them).
+  { slug: 'stock-items', role: 'staff' },
+  { slug: 'stock-movements', role: 'staff' },
+  { slug: 'stock-issues', role: 'staff' },
   // Bulk email (WP-6): campaigns, per-address send rows and the unsubscribed list. Personal data, so admin only; the module is also hidden unless email is configured.
   { slug: 'email-campaigns', role: 'admin' },
   { slug: 'email-recipients', role: 'admin' },

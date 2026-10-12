@@ -4,7 +4,7 @@
  */
 import { emailEnabled } from '../email/env'
 
-export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings' | 'diary' | 'email'
+export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings' | 'diary' | 'stock' | 'email'
 export type OfficeModule = {
   key: OfficeModuleKey
   label: string
@@ -65,6 +65,15 @@ export const officeModules: OfficeModule[] = [
     role: 'staff',
     doc: 'season-diary-and-plan',
     collections: ['diary-jobs', 'plan-pillars', 'plan-objectives'],
+  },
+  {
+    key: 'stock',
+    label: 'Stock',
+    hint: 'Kit, equipment and supplies: how many you have, who has what, and what is still owed back.',
+    path: '/office/stock',
+    role: 'staff',
+    doc: 'stock-and-merch',
+    collections: ['stock-items', 'stock-movements', 'stock-issues'],
   },
   {
     key: 'email',

@@ -135,6 +135,9 @@ export interface Config {
     'email-campaigns': EmailCampaign;
     'email-recipients': EmailRecipient;
     'email-suppressions': EmailSuppression;
+    'stock-items': StockItem;
+    'stock-issues': StockIssue;
+    'stock-movements': StockMovement;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -220,6 +223,9 @@ export interface Config {
     'email-campaigns': EmailCampaignsSelect<false> | EmailCampaignsSelect<true>;
     'email-recipients': EmailRecipientsSelect<false> | EmailRecipientsSelect<true>;
     'email-suppressions': EmailSuppressionsSelect<false> | EmailSuppressionsSelect<true>;
+    'stock-items': StockItemsSelect<false> | StockItemsSelect<true>;
+    'stock-issues': StockIssuesSelect<false> | StockIssuesSelect<true>;
+    'stock-movements': StockMovementsSelect<false> | StockMovementsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2501,6 +2507,99 @@ export interface EmailSuppression {
   createdAt: string;
 }
 /**
+ * Kit, equipment and supplies the club holds. One row for each size. Day to day, use Club office, then Stock: it shows how many are on hand.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-items".
+ */
+export interface StockItem {
+  id: number;
+  name: string;
+  /**
+   * Keeps sizes together, for example "Playing shirt". Items with the same group are listed together.
+   */
+  groupName?: string | null;
+  size?: string | null;
+  category: 'kit' | 'equipment' | 'consumables' | 'other';
+  /**
+   * For example each, box or dozen.
+   */
+  unit?: string | null;
+  /**
+   * Leave empty to not check this item for low stock.
+   */
+  reorderLevel?: number | null;
+  location?: string | null;
+  /**
+   * Tick for things people borrow and give back, such as helmets. Untick for things given away, such as caps.
+   */
+  returnable?: boolean | null;
+  /**
+   * Untick to stop issuing it and to leave it out of the low stock count. Its history stays.
+   */
+  active?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Kit handed to a person. Whether it is out, part returned or returned is worked out from the returns recorded against it. Managed from Club office, then Stock.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-issues".
+ */
+export interface StockIssue {
+  id: number;
+  item: number | StockItem;
+  member: number | Member;
+  qty: number;
+  issuedOn: string;
+  dueBackOn?: string | null;
+  /**
+   * Copied from the item when it was issued, so changing the item later does not change this.
+   */
+  returnable?: boolean | null;
+  note?: string | null;
+  recordedBy?: (number | null) | User;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every time stock came in, went out or was corrected. Never edited: a mistake is voided with a reason and stock on hand is added up from what is not voided.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-movements".
+ */
+export interface StockMovement {
+  id: number;
+  item: number | StockItem;
+  kind: 'received' | 'issued' | 'returned' | 'lost' | 'written-off' | 'adjustment';
+  qty: number;
+  date: string;
+  /**
+   * For issued and returned stock.
+   */
+  member?: (number | null) | Member;
+  /**
+   * The issue this movement belongs to: its own issue, or the one a return or loss settles.
+   */
+  issue?: (number | null) | StockIssue;
+  note?: string | null;
+  /**
+   * Stops a double click recording one movement twice.
+   */
+  idempotencyKey?: string | null;
+  recordedBy?: (number | null) | User;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2795,6 +2894,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'email-suppressions';
         value: number | EmailSuppression;
+      } | null)
+    | ({
+        relationTo: 'stock-items';
+        value: number | StockItem;
+      } | null)
+    | ({
+        relationTo: 'stock-issues';
+        value: number | StockIssue;
+      } | null)
+    | ({
+        relationTo: 'stock-movements';
+        value: number | StockMovement;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -4196,6 +4307,63 @@ export interface EmailSuppressionsSelect<T extends boolean = true> {
   source?: T;
   at?: T;
   campaign?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-items_select".
+ */
+export interface StockItemsSelect<T extends boolean = true> {
+  name?: T;
+  groupName?: T;
+  size?: T;
+  category?: T;
+  unit?: T;
+  reorderLevel?: T;
+  location?: T;
+  returnable?: T;
+  active?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-issues_select".
+ */
+export interface StockIssuesSelect<T extends boolean = true> {
+  item?: T;
+  member?: T;
+  qty?: T;
+  issuedOn?: T;
+  dueBackOn?: T;
+  returnable?: T;
+  note?: T;
+  recordedBy?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-movements_select".
+ */
+export interface StockMovementsSelect<T extends boolean = true> {
+  item?: T;
+  kind?: T;
+  qty?: T;
+  date?: T;
+  member?: T;
+  issue?: T;
+  note?: T;
+  idempotencyKey?: T;
+  recordedBy?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }

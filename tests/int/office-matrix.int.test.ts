@@ -45,10 +45,14 @@ const EXPECTED: Record<string, Record<'anonymous' | 'selector' | 'editor' | 'adm
   'plan-pillars': { anonymous: [], selector: [], editor: [...READ, 'create', 'update'], admin: ALL },
   'plan-objectives': { anonymous: [], selector: [], editor: [...READ, 'create', 'update'], admin: ALL },
   'diary-jobs': { anonymous: [], selector: [], editor: [...READ, 'create', 'update'], admin: ALL },
+  // WP-7: items are club figures the committee edits (only an admin deletes); the movements ledger and the issues are read-only for everyone, the Stock pages write them.
+  'stock-items': { anonymous: [], selector: [], editor: [...READ, 'create', 'update'], admin: ALL },
+  'stock-issues': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'stock-movements': { anonymous: [], selector: [], editor: READ, admin: READ },
 }
 
 /** A valid row for each collection (the matrix probes with real data, so a validation failure cannot read as "denied"). */
-type Ctx = { member: number; probeMember: number; tier: number; probeTier: number; week: number; probeWeek: number; shift: number; meeting: number; pillar: number; n: number; probe: boolean }
+type Ctx = { member: number; probeMember: number; tier: number; probeTier: number; week: number; probeWeek: number; shift: number; meeting: number; pillar: number; item: number; n: number; probe: boolean }
 const SAMPLE: Record<string, (ctx: Ctx) => Record<string, unknown>> = {
   members: ({ n }) => ({ firstName: 'Probe', lastName: `Row${n}`, roles: ['supporter'] }),
   'office-audit-log': () => ({ at: new Date().toISOString(), action: 'export', module: 'members' }),
@@ -75,6 +79,9 @@ const SAMPLE: Record<string, (ctx: Ctx) => Record<string, unknown>> = {
   'plan-pillars': ({ n }) => ({ title: `Probe pillar ${n}` }),
   'plan-objectives': ({ pillar, n }) => ({ pillar, title: `Probe objective ${n}` }),
   'diary-jobs': ({ n }) => ({ title: `Probe job ${n}`, season: '2026/27', status: 'todo' }),
+  'stock-items': ({ n }) => ({ name: `Probe item ${n}`, category: 'kit' }),
+  'stock-issues': ({ item, member }) => ({ item, member, qty: 1, issuedOn: new Date().toISOString(), returnable: true }),
+  'stock-movements': ({ item }) => ({ item, kind: 'received', qty: 1, date: new Date().toISOString() }),
 }
 const PATCH: Record<string, Record<string, unknown>> = {
   members: { notes: 'x' },
@@ -100,6 +107,9 @@ const PATCH: Record<string, Record<string, unknown>> = {
   'plan-pillars': { summary: 'changed' },
   'plan-objectives': { progressNote: 'changed' },
   'diary-jobs': { notes: 'changed' },
+  'stock-items': { notes: 'changed' },
+  'stock-issues': { note: 'changed' },
+  'stock-movements': { note: 'changed' },
 }
 
 describe('office access matrix', () => {
@@ -107,9 +117,9 @@ describe('office access matrix', () => {
   const users: Record<string, { id: number; role: string; collection: 'users' } | undefined> = { anonymous: undefined }
   const tokens: Record<string, string> = {}
   const seeded: Record<string, number> = {}
-  const ctx: Ctx = { member: 0, probeMember: 0, tier: 0, probeTier: 0, week: 0, probeWeek: 0, shift: 0, meeting: 0, pillar: 0, n: 0, probe: false }
+  const ctx: Ctx = { member: 0, probeMember: 0, tier: 0, probeTier: 0, week: 0, probeWeek: 0, shift: 0, meeting: 0, pillar: 0, item: 0, n: 0, probe: false }
   const wipe = async () => {
-    for (const c of ['diary-jobs', 'plan-objectives', 'plan-pillars', 'meeting-actions', 'meeting-motions', 'meeting-attendance', 'meeting-items', 'meetings', 'meeting-templates', 'committee-seats', 'volunteer-hours', 'volunteer-availability', 'volunteer-assignments', 'volunteer-shifts', 'volunteer-weeks', 'fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
+    for (const c of ['stock-movements', 'stock-issues', 'stock-items', 'diary-jobs', 'plan-objectives', 'plan-pillars', 'meeting-actions', 'meeting-motions', 'meeting-attendance', 'meeting-items', 'meetings', 'meeting-templates', 'committee-seats', 'volunteer-hours', 'volunteer-availability', 'volunteer-assignments', 'volunteer-shifts', 'volunteer-weeks', 'fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
   }
 
   beforeAll(async () => {
@@ -137,6 +147,7 @@ describe('office access matrix', () => {
       if (slug === 'volunteer-shifts') ctx.shift = row.id
       if (slug === 'meetings') ctx.meeting = row.id
       if (slug === 'plan-pillars') ctx.pillar = row.id
+      if (slug === 'stock-items') ctx.item = row.id
       if (slug === 'membership-tiers') {
         ctx.tier = row.id
         ctx.probeTier = (await payload.create({ collection: 'membership-tiers', data: { season: '2032/33', name: 'Probe tier', kind: 'free' } as never, overrideAccess: true })).id

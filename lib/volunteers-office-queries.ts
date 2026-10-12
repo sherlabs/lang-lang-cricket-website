@@ -66,7 +66,7 @@ const done = (notice: VolunteerNotice, n?: number): ActionResult => ({ ok: true,
  * Names for people already on the roster (by id), for the committee. A junior is first name and last initial. This is a lookup of
  * ids the caller already holds, not a list of members, so it opens nothing the roster projection did not.
  */
-async function namesFor(payload: Payload, ids: readonly number[], today: string): Promise<Map<number, string>> {
+export async function namesFor(payload: Payload, ids: readonly number[], today: string): Promise<Map<number, string>> {
   const out = new Map<number, string>()
   if (!ids.length) return out
   const res = await payload.find({
@@ -87,7 +87,7 @@ async function namesFor(payload: Payload, ids: readonly number[], today: string)
 }
 
 /** Full names for the admin-only hours report (no junior shortening: admins see members anyway). */
-async function fullNamesFor(payload: Payload, ids: readonly number[]): Promise<Map<number, string>> {
+export async function fullNamesFor(payload: Payload, ids: readonly number[]): Promise<Map<number, string>> {
   const out = new Map<number, string>()
   if (!ids.length) return out
   const res = await payload.find({ collection: 'members', where: { id: { in: [...new Set(ids)] } }, pagination: false, depth: 1, overrideAccess: true, select: { firstName: true, lastName: true, preferredName: true, erasedAt: true, player: true, person: true } })

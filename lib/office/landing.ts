@@ -3,6 +3,7 @@ import { diaryFigures } from '@/lib/diary-office-queries'
 import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { memberCompleteness } from '@/lib/members-queries'
 import { meetingStats } from '@/lib/meetings-office-queries'
+import { stockFigures } from '@/lib/stock-office-queries'
 import { nextGameDay } from '@/lib/volunteers-office-queries'
 import { officeCopy } from '@/payload/admin/copy'
 import { gameDayLabel } from './game-day'
@@ -33,6 +34,10 @@ export async function landingStats(user: unknown, keys: readonly OfficeModuleKey
   if (keys.includes('diary')) {
     const d = await diaryFigures(user)
     if (d) out.diary = officeCopy.diary.stat(d.overdue, d.blocked, d.unowned)
+  }
+  if (keys.includes('stock')) {
+    const st = await stockFigures(user)
+    if (st) out.stock = officeCopy.stock.stat(st.low, st.out, st.overdue)
   }
   if (keys.includes('fees')) {
     const f = await feeOwingSummary(user)

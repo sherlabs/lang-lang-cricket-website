@@ -54,6 +54,10 @@ import { OfficeMeetingView as OfficeMeetingView_c0df34f826197593ec44d135ecf7dba1
 import { OfficeEmailView as OfficeEmailView_c79a7a050bd9f463f6f129a2ab4390db } from '../../../payload/components/OfficeEmailView'
 import { OfficeEmailCampaignView as OfficeEmailCampaignView_b69e1d2acbb15288a37e45f62db4e829 } from '../../../payload/components/OfficeEmailCampaignView'
 import { OfficeDiaryView as OfficeDiaryView_459141c5a7330f788ec497fab96f6c6a } from '../../../payload/components/OfficeDiaryView'
+import { OfficeStockView as OfficeStockView_0c8da59757c0ff40dffcb969a4f4c7b7 } from '../../../payload/components/OfficeStockView'
+import { OfficeStockStocktakeView as OfficeStockStocktakeView_755045b9c3f6a5f2fa519441c06d10b3 } from '../../../payload/components/OfficeStockStocktakeView'
+import { OfficeStockPersonView as OfficeStockPersonView_4f3e36ce3ab9fc02e175f1086e167f97 } from '../../../payload/components/OfficeStockPersonView'
+import { OfficeStockItemView as OfficeStockItemView_e2efdaa4065cd2bafdfe88e41bcf3623 } from '../../../payload/components/OfficeStockItemView'
 import { OfficePlanView as OfficePlanView_64e74536fc1c21159f9b48f7d8e3d499 } from '../../../payload/components/OfficePlanView'
 import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -117,6 +121,10 @@ export const importMap = {
   "/payload/components/OfficeEmailView#OfficeEmailView": OfficeEmailView_c79a7a050bd9f463f6f129a2ab4390db,
   "/payload/components/OfficeEmailCampaignView#OfficeEmailCampaignView": OfficeEmailCampaignView_b69e1d2acbb15288a37e45f62db4e829,
   "/payload/components/OfficeDiaryView#OfficeDiaryView": OfficeDiaryView_459141c5a7330f788ec497fab96f6c6a,
+  "/payload/components/OfficeStockView#OfficeStockView": OfficeStockView_0c8da59757c0ff40dffcb969a4f4c7b7,
+  "/payload/components/OfficeStockStocktakeView#OfficeStockStocktakeView": OfficeStockStocktakeView_755045b9c3f6a5f2fa519441c06d10b3,
+  "/payload/components/OfficeStockPersonView#OfficeStockPersonView": OfficeStockPersonView_4f3e36ce3ab9fc02e175f1086e167f97,
+  "/payload/components/OfficeStockItemView#OfficeStockItemView": OfficeStockItemView_e2efdaa4065cd2bafdfe88e41bcf3623,
   "/payload/components/OfficePlanView#OfficePlanView": OfficePlanView_64e74536fc1c21159f9b48f7d8e3d499,
   "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
