@@ -63,7 +63,9 @@ export type Allocation = {
   totalPaymentsCents: number
 }
 
-const byDateThenId = (a: { date: string; id: string }, b: { date: string; id: string }) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+/** Ids are compared numerically where they are numbers, so row 100 comes after row 99 on the same day. */
+const byId = (a: string, b: string): number => a.localeCompare(b, 'en', { numeric: true })
+const byDateThenId = (a: { date: string; id: string }, b: { date: string; id: string }) => (a.date < b.date ? -1 : a.date > b.date ? 1 : byId(a.id, b.id))
 
 export function statusOf(payable: number, waived: number, paid: number, owed: number): ChargeStatus {
   if (payable === 0) return waived > 0 ? 'waived' : 'not-charged'
@@ -101,7 +103,7 @@ export function allocate(chargesIn: readonly Charge[], waiversIn: readonly Waive
   }
 
   // 3. Targeted payments settle only their target; excess is held as credit.
-  const payments = paymentsIn.filter((p) => !p.voided && p.amountCents > 0).sort((a, b) => (a.receivedOn < b.receivedOn ? -1 : a.receivedOn > b.receivedOn ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  const payments = paymentsIn.filter((p) => !p.voided && p.amountCents > 0).sort((a, b) => (a.receivedOn < b.receivedOn ? -1 : a.receivedOn > b.receivedOn ? 1 : byId(a.id, b.id)))
   let credit = 0
   let pool = 0
   let total = 0

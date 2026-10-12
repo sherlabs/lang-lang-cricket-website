@@ -36,6 +36,18 @@ describe('seasons', () => {
     expect(seasonRange('2026/27')).toMatchObject({ from: '2026-07-01', to: '2027-06-30' })
     expect(seasonRange('nope')).toBeNull()
   })
+  it('rejects names that are not a season of the configured format', () => {
+    for (const bad of ['2026', '2026/99', '2026/28', '1999x', '26/27']) expect(seasonStartYearOfName(bad, { startMonth: 7, format: 'split' }), bad).toBeNull()
+    expect(seasonStartYearOfName('2026/27', { startMonth: 7, format: 'split' })).toBe(2026)
+    expect(seasonStartYearOfName('2099/00', { startMonth: 7, format: 'split' })).toBe(2099)
+    expect(seasonStartYearOfName('2026', { startMonth: 7, format: 'single' })).toBe(2026)
+    expect(seasonStartYearOfName('2026/27', { startMonth: 7, format: 'single' })).toBeNull()
+  })
+  it('same-day ids settle in numeric order', () => {
+    const c = (id: string) => ({ id, kind: 'game' as const, date: '2026-08-01', season: '2026/27', amountCents: 1000, description: id, matchId: id })
+    const a = allocate([c('100'), c('99')], [], [pay('p1', 1000)])
+    expect(a.lines.map((l) => [l.id, l.status])).toEqual([['99', 'paid'], ['100', 'owing']])
+  })
 })
 
 describe('allocate: worked examples', () => {

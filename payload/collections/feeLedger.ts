@@ -83,6 +83,7 @@ export const FeePayments = ledgerCollection({
     member,
     { name: 'payer', label: 'Paid by', type: 'relationship', relationTo: 'members' },
     { name: 'splitGroup', label: 'Split group', type: 'text', index: true, admin: { description: 'Shared by the rows made when one payment was split across children.' } },
+    { name: 'idempotencyKey', label: 'Form key', type: 'text', unique: true, index: true, admin: { readOnly: true, description: 'Stops a double click recording one payment twice.' } },
     { name: 'receivedOn', label: 'Received on', type: 'date', required: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
     { name: 'amountCents', label: 'Amount (cents)', type: 'number', required: true, min: 1 },
     { name: 'method', label: 'Method', type: 'select', required: true, options: [{ label: 'Cash', value: 'cash' }, { label: 'Bank transfer', value: 'bank-transfer' }, { label: 'Other', value: 'other' }] },

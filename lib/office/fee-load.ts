@@ -89,9 +89,11 @@ export async function loadFeeModel(payload: Payload, chargeFillIns: boolean, foc
   const seasonsWithMemberships = [...new Set(memberships.map((m) => m.season))].sort().reverse()
   const wanted = focus ? [...focus] : seasonsWithMemberships.filter((s) => !closedSeasons.has(s))
   const openWanted = wanted.filter((s) => !closedSeasons.has(s))
-  // Games are loaded for every season asked about (a closed one too, so the report can warn when match data has moved on); the
-  // data-quality counts are for open seasons only.
-  const ranges = wanted.map((s) => seasonRange(s)).filter((r): r is NonNullable<typeof r> => r !== null)
+  // Games are loaded for every open season that has memberships (a member's per-game charges, and the payments that settle them, must
+  // not depend on which season is on screen) plus every season asked about (a closed one too, so the report can warn when match data
+  // has moved on). `focus` only chooses which seasons feed the data-quality counts, which are for open seasons only.
+  const loadSeasons = [...new Set([...seasonsWithMemberships.filter((s) => !closedSeasons.has(s)), ...wanted])]
+  const ranges = loadSeasons.map((s) => seasonRange(s)).filter((r): r is NonNullable<typeof r> => r !== null)
   let appearances: FeeAppearance[] = []
   let unmatchedAppearances = 0
   let missingFromStore = 0

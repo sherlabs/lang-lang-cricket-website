@@ -165,6 +165,26 @@ describe('membership fees', () => {
       await payload.updateGlobal({ slug: 'office-settings', data: { chargeFillIns: false }, overrideAccess: true })
     })
 
+    it('figures do not change with the season on screen when another season is also open', async () => {
+      const prevTier = (await create('membership-tiers', { season: '2025/26', name: 'Pay as you play', kind: 'per-match', perMatchCents: 1000 })).id
+      const p = await player('Both')
+      const m = await member({ firstName: 'Both', lastName: 'Seasons', player: p.id })
+      await join(m.id, prevTier, '2025/26')
+      await join(m.id, tierPlay)
+      await game(51, '2025-09-06', [{ id: p.id }], '2025/26')
+      await game(52, '2025-09-13', [{ id: p.id }], '2025/26')
+      await game(53, '2026-09-05', [{ id: p.id }])
+      const { recordPayment } = await import('@/lib/fees-office-queries')
+      expect((await recordPayment(user.admin, { memberId: m.id, amount: '25', receivedOn: '2026-09-10', method: 'cash', reference: '', note: '', payerId: '', target: '', splitIds: [], splitShares: [] })).ok).toBe(true)
+      for (const view of ['2026/27', '2025/26']) {
+        const rep = await report(view)
+        expect(rep.rows.reduce((t, x) => t + x.creditCents, 0), view).toBe(0)
+        expect(rep.rows.reduce((t, x) => t + x.owedCents, 0), view).toBe(view === '2026/27' ? 500 : 0)
+      }
+      const { feeOwingSummary } = await import('@/lib/fees-office-queries')
+      expect((await feeOwingSummary(user.admin))?.owedCents).toBe(500)
+    })
+
     it('a targeted payment for the new season leaves the old arrears owing', async () => {
       const p = await player('Arrears')
       const m = await member({ firstName: 'Arrears', lastName: 'Player', player: p.id })
@@ -302,6 +322,28 @@ describe('membership fees', () => {
       expect(bad.headers.get('location')).toContain('/office/fees?error=amount')
       expect((await post('unknown', { token: tok.admin, form })).status).toBe(404)
       expect((await payload.count({ collection: 'fee-payments', overrideAccess: true })).totalDocs).toBe(1)
+    })
+
+    it('a closed season refuses new types, copies and memberships with the closed code; a bad removal id is not-found', async () => {
+      const m = await member({ firstName: 'Late', lastName: 'Joiner' })
+      await create('fee-seasons', { season: '2025/26', status: 'closed', closedAt: new Date().toISOString() })
+      const loc = async (action: string, form: Record<string, string | string[]>) => (await post(action, { token: tok.admin, form })).headers.get('location') ?? ''
+      expect(await loc('tier', { season: '2025/26', name: 'Late type', kind: 'upfront', upfront: '10', perMatch: '' })).toContain('error=closed')
+      expect(await loc('tiers-copy', { season: '2025/26' })).toContain('error=closed')
+      expect(await loc('membership', { season: '2025/26', tierId: String(tierPlay), memberIds: [String(m.id)] })).toContain('error=closed')
+      expect(await loc('membership-remove', { id: 'abc' })).toContain('error=not-found')
+      expect(await loc('membership-remove', { id: '999999' })).toContain('error=not-found')
+      expect((await payload.count({ collection: 'membership-tiers', where: { name: { equals: 'Late type' } }, overrideAccess: true })).totalDocs).toBe(0)
+    })
+
+    it('a double click on Record payment records it once', async () => {
+      const m = await member({ firstName: 'Double', lastName: 'Click' })
+      const form = { memberId: String(m.id), amount: '15', receivedOn: '2026-08-01', method: 'cash', nonce: '3f2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a11', return: `/office/fees/member/${m.id}` }
+      expect((await post('payment', { token: tok.admin, form })).headers.get('location')).toContain('notice=paid')
+      expect((await post('payment', { token: tok.admin, form })).headers.get('location')).toContain('notice=paid')
+      expect((await payload.count({ collection: 'fee-payments', overrideAccess: true })).totalDocs).toBe(1)
+      await post('payment', { token: tok.admin, form: { ...form, nonce: '4a2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a22' } })
+      expect((await payload.count({ collection: 'fee-payments', overrideAccess: true })).totalDocs).toBe(2)
     })
 
     it('REST cannot create a payment even for an admin, and the ledger collections are admin read only', async () => {

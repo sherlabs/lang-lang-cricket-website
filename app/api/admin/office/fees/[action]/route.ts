@@ -30,7 +30,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
 
   switch (action) {
     case 'payment':
-      return done(await recordPayment(user, { memberId: get('memberId'), amount: get('amount'), receivedOn: get('receivedOn'), method: get('method'), reference: get('reference'), note: get('note'), payerId: get('payerId'), target: get('target'), splitIds: all('splitIds'), splitShares: all('splitShares') }))
+      return done(await recordPayment(user, { nonce: get('nonce'), memberId: get('memberId'), amount: get('amount'), receivedOn: get('receivedOn'), method: get('method'), reference: get('reference'), note: get('note'), payerId: get('payerId'), target: get('target'), splitIds: all('splitIds'), splitShares: all('splitShares') }))
     case 'payment-void':
       return done(await voidPayment(user, { id: get('id'), reason: get('reason'), wholeGroup: get('wholeGroup') }))
     case 'waiver':

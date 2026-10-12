@@ -35,6 +35,7 @@ import * as migration_20261012_022720_wp_2_social_posts from './20261012_022720_
 import * as migration_20261012_050025_wd_0_social_toss_caption from './20261012_050025_wd_0_social_toss_caption';
 import * as migration_20261012_051834_d1_members_office from './20261012_051834_d1_members_office';
 import * as migration_20261012_060836_d2_membership_fees from './20261012_060836_d2_membership_fees';
+import * as migration_20261012_065830_d2_payment_form_key from './20261012_065830_d2_payment_form_key';
 
 export const migrations = [
   {
@@ -220,6 +221,11 @@ export const migrations = [
   {
     up: migration_20261012_060836_d2_membership_fees.up,
     down: migration_20261012_060836_d2_membership_fees.down,
-    name: '20261012_060836_d2_membership_fees'
+    name: '20261012_060836_d2_membership_fees',
+  },
+  {
+    up: migration_20261012_065830_d2_payment_form_key.up,
+    down: migration_20261012_065830_d2_payment_form_key.down,
+    name: '20261012_065830_d2_payment_form_key'
   },
 ];

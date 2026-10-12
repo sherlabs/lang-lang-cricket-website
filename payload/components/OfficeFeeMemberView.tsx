@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { getMemberLedger } from '@/lib/fees-office-queries'
@@ -138,6 +139,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
       </form>
       <form method="post" action={`${api}/fees/payment`} className="office-box office-form">
         {hidden}
+        <input type="hidden" name="nonce" value={randomUUID()} />
         <input type="hidden" name="memberId" value={member.id} />
         <label>Amount<input name="amount" required inputMode="decimal" defaultValue={first(sp.pamount)} autoComplete="off" /></label>
         <label>Date received<input name="receivedOn" type="date" defaultValue={today} max={today} required /></label>

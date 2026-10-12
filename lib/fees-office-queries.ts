@@ -20,6 +20,7 @@ import type { OfficeSettings } from './office/settings'
  * with the access override only after that check (the ledger collections allow nobody to write over REST, so the writes below are the
  * only door). All arithmetic lives in the pure `lib/office/fee-report.ts`; this file moves rows in and out.
  */
+const NONCE = /^[0-9a-f-]{36}$/
 const adminOnly = (user: unknown): user is TypedUser => isAdminUser(user as never)
 const idOf = (v: unknown): number | null => (typeof v === 'number' ? v : v && typeof v === 'object' && typeof (v as { id?: unknown }).id === 'number' ? (v as { id: number }).id : null)
 type Doc = Record<string, unknown>
@@ -119,6 +120,11 @@ export async function feeOwingSummary(user: unknown): Promise<{ members: number;
 export type ActionResult = { ok: true; notice: string } | { ok: false; code: FeeFormError }
 const fail = (code: FeeFormError): ActionResult => ({ ok: false, code })
 
+async function seasonClosed(payload: Payload, season: string): Promise<boolean> {
+  const r = await payload.count({ collection: 'fee-seasons', where: { and: [{ season: { equals: season } }, { status: { equals: 'closed' } }] }, overrideAccess: true })
+  return r.totalDocs > 0
+}
+
 async function memberExists(payload: Payload, id: number): Promise<boolean> {
   const r = await payload.count({ collection: 'members', where: { id: { equals: id } }, overrideAccess: true })
   return r.totalDocs > 0
@@ -140,15 +146,20 @@ export async function recordPayment(user: unknown, raw: RawPayment): Promise<Act
     if (!v.shares.every((s) => household.has(s.memberId))) return fail('split')
   } else if (v.shares[0].memberId !== v.memberId) return fail('split')
   const splitGroup = v.shares.length > 1 ? randomUUID() : null
+  // A form carries a one-shot key made when it was drawn; a second POST with the same key (a double click) records nothing more.
+  const key = typeof raw.nonce === 'string' && NONCE.test(raw.nonce) ? raw.nonce : null
+  const keyUsed = async () => key !== null && (await payload.count({ collection: 'fee-payments', where: { idempotencyKey: { equals: key } }, overrideAccess: true })).totalDocs > 0
+  if (await keyUsed()) return { ok: true, notice: 'paid' }
   try {
     await inTransaction(payload, async (req) => {
-      for (const s of v.shares) {
+      for (const [i, s] of v.shares.entries()) {
         await payload.create({
           collection: 'fee-payments',
           data: {
             member: s.memberId,
             payer: v.payerId,
             splitGroup,
+            idempotencyKey: key ? (i === 0 ? key : `${key}:${i}`) : null,
             receivedOn: noon(v.receivedOn),
             amountCents: s.amountCents,
             method: v.method,
@@ -164,6 +175,7 @@ export async function recordPayment(user: unknown, raw: RawPayment): Promise<Act
       }
     })
   } catch (err) {
+    if (await keyUsed().catch(() => false)) return { ok: true, notice: 'paid' } // lost a race with the same form's other click
     console.warn('[office] record payment failed:', (err as Error).message)
     return fail('save')
   }
@@ -251,8 +263,7 @@ export async function addAdjustment(user: unknown, raw: Parameters<typeof valida
   const v = validateAdjustment(raw, currentClubDate())
   if (!v.ok) return fail(v.code)
   const payload = await getPayloadClient()
-  const closed = await payload.count({ collection: 'fee-seasons', where: { and: [{ season: { equals: v.season } }, { status: { equals: 'closed' } }] }, overrideAccess: true })
-  if (closed.totalDocs === 0) return fail('season')
+  if (!(await seasonClosed(payload, v.season))) return fail('season')
   if (!(await memberExists(payload, v.memberId))) return fail('member')
   try {
     await payload.create({ collection: 'fee-charges', data: { member: v.memberId, season: v.season, kind: 'adjustment', date: noon(v.date), amountCents: v.amountCents, description: v.note, closedAt: new Date().toISOString() } as never, overrideAccess: true, depth: 0 })
@@ -271,6 +282,7 @@ export async function addMembership(user: unknown, raw: { memberIds: unknown[]; 
   if (!ids.length) return fail('member')
   const joined = typeof raw.joinedOn === 'string' && raw.joinedOn ? raw.joinedOn : null
   const payload = await getPayloadClient()
+  if (await seasonClosed(payload, raw.season)) return fail('closed')
   let added = 0
   try {
     await inTransaction(payload, async (req) => {
@@ -291,7 +303,11 @@ export async function addMembership(user: unknown, raw: { memberIds: unknown[]; 
 
 export async function removeMembership(user: unknown, id: number): Promise<ActionResult> {
   if (!adminOnly(user)) return fail('forbidden')
+  if (!Number.isInteger(id) || id <= 0) return fail('not-found')
   const payload = await getPayloadClient()
+  const row = await payload.findByID({ collection: 'memberships', id, depth: 0, overrideAccess: true }).catch(() => null)
+  if (!row) return fail('not-found')
+  if (await seasonClosed(payload, String((row as unknown as Doc).season))) return fail('closed')
   try {
     await payload.delete({ collection: 'memberships', id, overrideAccess: true })
   } catch (err) {
@@ -313,6 +329,7 @@ export async function addTier(user: unknown, raw: { season: unknown; name: unkno
   const perMatchCents = kind === 'free' ? 0 : parseRate(raw.perMatch)
   if (upfrontCents === null || perMatchCents === null) return fail('amount')
   const payload = await getPayloadClient()
+  if (await seasonClosed(payload, raw.season)) return fail('closed')
   try {
     await payload.create({ collection: 'membership-tiers', data: { season: raw.season, name, kind, upfrontCents, perMatchCents, active: true } as never, overrideAccess: true, depth: 0 })
   } catch (err) {
@@ -328,6 +345,7 @@ export async function copyTiers(user: unknown, season: unknown): Promise<ActionR
   if (!isSeasonName(season)) return fail('season')
   const prev = seasonNameForYear((seasonStartYearOfName(season) ?? 0) - 1)
   const payload = await getPayloadClient()
+  if (await seasonClosed(payload, season)) return fail('closed')
   const from = (await payload.find({ collection: 'membership-tiers', where: { season: { equals: prev } }, pagination: false, depth: 0, overrideAccess: true })).docs as unknown as Doc[]
   const have = new Set(((await payload.find({ collection: 'membership-tiers', where: { season: { equals: season } }, pagination: false, depth: 0, overrideAccess: true })).docs as unknown as Doc[]).map((t) => String(t.name)))
   let copied = 0

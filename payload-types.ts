@@ -1917,6 +1917,10 @@ export interface FeePayment {
    * Shared by the rows made when one payment was split across children.
    */
   splitGroup?: string | null;
+  /**
+   * Stops a double click recording one payment twice.
+   */
+  idempotencyKey?: string | null;
   receivedOn: string;
   amountCents: number;
   method: 'cash' | 'bank-transfer' | 'other';
@@ -3204,6 +3208,7 @@ export interface FeePaymentsSelect<T extends boolean = true> {
   member?: T;
   payer?: T;
   splitGroup?: T;
+  idempotencyKey?: T;
   receivedOn?: T;
   amountCents?: T;
   method?: T;

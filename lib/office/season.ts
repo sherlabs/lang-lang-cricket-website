@@ -18,14 +18,17 @@ export const seasonOfClubDate = (date: string, cfg: Cfg = DEFAULT_CFG): { startY
 export const currentSeason = (today: string, cfg: Cfg = DEFAULT_CFG): { startYear: number; name: string } => seasonOfClubDate(today, cfg)
 
 /** Start year of a season name, or null if it is not one ("2026/27" and "2026" both give 2026). */
-export function seasonStartYearOfName(name: string): number | null {
-  const m = /^(\d{4})(?:\/\d{2})?$/.exec(name.trim())
-  return m ? Number(m[1]) : null
+export function seasonStartYearOfName(name: string, cfg: Cfg = DEFAULT_CFG): number | null {
+  const t = name.trim()
+  if (cfg.format === 'single') return /^\d{4}$/.test(t) ? Number(t) : null
+  const m = /^(\d{4})\/(\d{2})$/.exec(t)
+  // The end year must be the start year plus one ("2026/27"), so a typo cannot open a separate ledger bucket.
+  return m && Number(m[2]) === (Number(m[1]) + 1) % 100 ? Number(m[1]) : null
 }
 
 /** First and last day (YYYY-MM-DD) of a season, or null for a name that is not a season. */
 export function seasonRange(name: string, cfg: Cfg = DEFAULT_CFG): { from: string; to: string; startYear: number } | null {
-  const y = seasonStartYearOfName(name)
+  const y = seasonStartYearOfName(name, cfg)
   if (y === null) return null
   const pad = (n: number) => String(n).padStart(2, '0')
   const from = `${y}-${pad(cfg.startMonth)}-01`
@@ -42,4 +45,4 @@ export function seasonChoices(today: string, count = 6, cfg: Cfg = DEFAULT_CFG):
   return Array.from({ length: count }, (_, i) => seasonNameForYear(cur - i, cfg))
 }
 
-export const isSeasonName = (v: unknown): v is string => typeof v === 'string' && seasonStartYearOfName(v) !== null
+export const isSeasonName = (v: unknown, cfg: Cfg = DEFAULT_CFG): v is string => typeof v === 'string' && seasonStartYearOfName(v, cfg) !== null

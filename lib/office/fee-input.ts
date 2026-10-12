@@ -28,6 +28,8 @@ export const isIsoDate = (v: unknown): v is string => {
 }
 
 export type RawPayment = {
+  /** One-shot key from the form, so a double click records the payment once. */
+  nonce?: unknown
   memberId: unknown
   amount: unknown
   receivedOn: unknown
