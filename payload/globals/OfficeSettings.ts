@@ -18,7 +18,7 @@ export const OfficeSettings: GlobalConfig = {
   admin: {
     group: false,
     hidden: hiddenFromEditors,
-    description: 'Currency, language and the names of the address lines used across the club office. Later modules add their own settings here.',
+    description: 'Currency, language and the names of the address lines used in the club office exports. Later modules add their own settings here.',
   },
   access: { read: isAdmin, update: isAdmin },
   fields: [
@@ -29,7 +29,7 @@ export const OfficeSettings: GlobalConfig = {
       label: 'Names of the address lines',
       type: 'group',
       access: admin,
-      admin: { description: 'What each address line is called where you live. These words appear on the member form and the directory.' },
+      admin: { description: 'What each address line is called where you live. These words are the column names in the members spreadsheet you download. The form on the member page keeps its standard wording.' },
       fields: [
         { name: 'addressLine', label: 'First line', type: 'text', maxLength: 60, defaultValue: DEFAULT_ADDRESS_LABELS.addressLine, access: admin },
         { name: 'locality', label: 'Second line', type: 'text', maxLength: 60, defaultValue: DEFAULT_ADDRESS_LABELS.locality, access: admin },
