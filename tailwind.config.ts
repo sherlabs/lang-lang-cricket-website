@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
-import { BRAND_TW } from "./config/brand";
+import { BRAND_TW, STATUS_TW } from "./config/brand";
 
 const config: Config = {
   darkMode: ["class"],
@@ -14,6 +14,7 @@ const config: Config = {
     extend: {
       colors: {
         brand: BRAND_TW,
+        status: STATUS_TW,
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {

@@ -44,6 +44,7 @@ describe('membership fees', () => {
     const headers: Record<string, string> = {}
     if (opts.token) headers.Authorization = `JWT ${opts.token}`
     if (opts.origin !== null) headers.Origin = opts.origin ?? ORIGIN
+    headers.Accept = 'application/json' // these tests check the JSON refusal; the HTML redirect has its own test
     const request = new Request(`${ORIGIN}/api/admin/office/fees/${action}`, { method: 'POST', headers, body })
     const mod = await import('@/app/api/admin/office/fees/[action]/route')
     return mod.POST(request, { params: Promise.resolve({ action }) })
@@ -322,6 +323,71 @@ describe('membership fees', () => {
       expect(bad.headers.get('location')).toContain('/office/fees?error=amount')
       expect((await post('unknown', { token: tok.admin, form })).status).toBe(404)
       expect((await payload.count({ collection: 'fee-payments', overrideAccess: true })).totalDocs).toBe(1)
+    })
+
+    it('a browser form post that is refused lands on a page, never on bare JSON', async () => {
+      const m = await member({ firstName: 'Soft', lastName: 'Landing' })
+      const ret = `/office/fees/member/${m.id}`
+      const form = new FormData()
+      form.append('memberId', String(m.id))
+      const send = async (headers: Record<string, string>) => {
+        const mod = await import('@/app/api/admin/office/fees/[action]/route')
+        return mod.POST(new Request(`${ORIGIN}/api/admin/office/fees/payment`, { method: 'POST', headers, body: form }), { params: Promise.resolve({ action: 'payment' }) })
+      }
+      const out = await send({ Origin: ORIGIN, Referer: `${ORIGIN}/admin${ret}?notice=paid` })
+      expect(out.status).toBe(303)
+      expect(out.headers.get('location')).toBe(`/admin/login?redirect=${encodeURIComponent(`/admin${ret}`)}`)
+      const editor = await send({ Origin: ORIGIN, Authorization: `JWT ${tok.editor}`, Referer: `${ORIGIN}/admin${ret}` })
+      expect(editor.status).toBe(303)
+      expect(editor.headers.get('location')).toBe(`/admin${ret}?error=forbidden`)
+      const foreign = await send({ Origin: 'https://evil.example', Referer: 'https://evil.example/x' })
+      expect(foreign.status).toBe(303)
+      expect(foreign.headers.get('location')).toBe('/admin?error=forbidden')
+      expect((await send({ Origin: ORIGIN, Accept: 'application/json' })).status).toBe(401)
+    })
+
+    it('a double tap on Waive, Add adjustment and Close season does each once', async () => {
+      const p = await player('Twice')
+      const m = await member({ firstName: 'Twice', lastName: 'Tapped', player: p.id })
+      await join(m.id, tierPlay)
+      await game(1, '2026-10-03', [{ id: p.id }])
+      const ret = `/office/fees/member/${m.id}`
+      const waiver = { memberId: String(m.id), scope: 'amount', amount: '5', note: 'Hardship', nonce: '5a2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a33', return: ret }
+      expect((await post('waiver', { token: tok.admin, form: waiver })).headers.get('location')).toContain('notice=waived')
+      expect((await post('waiver', { token: tok.admin, form: waiver })).headers.get('location')).toContain('notice=waived')
+      expect((await payload.count({ collection: 'fee-waivers', overrideAccess: true })).totalDocs).toBe(1)
+
+      const close = { season: SEASON, confirm: 'yes', nonce: '6a2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a44' }
+      // Two taps at once: the lock lets one through, the other sees the season closed and stores nothing more.
+      const both = await Promise.all([post('close', { token: tok.admin, form: close }), post('close', { token: tok.admin, form: close })])
+      for (const r of both) expect(r.headers.get('location')).toContain('notice=closed')
+      expect((await payload.count({ collection: 'fee-charges', overrideAccess: true })).totalDocs).toBe(1)
+      expect((await payload.count({ collection: 'fee-seasons', overrideAccess: true })).totalDocs).toBe(1)
+      // A different admin's second close (no matching form key) is refused, not repeated.
+      expect((await post('close', { token: tok.admin, form: { ...close, nonce: '7a2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a55' } })).headers.get('location')).toContain('error=closed')
+
+      const adj = { memberId: String(m.id), adjustSeason: SEASON, amount: '10', note: 'Fix', date: '2026-12-01', nonce: '8a2b8f0e-1c1d-4e53-9a43-2f0f6f7f1a66', return: ret }
+      expect((await post('adjustment', { token: tok.admin, form: adj })).headers.get('location')).toContain('notice=adjusted')
+      expect((await post('adjustment', { token: tok.admin, form: adj })).headers.get('location')).toContain('notice=adjusted')
+      expect((await payload.count({ collection: 'fee-charges', where: { kind: { equals: 'adjustment' } }, overrideAccess: true })).totalDocs).toBe(1)
+    })
+
+    it('removing a member scrubs the free text in the ledgers but keeps the amounts', async () => {
+      const m = await member({ firstName: 'Erase', lastName: 'Ledger' })
+      const ms = await join(m.id, tierPlay)
+      await payload.db.drizzle.execute(sql`UPDATE "payload"."memberships" SET "note" = 'paid by cousin Dave' WHERE id = ${ms.id}`)
+      await create('fee-payments', { member: m.id, receivedOn: '2026-08-01T12:00:00.000Z', amountCents: 1500, method: 'cash', reference: 'Dave Smith 0412', note: 'from Dave' })
+      await create('fee-waivers', { member: m.id, scope: 'amount', amountCents: 500, note: 'Dave lost his job' })
+      const { eraseMemberDetails } = await import('@/lib/office/erase')
+      expect(await eraseMemberDetails(payload, user.admin, m.id)).toEqual({ ok: true })
+      const text = JSON.stringify([
+        (await payload.find({ collection: 'fee-payments', overrideAccess: true, depth: 0 })).docs,
+        (await payload.find({ collection: 'fee-waivers', overrideAccess: true, depth: 0 })).docs,
+        (await payload.find({ collection: 'memberships', overrideAccess: true, depth: 0 })).docs,
+      ])
+      expect(text).not.toMatch(/Dave/)
+      const pay = (await payload.find({ collection: 'fee-payments', overrideAccess: true, depth: 0 })).docs[0]
+      expect(pay.amountCents).toBe(1500)
     })
 
     it('a closed season refuses new types, copies and memberships with the closed code; a bad removal id is not-found', async () => {

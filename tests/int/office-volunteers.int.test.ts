@@ -267,6 +267,7 @@ describe('volunteer roster', () => {
       const headers: Record<string, string> = {}
       if (opts.token) headers.Authorization = `JWT ${opts.token}`
       if (opts.origin !== null) headers.Origin = opts.origin ?? ORIGIN
+      headers.Accept = 'application/json' // these tests check the JSON refusal; the HTML redirect has its own test
       const mod = await import('@/app/api/admin/office/volunteers/[action]/route')
       return mod.POST(new Request(`${ORIGIN}/api/admin/office/volunteers/${action}`, { method: 'POST', headers, body }), { params: Promise.resolve({ action }) })
     }
@@ -389,11 +390,13 @@ describe('volunteer roster', () => {
       expect((await q.getWeekPage(user.editor, w.week))!.answers).toEqual([{ memberId: ann.id, name: 'Ann Helper', state: 'maybe', note: null }])
     })
 
-    it('counts every look against the address and stops after 60 in the window', async () => {
-      let allowed = 0
-      for (let i = 0; i < 65; i++) if ((await ipHit(payload, 'vol', '203.0.113.9')).allowed) allowed++
-      expect(allowed).toBe(60)
-      expect((await ipHit(payload, 'vol', '203.0.113.10')).allowed).toBe(true) // another address is unaffected
+    it('counts only failed links against the address; a valid link is never throttled', async () => {
+      const good = volunteerToken(people[0].id, 0)
+      for (let i = 0; i < 65; i++) expect(await pub.resolveVolunteerCounted(payload, good, '203.0.113.9')).not.toBeNull()
+      expect((await ipHit(payload, 'vol-bad', '203.0.113.9')).allowed).toBe(true) // 65 valid looks counted nothing
+      for (let i = 0; i < 65; i++) await pub.resolveVolunteerCounted(payload, 'not-a-link', '203.0.113.9')
+      expect((await ipHit(payload, 'vol-bad', '203.0.113.9')).allowed).toBe(false) // 30 bad checks lock the address
+      expect((await ipHit(payload, 'vol-bad', '203.0.113.10')).allowed).toBe(true) // another address is unaffected
     })
   })
 

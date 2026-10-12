@@ -1,4 +1,5 @@
 import 'server-only'
+import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload, TypedUser } from 'payload'
 import { isAdminUser } from '@/payload/access'
 import { scrubMemberRecipients } from '@/lib/email/recipients'
@@ -15,13 +16,56 @@ export type Scrubber = { name: string; run: (payload: Payload, memberId: number)
 
 /**
  * Scrubbers for tables that hold copies of member data. A volunteer's availability notes are free text they typed about themselves,
- * so they are blanked (the answer, the week and the hours stay). The email recipient snapshots are registered here too.
+ * so they are blanked (the answer, the week and the hours stay). The ledger notes and references, the typed adjustment descriptions
+ * and the void reasons are blanked too, and the email recipient snapshots are registered here. Two things are kept on purpose: the
+ * amounts and dates, and each email recipient's one-way `emailHash` (a hash cannot be read back to an address; it only lets the
+ * do-not-email list keep working).
  */
+/** What replaces required or reason text that is removed, so every row still reads as complete. */
+const REMOVED = 'Details removed'
+
 export const scrubbers: Scrubber[] = [
   {
     name: 'volunteer availability notes',
     run: async (payload, memberId) => {
       await payload.update({ collection: 'volunteer-availability', where: { member: { equals: memberId } }, data: { note: null }, overrideAccess: true, depth: 0 })
+    },
+  },
+  // Free text in the money and hours ledgers can name people or hold payer details. The amounts, dates and the voided state stay (the
+  // books must still add up); the words go. A payment is also scrubbed when the member was the payer for someone else.
+  {
+    name: 'payment references and notes',
+    run: async (payload, memberId) => {
+      await payload.update({ collection: 'fee-payments', where: { or: [{ member: { equals: memberId } }, { payer: { equals: memberId } }] }, data: { reference: null, note: null }, overrideAccess: true, depth: 0 })
+      await payload.update({ collection: 'fee-payments', where: { and: [{ or: [{ member: { equals: memberId } }, { payer: { equals: memberId } }] }, { voidReason: { exists: true } }] }, data: { voidReason: REMOVED }, overrideAccess: true, depth: 0 })
+    },
+  },
+  {
+    name: 'waiver reasons',
+    run: async (payload, memberId) => {
+      await payload.update({ collection: 'fee-waivers', where: { member: { equals: memberId } }, data: { note: REMOVED }, overrideAccess: true, depth: 0 })
+      await payload.update({ collection: 'fee-waivers', where: { and: [{ member: { equals: memberId } }, { voidReason: { exists: true } }] }, data: { voidReason: REMOVED }, overrideAccess: true, depth: 0 })
+    },
+  },
+  {
+    name: 'typed charge descriptions',
+    run: async (payload, memberId) => {
+      await payload.update({ collection: 'fee-charges', where: { and: [{ member: { equals: memberId } }, { kind: { equals: 'adjustment' } }] }, data: { description: REMOVED }, overrideAccess: true, depth: 0 })
+      await payload.update({ collection: 'fee-charges', where: { and: [{ member: { equals: memberId } }, { voidReason: { exists: true } }] }, data: { voidReason: REMOVED }, overrideAccess: true, depth: 0 })
+    },
+  },
+  {
+    name: 'volunteer hours notes',
+    run: async (payload, memberId) => {
+      await payload.update({ collection: 'volunteer-hours', where: { member: { equals: memberId } }, data: { note: null }, overrideAccess: true, depth: 0 })
+      await payload.update({ collection: 'volunteer-hours', where: { and: [{ member: { equals: memberId } }, { voidReason: { exists: true } }] }, data: { voidReason: REMOVED }, overrideAccess: true, depth: 0 })
+    },
+  },
+  {
+    name: 'membership notes',
+    run: async (payload, memberId) => {
+      // Straight SQL: the collection refuses any change to a membership in a closed season, and a note is not part of the money.
+      await payload.db.drizzle.execute(sql`UPDATE "payload"."memberships" SET "note" = NULL, "updated_at" = now() WHERE "member_id" = ${memberId}`)
     },
   },
   // The address and first name copied onto each email the member was sent. The unsubscribe list is kept on purpose (spec 1).

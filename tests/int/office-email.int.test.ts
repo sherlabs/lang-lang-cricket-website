@@ -74,6 +74,7 @@ describe('bulk email', () => {
     const headers: Record<string, string> = {}
     if (opts.token) headers.Authorization = `JWT ${opts.token}`
     if (opts.origin !== null) headers.Origin = opts.origin ?? ORIGIN
+    headers.Accept = 'application/json' // these tests check the JSON refusal; the HTML redirect has its own test
     const request = new Request(`${ORIGIN}${route}`, { method: 'POST', headers, body })
     const seg = route.replace('/api/admin/office/email/', '').split('/')
     if (seg[0] === 'new') return (await import('@/app/api/admin/office/email/new/route')).POST(request)

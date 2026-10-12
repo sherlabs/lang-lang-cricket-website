@@ -35,11 +35,11 @@ describe('role visibility helpers', () => {
 })
 
 describe('navigation', () => {
-  it('editors get the short plain list and only the Selectors and Social posts entries of Advanced', () => {
+  it('editors get the short plain list and the Selectors, Social posts, stories and yearbooks entries of Advanced', () => {
     const nav = navFor('editor')
     // Selectors is an occasional task, so it is an Advanced entry (not a 17th everyday one) that editors can reach; also a Home tile.
     // Social posts (wave C) is the same kind of entry: an occasional task with a Home tile. The styling settings stay admin only.
-    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors', 'social'])
+    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors', 'social', 'stories', 'yearbooks'])
     expect(navFor('admin').advanced.map((e) => e.key)).toContain('social-settings')
     expect(nav.advanced.map((e) => e.key)).not.toContain('social-settings')
     expect(navFor(null).advanced.map((e) => e.key)).not.toContain('social')
@@ -48,7 +48,8 @@ describe('navigation', () => {
     // 14 -> 16: Pages and News are committee-run content (WP-P); hiding them under Advanced was rejected.
     // 16 -> 17: Club office (wave D). One entry replaces the seven it would otherwise take (members, fees, volunteers, meetings,
     // diary, email, stock); every module is a tile on its page. It is the only new everyday entry of the wave.
-    expect(nav.everyday.length).toBeLessThanOrEqual(17)
+    // 17 -> 15: Club history stories and Season yearbooks are occasional, so they moved under Advanced (still open to editors).
+    expect(nav.everyday.length).toBeLessThanOrEqual(16)
     expect(nav.everyday.map((e) => e.key)).toContain('office')
     expect(navFor(null).everyday.map((e) => e.key)).toContain('office') // the sidebar only renders for a signed-in user; the view itself refuses non-staff
     expect(nav.everyday.map((e) => e.path)).not.toContain('/collections/users')
@@ -158,7 +159,7 @@ describe('every collection and global is classified (new ones fail here until th
     for (const slug of socialCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a social collection but is not a collection`).toBe(true)
     for (const slug of internalCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as internal but is not a collection`).toBe(true)
     // Entities listed under Advanced must be hidden from editors unless they are a deliberate upload target.
-    const uploadTargets = new Set(['media', 'event-photos'])
+    const uploadTargets = new Set(['media', 'event-photos', ...advancedNav.filter((e) => e.forEditors).map((e) => e.path.split('/').pop()!)])
     for (const entry of advancedNav) {
       const slug = entry.path.split('/').pop()!
       const e = entities.find((x) => x.slug === slug)

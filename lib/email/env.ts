@@ -6,6 +6,20 @@ export const DEFAULT_BATCH_SIZE = 50
 export const DEFAULT_RATE_PER_SECOND = 2
 export const DEFAULT_MAX_RECIPIENTS = 2000
 
+/** How long one scheduled run keeps sending before it stops (the function limit is 300 s; this leaves room to finish). */
+export const CRON_BUDGET_SECONDS = 240
+
+/**
+ * What the pace means in practice. `perRun` is what one scheduled run can send unattended (about 90% of the budget at the set rate,
+ * since each batch also spends time on the database). The schedule is one run a day, so a bigger email left alone takes `days`.
+ * `minutesOpen` is the time with the page open and the progress bar running. Pure.
+ */
+export function sendEstimate(recipients: number, ratePerSecond: number): { perRun: number; days: number; minutesOpen: number; overOneRun: boolean } {
+  const perRun = Math.max(1, Math.floor(ratePerSecond * CRON_BUDGET_SECONDS * 0.9))
+  const n = Math.max(0, Math.floor(recipients))
+  return { perRun, days: Math.max(1, Math.ceil(n / perRun)), minutesOpen: Math.max(1, Math.ceil(n / ratePerSecond / 60)), overOneRun: n > perRun }
+}
+
 /** The configured provider, or null (off). Anything but `resend` or `mock` is off, never a guess. */
 export function emailProvider(env: EmailEnv = process.env): EmailProvider | null {
   const v = env.EMAIL_PROVIDER?.trim().toLowerCase()

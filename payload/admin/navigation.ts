@@ -34,8 +34,6 @@ export const everydayNav: NavEntry[] = [
   { key: 'documents', label: 'Documents', path: '/collections/documents' },
   { key: 'pages', label: 'Pages', path: '/collections/pages' },
   { key: 'news', label: 'News', path: '/collections/news' },
-  { key: 'stories', label: 'Club history stories', path: '/collections/stories' },
-  { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks' },
   { key: 'players', label: 'Players', path: '/collections/players' },
   { key: 'player-sponsors', label: 'Player sponsors', path: '/collections/player-sponsors' },
   { key: 'club-apparel', label: 'Club apparel link', path: '/globals/club-apparel' },
@@ -51,6 +49,9 @@ export const advancedNav: NavEntry[] = [
   { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
   // Posting a result is a weekly job for editors, so Social posts is reachable by them here and from a Home tile (wave C spec 3.6).
   { key: 'social', label: 'Social posts', path: '/social', forEditors: true },
+  // Occasional, editor-run content: kept out of the everyday list so it stays short on a phone, still reachable by the committee here and from Home tiles / approvals.
+  { key: 'stories', label: 'Club history stories', path: '/collections/stories', forEditors: true },
+  { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks', forEditors: true },
   { key: 'social-settings', label: 'Social graphics settings', path: '/globals/social-settings' },
   { key: 'office-settings', label: 'Club office settings', path: '/globals/office-settings' },
   { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings' },

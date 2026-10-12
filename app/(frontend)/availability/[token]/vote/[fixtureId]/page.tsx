@@ -42,7 +42,7 @@ export default async function VotePage({ params, searchParams }: Props) {
       <p className="text-sm text-brand-grey">{view.fixture.gradeName}{view.fixture.roundName ? `, ${view.fixture.roundName}` : ''}</p>
       <h1 className="display text-3xl text-brand-black">{VOTES.label}: {view.fixture.gradeName} v {view.fixture.opponentName}</h1>
       <p className="mt-1 text-sm text-brand-grey">{when}. Hi {first}.</p>
-      {flash && <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{flash}</p>}
+      {flash && <p role="alert" className="mt-4 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{flash}</p>}
       {sp.saved && !flash && <p role="status" className="mt-4 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">Your vote is in.{view.canEdit ? ' You can change it for a little while.' : ''}</p>}
       <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-black/10">
         {view.canEdit ? (

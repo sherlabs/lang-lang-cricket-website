@@ -138,7 +138,7 @@ export function CheckIn({ sessionId, squad, others, guestsLeft, actions }: { ses
         </label>
         <button type="submit" className={`${btnQuiet} mt-2`} disabled={guestsLeft === 0 || !guest.trim()}>Add guest</button>
       </form>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{error}</p>}
     </div>
   )
 }

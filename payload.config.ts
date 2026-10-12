@@ -47,6 +47,7 @@ import { VolunteerAssignments, VolunteerAvailability, VolunteerHours, VolunteerS
 import { CommitteeSeats } from './payload/collections/CommitteeSeats'
 import { CommitteeDocuments, MeetingActions, MeetingAttendance, MeetingItems, MeetingMotions, MeetingTemplates, Meetings } from './payload/collections/meetings'
 import { EmailCampaigns, EmailRecipients, EmailSuppressions } from './payload/collections/email'
+import { OFFICE_BLOB } from './payload/office-blob'
 import { OfficeFiles } from './payload/collections/OfficeFiles'
 import { DiaryJobs, PlanObjectives, PlanPillars } from './payload/collections/diary'
 import { StockIssues, StockItems, StockMovements } from './payload/collections/stock'
@@ -160,10 +161,12 @@ export default buildConfig({
       vercelBlobStorage({
         enabled: Boolean(token),
         token,
-        clientUploads: false,
+        clientUploads: OFFICE_BLOB.clientUploads,
+        // The plugin's store is public, so the stored name gets a random suffix: the address cannot be guessed (see payload/office-blob.ts).
+        addRandomSuffix: OFFICE_BLOB.addRandomSuffix,
         alwaysInsertFields: true,
         // No disablePayloadAccessControl: the default is the access-controlled download route.
-        collections: { 'office-files': { prefix: 'office' } },
+        collections: { 'office-files': { prefix: OFFICE_BLOB.prefix } },
       }),
     ),
     guardLegacyBlobDeletes(

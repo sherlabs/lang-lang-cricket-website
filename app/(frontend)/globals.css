@@ -10,6 +10,16 @@
 
 @layer base {
   :root {
+    /* Status colours (channel triples, so /alpha works). Messages and answer buttons use these, never raw red/green/amber. */
+    --status-ok: 4 120 87;
+    --status-ok-soft: 209 250 229;
+    --status-ok-ink: 6 78 59;
+    --status-warn: 245 158 11;
+    --status-warn-soft: 254 243 199;
+    --status-warn-ink: 120 53 15;
+    --status-bad: 185 28 28;
+    --status-bad-soft: 254 226 226;
+    --status-bad-ink: 153 27 27;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);

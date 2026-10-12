@@ -1921,6 +1921,10 @@ export interface FeeSeason {
   chargesTotalCents?: number | null;
   snapshotCount?: number | null;
   closedAnyway?: boolean | null;
+  /**
+   * Stops a double click closing the season twice.
+   */
+  idempotencyKey?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1943,6 +1947,10 @@ export interface FeeCharge {
   amountCents: number;
   description?: string | null;
   closedAt?: string | null;
+  /**
+   * Stops a double click adding one adjustment twice.
+   */
+  idempotencyKey?: string | null;
   voidedAt?: string | null;
   voidedBy?: (number | null) | User;
   voidReason?: string | null;
@@ -2000,6 +2008,10 @@ export interface FeeWaiver {
   amountCents?: number | null;
   note: string;
   grantedBy?: (number | null) | User;
+  /**
+   * Stops a double click granting one waiver twice.
+   */
+  idempotencyKey?: string | null;
   voidedAt?: string | null;
   voidedBy?: (number | null) | User;
   voidReason?: string | null;
@@ -3909,6 +3921,7 @@ export interface FeeSeasonsSelect<T extends boolean = true> {
   chargesTotalCents?: T;
   snapshotCount?: T;
   closedAnyway?: T;
+  idempotencyKey?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3925,6 +3938,7 @@ export interface FeeChargesSelect<T extends boolean = true> {
   amountCents?: T;
   description?: T;
   closedAt?: T;
+  idempotencyKey?: T;
   voidedAt?: T;
   voidedBy?: T;
   voidReason?: T;
@@ -3972,6 +3986,7 @@ export interface FeeWaiversSelect<T extends boolean = true> {
   amountCents?: T;
   note?: T;
   grantedBy?: T;
+  idempotencyKey?: T;
   voidedAt?: T;
   voidedBy?: T;
   voidReason?: T;
@@ -4945,7 +4960,7 @@ export interface SocialSetting {
 export interface OfficeSetting {
   id: number;
   /**
-   * A three-letter code such as AUD, NZD, GBP or USD.
+   * A three-letter code such as AUD, NZD, GBP or USD. Amounts are kept in cents, so the currency must have cents.
    */
   currency?: string | null;
   /**

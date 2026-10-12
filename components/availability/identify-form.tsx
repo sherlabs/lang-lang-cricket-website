@@ -24,7 +24,7 @@ export function IdentifyForm({ action, token }: { action: (prev: FormState, form
         <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} className="h-5 w-5" />
         Show what I type
       </label>
-      {state.error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{state.error}</p>}
       <button type="submit" className={`${btnPrimary} w-full`} disabled={pending}>{pending ? 'Checking...' : 'Continue'}</button>
     </form>
   )

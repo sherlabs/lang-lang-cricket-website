@@ -191,7 +191,7 @@ export function RsvpEditForm({
         </div>
 
         {error && (
-          <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+          <p role="alert" className="mt-5 rounded-lg bg-status-bad-soft px-4 py-3 text-sm text-status-bad ring-1 ring-status-bad/25">
             {error}
           </p>
         )}
@@ -214,7 +214,7 @@ export function RsvpEditForm({
         </p>
 
         {cancelError && (
-          <p role="alert" className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+          <p role="alert" className="mt-4 rounded-lg bg-status-bad-soft px-4 py-3 text-sm text-status-bad ring-1 ring-status-bad/25">
             {cancelError}
           </p>
         )}
@@ -250,7 +250,7 @@ export function RsvpEditForm({
             type="button"
             disabled={busy}
             onClick={() => setConfirmingCancel(true)}
-            className="mt-5 inline-flex h-11 items-center justify-center rounded-lg border border-red-700/30 px-5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-5 inline-flex h-11 items-center justify-center rounded-lg border border-status-bad/30 px-5 text-sm font-semibold text-status-bad transition hover:bg-status-bad-soft disabled:pointer-events-none disabled:opacity-50"
           >
             Cancel my RSVP
           </button>

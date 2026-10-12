@@ -42,7 +42,7 @@ export default async function LinkPage({ searchParams }: Props) {
         ) : (
           <p className="mt-2 text-sm text-brand-grey">The link is switched off, so anyone who opens it sees &quot;page not found&quot;.</p>
         )}
-        {info.guessing && <p role="alert" className="mt-3 text-sm text-red-800">Someone is guessing PINs on this link. Consider making a new one.</p>}
+        {info.guessing && <p role="alert" className="mt-3 text-sm text-status-bad-ink">Someone is guessing PINs on this link. Consider making a new one.</p>}
       </section>
 
       <section aria-labelledby="switch" className="mt-8">

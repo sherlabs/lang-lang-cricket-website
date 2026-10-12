@@ -35,8 +35,8 @@ const GROUPS: { answer: Answer; title: string }[] = [
 const chipTone: Record<string, string> = {
   'not-started': 'bg-brand-black/10 text-brand-black',
   'in-progress': 'bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30',
-  ready: 'bg-emerald-100 text-emerald-900',
-  'needs-attention': 'bg-red-100 text-red-900',
+  ready: 'bg-status-ok-soft text-status-ok-ink',
+  'needs-attention': 'bg-status-bad-soft text-status-bad-ink',
 }
 
 const iconBtn = 'inline-flex h-11 min-w-11 items-center justify-center rounded-lg border border-brand-black/20 bg-white px-2 text-sm font-semibold text-brand-black hover:bg-brand-black/5 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black'
@@ -175,7 +175,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
       {warnings.length > 0 && (
         <ul aria-label="Warnings" className="mt-4 space-y-2">
           {warnings.map((w, i) => (
-            <li key={i} className={`rounded-lg px-3 py-2 text-sm ring-1 ${w.blocking || w.strong ? 'bg-red-50 text-red-900 ring-red-200' : 'bg-brand-gold-pale text-brand-black ring-brand-gold/30'}`}>
+            <li key={i} className={`rounded-lg px-3 py-2 text-sm ring-1 ${w.blocking || w.strong ? 'bg-status-bad-soft text-status-bad-ink ring-status-bad/25' : 'bg-brand-gold-pale text-brand-black ring-brand-gold/30'}`}>
               <span className="font-semibold">{w.blocking ? 'Fix before publishing: ' : w.strong ? 'Check: ' : ''}</span>{w.text}
             </li>
           ))}
@@ -208,8 +208,8 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
                     {r.playerId != null && (
                       <span className="inline-flex items-center gap-1.5"><span aria-hidden className={`h-2.5 w-2.5 rounded-full ${ANSWER_DOT[r.answer]}`} />{ANSWER_LABEL[r.answer]}</span>
                     )}
-                    {r.hidden && <span className="font-semibold text-red-800">Hidden on the site</span>}
-                    {r.missing && <span className="font-semibold text-red-800">Removed player</span>}
+                    {r.hidden && <span className="font-semibold text-status-bad-ink">Hidden on the site</span>}
+                    {r.missing && <span className="font-semibold text-status-bad-ink">Removed player</span>}
                   </p>
                   {r.playerId != null && (r.batting || r.bowling) && (
                     <p className="mt-1 text-xs text-brand-grey">Bat: {r.batting || 'No data'}<br />Bowl: {r.bowling || 'No data'}</p>
@@ -221,7 +221,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
                 <button type="button" onClick={() => move(i, i + 1)} disabled={i === rows.length - 1} aria-label={`Move ${r.name} down`} className={iconBtn}>Down</button>
                 <button type="button" onClick={() => toggleCaptain(i)} aria-pressed={r.isCaptain} aria-label={`${r.name} is captain`} className={toggleBtn(r.isCaptain)}>C</button>
                 <button type="button" onClick={() => toggleKeeper(i)} aria-pressed={r.isKeeper} aria-label={`${r.name} is wicketkeeper`} className={toggleBtn(r.isKeeper)}>WK</button>
-                <button type="button" onClick={() => remove(i)} aria-label={`Remove ${r.name}`} className={`${iconBtn} ml-auto text-red-800`}>Remove</button>
+                <button type="button" onClick={() => remove(i)} aria-label={`Remove ${r.name}`} className={`${iconBtn} ml-auto text-status-bad-ink`}>Remove</button>
               </div>
             </li>
           ))}
@@ -240,7 +240,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
       </div>
 
       {message && (
-        <p role={message.tone === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-lg px-3 py-2 text-sm ring-1 ${message.tone === 'error' ? 'bg-red-50 text-red-900 ring-red-200' : 'bg-emerald-50 text-emerald-900 ring-emerald-200'}`}>
+        <p role={message.tone === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-lg px-3 py-2 text-sm ring-1 ${message.tone === 'error' ? 'bg-status-bad-soft text-status-bad-ink ring-status-bad/25' : 'bg-status-ok-soft text-status-ok-ink ring-status-ok/25'}`}>
           {message.text}{' '}
           {message.toShare && <button type="button" className="font-semibold underline" onClick={goToShare}>Go to the picture and Facebook post</button>}
           {message.stale && <button type="button" className="font-semibold underline" onClick={() => window.location.reload()}>Reload</button>}
@@ -253,7 +253,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
           <button type="button" onClick={onReady} disabled={pending || rows.length === 0} aria-pressed={ready} className={btnQuiet}>{ready ? 'Marked ready' : 'Mark ready'}</button>
           <button type="button" onClick={onPublishClick} disabled={pending || rows.length === 0 || blocking.length > 0} aria-describedby={publishBlockedBy ? 'publish-blocked' : undefined} className={`${btn} bg-brand-black text-brand-gold hover:bg-brand-charcoal ml-auto`}>{chip ? 'Publish changes' : 'Publish teams'}</button>
         </div>
-        {publishBlockedBy && <p id="publish-blocked" className="mt-2 text-sm font-semibold text-red-800">Cannot publish yet: {publishBlockedBy}</p>}
+        {publishBlockedBy && <p id="publish-blocked" className="mt-2 text-sm font-semibold text-status-bad-ink">Cannot publish yet: {publishBlockedBy}</p>}
         <p className="mt-2 text-xs text-brand-grey">Save keeps your work. Mark ready says you are happy with this team; it lets “Publish all ready” include it and does not publish anything. Publishing makes the team public.</p>
         {notReadyBecause && <p className="mt-1 text-xs font-semibold text-brand-gold-deep">{notReadyBecause}</p>}
       </div>
@@ -293,7 +293,7 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
               <input id="guest-name" value={guest} onChange={(e) => setGuest(e.target.value)} maxLength={40} autoComplete="off" className={field} placeholder="First and last name" />
               <button type="button" onClick={addGuest} className={`${btnQuiet} shrink-0`}>Add guest</button>
             </div>
-            {guestError && <p role="alert" className="mt-1 text-sm text-red-800">{guestError}</p>}
+            {guestError && <p role="alert" className="mt-1 text-sm text-status-bad-ink">{guestError}</p>}
           </section>
         </div>
       </Sheet>

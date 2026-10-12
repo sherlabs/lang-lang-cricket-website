@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { claimedMemberId, volunteerTokenMatches } from '@/lib/volunteer-link'
 import { displayNameFor } from '@/lib/office/members'
+import { ipHit } from '@/lib/throttle'
 import { resolveOfficeSettings } from '@/lib/office/settings'
 import { AVAILABILITY_NOTE_MAX, isActiveState, parseAvailability, type AvailabilityError, type AvailabilityState, type AssignmentState } from '@/lib/office/volunteers'
 
@@ -27,6 +28,16 @@ export async function resolveVolunteer(payload: Payload, token: string): Promise
   if (!volunteerTokenMatches(token, id, typeof doc.volunteerLinkVersion === 'number' ? doc.volunteerLinkVersion : 0)) return null
   const full = displayNameFor({ ...(doc as object), player: doc.player && typeof doc.player === 'object' ? (doc.player as never) : null, person: doc.person && typeof doc.person === 'object' ? (doc.person as never) : null } as never)
   return { id, firstName: full.split(/\s+/)[0] || 'there' }
+}
+
+/**
+ * `resolveVolunteer` for a public request. Like the unsubscribe link, only a link that fails to check counts against the caller's
+ * address (`vol-bad`): a valid link is never throttled, because clubhouse wifi and mobile carriers put many volunteers on one address.
+ */
+export async function resolveVolunteerCounted(payload: Payload, token: string, ip: string | null): Promise<Volunteer | null> {
+  const who = await resolveVolunteer(payload, token)
+  if (!who) await ipHit(payload, 'vol-bad', ip).catch(() => undefined)
+  return who
 }
 
 export type VolunteerWeekView = { id: number; date: string; label: string | null; answer: AvailabilityState | null; note: string; preferred: string[] }

@@ -4,6 +4,8 @@
  * the agency credit. Club identity and copy live in `payload/seed/club-defaults.ts`.
  */
 
+import { isTwoDecimalCurrency } from '../lib/office/money'
+
 const env = process.env
 /**
  * Lang Lang fallbacks for the three club-identity values apply ONLY to local development and tests
@@ -40,7 +42,10 @@ export const CLUB_LOCALE = env.CLUB_LOCALE || 'en-AU'
  * Club back office defaults (wave D). The office settings global is the editable copy; these are only what it starts with.
  * Env `OFFICE_CURRENCY` (ISO 4217 code, default AUD) and `OFFICE_LOCALE` (BCP 47, default `CLUB_LOCALE`).
  */
-export const OFFICE_CURRENCY = (env.OFFICE_CURRENCY || 'AUD').trim().toUpperCase()
+const DEFAULT_OFFICE_CURRENCY = 'AUD'
+const wantedCurrency = (env.OFFICE_CURRENCY || DEFAULT_OFFICE_CURRENCY).trim().toUpperCase()
+/** Money is kept in cents, so a currency without two decimals (JPY, KWD) is ignored in favour of the default. */
+export const OFFICE_CURRENCY = isTwoDecimalCurrency(wantedCurrency) ? wantedCurrency : DEFAULT_OFFICE_CURRENCY
 export const OFFICE_LOCALE = env.OFFICE_LOCALE?.trim() || CLUB_LOCALE
 
 /**

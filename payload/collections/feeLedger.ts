@@ -49,6 +49,7 @@ export const FeeSeasons = ledgerCollection({
     { name: 'chargesTotalCents', label: 'Charges total (cents)', type: 'number' },
     { name: 'snapshotCount', label: 'Charges stored', type: 'number' },
     { name: 'closedAnyway', label: 'Closed with unmatched games', type: 'checkbox', defaultValue: false },
+    { name: 'idempotencyKey', label: 'Form key', type: 'text', unique: true, index: true, admin: { readOnly: true, description: 'Stops a double click closing the season twice.' } },
   ],
 })
 
@@ -68,6 +69,7 @@ export const FeeCharges = ledgerCollection({
     { name: 'amountCents', label: 'Amount (cents)', type: 'number', required: true, min: 1 },
     { name: 'description', label: 'Description', type: 'text', maxLength: 300, validate: noCardNumbers },
     { name: 'closedAt', label: 'Closed on', type: 'date' },
+    { name: 'idempotencyKey', label: 'Form key', type: 'text', unique: true, index: true, admin: { readOnly: true, description: 'Stops a double click adding one adjustment twice.' } },
     ...voidFields,
   ],
 })
@@ -120,6 +122,7 @@ export const FeeWaivers = ledgerCollection({
     { name: 'amountCents', label: 'Amount (cents)', type: 'number', min: 1 },
     { name: 'note', label: 'Reason', type: 'text', required: true, maxLength: 500, validate: noCardNumbers },
     { name: 'grantedBy', label: 'Granted by', type: 'relationship', relationTo: 'users' },
+    { name: 'idempotencyKey', label: 'Form key', type: 'text', unique: true, index: true, admin: { readOnly: true, description: 'Stops a double click granting one waiver twice.' } },
     ...voidFields,
   ],
 })

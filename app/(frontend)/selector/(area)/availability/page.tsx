@@ -21,7 +21,7 @@ export default async function AvailabilityPage({ searchParams }: Props) {
       <AvailabilitySectionNav current="availability" />
       <h1 className="display text-3xl text-brand-black">Availability</h1>
       {!board.linkEnabled && <p className="mt-3 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">The player link is switched off, so players cannot reply themselves. Switch it on under Player link.</p>}
-      {board.guessing && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">Someone is guessing PINs on the availability link. New sign-ins are paused for a while. Consider rotating the link.</p>}
+      {board.guessing && <p role="alert" className="mt-3 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">Someone is guessing PINs on the availability link. New sign-ins are paused for a while. Consider rotating the link.</p>}
       {board.pinClashes.length > 0 && (
         <p role="status" className="mt-3 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">
           PIN clash between players called {board.pinClashes.join(', ')}. Give one of each pair their own PIN on their player card.

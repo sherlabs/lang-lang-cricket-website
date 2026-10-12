@@ -143,7 +143,7 @@ export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: 
           >
             <span className="whitespace-nowrap">
               Built with{' '}
-              <span aria-label="love" role="img" className="inline-block text-rose-500 transition group-hover:scale-110">
+              <span aria-label="love" role="img" className="inline-block text-status-bad transition group-hover:scale-110">
                 ♥
               </span>{' '}
               by{' '}

@@ -272,6 +272,7 @@ describe('stock and merch', () => {
         for (const [k, v] of Object.entries(opts.form ?? {})) body.append(k, v)
         const headers: Record<string, string> = {}
         if (opts.origin !== null) headers.Origin = opts.origin ?? ORIGIN
+        headers.Accept = 'application/json' // these tests check the JSON refusal; the HTML redirect has its own test
         if (opts.token) headers.Authorization = `JWT ${opts.token}`
         const mod = await import('@/app/api/admin/office/stock/[action]/route')
         return mod.POST(new Request(`${ORIGIN}/api/admin/office/stock/${action}`, { method: 'POST', headers, body }), { params: Promise.resolve({ action }) })

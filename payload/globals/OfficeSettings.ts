@@ -4,6 +4,7 @@ import { hiddenFromEditors } from '../admin/visibility'
 import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPES } from '../../lib/office/settings-defaults'
 import { validateShiftTypes } from '../../lib/office/volunteers'
 import { DEFAULT_CATEGORY_LABELS, DEFAULT_DIARY_LEAD_DAYS, DIARY_CATEGORIES, MAX_DIARY_LEAD_DAYS } from '../../lib/office/diary'
+import { isTwoDecimalCurrency } from '../../lib/office/money'
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '../../config/site'
 import { DEFAULT_EMAIL_FOOTER, DEFAULT_RECIPIENT_RETENTION_DAYS, DEFAULT_UNSUBSCRIBE_TEXT, MAX_RECIPIENT_RETENTION_DAYS } from '../../lib/office/settings-defaults'
 
@@ -41,7 +42,7 @@ export const OfficeSettings: GlobalConfig = {
     ],
   },
   fields: [
-    { name: 'currency', label: 'Currency', type: 'text', maxLength: 3, defaultValue: () => OFFICE_CURRENCY, access: admin, admin: { description: 'A three-letter code such as AUD, NZD, GBP or USD.', width: '50%' } },
+    { name: 'currency', label: 'Currency', type: 'text', maxLength: 3, validate: (v: unknown) => (v === undefined || v === null || v === '' || isTwoDecimalCurrency(v) ? true : 'Use a three-letter currency code that has cents, such as AUD, NZD, GBP, USD or EUR. Currencies without cents (like JPY) are not supported.'), defaultValue: () => OFFICE_CURRENCY, access: admin, admin: { description: 'A three-letter code such as AUD, NZD, GBP or USD. Amounts are kept in cents, so the currency must have cents.', width: '50%' } },
     { name: 'locale', label: 'Language and region for dates and amounts', type: 'text', maxLength: 20, defaultValue: () => OFFICE_LOCALE, access: admin, admin: { description: 'For example en-AU, en-GB or en-US.', width: '50%' } },
     {
       name: 'chargeFillIns',

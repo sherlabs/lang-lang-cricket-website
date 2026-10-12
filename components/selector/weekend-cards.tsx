@@ -11,8 +11,8 @@ import { CopyButton } from './ui'
 const tone: Record<string, string> = {
   'not-started': 'bg-brand-black/10 text-brand-black',
   'in-progress': 'bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30',
-  ready: 'bg-emerald-100 text-emerald-900',
-  'needs-attention': 'bg-red-100 text-red-900',
+  ready: 'bg-status-ok-soft text-status-ok-ink',
+  'needs-attention': 'bg-status-bad-soft text-status-bad-ink',
 }
 
 const when = (f: BoardFixture['fixture'], locale: string) => [formatMatchDay(f.localDate, locale), formatMatchTime(f.localTime)].filter(Boolean).join(' ')
@@ -85,8 +85,8 @@ export function OverviewCards({ board, locale }: { board: WeekendBoard; locale: 
             </dl>
             <ul className="mt-3 space-y-1 text-sm">
               {b.availability.squadSize === 0 && <li className="font-semibold text-brand-gold-deep">No squad for this grade yet. Add players on the Squads page.</li>}
-              {!b.availability.keeperAvailable && b.availability.squadSize > 0 && <li className="font-semibold text-red-800">No wicketkeeper available (nobody marked as a keeper has replied in or maybe).</li>}
-              {b.view.slots.length > 0 && noKeeperTagged && <li className="font-semibold text-red-800">No keeper tagged in the team.</li>}
+              {!b.availability.keeperAvailable && b.availability.squadSize > 0 && <li className="font-semibold text-status-bad-ink">No wicketkeeper available (nobody marked as a keeper has replied in or maybe).</li>}
+              {b.view.slots.length > 0 && noKeeperTagged && <li className="font-semibold text-status-bad-ink">No keeper tagged in the team.</li>}
               {b.view.status === 'not-started' && <li className="font-semibold text-brand-gold-deep">Selection not started.</li>}
             </ul>
             {b.availability.noReply.length > 0 && (

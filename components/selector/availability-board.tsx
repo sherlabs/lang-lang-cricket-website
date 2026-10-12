@@ -11,8 +11,8 @@ import { setAnswerAction } from '@/app/(frontend)/selector/board-actions'
 import { field } from './styles'
 
 const ORDER = ['in', 'maybe', 'out'] as const
-const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-emerald-700 text-white', maybe: 'bg-amber-500 text-brand-black', out: 'bg-red-700 text-white' }
-const CELL: Record<Answer, string> = { in: 'bg-emerald-100 text-emerald-900', maybe: 'bg-amber-100 text-amber-900', out: 'bg-red-100 text-red-900', none: 'bg-brand-stone/60 text-brand-grey' }
+const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-status-ok text-white', maybe: 'bg-status-warn text-brand-black', out: 'bg-status-bad text-white' }
+const CELL: Record<Answer, string> = { in: 'bg-status-ok-soft text-status-ok-ink', maybe: 'bg-status-warn-soft text-status-warn-ink', out: 'bg-status-bad-soft text-status-bad-ink', none: 'bg-brand-stone/60 text-brand-grey' }
 
 type Props = { board: Pick<AvailabilityBoard, 'fixtures' | 'players'>; country: string }
 
@@ -79,7 +79,7 @@ export function AvailabilityBoardView({ board, country }: Props) {
           Show only players who have not replied
         </label>
       </div>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{error}</p>}
 
       {board.players.length === 0 ? (
         <p className="mt-4 text-sm text-brand-grey">No one is in this grade&apos;s squad yet. Add players on the Squads page.</p>

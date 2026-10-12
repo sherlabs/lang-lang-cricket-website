@@ -26,7 +26,7 @@ export default async function SelectorLoginPage({ searchParams }: Props) {
   const failure = isFailureCode(sp.e) ? FAILURE_MESSAGES[sp.e] : null
   return (
     <AuthCard title="Selector login" intro="For the people who pick the teams. Your login comes from the committee.">
-      {failure && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{failure}</p>}
+      {failure && <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{failure}</p>}
       {facebook && (
         <>
           <FacebookButton next={next} />

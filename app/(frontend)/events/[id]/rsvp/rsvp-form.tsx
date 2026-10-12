@@ -158,7 +158,7 @@ export function RsvpForm({ eventId, occurrenceIso, mode, mealOptions, paymentUrl
       </div>
 
       {error && (
-        <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+        <p role="alert" className="mt-5 rounded-lg bg-status-bad-soft px-4 py-3 text-sm text-status-bad ring-1 ring-status-bad/25">
           {error}
         </p>
       )}

@@ -98,12 +98,12 @@ export default async function ComparePage({ searchParams }: Props) {
         </form>
 
         {unknown.length > 0 && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+          <p role="alert" className="rounded-lg bg-status-bad-soft px-4 py-3 text-sm text-status-bad ring-1 ring-status-bad/25">
             {copy.unknownPlayer} ({unknown.join(' and ')} player)
           </p>
         )}
         {same && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">{copy.sameLabel}</p>
+          <p role="alert" className="rounded-lg bg-status-bad-soft px-4 py-3 text-sm text-status-bad ring-1 ring-status-bad/25">{copy.sameLabel}</p>
         )}
 
         {ready && (sa.length === 0 || sb.length === 0) && (

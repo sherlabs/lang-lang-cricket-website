@@ -9,7 +9,7 @@ import { field } from '@/components/selector/styles'
 import { answerAction } from '@/app/(frontend)/availability/[token]/actions'
 
 const ORDER = ['in', 'maybe', 'out'] as const
-const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-emerald-700 text-white', maybe: 'bg-amber-500 text-brand-black', out: 'bg-red-700 text-white' }
+const ON: Record<(typeof ORDER)[number], string> = { in: 'bg-status-ok text-white', maybe: 'bg-status-warn text-brand-black', out: 'bg-status-bad text-white' }
 
 /** Big In / Maybe / Out buttons per game. The page never shows anyone else's answers. */
 export function AnswerList({ token, fixtures }: { token: string; fixtures: PlayerFixtureView[] }) {

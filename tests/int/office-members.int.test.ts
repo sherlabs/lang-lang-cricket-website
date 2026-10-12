@@ -22,6 +22,7 @@ describe('member directory', () => {
     const headers: Record<string, string> = {}
     if (opts.token) headers.Authorization = `JWT ${opts.token}`
     if (opts.origin !== null) headers.Origin = opts.origin ?? ORIGIN
+    headers.Accept = 'application/json' // these tests check the JSON refusal; the HTML redirect has its own test
     if (opts.fetchSite) headers['Sec-Fetch-Site'] = opts.fetchSite
     const request = new Request(`${ORIGIN}${route}`, { method: 'POST', headers, body })
     const mod = await (route.includes('link-players')

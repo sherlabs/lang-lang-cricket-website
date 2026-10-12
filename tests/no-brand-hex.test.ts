@@ -74,6 +74,17 @@ describe('no brand hex in code', () => {
   })
 })
 
+describe('no raw palette colours in the public site', () => {
+  it('app and components use brand-* and status-* tokens, never red/green/emerald/amber-NNN classes', () => {
+    const palette = /\b(?:[a-z-]+:)*(?:bg|text|ring|border|divide|outline|from|to|via|fill|stroke|decoration|accent|placeholder)-(?:red|green|emerald|amber|yellow|orange|lime|teal|rose|blue|sky|indigo|violet|purple|pink|fuchsia|cyan)-\d{2,3}\b/g
+    const bad: string[] = []
+    for (const f of files.filter((x) => x.startsWith('app/') || x.startsWith('components/'))) {
+      for (const m of stripped(f).matchAll(palette)) bad.push(`${f}: ${m[0]}`)
+    }
+    expect(bad).toEqual([])
+  })
+})
+
 /** The only non-seed files that may name the club: the per-club build file (env defaults for dev and test). */
 const NAME_ALLOWLIST = ['config/site.ts']
 const CLUB_NAME = /lang ?lang|caldermeade|llcc/i

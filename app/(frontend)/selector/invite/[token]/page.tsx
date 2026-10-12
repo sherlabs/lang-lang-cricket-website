@@ -40,7 +40,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
   const failure = isFailureCode(sp.e) ? FAILURE_MESSAGES[sp.e] : null
   return (
     <AuthCard title={`Hi ${first}`} intro={`You have been asked to help pick the teams. This link works once and for ${SELECTOR_INVITE_DAYS} days from when it was made. Choose how you want to sign in.`}>
-      {failure && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{failure}</p>}
+      {failure && <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{failure}</p>}
       {facebook && (
         <>
           {inApp && (

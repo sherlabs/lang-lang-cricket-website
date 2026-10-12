@@ -57,5 +57,6 @@ Match fees were tracked by hand against a game list that already exists on the s
 
 - Figures for every open season are worked out together, so a member's per-game charges and the payments that settle them are the same whichever season you are viewing.
 - Closed seasons are frozen: new membership types, copying types in, adding or removing a membership all say the season is closed.
-- Each Record payment form carries a one-shot key, so a double click or a refresh-and-resubmit records the payment once.
+- Each Record payment, Waive a fee, Add adjustment and Close season form carries a one-shot key, so a double tap or a refresh-and-resubmit does it once. Close season also takes a database lock per season and looks again for a closed season before storing anything, so two people (or two taps at once) can never store the charges twice. A second close without the same form key says the season is already closed.
+- Money is kept in cents, so the currency in Club office settings must have two decimals (AUD, NZD, GBP, USD, EUR...). A code such as JPY or KWD is refused in the settings and the configured default is used instead.
 - Season names must match the club's format (for example 2026/27, with the second year one more than the first); anything else is refused.

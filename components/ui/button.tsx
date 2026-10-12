@@ -21,7 +21,7 @@ const buttonVariants = cva(
         // Site-brand variants: black on light surfaces, gold on dark ones.
         brand: "bg-brand-black text-white hover:bg-brand-charcoal",
         gold: "bg-brand-gold text-brand-black hover:bg-brand-gold-light",
-        danger: "bg-red-700 text-white hover:bg-red-800",
+        danger: "bg-status-bad text-white hover:bg-status-bad-ink",
       },
       size: {
         default:

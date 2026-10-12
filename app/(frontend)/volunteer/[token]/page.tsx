@@ -5,8 +5,7 @@ import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { clientIp } from '@/lib/client-ip'
 import { getPayloadClient } from '@/lib/payload/client'
 import { currentClubDate } from '@/lib/selection/club-date'
-import { ipHit } from '@/lib/throttle'
-import { ANSWER_TEXT, resolveVolunteer, volunteerView, type AnswerCode } from '@/lib/volunteer-public'
+import { ANSWER_TEXT, resolveVolunteerCounted, volunteerView, type AnswerCode } from '@/lib/volunteer-public'
 import { AVAILABILITY_LABEL, type AvailabilityState } from '@/lib/office/volunteers'
 import { answerAction } from './actions'
 
@@ -20,17 +19,15 @@ const dayFormat = new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE
 const when = (date: string): string => dayFormat.format(new Date(`${date}T12:00:00Z`))
 /** Left to right, as the question reads. */
 const ORDER: AvailabilityState[] = ['yes', 'maybe', 'no']
-const ON: Record<string, string> = { yes: 'bg-emerald-700 text-white', maybe: 'bg-amber-500 text-brand-black', no: 'bg-red-700 text-white' }
+const ON: Record<string, string> = { yes: 'bg-status-ok text-white', maybe: 'bg-status-warn text-brand-black', no: 'bg-status-bad text-white' }
 const isCode = (v: unknown): v is AnswerCode => typeof v === 'string' && v in ANSWER_TEXT
 
 export default async function VolunteerPage({ params, searchParams }: Props) {
   const { token } = await params
   const sp = await searchParams
   const payload = await getPayloadClient()
-  // Every look at this page counts against the address, so guessing links is slow; a wrong, rotated or throttled link is the same plain 404.
-  const throttle = await ipHit(payload, 'vol', clientIp(await headers()))
-  if (!throttle.allowed) notFound()
-  const who = await resolveVolunteer(payload, token)
+  // Only a link that fails to check counts against the address (guessing is slow, shared wifi is safe); a wrong or rotated link is a plain 404.
+  const who = await resolveVolunteerCounted(payload, token, clientIp(await headers()))
   if (!who) notFound()
   const view = await volunteerView(payload, who.id, currentClubDate())
   const message = isCode(sp.r) ? ANSWER_TEXT[sp.r] : null
@@ -40,7 +37,7 @@ export default async function VolunteerPage({ params, searchParams }: Props) {
       <h1 className="display text-3xl text-brand-black">Hi {who.firstName}</h1>
       <p className="mt-2 text-sm text-brand-grey">Tell the committee which game days you can help. Only you can see your answers here.</p>
       <div role="status" aria-live="polite">
-        {message ? <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${sp.r === 'saved' ? 'bg-brand-stone text-brand-black' : 'bg-red-50 text-red-900'}`}>{message}</p> : null}
+        {message ? <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${sp.r === 'saved' ? 'bg-brand-stone text-brand-black' : 'bg-status-bad-soft text-status-bad-ink'}`}>{message}</p> : null}
       </div>
 
       {view.shifts.length > 0 && (

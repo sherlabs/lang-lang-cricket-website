@@ -44,7 +44,7 @@ export default async function UnsubscribePage({ params, searchParams }: Props) {
   return (
     <main className="container-site max-w-xl py-10 sm:py-16">
       <div role="status" aria-live="polite">
-        {r === 'busy' ? <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-900">Too many tries just now. Please wait a few minutes and try again.</p> : null}
+        {r === 'busy' ? <p className="mb-4 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink">Too many tries just now. Please wait a few minutes and try again.</p> : null}
       </div>
       {done ? (
         <>

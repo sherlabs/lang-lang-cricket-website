@@ -1,4 +1,5 @@
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '@/config/site'
+import { isTwoDecimalCurrency } from './money'
 
 import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_EMAIL_FOOTER, DEFAULT_RECIPIENT_RETENTION_DAYS, DEFAULT_SHIFT_TYPES, DEFAULT_UNSUBSCRIBE_TEXT, MAX_RECIPIENT_RETENTION_DAYS, type AddressLabels, type ShiftType } from './settings-defaults'
 import { DEFAULT_CATEGORY_LABELS, DEFAULT_DIARY_LEAD_DAYS, DIARY_CATEGORIES, MAX_DIARY_LEAD_DAYS, type DiaryCategory } from './diary'
@@ -36,7 +37,7 @@ export function resolveOfficeSettings(doc: unknown): OfficeSettings {
   const d = (doc && typeof doc === 'object' ? doc : {}) as Record<string, unknown>
   const labels = (d.addressLabels && typeof d.addressLabels === 'object' ? d.addressLabels : {}) as Record<string, unknown>
   return {
-    currency: text(d.currency, 3)?.toUpperCase() ?? OFFICE_CURRENCY,
+    currency: (isTwoDecimalCurrency(text(d.currency, 3)) ? text(d.currency, 3)!.toUpperCase() : OFFICE_CURRENCY),
     locale: text(d.locale, 20) ?? OFFICE_LOCALE,
     chargeFillIns: d.chargeFillIns === true,
     addressLabels: {

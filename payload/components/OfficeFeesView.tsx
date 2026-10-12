@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { getFeesPage } from '@/lib/fees-office-queries'
@@ -217,6 +218,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
           <p>Closing stores every charge for {season} as it stands now and freezes the figures. Later changes to match data will not move them; a correction after that is a void plus an adjustment. It cannot be undone.</p>
           <form method="post" action={`${api}/fees/close`} className="office-form">
             {hidden}{seasonField}
+            <input type="hidden" name="nonce" value={randomUUID()} />
             {report.unmatchedAppearances > 0 ? (
               <label className="office-check"><input type="checkbox" name="closeAnyway" value="yes" /> {report.unmatchedAppearances} {report.unmatchedAppearances === 1 ? 'game' : 'games'} could not be matched to a member. Close anyway</label>
             ) : null}

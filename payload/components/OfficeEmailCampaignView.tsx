@@ -2,7 +2,7 @@ import { SetStepNav } from '@payloadcms/ui'
 import { notFound } from 'next/navigation'
 import type { AdminViewServerProps } from 'payload'
 import { getCampaignPage, parseCampaignId } from '@/lib/email-office-queries'
-import { emailEnabled } from '@/lib/email/env'
+import { emailEnabled, emailLimits, sendEstimate } from '@/lib/email/env'
 import { EMAIL_ERROR_TEXT, EMAIL_NOTICE_TEXT, isEmailError, isEmailNotice } from '@/lib/email/flash'
 import { isAdminUser } from '../access'
 import { AdminPage, requireUser } from './AdminPage'
@@ -39,6 +39,9 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
   const error = first(sp.error)
   const total = page.counts.queued + page.counts.sent + page.counts.failed + page.counts.skipped
   const will = page.audienceCounts?.willReceive ?? 0
+  const pace = emailLimits().ratePerSecond
+  const estimate = sendEstimate(will, pace)
+  const leftEstimate = sendEstimate(page.counts.queued, pace)
 
   return (
     <AdminPage view={view}>
@@ -56,6 +59,9 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
           <h2 id="progress">Sending</h2>
           <EmailSendProgress endpoint={`${api}/batch`} total={total} queued={page.counts.queued} />
           <p className="club-muted">{page.counts.sent} sent, {page.counts.queued} waiting, {page.counts.failed} failed, {page.counts.skipped} skipped (unsubscribed or asked not to be emailed).</p>
+          <p className="club-muted">
+            Keep this page open until it finishes: sending pauses when the tab is in the background or closed, and on a phone as soon as the screen locks. Left alone, the scheduled run sends only about {leftEstimate.perRun} a day{leftEstimate.overOneRun ? `, so the ${page.counts.queued} still waiting would take about ${leftEstimate.days} days` : ''}. Press Continue sending to carry on.
+          </p>
           <form method="post" action={`${api}/continue`} className="office-inline">
             <button type="submit" className="btn btn--style-primary btn--size-medium">Continue sending</button>
           </form>
@@ -100,6 +106,14 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
             {will > 0 && !page.overCap ? (
               <form method="post" action={`${api}/send`} className="office-form">
                 <input type="hidden" name="expected" value={will} />
+                <p className="club-muted">
+                  Sending runs at about {pace} per second, so this takes roughly {estimate.minutesOpen} {estimate.minutesOpen === 1 ? 'minute' : 'minutes'} with this page open. If you close it, the scheduled run sends only about {estimate.perRun} a day.
+                </p>
+                {estimate.overOneRun ? (
+                  <p className="office-flash office-flash--error">
+                    That is more than one scheduled run can send, so if the page is closed this would take about {estimate.days} days. Stay on this page (keep the screen awake) until it finishes, or come back and press Continue sending.
+                  </p>
+                ) : null}
                 <p>
                   You are about to send <strong>“{page.subject}”</strong> to <strong>{will} {will === 1 ? 'person' : 'people'}</strong>. This cannot be taken back.
                 </p>

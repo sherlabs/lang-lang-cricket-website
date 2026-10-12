@@ -8,7 +8,7 @@ import { voteWord } from '@/lib/votes/ballot'
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>
 
 function Message({ state }: { state: FormState }) {
-  if (state.error) return <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{state.error}</p>
+  if (state.error) return <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{state.error}</p>
   if (state.ok) return <p role="status" className="rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">{state.ok}</p>
   return null
 }

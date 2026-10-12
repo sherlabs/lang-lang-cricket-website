@@ -4,6 +4,21 @@
  */
 export type MoneyFormat = { currency: string; locale: string }
 
+/**
+ * Money is stored as hundredths of the unit, so the currency must have exactly two decimals (AUD, NZD, GBP, USD, EUR, CAD, ZAR,
+ * INR...). A zero-decimal (JPY) or three-decimal (KWD) currency would be wrong by 10 to 100 times, so it is refused. Uses the
+ * runtime's ISO 4217 data; an unknown code is not accepted either. Pure.
+ */
+export function isTwoDecimalCurrency(code: unknown): boolean {
+  if (typeof code !== 'string' || !/^[A-Za-z]{3}$/.test(code)) return false
+  try {
+    const o = new Intl.NumberFormat('en', { style: 'currency', currency: code.toUpperCase() }).resolvedOptions()
+    return o.minimumFractionDigits === 2 && o.maximumFractionDigits === 2
+  } catch {
+    return false
+  }
+}
+
 /** The largest single amount accepted anywhere in the office: one million in whole units. */
 export const MAX_CENTS = 100_000_000
 

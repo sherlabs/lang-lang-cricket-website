@@ -36,14 +36,14 @@ export function TeamShare({ gameId, postText, publishedAt }: { gameId: string; p
       <label htmlFor="post-text" className="mt-4 block text-sm font-semibold text-brand-black">Post text</label>
       <textarea id="post-text" readOnly rows={Math.min(14, postText.split('\n').length + 1)} value={postText} onFocus={(e) => e.currentTarget.select()} className="mt-1 w-full rounded-lg border border-brand-black/20 bg-white p-3 text-sm text-brand-black" />
       <div className="mt-4 border-t border-brand-black/10 pt-4">
-        <button type="button" onClick={() => setConfirming(true)} disabled={pending} className={`${btnQuiet} text-red-800`}>Withdraw this team</button>
-        {error && <p role="alert" className="mt-2 text-sm text-red-800">{error}</p>}
+        <button type="button" onClick={() => setConfirming(true)} disabled={pending} className={`${btnQuiet} text-status-bad-ink`}>Withdraw this team</button>
+        {error && <p role="alert" className="mt-2 text-sm text-status-bad-ink">{error}</p>}
       </div>
       <Sheet open={confirming} title="Withdraw this team" onClose={() => !pending && setConfirming(false)}>
         <div className="space-y-4">
           <p className="text-brand-charcoal">This takes the team off the public site. A picture Facebook or anyone else has already copied cannot be recalled.</p>
           <div className="flex gap-2">
-            <button type="button" onClick={withdraw} disabled={pending} className={`${btn} bg-red-800 text-white hover:bg-red-900`}>{pending ? 'Withdrawing…' : 'Withdraw'}</button>
+            <button type="button" onClick={withdraw} disabled={pending} className={`${btn} bg-status-bad-ink text-white hover:bg-status-bad-ink`}>{pending ? 'Withdrawing…' : 'Withdraw'}</button>
             <button type="button" onClick={() => setConfirming(false)} disabled={pending} className={btnQuiet}>Cancel</button>
           </div>
         </div>

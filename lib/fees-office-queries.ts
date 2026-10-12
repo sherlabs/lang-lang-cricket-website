@@ -9,7 +9,7 @@ import { writeAudit } from './office/audit-write'
 import { validateAdjustment, validatePayment, validateVoid, validateWaiver, type CleanPayment, type FeeFormError, type RawPayment } from './office/fee-input'
 import { feeReport, ledgerFor, owingSummary, previewPayment, type FeeMember, type FeeModel, type FeePayment, type FeeReport, type FeeWaiver, type StoredCharge } from './office/fee-report'
 import { householdFor, type Allocation, type PaymentTarget } from './office/fees'
-import { inTransaction, loadFeeModel, noon, storeClosedSeason, type FeeTier } from './office/fee-load'
+import { inTransaction, loadFeeModel, noon, SeasonAlreadyClosedError, storeClosedSeason, type FeeTier } from './office/fee-load'
 import { formatMoney } from './office/money'
 import { isSeasonName, seasonChoices, seasonNameForYear, seasonOfClubDate, seasonStartYearOfName } from './office/season'
 import { getOfficeSettings } from './office/settings-server'
@@ -226,15 +226,23 @@ export async function voidPayment(user: unknown, raw: { id: unknown; reason: unk
   return { ok: true, notice: 'voided' }
 }
 
-export async function addWaiver(user: unknown, raw: Parameters<typeof validateWaiver>[0]): Promise<ActionResult> {
+/** The one-shot key a form carries (made when it was drawn), or null. A second POST with the same key is a double tap. */
+const formKey = (nonce: unknown): string | null => (typeof nonce === 'string' && NONCE.test(nonce) ? nonce : null)
+const keyTaken = async (payload: Payload, collection: 'fee-waivers' | 'fee-charges' | 'fee-seasons', key: string | null): Promise<boolean> =>
+  key !== null && (await payload.count({ collection, where: { idempotencyKey: { equals: key } }, overrideAccess: true })).totalDocs > 0
+
+export async function addWaiver(user: unknown, raw: Parameters<typeof validateWaiver>[0] & { nonce?: unknown }): Promise<ActionResult> {
   if (!adminOnly(user)) return fail('forbidden')
   const v = validateWaiver(raw)
   if (!v.ok) return fail(v.code)
   const payload = await getPayloadClient()
   if (!(await memberExists(payload, v.value.memberId))) return fail('member')
+  const key = formKey(raw.nonce)
+  if (await keyTaken(payload, 'fee-waivers', key)) return { ok: true, notice: 'waived' }
   try {
-    await payload.create({ collection: 'fee-waivers', data: { member: v.value.memberId, scope: v.value.scope, matchId: v.value.matchId, season: v.value.season, amountCents: v.value.amountCents, note: v.value.note, grantedBy: user.id } as never, overrideAccess: true, depth: 0 })
+    await payload.create({ collection: 'fee-waivers', data: { idempotencyKey: key, member: v.value.memberId, scope: v.value.scope, matchId: v.value.matchId, season: v.value.season, amountCents: v.value.amountCents, note: v.value.note, grantedBy: user.id } as never, overrideAccess: true, depth: 0 })
   } catch (err) {
+    if (await keyTaken(payload, 'fee-waivers', key).catch(() => false)) return { ok: true, notice: 'waived' } // lost a race with the same form's other tap
     console.warn('[office] add waiver failed:', (err as Error).message)
     return fail('save')
   }
@@ -272,16 +280,19 @@ export async function voidCharge(user: unknown, raw: { id: unknown; reason: unkn
   return { ok: true, notice: 'voided' }
 }
 
-export async function addAdjustment(user: unknown, raw: Parameters<typeof validateAdjustment>[0]): Promise<ActionResult> {
+export async function addAdjustment(user: unknown, raw: Parameters<typeof validateAdjustment>[0] & { nonce?: unknown }): Promise<ActionResult> {
   if (!adminOnly(user)) return fail('forbidden')
   const v = validateAdjustment(raw, currentClubDate())
   if (!v.ok) return fail(v.code)
   const payload = await getPayloadClient()
   if (!(await seasonClosed(payload, v.season))) return fail('season')
   if (!(await memberExists(payload, v.memberId))) return fail('member')
+  const key = formKey(raw.nonce)
+  if (await keyTaken(payload, 'fee-charges', key)) return { ok: true, notice: 'adjusted' }
   try {
-    await payload.create({ collection: 'fee-charges', data: { member: v.memberId, season: v.season, kind: 'adjustment', date: noon(v.date), amountCents: v.amountCents, description: v.note, closedAt: new Date().toISOString() } as never, overrideAccess: true, depth: 0 })
+    await payload.create({ collection: 'fee-charges', data: { idempotencyKey: key, member: v.memberId, season: v.season, kind: 'adjustment', date: noon(v.date), amountCents: v.amountCents, description: v.note, closedAt: new Date().toISOString() } as never, overrideAccess: true, depth: 0 })
   } catch {
+    if (await keyTaken(payload, 'fee-charges', key).catch(() => false)) return { ok: true, notice: 'adjusted' } // lost a race with the same form's other tap
     return fail('save')
   }
   return { ok: true, notice: 'adjusted' }
@@ -379,20 +390,25 @@ export async function copyTiers(user: unknown, season: unknown): Promise<ActionR
  * Close season: derives the season's charges once, stores one row per charge, marks the season closed. Refuses when games are still
  * unmatched unless `closeAnyway` is ticked (recorded on the season row). From then on the season's figures come from the stored rows.
  */
-export async function closeSeason(user: unknown, raw: { season: unknown; confirm: unknown; closeAnyway: unknown }): Promise<ActionResult> {
+export async function closeSeason(user: unknown, raw: { season: unknown; confirm: unknown; closeAnyway: unknown; nonce?: unknown }): Promise<ActionResult> {
   if (!adminOnly(user)) return fail('forbidden')
   if (!isSeasonName(raw.season) || raw.confirm !== 'yes') return fail('season')
   const season = raw.season
   const payload = await getPayloadClient()
   const { model } = await loadFees(user, [season])
-  if (model.closedSeasons.has(season)) return fail('closed')
+  const key = formKey(raw.nonce)
+  if (model.closedSeasons.has(season)) return (await keyTaken(payload, 'fee-seasons', key)) ? { ok: true, notice: 'closed' } : fail('closed')
   if (!model.memberships.some((m) => m.season === season)) return fail('season')
   const anyway = raw.closeAnyway === 'yes'
   if (model.unmatchedAppearances > 0 && !anyway) return fail('unmatched')
   let stored: { count: number }
   try {
-    stored = await storeClosedSeason(payload, model, season, user.id, anyway)
+    stored = await storeClosedSeason(payload, model, season, user.id, anyway, key)
   } catch (err) {
+    // A second tap, or another admin, closed it between our check and the lock: the lock made them wait and nothing more was stored.
+    if (err instanceof SeasonAlreadyClosedError || (await keyTaken(payload, 'fee-seasons', key).catch(() => false))) {
+      return (await keyTaken(payload, 'fee-seasons', key).catch(() => false)) ? { ok: true, notice: 'closed' } : fail('closed')
+    }
     console.warn('[office] close season failed:', (err as Error).message)
     return fail('save')
   }

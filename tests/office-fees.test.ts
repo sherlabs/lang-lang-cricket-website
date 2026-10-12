@@ -272,3 +272,17 @@ describe('payment and waiver input', () => {
     expect(validateWaiver({ ...w, scope: 'amount', amount: '0' })).toEqual({ ok: false, code: 'amount' })
   })
 })
+
+describe('currencies the cents arithmetic can serve', () => {
+  it('accepts two-decimal currencies and refuses zero- and three-decimal or unknown codes', async () => {
+    const { isTwoDecimalCurrency } = await import('../lib/office/money')
+    for (const ok of ['AUD', 'nzd', 'GBP', 'USD', 'EUR']) expect(isTwoDecimalCurrency(ok), ok).toBe(true)
+    for (const bad of ['JPY', 'KWD', 'XXX1', 'ZZ', '', null, 12]) expect(isTwoDecimalCurrency(bad), String(bad)).toBe(false)
+  })
+  it('the office settings fall back to the configured currency when the saved one has no cents', async () => {
+    const { resolveOfficeSettings } = await import('../lib/office/settings')
+    const { OFFICE_CURRENCY } = await import('../config/site')
+    expect(resolveOfficeSettings({ currency: 'jpy' }).currency).toBe(OFFICE_CURRENCY)
+    expect(resolveOfficeSettings({ currency: 'gbp' }).currency).toBe('GBP')
+  })
+})

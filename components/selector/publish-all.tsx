@@ -40,7 +40,7 @@ export function PublishAll({ gameIds, revisions, grades, announceDefault }: { ga
       <button type="button" disabled={gameIds.length === 0} onClick={() => setOpen(true)} className={`${btn} bg-brand-black text-brand-gold hover:bg-brand-charcoal`}>
         Publish all ready{gameIds.length ? ` (${gameIds.length})` : ''}
       </button>
-      {message && <p role={message.ok ? 'status' : 'alert'} className={`mt-2 text-sm ${message.ok ? 'text-emerald-900' : 'text-red-800'}`}>{message.text}</p>}
+      {message && <p role={message.ok ? 'status' : 'alert'} className={`mt-2 text-sm ${message.ok ? 'text-status-ok-ink' : 'text-status-bad-ink'}`}>{message.text}</p>}
       <Sheet open={open} title="Publish all ready" onClose={() => !pending && close()}>
         <div className="space-y-4">
           <p className="text-brand-charcoal">This puts the full teams for {grades.join(', ')} on the public teams page and in the shareable pictures.</p>

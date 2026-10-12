@@ -70,7 +70,7 @@ export function DraftEditForm({
       />
 
       {error && (
-        <p role="alert" className="mt-6 text-sm text-red-700">
+        <p role="alert" className="mt-6 text-sm text-status-bad">
           {error}
         </p>
       )}

@@ -31,6 +31,24 @@ export async function inTransaction<T>(payload: Payload, fn: (req: Partial<Paylo
   }
 }
 
+/** Thrown inside the close transaction when the season turned out to be closed already (a double tap or a second admin). */
+export class SeasonAlreadyClosedError extends Error {
+  constructor() {
+    super('season already closed')
+  }
+}
+
+/**
+ * Takes a transaction-scoped Postgres advisory lock named `key`: a second transaction asking for the same key waits until the first
+ * commits or rolls back. A no-op where the adapter has no transactions.
+ */
+export async function advisoryLock(payload: Payload, req: Partial<PayloadRequest>, key: string): Promise<void> {
+  const id = req.transactionID
+  const session = id ? (payload.db as unknown as { sessions?: Record<string, { db: { execute: (q: unknown) => Promise<unknown> } }> }).sessions?.[String(id)] : undefined
+  if (!session) return
+  await session.db.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`)
+}
+
 export type LoadedFees = { model: FeeModel; tiers: FeeTier[]; seasonsWithMemberships: string[] }
 
 /**
@@ -144,15 +162,19 @@ export async function loadFeeModel(payload: Payload, chargeFillIns: boolean, foc
  * Stores one charge per derived charge of `season` and marks it closed, in one transaction. The caller has checked the caller is an
  * admin, that the season is open and that unmatched games were accepted. Returns what was stored.
  */
-export async function storeClosedSeason(payload: Payload, model: FeeModel, season: string, closedBy: number | null, closeAnyway: boolean): Promise<{ count: number; totalCents: number }> {
+export async function storeClosedSeason(payload: Payload, model: FeeModel, season: string, closedBy: number | null, closeAnyway: boolean, idempotencyKey: string | null = null): Promise<{ count: number; totalCents: number }> {
   const toStore = chargesToStore(model, season)
   const totalCents = toStore.reduce((s, x) => s + x.charge.amountCents, 0)
   await inTransaction(payload, async (req) => {
     const r = req as PayloadRequest
+    // One close at a time per season, then look again: whoever got here second finds the season closed and stores nothing.
+    await advisoryLock(payload, r, `fee-close:${season}`)
+    const already = await payload.count({ collection: 'fee-seasons', where: { and: [{ season: { equals: season } }, { status: { equals: 'closed' } }] }, overrideAccess: true, req: r })
+    if (already.totalDocs > 0) throw new SeasonAlreadyClosedError()
     for (const { memberId, charge } of toStore) {
       await payload.create({ collection: 'fee-charges', data: { member: memberId, season, kind: charge.kind, date: noon(charge.date), matchId: charge.matchId ?? null, amountCents: charge.amountCents, description: charge.description, closedAt: new Date().toISOString() } as never, overrideAccess: true, depth: 0, req: r })
     }
-    const data = { season, status: 'closed', closedAt: new Date().toISOString(), closedBy, chargesTotalCents: totalCents, snapshotCount: toStore.length, closedAnyway: closeAnyway }
+    const data = { season, status: 'closed', closedAt: new Date().toISOString(), closedBy, chargesTotalCents: totalCents, snapshotCount: toStore.length, closedAnyway: closeAnyway, idempotencyKey }
     const existing = await payload.find({ collection: 'fee-seasons', where: { season: { equals: season } }, limit: 1, depth: 0, overrideAccess: true, req: r })
     if (existing.docs[0]) await payload.update({ collection: 'fee-seasons', id: existing.docs[0].id, data: data as never, overrideAccess: true, depth: 0, req: r })
     else await payload.create({ collection: 'fee-seasons', data: data as never, overrideAccess: true, depth: 0, req: r })

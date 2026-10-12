@@ -220,6 +220,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
         <summary>Waive a fee</summary>
         <form method="post" action={`${api}/fees/waiver`} className="office-form">
           {hidden}
+          <input type="hidden" name="nonce" value={randomUUID()} />
           <input type="hidden" name="memberId" value={member.id} />
           <label>What to waive
             <select name="scope" defaultValue="amount">
@@ -272,6 +273,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
           ) : null}
           <form method="post" action={`${api}/fees/adjustment`} className="office-form">
             {hidden}
+            <input type="hidden" name="nonce" value={randomUUID()} />
             <input type="hidden" name="memberId" value={member.id} />
             <label>Season<select name="adjustSeason">{closed.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
             <label>Amount charged<input name="amount" required inputMode="decimal" autoComplete="off" /></label>

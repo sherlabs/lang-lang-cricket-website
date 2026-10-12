@@ -98,7 +98,7 @@ export function SquadGradeView({ grade, others }: Props) {
               ))}
             </ul>
             {others.length > 0 && <p className="text-sm text-brand-grey">To have a player in two grades, add them to the other grade with Add players.</p>}
-            <button type="button" disabled={pending} className={`${btnQuiet} w-full justify-start border-red-300 text-red-800`} onClick={() => run(() => removeMemberAction({ squadId: grade.squadId, playerId: moving.id }), `${moving.name} removed from ${grade.gradeName}.`)}>
+            <button type="button" disabled={pending} className={`${btnQuiet} w-full justify-start border-status-bad/40 text-status-bad-ink`} onClick={() => run(() => removeMemberAction({ squadId: grade.squadId, playerId: moving.id }), `${moving.name} removed from ${grade.gradeName}.`)}>
               Remove from {grade.gradeName}
             </button>
           </div>
@@ -173,8 +173,8 @@ function AddSheet({ open, grade, onClose, onAdded }: { open: boolean; grade: Gra
             {FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         </label>
-        {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
-        {searchError && <p role="alert" className="text-sm text-red-800">{searchError}</p>}
+        {error && <p role="alert" className="text-sm text-status-bad-ink">{error}</p>}
+        {searchError && <p role="alert" className="text-sm text-status-bad-ink">{searchError}</p>}
         {loading && found.length === 0 ? (
           <p role="status" className="text-sm text-brand-grey">Searching…</p>
         ) : found.length === 0 ? (

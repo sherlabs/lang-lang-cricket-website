@@ -156,7 +156,7 @@ export function RotationTimer({ initial, actions, statePath, canBuild }: { initi
       <div>
         <p className="text-sm text-brand-grey">No rotation yet. Check players in, then build it.</p>
         {canBuild && snap.state === 'planned' && <button type="button" className={`${btnPrimary} mt-3`} disabled={busy} onClick={() => run(actions.build)}>Build rotation</button>}
-        {message && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{message}</p>}
+        {message && <p role="alert" className="mt-3 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{message}</p>}
       </div>
     )
   }
@@ -217,7 +217,7 @@ export function RotationTimer({ initial, actions, statePath, canBuild }: { initi
         {snap.state !== 'planned' && snap.state !== 'finished' && <div className="col-span-2"><ConfirmButton label="Finish" confirmLabel="Really finish?" className={btnQuiet} disabled={busy} onConfirm={() => run(actions.finish)} /></div>}
       </div>
       {snap.state === 'finished' && <p className="mt-3 text-sm text-brand-grey">This session is finished.</p>}
-      {message && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{message}</p>}
+      {message && <p role="alert" className="mt-3 rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{message}</p>}
     </div>
   )
 }

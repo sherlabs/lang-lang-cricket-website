@@ -156,7 +156,8 @@ describe('office guards', () => {
     expect(publicLib).toMatch(/volunteer-assignments[\s\S]{0,200}member: \{ equals: memberId \}/)
     expect(publicLib).toMatch(/volunteer-availability[\s\S]{0,200}member: \{ equals: memberId \}/)
     const page = read('app/(frontend)/volunteer/[token]/page.tsx')
-    expect(page).toContain("ipHit(payload, 'vol'")
+    expect(page).toContain('resolveVolunteerCounted(')
+    expect(read('lib/volunteer-public.ts')).toContain("ipHit(payload, 'vol-bad'")
     expect(page).toContain('notFound()')
   })
 
@@ -179,7 +180,7 @@ describe('office guards', () => {
     const own = (i: string) => i.slice(0, i.indexOf('}),') + 3)
     const withOffice = instances.map(own).filter((i) => i.includes("'office-files'"))
     expect(withOffice).toHaveLength(1)
-    expect(withOffice[0]).toContain('clientUploads: false')
+    expect(withOffice[0]).toContain('clientUploads: OFFICE_BLOB.clientUploads') // false; tests/office-blob.test.ts pins the value
     const main = own(instances.find((i) => i.includes('clientUploads: true'))!)
     expect(main).not.toContain('office-files')
     // The access-controlled download route stays on: the storage option that switches it off must not be set for this collection.

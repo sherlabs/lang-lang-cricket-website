@@ -7,7 +7,7 @@ const input = 'mt-1 block h-12 w-full rounded-lg border border-brand-black/20 bg
 const submit = 'flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-gold px-4 text-base font-semibold text-brand-black transition hover:bg-brand-gold-light disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black'
 
 function Message({ state }: { state: FormState }) {
-  if (state.error) return <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{state.error}</p>
+  if (state.error) return <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{state.error}</p>
   if (state.ok) return <p role="status" className="rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">{state.ok}</p>
   return null
 }

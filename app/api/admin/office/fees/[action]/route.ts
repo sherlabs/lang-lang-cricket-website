@@ -34,13 +34,13 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
     case 'payment-void':
       return done(await voidPayment(user, { id: get('id'), reason: get('reason'), wholeGroup: get('wholeGroup') }))
     case 'waiver':
-      return done(await addWaiver(user, { memberId: get('memberId'), scope: get('scope'), matchId: get('matchId'), season: get('waiverSeason'), amount: get('amount'), note: get('note') }))
+      return done(await addWaiver(user, { nonce: get('nonce'), memberId: get('memberId'), scope: get('scope'), matchId: get('matchId'), season: get('waiverSeason'), amount: get('amount'), note: get('note') }))
     case 'waiver-void':
       return done(await voidWaiver(user, { id: get('id'), reason: get('reason') }))
     case 'charge-void':
       return done(await voidCharge(user, { id: get('id'), reason: get('reason') }))
     case 'adjustment':
-      return done(await addAdjustment(user, { memberId: get('memberId'), season: get('adjustSeason'), amount: get('amount'), note: get('note'), date: get('date') }))
+      return done(await addAdjustment(user, { nonce: get('nonce'), memberId: get('memberId'), season: get('adjustSeason'), amount: get('amount'), note: get('note'), date: get('date') }))
     case 'membership':
       return done(await addMembership(user, { memberIds: all('memberIds'), season: get('season'), tierId: get('tierId'), joinedOn: get('joinedOn') }))
     case 'membership-remove':
@@ -50,7 +50,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
     case 'tiers-copy':
       return done(await copyTiers(user, get('season')))
     case 'close':
-      return done(await closeSeason(user, { season: get('season'), confirm: get('confirm'), closeAnyway: get('closeAnyway') }))
+      return done(await closeSeason(user, { nonce: get('nonce'), season: get('season'), confirm: get('confirm'), closeAnyway: get('closeAnyway') }))
     default:
       return Response.json({ error: 'Not found' }, { status: 404 })
   }

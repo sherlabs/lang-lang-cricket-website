@@ -45,7 +45,7 @@ export function SessionForm({ action, defaults, submitLabel }: { action: Action;
         Notes (optional)
         <textarea name="notes" defaultValue={defaults.notes} maxLength={500} rows={2} className="mt-1 block w-full rounded-lg border border-brand-black/20 bg-white px-3 py-2 text-base text-brand-black focus:border-brand-gold-deep focus:outline-none focus:ring-2 focus:ring-brand-gold/50" />
       </label>
-      {state.error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-status-bad-soft px-3 py-2 text-sm text-status-bad-ink ring-1 ring-status-bad/25">{state.error}</p>}
       {state.ok && <p role="status" className="rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">{state.ok}</p>}
       <button type="submit" className={btnPrimary} disabled={pending}>{pending ? 'Saving...' : submitLabel}</button>
     </form>
