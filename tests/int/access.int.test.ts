@@ -525,7 +525,7 @@ describe('access: every collection and global (WP6)', () => {
   let before: Record<string, number>
 
   const PUBLIC_READ = new Set(['media', 'documents', 'gallery-photos', 'sponsors', 'people', 'announcements', 'events', 'event-photos', 'stories', 'players', 'player-seasons', 'player-sponsors', 'yearbooks', 'pages', 'news'])
-  const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs', 'matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'saved-reports', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets', 'best-player-ballots', 'net-sessions', 'net-attendance', 'social-posts', 'social-post-targets'])
+  const PRIVATE_READ = new Set(['users', 'event-rsvps', 'player-aliases', 'player-sync-runs', 'matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'saved-reports', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets', 'best-player-ballots', 'net-sessions', 'net-attendance', 'social-posts', 'social-post-targets', 'members', 'office-audit-log'])
   const INTERNAL = /^payload-/
 
   beforeAll(async () => {
@@ -541,7 +541,7 @@ describe('access: every collection and global (WP6)', () => {
   it('the collection list is the one this file classifies', () => {
     const slugs = payload.config.collections.map((c) => c.slug).filter((s) => !INTERNAL.test(s)).sort()
     expect(slugs).toEqual([...PUBLIC_READ, ...PRIVATE_READ].sort())
-    expect(payload.config.globals.map((g) => g.slug).sort()).toEqual(['club', 'club-apparel', 'selection-settings', 'site-settings', 'social-settings', 'theme'])
+    expect(payload.config.globals.map((g) => g.slug).sort()).toEqual(['club', 'club-apparel', 'office-settings', 'selection-settings', 'site-settings', 'social-settings', 'theme'])
   })
 
   it('anonymous REST cannot create, update or delete in any collection (bulk or by id)', async () => {
@@ -563,7 +563,7 @@ describe('access: every collection and global (WP6)', () => {
   })
 
   it('anonymous REST cannot update any global', async () => {
-    for (const g of ['club', 'club-apparel', 'selection-settings', 'site-settings', 'social-settings', 'theme']) expect((await rest('POST', `/globals/${g}`, { body: {} })).status).toBe(403)
+    for (const g of ['club', 'club-apparel', 'office-settings', 'selection-settings', 'site-settings', 'social-settings', 'theme']) expect((await rest('POST', `/globals/${g}`, { body: {} })).status).toBe(403)
   })
 
   it('anonymous REST reads only the public collections', async () => {

@@ -8,6 +8,18 @@ export const helpIntro = 'Everything on the club website is changed from here. N
 
 export const helpSections: HelpSection[] = [
   {
+    id: 'club-office',
+    title: 'Look after the club members (admins)',
+    steps: [
+      'Click "Club office" in the menu, then "Members". Only admins can open Members.',
+      'Press "Add members for players who have none" the first time. It adds one entry for every player, without any contact details.',
+      'To add someone else, open "Add a member", type their name, tick at least one role, add an email and phone if you have them, then press "Add member".',
+      'Use the "No email" and "No phone" buttons to see who to chase. Click a name to change their details.',
+      'To get a spreadsheet, set the filters you want and press "Download CSV". Tick the extra box only if you really need date of birth, emergency contact or notes. Every download is logged.',
+      'If someone asks you to delete their details, press "Remove details" on their row, tick the box and confirm. This cannot be undone.',
+    ],
+  },
+  {
     id: 'selector',
     title: 'Add a selector',
     steps: [

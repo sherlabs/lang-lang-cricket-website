@@ -24,20 +24,23 @@ export const normalisePhone = (v: unknown): string | null => {
 
 export type NewMemberInput = { firstName: string; lastName: string; roles: string[]; email: string | null; phone: string | null }
 
-export type NewMemberResult = { ok: true; value: NewMemberInput } | { ok: false; error: string }
+export type NewMemberResult = { ok: true; value: NewMemberInput } | { ok: false; code: MemberFormError }
+
+export const MEMBER_FORM_ERRORS = ['name', 'name-long', 'roles', 'email', 'phone', 'save', 'forbidden', 'bad-id'] as const
+export type MemberFormError = (typeof MEMBER_FORM_ERRORS)[number]
 
 /** The quick-add form (name, roles, email, phone and nothing else). Server-side validation; the form's own checks are a convenience. */
 export function validateQuickAdd(raw: { firstName?: unknown; lastName?: unknown; roles?: unknown; email?: unknown; phone?: unknown }, allowedRoles: readonly string[]): NewMemberResult {
   const firstName = trimOrNull(raw.firstName)
   const lastName = trimOrNull(raw.lastName)
-  if (!firstName || !lastName) return { ok: false, error: 'Please type a first name and a last name.' }
-  if (firstName.length > 100 || lastName.length > 100) return { ok: false, error: 'That name is too long.' }
+  if (!firstName || !lastName) return { ok: false, code: 'name' }
+  if (firstName.length > 100 || lastName.length > 100) return { ok: false, code: 'name-long' }
   const list = Array.isArray(raw.roles) ? raw.roles : typeof raw.roles === 'string' ? [raw.roles] : []
   const roles = [...new Set(list.filter((r): r is string => typeof r === 'string' && allowedRoles.includes(r)))]
-  if (roles.length === 0) return { ok: false, error: 'Pick at least one role.' }
+  if (roles.length === 0) return { ok: false, code: 'roles' }
   const email = normaliseEmail(raw.email)
-  if (email !== null && !isValidEmail(email)) return { ok: false, error: 'That email address does not look right.' }
+  if (email !== null && !isValidEmail(email)) return { ok: false, code: 'email' }
   const phone = normalisePhone(raw.phone)
-  if (phone !== null && (phone.length > 40 || looksLikeCardNumber(phone))) return { ok: false, error: 'That phone number does not look right.' }
+  if (phone !== null && (phone.length > 40 || looksLikeCardNumber(phone))) return { ok: false, code: 'phone' }
   return { ok: true, value: { firstName, lastName, roles, email, phone } }
 }

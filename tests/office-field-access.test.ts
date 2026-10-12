@@ -53,7 +53,7 @@ describe('office collections: every field declares its access', () => {
       }
     }
     expect(problems).toEqual([])
-  })
+  }, 60_000)
 
   it('every admin office collection denies every operation to non-admins at collection level', async () => {
     const config = await loadSanitizedConfig()

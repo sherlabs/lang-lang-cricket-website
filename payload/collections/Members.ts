@@ -24,7 +24,16 @@ const deriveDisplayName: FieldHook = async ({ data, originalDoc, req }) => {
       player = null
     }
   }
-  return displayNameFor({ firstName: merged.firstName as string, lastName: merged.lastName as string, preferredName: merged.preferredName as string, erasedAt: merged.erasedAt as string, player })
+  const personId = playerId === null ? relId(merged.person) : null
+  let person: Doc | null = null
+  if (personId !== null) {
+    try {
+      person = (await req.payload.findByID({ collection: 'people', id: personId, depth: 0, overrideAccess: true, req })) as unknown as Doc
+    } catch {
+      person = null
+    }
+  }
+  return displayNameFor({ firstName: merged.firstName as string, lastName: merged.lastName as string, preferredName: merged.preferredName as string, erasedAt: merged.erasedAt as string, player, person: person as { name?: string } | null })
 }
 
 /**
@@ -101,7 +110,7 @@ export const Members: CollectionConfig = {
     { name: 'lastName', label: 'Last name', type: 'text', maxLength: 100, admin: { condition: (data) => !data?.player } },
     { name: 'preferredName', label: 'Preferred name', type: 'text', maxLength: 100, admin: { description: 'A nickname to show instead of the full name.', condition: (data) => !data?.player } },
     { name: 'roles', label: 'Roles', type: 'select', hasMany: true, required: true, defaultValue: ['supporter'], options: MEMBER_ROLES.map((value) => ({ label: ROLE_LABELS[value], value })), admin: { description: 'One person can have several roles.' } },
-    { name: 'status', label: 'Status', type: 'select', required: true, defaultValue: 'active', index: true, options: MEMBER_STATUSES.map((value) => ({ label: value === 'active' ? 'Active' : 'Past member', value })), admin: { description: 'Choose Past member for someone who has left. Their links stop working and they drop off mailing lists.' } },
+    { name: 'status', label: 'Status', type: 'select', required: true, defaultValue: 'active', index: true, options: MEMBER_STATUSES.map((value) => ({ label: value === 'active' ? 'Active' : 'Past member', value })), admin: { description: 'Choose Past member for someone who has left. They stay in the list under Past.' } },
     { name: 'membershipSince', label: 'Member since', type: 'date', admin: { date: { pickerAppearance: 'dayOnly' } } },
     { name: 'lifeMemberSince', label: 'Life member since (year)', type: 'number', min: 1800, max: 2200, admin: { step: 1 } },
     {
@@ -113,7 +122,7 @@ export const Members: CollectionConfig = {
       validate: (value: unknown) => (value == null || value === '' || (typeof value === 'string' && isValidEmail(value)) ? true : 'That email address does not look right.'),
     },
     { name: 'phone', label: 'Phone', type: 'text', maxLength: 40, validate: noCardNumbers },
-    { name: 'addressLine', label: 'Street address', type: 'text', maxLength: 200, admin: { description: 'The labels for these four lines can be renamed in Club office settings.' } },
+    { name: 'addressLine', label: 'Street address', type: 'text', maxLength: 200, admin: { description: 'Optional. The column names in the members spreadsheet can be renamed in Club office settings.' } },
     { name: 'locality', label: 'Locality', type: 'text', maxLength: 100 },
     { name: 'region', label: 'Region', type: 'text', maxLength: 100 },
     { name: 'postalCode', label: 'Postal code', type: 'text', maxLength: 20 },

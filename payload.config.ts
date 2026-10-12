@@ -96,7 +96,7 @@ export default buildConfig({
         playerDataTools: { Component: '/payload/components/PlayerDataToolsView#PlayerDataToolsView', path: '/player-data-tools', meta: { title: 'Player data tools' } },
         selectors: { Component: '/payload/components/SelectorsView#SelectorsView', path: '/selectors', meta: { title: 'Selectors' } },
         social: { Component: '/payload/components/SocialView#SocialView', path: '/social', meta: { title: 'Social posts' } },
-        office: { Component: '/payload/components/OfficeView#OfficeView', path: '/office', meta: { title: 'Club office' } },
+        office: { Component: '/payload/components/OfficeView#OfficeView', path: '/office', exact: true, meta: { title: 'Club office' } },
         officeMembers: { Component: '/payload/components/OfficeMembersView#OfficeMembersView', path: '/office/members', meta: { title: 'Members' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },

@@ -57,3 +57,25 @@ export const notificationCopy = {
     importsOpen: 'Open Player data tools',
   },
 } as const
+
+/**
+ * Club office wording (wave D spec section 8, "honest numbers"). Every count says what it leaves out, so a number is never read as
+ * more than it is. Unit-tested for zero, one and many (`tests/office-copy.test.ts`).
+ */
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
+export const officeCopy = {
+  members: {
+    noEmail: (n: number) => `${n} active ${plural(n, 'member has', 'members have')} no email (past members and people on the do-not-email list are not counted)`,
+    noPhone: (n: number) => `${n} active ${plural(n, 'member has', 'members have')} no phone (past members are not counted)`,
+    noBoth: (n: number) => `${n} active ${plural(n, 'member has', 'members have')} neither an email nor a phone (past members are not counted)`,
+    total: (n: number) => `${n} active ${plural(n, 'member', 'members')} (past members are not counted)`,
+    complete: 'Every active member has an email and a phone.',
+    stat: (total: number, noEmail: number) =>
+      total === 0 ? 'No members yet' : `${total} active ${plural(total, 'member', 'members')}, ${noEmail} with no email (past members and the do-not-email list are not counted)`,
+    duplicate: (n: number) => `${n} email ${plural(n, 'address is', 'addresses are')} shared by more than one member`,
+  },
+  landing: {
+    empty: 'Nothing else is set up for the committee here yet. When more of the club office is switched on, it will appear on this page.',
+    adminOnlyNote: 'Members, and the exports and sends log, are for admins only.',
+  },
+} as const

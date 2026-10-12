@@ -27,6 +27,8 @@ export type NameParts = { firstName?: string | null; lastName?: string | null; p
 export type NameSource = NameParts & {
   /** A linked player (populated); its name wins over anything typed on the member. */
   player?: NameParts | null
+  /** A linked committee or coach record; its single full-name field is the last fallback. */
+  person?: { name?: string | null } | null
   erasedAt?: string | null
 }
 
@@ -40,7 +42,7 @@ export function displayNameFor(m: NameSource): string {
     const fromPlayer = clean(p.displayName) || `${clean(p.firstName)} ${clean(p.lastName)}`.trim()
     if (fromPlayer) return fromPlayer
   }
-  return clean(m.preferredName) || `${clean(m.firstName)} ${clean(m.lastName)}`.trim() || 'Unnamed member'
+  return clean(m.preferredName) || `${clean(m.firstName)} ${clean(m.lastName)}`.trim() || clean(m.person?.name) || 'Unnamed member'
 }
 
 /** "Sam T.": first name and last initial, the form editors see for a junior (wave D spec section 1). */
@@ -49,6 +51,11 @@ export function shortNameFor(m: NameSource): string {
   const src = m.player && (clean(m.player.firstName) || clean(m.player.lastName)) ? m.player : m
   const first = clean(src.firstName) || clean(src.preferredName)
   const last = clean(src.lastName)
+  if (!first && clean(m.person?.name)) {
+    const [f, ...rest] = clean(m.person?.name).split(/\s+/)
+    const l = rest[rest.length - 1]
+    return l ? `${f} ${l.charAt(0).toUpperCase()}.` : f
+  }
   if (!first) return displayNameFor(m)
   return last ? `${first} ${last.charAt(0).toUpperCase()}.` : first
 }

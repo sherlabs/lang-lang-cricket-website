@@ -23,8 +23,12 @@ export function looksLikeCardNumber(text: string | null | undefined): boolean {
   for (const run of text.match(/\d[\d -]*\d/g) ?? []) {
     const digits = run.replace(/\D/g, '')
     if (digits.length < 13) continue
-    // Any 13 to 19 digit window of a longer run is checked too, so padding a number with extra digits does not hide it.
-    for (let len = 13; len <= Math.min(19, digits.length); len++) {
+    if (digits.length <= 19) {
+      if (luhn(digits)) return true
+      continue
+    }
+    // A longer run is checked in 13 to 19 digit windows, so padding a number with extra digits does not hide it.
+    for (let len = 13; len <= 19; len++) {
       for (let start = 0; start + len <= digits.length; start++) if (luhn(digits.slice(start, start + len))) return true
     }
   }

@@ -21,6 +21,9 @@
  * It also writes the social settings (the club's caption voice), four sponsors with PNG logos made in code, and one recent stored game
  * with a player-of-the-match performance and two juniors (one with the social opt-in) for the social graphics.
  *
+ * It also writes about 40 club office members (invented people, example.org addresses; 6 with no email, 9 with no phone, 3 with neither,
+ * 4 juniors with a guardian) when `members` is empty, plus links for the first demo players.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -38,6 +41,7 @@ import { seedDemoSelection, seedDemoTeams } from '../seed/demo-selection'
 import { seedDemoNets } from '../seed/demo-nets'
 import { seedDemoVotes } from '../seed/demo-votes'
 import { seedDemoSocial, seedDemoSocialQueue } from '../seed/demo-social'
+import { seedDemoMembers } from '../seed/demo-members'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
@@ -497,6 +501,7 @@ async function main() {
     await seedDemoNets(payload)
     await seedDemoSocial(payload)
     await seedDemoSocialQueue(payload)
+    console.log(`[seed:demo] club office members: ${await seedDemoMembers(payload)} added`)
   } finally {
     await payload.destroy()
   }

@@ -874,3 +874,47 @@ a[href$='/forgot'] {
 .social__net select { min-height: 44px; }
 .social__when { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .social__when input { min-height: 44px; font: inherit; padding: 0.25rem 0.5rem; }
+
+/* Club office (wave D). Mobile first; the table becomes cards under 48rem. */
+.office-stat { margin-top: 0.35rem; font-size: 0.9375rem; font-weight: 600; color: var(--club-charcoal); }
+.office-footer-links { margin-top: 1rem; }
+.office-flash { max-width: 42rem; margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--club-gold); background: #fff; font-size: 1.0625rem; }
+.office-flash--error { border-color: var(--theme-error-500); border-left-width: 6px; }
+.office-flash--ok { border-left: 6px solid var(--club-gold); }
+.office-strip { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-left: 6px solid var(--club-gold); border-radius: 0.75rem; }
+.office-strip__total { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.125rem; }
+.office-strip ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
+.office-box { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-box > summary { cursor: pointer; font-weight: 700; font-size: 1.125rem; min-height: 2.75rem; display: flex; align-items: center; }
+.office-box--danger { border-color: var(--theme-error-500); border-left-width: 6px; }
+.office-form { display: grid; gap: 0.85rem; margin-top: 0.75rem; }
+.office-form label, .office-filters label { display: grid; gap: 0.25rem; font-weight: 600; }
+.office-form input:not([type='checkbox']), .office-filters input, .office-filters select { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: #fff; }
+.office-form fieldset { border: 1px solid var(--theme-elevation-150); border-radius: 0.5rem; padding: 0.5rem 0.75rem 0.75rem; }
+.office-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.25rem 0.75rem; }
+.office-check { display: flex !important; align-items: center; gap: 0.5rem; min-height: 2.75rem; font-weight: 500 !important; }
+.office-check input { width: 1.25rem; height: 1.25rem; }
+.office-filters { display: grid; gap: 0.75rem; max-width: 42rem; margin-bottom: 0.75rem; align-items: end; }
+.office-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.25rem; }
+.office-chip { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 0.9rem; border: 1px solid var(--club-gold); border-radius: 999px; background: #fff; color: var(--club-black); text-decoration: none; font-weight: 600; }
+.office-chip--on { background: var(--club-gold); }
+.office-chip:focus-visible, .office-box > summary:focus-visible { outline: 3px solid var(--club-gold); outline-offset: 2px; }
+.office-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0 0 1.25rem; }
+.office-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem; }
+.office-pager { display: flex; justify-content: space-between; margin: 1rem 0 1.5rem; font-weight: 600; }
+.office-pager a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.office-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.office-table, .office-table tbody, .office-table tr, .office-table th, .office-table td { display: block; }
+.office-table tr { margin: 0 0 0.75rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-table th[scope='row'], .office-table td { padding: 0.2rem 0; border: 0; text-align: left; }
+.office-table td::before { content: attr(data-label) ': '; font-weight: 600; color: var(--club-grey); }
+@media (min-width: 48rem) {
+  .office-filters { grid-template-columns: 2fr 1fr 1fr auto; }
+  .office-table thead { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .office-table { display: table; width: 100%; }
+  .office-table thead { display: table-header-group; }
+  .office-table tbody { display: table-row-group; }
+  .office-table tr { display: table-row; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .office-table th, .office-table td { display: table-cell; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--theme-elevation-150); }
+  .office-table td::before { content: none; }
+}

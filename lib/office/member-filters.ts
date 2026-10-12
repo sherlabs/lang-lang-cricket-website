@@ -52,7 +52,7 @@ export function memberWhere(query: MemberQuery, today: string): Where {
   if (query.missing === 'both') and.push({ email: { exists: false } }, { phone: { exists: false } })
   if (query.missing === 'guardian') and.push({ guardians: { exists: false } })
   if (query.q) {
-    and.push({ or: [{ displayName: { contains: query.q } }, { firstName: { contains: query.q } }, { lastName: { contains: query.q } }, { email: { contains: query.q } }] })
+    and.push({ or: [{ displayName: { contains: query.q } }, { 'player.displayName': { contains: query.q } }, { firstName: { contains: query.q } }, { lastName: { contains: query.q } }, { email: { contains: query.q } }] })
   }
   return and.length ? { and } : {}
 }

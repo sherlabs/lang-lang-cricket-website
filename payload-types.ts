@@ -1734,7 +1734,7 @@ export interface Member {
     | 'other'
   )[];
   /**
-   * Choose Past member for someone who has left. Their links stop working and they drop off mailing lists.
+   * Choose Past member for someone who has left. They stay in the list under Past.
    */
   status: 'active' | 'past';
   membershipSince?: string | null;
@@ -1742,7 +1742,7 @@ export interface Member {
   email?: string | null;
   phone?: string | null;
   /**
-   * The labels for these four lines can be renamed in Club office settings.
+   * Optional. The column names in the members spreadsheet can be renamed in Club office settings.
    */
   addressLine?: string | null;
   locality?: string | null;
@@ -3527,7 +3527,7 @@ export interface SocialSetting {
   createdAt?: string | null;
 }
 /**
- * Currency, language and the names of the address lines used across the club office. Later modules add their own settings here.
+ * Currency, language and the names of the address lines used in the club office exports. Later modules add their own settings here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "office-settings".
@@ -3543,7 +3543,7 @@ export interface OfficeSetting {
    */
   locale?: string | null;
   /**
-   * What each address line is called where you live. These words appear on the member form and the directory.
+   * What each address line is called where you live. These words are the column names in the members spreadsheet you download. The form on the member page keeps its standard wording.
    */
   addressLabels?: {
     addressLine?: string | null;

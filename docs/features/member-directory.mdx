@@ -1,0 +1,55 @@
+---
+title: Member directory
+status: shipped
+routes: ["/admin/office/members", "/admin/collections/members", "/api/admin/office/members", "/api/admin/office/members/link-players", "/api/admin/office/members/erase", "/api/admin/office/export/members"]
+collections: [members, players, people, office-audit-log, office-settings]
+admin: "Club office, then Members (admin only); the native member page is the fallback for rare edits"
+owner: "The club's secretary or membership officer (a site admin)"
+related: [club-office, committee-and-contacts, players-directory-and-profiles, social-graphics, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The membership officer** who has contact details in a spreadsheet and a notebook, and wants to know who has no email or phone, who is a junior without a parent on file, and to email or call the right people.
+- **The secretary** who needs a spreadsheet of members for the association, without handing the whole file to every volunteer.
+- **A parent** whose child plays: their details are kept for the club only and are never shown on the public site.
+
+## Why it was built
+
+The site knew players (public) and committee contacts (public), but nothing private: nowhere safe to keep an email, a phone number, a date of birth or an emergency contact. Putting those on the public collections would have been a leak waiting to happen. This is issue [#24](https://github.com/sherlabs/lang-lang-cricket-website/issues/24). It is a new, admin-only collection that links to players and committee records instead of copying them.
+
+## What it does
+
+- **A member is a person with roles.** One person can be a player, a parent, a volunteer and on the committee at once. Roles: Player, Parent or guardian, Life member, Volunteer, Sponsor contact, Committee, Coach, Supporter, Other. Status is Active or Past member.
+- **Linked, not copied.** A member can be linked to a player (the name then comes from the player, so a nickname or a rename follows) and to a committee or coach record. Each player has at most one member. A member linked to nobody needs a first and last name.
+- **Details held:** email (lowercased, a blank is saved as "missing"), phone, an address in four lines, date of birth (used only to know who is under 18), parents or guardians (for a junior without their own email), an emergency contact, a "do not email" tick, member-since dates and notes. The notes box says not to record medical details and refuses anything that looks like a card number.
+- **Who is a junior** is decided the same way as for social graphics: a junior flag on the linked player, or a date of birth under 18. A date of birth that cannot be read counts as a junior. The "Juniors" filter uses those two signals only (it cannot see a junior grade the stats mark).
+- **The directory** (`/admin/office/members`, admins only): search by name or email, filters for status and role, quick filters for **No email**, **No phone**, **No email or phone**, **Juniors** and **Junior with no guardian**, and a strip at the top saying how complete the list is (active members only; the email figure also leaves out people on the do-not-email list). Rows are cards on a phone and a table from tablet width, 50 to a page, each with the name, roles, email, phone and tags (Past, Junior, No guardian, Do not email, **Shared email** when two members have the same address).
+- **Add a member** takes a first name, last name, roles, and optionally an email and phone. Everything else is set by the server. Rare edits use the native member page ("Edit").
+- **Add members for players who have none** creates one contact-free member for each player without one: players who are currently active start Active, the rest Past, role Player. Pressing it twice adds nothing twice. It is written to the log as a bulk change.
+- **Download as a spreadsheet** takes the current filters. Date of birth, emergency contact and notes are included only if the box is ticked. Every download is logged with its row count, whether the extra box was ticked, and the filter keys (never the search text).
+- **Remove personal details** (per row, with a tick to confirm) blanks the name, email, phone, address, date of birth, emergency contact and notes, drops the guardian and committee-record links, marks the member as Past and shows them as "Former member". Roles, dates and the link to the player stay (the player is public site data and the link stops the member being created again). The removal is logged. Copies of a person's data held in other tables will be cleared by the same action once those tables exist (the email module registers them); today the members table is the only place.
+- **Old personal links stop working.** Each member has a counter that goes up when they are archived, put on the do-not-email list, or have their details removed. It is for the personal links the volunteer roster will use; nothing reads it yet.
+- **Editors get names, not contact details.** Screens built for the committee (roster, stock, actions) will list people by name only, scoped to who is relevant to that screen, with a junior shown as first name and last initial ("Sam T."). There is no screen that lists everyone to an editor, and an editor who types the member address gets the not-found page. At this stage no committee screen uses it yet.
+- **Nothing public changes.** Players and committee pages gain no field, and a test compares what an anonymous visitor can read and checks a member who is also a player and a committee person leaves no email, phone or address on the public pages.
+- **Demo data:** `pnpm seed:demo` adds about 40 invented members (6 with no email, 9 with no phone, 3 with neither, 4 juniors with a guardian) and links the first demo players.
+
+## How to use it
+
+1. Sign in as an admin. **Club office**, then **Members**.
+2. First time: press **Add members for players who have none** to bring the players in, then fill the gaps. Use the **No email** and **No phone** filters to see who to chase.
+3. To add a person: open **Add a member**, type the name, pick at least one role, add an email and phone if you have them, **Add member**.
+4. To change a person: click their name, edit on the member page, **Save**. To mark someone as gone, set Status to **Past member**.
+5. To get a spreadsheet: set the filters, then **Download CSV**. Tick the extra box only when you really need date of birth, emergency contact or notes.
+6. To remove a person's details at their request: **Remove details** on their row, tick the box, confirm.
+
+## Not included / deferred
+
+- Importing a member list from a spreadsheet: it needs a column mapping step and rules for duplicates. Tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Membership fees, payments and per-season membership: [#25](https://github.com/sherlabs/lang-lang-cricket-website/issues/25). Volunteer rosters and hours: [#26](https://github.com/sherlabs/lang-lang-cricket-website/issues/26). Bulk email and unsubscribes: [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29).
+- A member sign-in or self-service page: members cannot see or edit their own details here.
+- Bulk edits of members beyond adding players. Opening one member is not logged; downloads, removals and the add-players action are.
+- The stored list title on the member page's own list can lag behind a player's rename; the directory always shows the current name.
+- The address line names in Club office settings rename the spreadsheet columns only.
+- Medical information is deliberately not stored.
