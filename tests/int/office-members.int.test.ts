@@ -222,7 +222,9 @@ describe('member directory', () => {
     })
 
     it('add members for players who have none: links each player once, active ones active, and audits the bulk change', async () => {
-      await clearCollection(payload, 'players')
+      // Players from other files (PlayHQ-sourced ones cannot be deleted) may be left over: give each a member so only ours are unlinked.
+      await clearCollection(payload, 'players').catch(() => undefined)
+      for (const left of (await payload.find({ collection: 'players', pagination: false, depth: 0, overrideAccess: true })).docs) await member({ player: left.id })
       const mk = (slug: string, active: boolean) => payload.create({ collection: 'players', data: { firstName: slug, lastName: 'P', displayName: `${slug} P`, slug, isActiveDerived: active } as never, overrideAccess: true, context: { disableRevalidate: true } })
       const a = await mk('link-a-office', true)
       await mk('link-b-office', false)

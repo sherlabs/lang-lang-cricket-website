@@ -96,8 +96,12 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
             {report.seasons.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <label>Or from<input name="from" type="date" defaultValue={report.season ? '' : report.from} /></label>
-        <label>to<input name="to" type="date" defaultValue={report.season ? '' : report.to} /></label>
+        {report.isAdmin ? (
+          <>
+            <label>Or from<input name="from" type="date" defaultValue={report.season ? '' : report.from} /></label>
+            <label>to<input name="to" type="date" defaultValue={report.season ? '' : report.to} /></label>
+          </>
+        ) : null}
         <button type="submit" className="btn btn--style-primary btn--size-medium">Show hours</button>
       </form>
 

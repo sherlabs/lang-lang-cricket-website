@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearCollection, destroyTestPayload, getTestPayload, tokenFor } from './helpers'
 import { ipHit } from '@/lib/throttle'
+import { seasonOfClubDate } from '@/lib/office/season'
 import { volunteerToken } from '@/lib/volunteer-link'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
@@ -239,7 +240,8 @@ describe('volunteer roster', () => {
       }
       await q.confirmWeek(user.editor, a.week)
 
-      const asEditor = (await q.getHoursReport(user.editor, RANGE))!
+      const asEditor = (await q.getHoursReport(user.editor, { ...RANGE, season: seasonOfClubDate(DAYS.a).name }))!
+      expect(asEditor.season).toBe(seasonOfClubDate(DAYS.a).name) // an editor's custom dates are ignored: ranges that differ by one day would isolate a person
       expect(asEditor.people).toBeNull()
       expect(asEditor.recent).toBeNull()
       const [vol, paid] = asEditor.aggregate
@@ -252,7 +254,7 @@ describe('volunteer roster', () => {
       expect(asAdmin.people!.find((p) => p.name === 'Ann Helper')).toMatchObject({ paid: 0, volunteer: 2 })
       // A third paid person makes the group reportable, and its hours never leak into the volunteer figures.
       expect(await q.addManualHours(user.admin, { memberId: people[0].id, date: DAYS.b, hours: '1', kind: 'paid', shiftTypeKey: 'bar', note: '' })).toMatchObject({ ok: true })
-      const again = (await q.getHoursReport(user.editor, RANGE))!.aggregate
+      const again = (await q.getHoursReport(user.editor, { season: seasonOfClubDate(DAYS.a).name }))!.aggregate
       expect(again[1]).toMatchObject({ kind: 'paid', state: 'shown', people: 3 })
       expect(again[0]).toMatchObject({ kind: 'volunteer', people: 3 })
     })

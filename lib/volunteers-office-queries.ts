@@ -614,8 +614,9 @@ export type HoursReport = {
   roster: { id: number; displayName: string }[] | null
 }
 
-function resolveRange(q: HoursQuery, today: string): { from: string; to: string; season: string; label: string } {
-  if (q.from && q.to && isIsoDate(q.from) && isIsoDate(q.to) && q.from <= q.to) return { from: q.from, to: q.to, season: '', label: `${q.from} to ${q.to}` }
+/** Custom date ranges are admin-only: an editor comparing two ranges that differ by one game day could isolate one person's hours. Everyone else gets whole seasons, which never overlap. */
+function resolveRange(q: HoursQuery, today: string, allowDates: boolean): { from: string; to: string; season: string; label: string } {
+  if (allowDates && q.from && q.to && isIsoDate(q.from) && isIsoDate(q.to) && q.from <= q.to) return { from: q.from, to: q.to, season: '', label: `${q.from} to ${q.to}` }
   const season = q.season && isSeasonName(q.season) ? q.season : seasonOfClubDate(today).name
   const r = seasonRange(season)!
   return { from: r.from, to: r.to, season, label: `Season ${season}` }
@@ -641,7 +642,7 @@ export async function getHoursReport(user: unknown, q: HoursQuery): Promise<Hour
   if (!staffOnly(user)) return null
   const payload = await getPayloadClient()
   const today = currentClubDate()
-  const range = resolveRange(q, today)
+  const range = resolveRange(q, today, adminOnly(user))
   const settings = await getOfficeSettings(user)
   const rows = await liveHourRows(payload, range.from, range.to)
   const shiftLabels = Object.fromEntries([...settings.shiftTypes.map((t) => [t.key, t.label]), ['other', 'Other work']])
@@ -666,7 +667,7 @@ export const HOURS_EXPORT_SPEC = { scope: ['aggregate', 'person'], seasonStartYe
 /** The hours CSV (called only from `auditedExport`, after the admin check). The aggregate keeps the small-count rule; per person is names and totals. */
 export async function hoursExportTable(user: TypedUser, q: HoursQuery, scope: 'aggregate' | 'person'): Promise<{ header: string[]; rows: (string | number)[][] }> {
   const payload = await getPayloadClient()
-  const range = resolveRange(q, currentClubDate())
+  const range = resolveRange(q, currentClubDate(), true)
   const settings: OfficeSettings = await getOfficeSettings(user)
   const rows = await liveHourRows(payload, range.from, range.to)
   if (scope === 'person') {
