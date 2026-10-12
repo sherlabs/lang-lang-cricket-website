@@ -1,0 +1,54 @@
+---
+title: Net sessions
+status: shipped
+routes: ["/selector/nets", "/selector/nets/[id]", "/selector/nets/[id]/state", "/selector/players/[slug]"]
+collections: [net-sessions, net-attendance, player-selection-profiles, players]
+admin: "None; net sessions are run in the selector area (Availability > Nets). The tables are hidden in the admin for every role."
+owner: "Selectors"
+related: [match-day-overview, selector-accounts, availability-link, squad-boards, duplicate-players-and-undo, safety-guards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector or coach at training** with a phone in one hand, who needs to tick people off as they arrive and keep the nets turning over.
+- **A selector choosing a team** who wants to see, on the player card, whether someone has been turning up.
+- **The committee**, who can mark a note about a player as committee only.
+
+## Why it was built
+
+Net nights are run from memory and a paper list (issue [#19](https://github.com/sherlabs/lang-lang-cricket-website/issues/19)), and the selectors' view of a player had no place for batting and bowling style (the editable player card, part of [#20](https://github.com/sherlabs/lang-lang-cricket-website/issues/20); tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). This keeps a check-in, a fair rotation and a timer in the selector area, and records who turned up.
+
+## What it does
+
+**Where it is.** The selector bottom bar stays at four tabs. **Nets** sits inside the Availability section: Availability, Nets and Link are a small row of buttons at the top of those three pages, and the Availability tab stays lit on the Nets pages. On a net day the Overview shows a **Nets tonight** card.
+
+**A session** has a name, a date (club time), an optional start time, how many nets, minutes per turn and players per net (3 nets, 10 minutes and 4 per net to start). It can be edited or deleted only before it starts; a selector can delete only a session they made, the committee any planned one.
+
+**Check in.** Squad players for this season are big tap rows ("Here" or "Not here" in words, not colour alone), with a live "N turned up" count. Search finds anyone else on the club list. **Add a guest** takes a name (40 characters at most, up to 10 guests a session, control characters and a leading spreadsheet formula character removed, always shown as plain text). A double tap, or two selectors ticking the same person, is one check-in. A guest is never linked to a person.
+
+**Rotation.** **Build rotation** splits everyone checked in into balanced groups (ten players with four to a net become 4, 3 and 3) and gives each group a round and a net. It is built again, not re-rolled, until the first start. After the start, anyone who checks in joins the smallest group of a later round; a round that has started is never changed.
+
+**Timer.** Start, Pause and Resume, Next round and Finish. A large countdown, **Up now** by net, **Up next** and who is waiting. The state is stored on the server, so a reload or a second selector's phone shows the same round and time; the round rolls over from the stored times without anything being written, and two selectors pressing a button together cannot overwrite each other (the second is told to look again). The page asks for a screen wake lock while the timer runs, where the browser has one. The countdown is a labelled timer that is not read out every second; the round is announced when it changes.
+
+**Attendance** means "turned up", nothing more: no rating, no form number. Squad members expected but not checked in are listed in the session summary.
+
+**The player card** (`/selector/players/<name>`) is now edit-in-place, one section per concern, each with its own Save button and a saved or failed message, and no JavaScript needed:
+- **Cricket**: role, can keep wicket, batting style (right or left hand) and bowling style (pace, medium, off-break, leg-break, orthodox, wrist spin, or does not bowl). Only the listed options are accepted.
+- **Notes**: the selectors' note. An admin or editor sees a **Staff only** tick; ticked notes can be read and changed only by them, and a selector sees only "A committee note exists".
+- **Nets**: "Turned up at 5 of 8 net sessions in the last 8 weeks, last on Sat 3 Oct" and a row of recent sessions, each marked Present or Absent in words. Never a percentage without its window, never a vote count.
+
+**Privacy.** Net sessions, attendance and guest names are readable over the API only by admins and editors, are never on a public page, and are in no export (there is no attendance CSV). A staff-only note is not sent to a selector's page, and a hand-edited form that tries to read, change or untick it is refused. Merging two players moves the check-ins with them; if both were checked in to one session the earlier check-in is kept and the other is deleted (an undo brings back the moved ones, not the deleted one).
+
+**Honest limits.** The rotation is balanced groups in check-in order, not a promise of equal batting time. The timer is a convenience: a phone that has put the tab to sleep may show a stale countdown until you come back to it (it then catches up from the stored times), and not every browser can keep the screen on. Without a wake lock it is a plain countdown.
+
+## How to use it
+
+1. Open **Availability > Nets** and choose **New session**; set nets, minutes and players per net.
+2. At training, open the session and tap people as they arrive; add guests and search for anyone not on the list.
+3. Press **Build rotation**, check the groups, then **Start**. Use **Pause**, **Next round** and **Finish**.
+4. Open a player card to see their net attendance, set role and styles, and (admins and editors) mark a note as staff only.
+
+## Not included / deferred
+
+Tracked under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38): players checking themselves in (for example from a QR code), sound or vibration at the end of a turn, background polling of the timer, a "previous round" button, a seeded re-roll, a separate selector-visible and staff-only note side by side, public batting and bowling styles, and form-trend scoring on the card. Repointing availability, squad and team-sheet rows when players are merged is also still open. Voting is in [Best player votes](./best-player-votes.mdx); the weekend view is in [Match-day overview](./match-day-overview.mdx).

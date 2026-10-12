@@ -2,10 +2,10 @@
 title: Match-day overview and player card
 status: shipped
 routes: ["/selector", "/selector/players/[slug]"]
-collections: [selection-fixtures, availability, squads, squad-members, team-sheets, player-selection-profiles]
+collections: [selection-fixtures, availability, squads, squad-members, team-sheets, player-selection-profiles, net-sessions]
 admin: "None; the selector home page (/selector)"
 owner: "Selectors"
-related: [team-selection-and-announce, availability-link, squad-boards, selector-accounts]
+related: [team-selection-and-announce, availability-link, squad-boards, selector-accounts, net-sessions]
 added: feat/payload-cms
 ---
 
@@ -30,6 +30,8 @@ The match-day part of issue [#20](https://github.com/sherlabs/lang-lang-cricket-
 Above the cards, the notices the availability board already raises: two players of one name sharing a PIN, and someone guessing PINs on the availability link.
 
 **The player card** (`/selector/players/<name>`, private) gains the role (the selectors' own, or a guess from the stats, labelled as a guess), the last five batting and bowling scores from stored finished games (or "No data"), and the next month's availability for the squads the player is in, as a dot and a word per game with any note they left, next to the phone, PIN and notes that were already there. It links to the public profile when the player is not hidden.
+
+**Editing the card.** The card is edit-in-place with one Save button per section: Cricket (role, can keep wicket, batting style, bowling style), Contact and PIN (as before) and Notes. An admin or editor can tick **Staff only** on a note; selectors then see only "A committee note exists". A Nets panel shows "Turned up at N of M net sessions in the last 8 weeks, last on <date>" with a Present or Absent mark per recent session (attendance only, never a rating). The Overview also shows a **Nets tonight** card on a net day. See [Net sessions](./net-sessions.mdx).
 
 ## How to use it
 

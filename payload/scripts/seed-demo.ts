@@ -32,6 +32,7 @@ import { htmlToLexical } from '../../lib/stories-convert'
 import { blobToken } from '../env'
 import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedDemoSelection, seedDemoTeams } from '../seed/demo-selection'
+import { seedDemoNets } from '../seed/demo-nets'
 import { seedDemoVotes } from '../seed/demo-votes'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
@@ -489,6 +490,7 @@ async function main() {
     await seedDemoSelection(payload)
     await seedDemoTeams(payload)
     await seedDemoVotes(payload)
+    await seedDemoNets(payload)
   } finally {
     await payload.destroy()
   }
