@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, selectionCollections } from '../payload/admin/navigation'
+import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, selectionCollections, socialCollections } from '../payload/admin/navigation'
 import { adminOnlyCondition, hiddenFromEditors, isAdminUser } from '../payload/admin/visibility'
 import { helpSections } from '../payload/admin/helpContent'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -97,7 +97,7 @@ describe('every collection and global is classified (new ones fail here until th
     for (const e of entities.filter((x) => !x.slug.startsWith('payload-'))) {
       // Payload's grouped nav is replaced by AdminNav: a stray group would add a second menu.
       expect(e.admin.group, `${e.slug} admin.group`).toBe(false)
-      if (internalCollections.includes(e.slug)) {
+      if (internalCollections.includes(e.slug) || socialCollections.includes(e.slug)) {
         // Written only by code: hidden from every role, absent from both menus, never writable via REST/admin.
         expect(navSlugs.has(e.slug), `${e.slug} is internal and must not be in a nav list`).toBe(false)
         expect(e.admin.hidden, `${e.slug} must be admin.hidden === true`).toBe(true)
@@ -131,6 +131,7 @@ describe('every collection and global is classified (new ones fail here until th
       }
     }
     for (const slug of selectionCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a selection collection but is not a collection`).toBe(true)
+    for (const slug of socialCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as a social collection but is not a collection`).toBe(true)
     for (const slug of internalCollections) expect(entities.some((x) => x.slug === slug), `${slug} is listed as internal but is not a collection`).toBe(true)
     // Entities listed under Advanced must be hidden from editors unless they are a deliberate upload target.
     const uploadTargets = new Set(['media', 'event-photos'])

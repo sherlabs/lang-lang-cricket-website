@@ -31,6 +31,7 @@ import * as migration_20261011_230924_wp_0_innings_period_id from './20261011_23
 import * as migration_20261011_232622_wp_1_votes from './20261011_232622_wp_1_votes';
 import * as migration_20261012_001356_wp_2_nets_card from './20261012_001356_wp_2_nets_card';
 import * as migration_20261012_015143_wp_1_social_settings from './20261012_015143_wp_1_social_settings';
+import * as migration_20261012_022720_wp_2_social_posts from './20261012_022720_wp_2_social_posts';
 
 export const migrations = [
   {
@@ -196,6 +197,11 @@ export const migrations = [
   {
     up: migration_20261012_015143_wp_1_social_settings.up,
     down: migration_20261012_015143_wp_1_social_settings.down,
-    name: '20261012_015143_wp_1_social_settings'
+    name: '20261012_015143_wp_1_social_settings',
+  },
+  {
+    up: migration_20261012_022720_wp_2_social_posts.up,
+    down: migration_20261012_022720_wp_2_social_posts.down,
+    name: '20261012_022720_wp_2_social_posts'
   },
 ];

@@ -52,6 +52,24 @@ export const CANONICAL_HOST = env.CANONICAL_HOST || (isProduction ? '' : LL.host
 export const EXPORT_FILENAME_PREFIX = env.EXPORT_FILENAME_PREFIX || ''
 
 /**
+ * Social posting queue tuning (wave C spec 1, "Constants, not env knobs"). Generic numbers, the same for every club.
+ * A post is tried up to `SOCIAL_MAX_ATTEMPTS` times, waiting `SOCIAL_BACKOFF_MINUTES[attempt - 1]` between tries; a run that
+ * has not finished after `SOCIAL_LEASE_MINUTES` is treated as dead; one run claims at most `SOCIAL_CLAIM_BATCH` posts; the
+ * signed picture link keeps working `SOCIAL_IMAGE_GRACE_MINUTES` after a post finishes (so a network can still fetch it).
+ */
+export const SOCIAL_MAX_ATTEMPTS = 3
+export const SOCIAL_BACKOFF_MINUTES: readonly number[] = [5, 15, 45]
+export const SOCIAL_LEASE_MINUTES = 10
+export const SOCIAL_CLAIM_BATCH = 5
+export const SOCIAL_IMAGE_GRACE_MINUTES = 15
+/** One call to a network is cut off after this long; the outcome is then unknown (never retried automatically). */
+export const SOCIAL_ADAPTER_TIMEOUT_MS = 20_000
+/** The cron stops starting new posts after this long (its route allows 300 s). */
+export const SOCIAL_RUN_BUDGET_MS = 240_000
+/** A signed picture link is valid for at most this long. */
+export const SOCIAL_IMAGE_URL_HOURS = 24
+
+/**
  * PlayHQ identity; env `PLAYHQ_ORG_ID` / `PLAYHQ_CLUB_URL` / `PLAYHQ_TEAM_PREFIX` win. `teamNamePrefix`
  * is stripped from PlayHQ team names for display ("Lang Lang B Grade" to "B Grade"). Lang Lang values are
  * development and test defaults only: anywhere else an unset org or prefix stays empty and `assertClubEnv()`

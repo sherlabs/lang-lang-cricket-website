@@ -1,4 +1,5 @@
 import { DEFAULT_CAPTIONS } from './caption'
+import { DEFAULT_WINDOW, resolveWindow, type PublishWindow } from './schedule-time'
 import { isStyleKey, TYPE_KEYS, type GraphicType, type StyleKey } from './types'
 
 /**
@@ -14,6 +15,8 @@ export type SocialSettings = {
   hashtags: string[]
   captionTemplates: Record<GraphicType, string>
   signOff: string
+  /** Quiet hours in club time (wave C spec 4.2). */
+  publishWindow: PublishWindow
 }
 
 export const HASHTAG_MAX = 30
@@ -30,6 +33,7 @@ export const DEFAULT_SOCIAL_SETTINGS: SocialSettings = {
   hashtags: [],
   captionTemplates: { ...DEFAULT_CAPTIONS },
   signOff: '',
+  publishWindow: { ...DEFAULT_WINDOW },
 }
 
 /** A tag is letters, digits and underscores only, so it cannot carry a mention or a link. */
@@ -72,6 +76,7 @@ export function resolveSocialSettings(doc: unknown): SocialSettings {
     hashtags: [...new Set(tags)].slice(0, HASHTAG_MAX),
     captionTemplates,
     signOff: str(d.signOff, 200),
+    publishWindow: resolveWindow(d.publishWindow),
   }
 }
 

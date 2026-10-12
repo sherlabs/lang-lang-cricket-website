@@ -1,5 +1,5 @@
 import type { Field, GlobalConfig } from 'payload'
-import { isAdminField, isStaff, isStaffField } from '../access'
+import { isAdminField, isStaff, isStaffField, nobodyField } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
 import { DEFAULT_CAPTIONS } from '../../lib/social/caption'
 import { ATTRIBUTION_MAX, DEFAULT_STRIP_TIERS, HASHTAG_MAX, SPONSOR_STRIP_MAX, templateKey, validateHashtag, validateTemplate } from '../../lib/social/settings'
@@ -18,6 +18,8 @@ const TYPE_LABELS: Record<(typeof TYPE_KEYS)[number], string> = {
   'sponsor-thanks': 'Sponsor thank-you',
   'season-wrap': 'Season wrap',
 }
+
+const validateClock = (v: unknown): true | string => (v == null || v === '' || (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)) ? true : 'Use 24-hour time like 07:00.')
 
 const templateFields: Field[] = TYPE_KEYS.map((type) => ({
   name: templateKey(type),
@@ -78,6 +80,17 @@ export const SocialSettings: GlobalConfig = {
           ],
         },
         { name: 'showSiteHost', label: 'Show the website address on pictures', type: 'checkbox', defaultValue: true, access: { update: isAdminField } },
+        {
+          name: 'publishWindow',
+          label: 'Usual posting hours',
+          type: 'group',
+          access: { update: isAdminField },
+          admin: { description: 'In club time. A post scheduled outside these hours needs an extra tick, because followers may be asleep.' },
+          fields: [
+            { name: 'earliest', label: 'Earliest', type: 'text', defaultValue: '07:00', validate: validateClock, admin: { description: '24-hour time, for example 07:00.' } },
+            { name: 'latest', label: 'Latest', type: 'text', defaultValue: '21:00', validate: validateClock, admin: { description: '24-hour time, for example 21:00.' } },
+          ],
+        },
         { name: 'attribution', label: 'Small line under the footer', type: 'text', maxLength: ATTRIBUTION_MAX, access: { update: isAdminField }, admin: { description: 'Optional. Leave empty for none.' } },
       ],
     },
@@ -105,6 +118,16 @@ export const SocialSettings: GlobalConfig = {
           fields: templateFields,
         },
         { name: 'signOff', label: 'Sign-off line', type: 'text', maxLength: 200, access: { update: isStaffField }, admin: { description: 'Optional. Added to the end of every caption.' } },
+      ],
+    },
+    {
+      // Written only by the scheduler's check-in (explicit SQL), never by a person: it is how the queue can say when it last ran.
+      type: 'collapsible',
+      label: 'Scheduler check-in (automatic)',
+      admin: { initCollapsed: true, description: 'When the scheduler last looked for posts to send. Filled in by the site.' },
+      fields: [
+        { name: 'lastCronRunAt', label: 'Last checked', type: 'date', access: { read: isStaffField, create: nobodyField, update: nobodyField }, admin: { readOnly: true } },
+        { name: 'observedCronIntervalMinutes', label: 'Minutes between checks', type: 'number', access: { read: isStaffField, create: nobodyField, update: nobodyField }, admin: { readOnly: true } },
       ],
     },
   ],

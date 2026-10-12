@@ -12,7 +12,7 @@ import { isSocialEligible, juniorCategoryIds, type SocialPlayer } from '../eligi
 export const dayLabel = (isoDate: string | null | undefined): string => (isoDate ? formatMatchDay(isoDate, CLUB_LOCALE) : '')
 export const timeLabel = (t: string | null | undefined): string => formatMatchTime(t)
 
-export type SocialPlayerInfo = { id: number; slug: string; name: string; eligible: boolean }
+export type SocialPlayerInfo = { id: number; slug: string; name: string; eligible: boolean; /** The player's `updatedAt`, kept in a queued post's snapshot. */ version: string }
 
 /**
  * Every visible player with the one eligibility answer all the graphics use (wave C spec section 1). Hidden players are not in
@@ -27,7 +27,7 @@ export async function loadSocialPlayers(onDate: string): Promise<Map<number, Soc
       pagination: false,
       depth: 0,
       overrideAccess: true,
-      select: { displayName: true, slug: true, isJunior: true, socialOptIn: true },
+      select: { displayName: true, slug: true, isJunior: true, socialOptIn: true, updatedAt: true },
     }),
     getVisibleStatData().catch(() => null),
     getStatsSettings(),
@@ -38,7 +38,7 @@ export async function loadSocialPlayers(onDate: string): Promise<Map<number, Soc
   const out = new Map<number, SocialPlayerInfo>()
   for (const p of res.docs) {
     const info: SocialPlayer = { isJunior: p.isJunior, socialOptIn: p.socialOptIn, juniorCategory: junior.has(p.id) }
-    out.set(p.id, { id: p.id, slug: p.slug ?? '', name: p.displayName ?? '', eligible: isSocialEligible(info, onDate) })
+    out.set(p.id, { id: p.id, slug: p.slug ?? '', name: p.displayName ?? '', eligible: isSocialEligible(info, onDate), version: p.updatedAt ?? '' })
   }
   return out
 }

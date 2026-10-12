@@ -10,6 +10,7 @@ export const HKDF_LABELS = {
   throttle: 'throttle-key',
   availLink: 'avail-link',
   availCookie: 'avail-cookie',
+  socialImage: 'social-image',
 } as const
 
 export type SecretLabel = (typeof HKDF_LABELS)[keyof typeof HKDF_LABELS]

@@ -1,4 +1,7 @@
 {
   "buildCommand": "pnpm vercel-build",
-  "crons": [{ "path": "/api/cron/players-sync", "schedule": "0 17 * * *" }]
+  "crons": [
+    { "path": "/api/cron/players-sync", "schedule": "0 17 * * *" },
+    { "path": "/api/cron/social-posts", "schedule": "0 18 * * *" }
+  ]
 }

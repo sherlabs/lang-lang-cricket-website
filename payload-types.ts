@@ -105,6 +105,8 @@ export interface Config {
     'best-player-ballots': BestPlayerBallot;
     'net-sessions': NetSession;
     'net-attendance': NetAttendance;
+    'social-posts': SocialPost;
+    'social-post-targets': SocialPostTarget;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -160,6 +162,8 @@ export interface Config {
     'best-player-ballots': BestPlayerBallotsSelect<false> | BestPlayerBallotsSelect<true>;
     'net-sessions': NetSessionsSelect<false> | NetSessionsSelect<true>;
     'net-attendance': NetAttendanceSelect<false> | NetAttendanceSelect<true>;
+    'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
+    'social-post-targets': SocialPostTargetsSelect<false> | SocialPostTargetsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1619,6 +1623,71 @@ export interface NetAttendance {
   createdAt: string;
 }
 /**
+ * Posts waiting to go to Facebook, Instagram or X. Managed from Social posts; read only here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts".
+ */
+export interface SocialPost {
+  id: number;
+  title: string;
+  status: 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed';
+  spec:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  caption?: string | null;
+  hashtags?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  scheduledFor?: string | null;
+  nextRunAt?: string | null;
+  approvedBy?: (number | null) | User;
+  approvedAt?: string | null;
+  createdBy?: (number | null) | User;
+  claimToken?: string | null;
+  claimedAt?: string | null;
+  finishedAt?: string | null;
+  revision: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One network a social post goes to, with its words and result. Managed from Social posts; read only here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-post-targets".
+ */
+export interface SocialPostTarget {
+  id: number;
+  post: number | SocialPost;
+  network: 'facebook' | 'instagram' | 'x' | 'mock';
+  size: 'square' | 'story' | 'landscape';
+  finalText?: string | null;
+  status: 'pending' | 'publishing' | 'published' | 'failed' | 'unknown';
+  attempts: number;
+  nextAttemptAt?: string | null;
+  lastError?: string | null;
+  errorCode?: string | null;
+  remoteId?: string | null;
+  remoteUrl?: string | null;
+  publishedAt?: string | null;
+  manual?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1793,6 +1862,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'net-attendance';
         value: number | NetAttendance;
+      } | null)
+    | ({
+        relationTo: 'social-posts';
+        value: number | SocialPost;
+      } | null)
+    | ({
+        relationTo: 'social-post-targets';
+        value: number | SocialPostTarget;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2661,6 +2738,49 @@ export interface NetAttendanceSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts_select".
+ */
+export interface SocialPostsSelect<T extends boolean = true> {
+  title?: T;
+  status?: T;
+  spec?: T;
+  caption?: T;
+  hashtags?: T;
+  scheduledFor?: T;
+  nextRunAt?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  createdBy?: T;
+  claimToken?: T;
+  claimedAt?: T;
+  finishedAt?: T;
+  revision?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-post-targets_select".
+ */
+export interface SocialPostTargetsSelect<T extends boolean = true> {
+  post?: T;
+  network?: T;
+  size?: T;
+  finalText?: T;
+  status?: T;
+  attempts?: T;
+  nextAttemptAt?: T;
+  lastError?: T;
+  errorCode?: T;
+  remoteId?: T;
+  remoteUrl?: T;
+  publishedAt?: T;
+  manual?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3149,6 +3269,19 @@ export interface SocialSetting {
   };
   showSiteHost?: boolean | null;
   /**
+   * In club time. A post scheduled outside these hours needs an extra tick, because followers may be asleep.
+   */
+  publishWindow?: {
+    /**
+     * 24-hour time, for example 07:00.
+     */
+    earliest?: string | null;
+    /**
+     * 24-hour time, for example 21:00.
+     */
+    latest?: string | null;
+  };
+  /**
    * Optional. Leave empty for none.
    */
   attribution?: string | null;
@@ -3206,6 +3339,8 @@ export interface SocialSetting {
    * Optional. Added to the end of every caption.
    */
   signOff?: string | null;
+  lastCronRunAt?: string | null;
+  observedCronIntervalMinutes?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3564,6 +3699,12 @@ export interface SocialSettingsSelect<T extends boolean = true> {
         max?: T;
       };
   showSiteHost?: T;
+  publishWindow?:
+    | T
+    | {
+        earliest?: T;
+        latest?: T;
+      };
   attribution?: T;
   hashtags?:
     | T
@@ -3585,6 +3726,8 @@ export interface SocialSettingsSelect<T extends boolean = true> {
         seasonWrap?: T;
       };
   signOff?: T;
+  lastCronRunAt?: T;
+  observedCronIntervalMinutes?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

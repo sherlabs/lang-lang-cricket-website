@@ -78,6 +78,13 @@ export const internalCollections: string[] = ['matches', 'match-innings', 'match
  */
 export const selectionCollections: string[] = ['player-selection-profiles', 'selection-fixtures', 'availability', 'squads', 'squad-members', 'team-sheets', 'best-player-ballots', 'net-sessions', 'net-attendance']
 
+/**
+ * Social queue collections (wave C spec 4.4): posts waiting to go out and their per-network targets. Hidden from the sidebar for
+ * every role and absent from both menus; the committee reaches them only through the Social posts view. Over REST staff can read
+ * (the lease fields never) and nobody can write: the composer's server actions and the publisher's SQL do all the writing.
+ */
+export const socialCollections: string[] = ['social-posts', 'social-post-targets']
+
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */
 export function navFor(role: string | null | undefined): { everyday: NavEntry[]; advanced: NavEntry[] } {
   const advanced = role === 'admin' ? advancedNav : role === 'editor' ? advancedNav.filter((e) => e.forEditors) : []

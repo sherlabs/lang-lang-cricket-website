@@ -62,7 +62,7 @@ export async function tokenFor(payload: Payload, role: 'admin' | 'editor' | 'sel
 }
 
 /** Resets a global to "never saved" (no row), so defaults apply again. */
-export async function resetGlobal(payload: Payload, slug: 'club' | 'site-settings' | 'theme'): Promise<void> {
+export async function resetGlobal(payload: Payload, slug: 'club' | 'site-settings' | 'theme' | 'social-settings'): Promise<void> {
   const { sql } = await import('@payloadcms/db-postgres/drizzle')
   await payload.db.drizzle.execute(sql.raw(`DELETE FROM "payload"."${slug.replace(/-/g, '_')}"`))
 }
