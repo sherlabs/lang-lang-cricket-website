@@ -189,6 +189,8 @@ export const AVAILABILITY = {
   unknownNameBuckets: 64,
 } as const
 export const availabilityPath = (token: string): string => `/availability/${token}`
+/** A volunteer's personal availability page (wave D, volunteer roster). The token is a bearer secret, like the availability link. */
+export const volunteerPath = (token: string): string => `/volunteer/${token}`
 
 /**
  * Best-player votes (wave B spec 3). `label` is the club's word for the award ("Best player", "Player of the match"); env

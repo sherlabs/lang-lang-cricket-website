@@ -12,8 +12,18 @@ import { writeAudit } from './audit-write'
  */
 export type Scrubber = { name: string; run: (payload: Payload, memberId: number) => Promise<void> }
 
-/** Scrubbers for tables that hold copies of member data. WP-6 registers the email recipient snapshots here; none exist yet. */
-export const scrubbers: Scrubber[] = []
+/**
+ * Scrubbers for tables that hold copies of member data. A volunteer's availability notes are free text they typed about themselves,
+ * so they are blanked (the answer, the week and the hours stay). WP-6 registers the email recipient snapshots here.
+ */
+export const scrubbers: Scrubber[] = [
+  {
+    name: 'volunteer availability notes',
+    run: async (payload, memberId) => {
+      await payload.update({ collection: 'volunteer-availability', where: { member: { equals: memberId } }, data: { note: null }, overrideAccess: true, depth: 0 })
+    },
+  },
+]
 
 export const ERASED_FIELDS = {
   firstName: null,

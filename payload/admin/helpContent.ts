@@ -19,6 +19,17 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'club-volunteers',
+    title: 'Roster volunteers for game days',
+    steps: [
+      'Click "Club office", then "Volunteers". Press "Create weeks from the home games", then click a game day.',
+      'Add the jobs for that day (canteen, bar, gate), then add people to each job. The people who said Yes come first. Warnings are advice only.',
+      'Press "Open for answers" so volunteers can say Yes, Maybe or No from their own link. Copy each person\u2019s link from "Personal links for volunteers" and send it privately.',
+      'After the game day, press "Confirm week and post hours". Mark anyone who did not turn up. Made a mistake? "Reopen this week" undoes the hours so you can fix the roster.',
+      'Open "Hours report" for totals. Groups of fewer than 3 people are hidden so a report never points at one person. Admins also see hours by person and can download them.',
+    ],
+  },
+  {
     id: 'club-office',
     title: 'Look after the club members (admins)',
     steps: [

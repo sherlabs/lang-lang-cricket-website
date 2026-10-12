@@ -11,6 +11,7 @@ export const HKDF_LABELS = {
   availLink: 'avail-link',
   availCookie: 'avail-cookie',
   socialImage: 'social-image',
+  volLink: 'vol-link',
 } as const
 
 export type SecretLabel = (typeof HKDF_LABELS)[keyof typeof HKDF_LABELS]

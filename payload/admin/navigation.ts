@@ -104,6 +104,12 @@ export const officeCollections: OfficeCollection[] = [
   { slug: 'fee-charges', role: 'admin' },
   { slug: 'fee-payments', role: 'admin' },
   { slug: 'fee-waivers', role: 'admin' },
+  { slug: 'volunteer-weeks', role: 'staff' },
+  { slug: 'volunteer-shifts', role: 'staff' },
+  { slug: 'volunteer-assignments', role: 'staff' },
+  { slug: 'volunteer-availability', role: 'staff' },
+  // Per-person hours are employment information, so the ledger is admin only even though the rest of the roster is the committee's.
+  { slug: 'volunteer-hours', role: 'admin' },
 ]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */

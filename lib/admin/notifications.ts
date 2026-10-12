@@ -26,6 +26,8 @@ export type NotificationInput = {
   social?: { failed: number; dueSoon: number; overdue: number } | null
   /** Admin only: members owing match fees in the open season, with the sentence already worded (club office, wave D). */
   fees?: { members: number; text: string } | null
+  /** Committee-visible: empty volunteer places for a game day within three days, with the sentence already worded. */
+  volunteers?: { empty: number; text: string } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
 
@@ -74,6 +76,7 @@ export function notificationLines(
     if (social.failed > 0) lines.push({ key: 'social-failed', tone: 'warn', text: copy.committee.socialFailed(social.failed), href: `${r}/social?tab=attention` })
     if (social.dueSoon > 0) lines.push({ key: 'social-today', tone: 'info', text: copy.committee.socialToday(social.dueSoon), href: `${r}/social?tab=scheduled` })
   }
+  if (input.volunteers && input.volunteers.empty > 0) lines.push({ key: 'volunteers-empty', tone: 'warn', text: input.volunteers.text, href: `${r}/office/volunteers`, linkText: 'Open Volunteers' })
   if (o.isAdmin) {
     if (input.fees && input.fees.members > 0) lines.push({ key: 'fees-owing', tone: 'info', text: input.fees.text, href: `${r}/office/fees`, linkText: 'Open Fees' })
     if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })

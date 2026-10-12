@@ -26,10 +26,17 @@ const EXPECTED: Record<string, Record<'anonymous' | 'selector' | 'editor' | 'adm
   'fee-charges': { anonymous: [], selector: [], editor: [], admin: READ },
   'fee-payments': { anonymous: [], selector: [], editor: [], admin: READ },
   'fee-waivers': { anonymous: [], selector: [], editor: [], admin: READ },
+  // WP-3: the roster is the committee's to read (nobody writes over REST; the roster actions write); the per-person hours ledger is admin only.
+  'volunteer-weeks': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'volunteer-shifts': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'volunteer-assignments': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'volunteer-availability': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'volunteer-hours': { anonymous: [], selector: [], editor: [], admin: READ },
 }
 
 /** A valid row for each collection (the matrix probes with real data, so a validation failure cannot read as "denied"). */
-const SAMPLE: Record<string, (ctx: { member: number; tier: number; probeTier: number; n: number; probe: boolean }) => Record<string, unknown>> = {
+type Ctx = { member: number; probeMember: number; tier: number; probeTier: number; week: number; probeWeek: number; shift: number; n: number; probe: boolean }
+const SAMPLE: Record<string, (ctx: Ctx) => Record<string, unknown>> = {
   members: ({ n }) => ({ firstName: 'Probe', lastName: `Row${n}`, roles: ['supporter'] }),
   'office-audit-log': () => ({ at: new Date().toISOString(), action: 'export', module: 'members' }),
   'membership-tiers': ({ n }) => ({ season: '2031/32', name: `Probe ${n}`, kind: 'free' }),
@@ -39,6 +46,12 @@ const SAMPLE: Record<string, (ctx: { member: number; tier: number; probeTier: nu
   'fee-charges': ({ member }) => ({ member, season: '2031/32', kind: 'game', date: new Date().toISOString(), amountCents: 100 }),
   'fee-payments': ({ member }) => ({ member, receivedOn: new Date().toISOString(), amountCents: 100, method: 'cash' }),
   'fee-waivers': ({ member }) => ({ member, scope: 'amount', amountCents: 100, note: 'probe' }),
+  // Every probe gets its own date, and the unique (shift, member) and (member, week) pairs use a second member and week, so a clash cannot read as a denial.
+  'volunteer-weeks': ({ n }) => ({ season: '2040/41', date: new Date(Date.UTC(2040, 0, 1 + n, 12)).toISOString(), status: 'draft' }),
+  'volunteer-shifts': ({ week }) => ({ week, shiftTypeKey: 'canteen', labelSnapshot: 'Canteen', hours: 2, slots: 1 }),
+  'volunteer-assignments': ({ shift, member, probeMember, probe }) => ({ shift, member: probe ? probeMember : member, hours: 2, kind: 'volunteer', state: 'rostered' }),
+  'volunteer-availability': ({ member, week, probeWeek, probe }) => ({ member, week: probe ? probeWeek : week, state: 'yes' }),
+  'volunteer-hours': ({ member }) => ({ member, date: new Date().toISOString(), hours: 1, kind: 'volunteer', source: 'manual' }),
 }
 const PATCH: Record<string, Record<string, unknown>> = {
   members: { notes: 'x' },
@@ -49,6 +62,11 @@ const PATCH: Record<string, Record<string, unknown>> = {
   'fee-charges': { description: 'probe' },
   'fee-payments': { note: 'probe' },
   'fee-waivers': { note: 'changed' },
+  'volunteer-weeks': { label: 'changed' },
+  'volunteer-shifts': { slots: 3 },
+  'volunteer-assignments': { hours: 3 },
+  'volunteer-availability': { note: 'changed' },
+  'volunteer-hours': { note: 'changed' },
 }
 
 describe('office access matrix', () => {
@@ -56,9 +74,9 @@ describe('office access matrix', () => {
   const users: Record<string, { id: number; role: string; collection: 'users' } | undefined> = { anonymous: undefined }
   const tokens: Record<string, string> = {}
   const seeded: Record<string, number> = {}
-  const ctx = { member: 0, tier: 0, probeTier: 0, n: 0, probe: false }
+  const ctx: Ctx = { member: 0, probeMember: 0, tier: 0, probeTier: 0, week: 0, probeWeek: 0, shift: 0, n: 0, probe: false }
   const wipe = async () => {
-    for (const c of ['fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
+    for (const c of ['volunteer-hours', 'volunteer-availability', 'volunteer-assignments', 'volunteer-shifts', 'volunteer-weeks', 'fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
   }
 
   beforeAll(async () => {
@@ -73,11 +91,17 @@ describe('office access matrix', () => {
     const m = await payload.create({ collection: 'members', data: { firstName: 'Matrix', lastName: 'Member', roles: ['supporter'], email: 'matrix@example.org' } as never, overrideAccess: true })
     seeded.members = m.id
     ctx.member = m.id
+    ctx.probeMember = (await payload.create({ collection: 'members', data: { firstName: 'Matrix', lastName: 'Probe', roles: ['supporter'] } as never, overrideAccess: true })).id
     const a = await payload.create({ collection: 'office-audit-log', data: { at: new Date().toISOString(), action: 'export', module: 'members', rowCount: 1 }, overrideAccess: true })
     seeded['office-audit-log'] = a.id
     for (const slug of Object.keys(SAMPLE).filter((s) => !(s in seeded))) {
       const row = await payload.create({ collection: slug as CollectionSlug, data: SAMPLE[slug](ctx) as never, overrideAccess: true })
       seeded[slug] = row.id
+      if (slug === 'volunteer-weeks') {
+        ctx.week = row.id
+        ctx.probeWeek = (await payload.create({ collection: 'volunteer-weeks', data: { season: '2040/41', date: new Date(Date.UTC(2039, 5, 1, 12)).toISOString(), status: 'draft' } as never, overrideAccess: true })).id
+      }
+      if (slug === 'volunteer-shifts') ctx.shift = row.id
       if (slug === 'membership-tiers') {
         ctx.tier = row.id
         ctx.probeTier = (await payload.create({ collection: 'membership-tiers', data: { season: '2032/33', name: 'Probe tier', kind: 'free' } as never, overrideAccess: true })).id
@@ -139,6 +163,16 @@ describe('office access matrix', () => {
       })
     }
   }
+
+  it('an editor reads the roster but never sees whether an assignment is paid; an admin does', async () => {
+    const asEditor = await payload.findByID({ collection: 'volunteer-assignments', id: seeded['volunteer-assignments'], user: users.editor as never, overrideAccess: false, depth: 0 })
+    expect('kind' in asEditor).toBe(false)
+    const asAdmin = await payload.findByID({ collection: 'volunteer-assignments', id: seeded['volunteer-assignments'], user: users.admin as never, overrideAccess: false, depth: 0 })
+    expect(asAdmin.kind).toBe('volunteer')
+    const viaRest = await rest('GET', `/volunteer-assignments/${seeded['volunteer-assignments']}`, { token: tokens.editor })
+    expect(viaRest.status).toBe(200)
+    expect('kind' in viaRest.json).toBe(false)
+  })
 
   it('REST: members and the log answer 401/403 to everyone but an admin; the settings global too', async () => {
     const denied = (s: number) => s === 401 || s === 403

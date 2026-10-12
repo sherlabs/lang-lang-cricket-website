@@ -16,7 +16,7 @@ const owned = (fields: Field[]): Field[] =>
  * nobody writes over REST or in the admin. The Fees server actions write with the access override after their own admin check, so
  * the rules (no card data, a reason on every void, append-only) cannot be bypassed from a form. Rows are voided, never deleted.
  */
-const ledgerCollection = (c: { slug: string; singular: string; plural: string; description: string; defaultColumns: string[]; fields: Field[]; indexes?: CollectionConfig['indexes'] }): CollectionConfig => ({
+export const ledgerCollection = (c: { slug: string; singular: string; plural: string; description: string; defaultColumns: string[]; fields: Field[]; indexes?: CollectionConfig['indexes'] }): CollectionConfig => ({
   slug: c.slug,
   labels: { singular: c.singular, plural: c.plural },
   admin: { group: false, hideAPIURL: true, hidden: hiddenFromEditors, defaultColumns: c.defaultColumns, description: c.description },
@@ -27,7 +27,7 @@ const ledgerCollection = (c: { slug: string; singular: string; plural: string; d
   fields: owned(c.fields),
 })
 
-const voidFields: Field[] = [
+export const voidFields: Field[] = [
   { name: 'voidedAt', label: 'Voided on', type: 'date', admin: { date: { pickerAppearance: 'dayAndTime' } } },
   { name: 'voidedBy', label: 'Voided by', type: 'relationship', relationTo: 'users' },
   { name: 'voidReason', label: 'Why it was voided', type: 'text', maxLength: 300, validate: noCardNumbers },

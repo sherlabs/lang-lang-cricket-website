@@ -115,6 +115,11 @@ export interface Config {
     'fee-charges': FeeCharge;
     'fee-payments': FeePayment;
     'fee-waivers': FeeWaiver;
+    'volunteer-weeks': VolunteerWeek;
+    'volunteer-shifts': VolunteerShift;
+    'volunteer-assignments': VolunteerAssignment;
+    'volunteer-availability': VolunteerAvailability;
+    'volunteer-hours': VolunteerHour;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -180,6 +185,11 @@ export interface Config {
     'fee-charges': FeeChargesSelect<false> | FeeChargesSelect<true>;
     'fee-payments': FeePaymentsSelect<false> | FeePaymentsSelect<true>;
     'fee-waivers': FeeWaiversSelect<false> | FeeWaiversSelect<true>;
+    'volunteer-weeks': VolunteerWeeksSelect<false> | VolunteerWeeksSelect<true>;
+    'volunteer-shifts': VolunteerShiftsSelect<false> | VolunteerShiftsSelect<true>;
+    'volunteer-assignments': VolunteerAssignmentsSelect<false> | VolunteerAssignmentsSelect<true>;
+    'volunteer-availability': VolunteerAvailabilitySelect<false> | VolunteerAvailabilitySelect<true>;
+    'volunteer-hours': VolunteerHoursSelect<false> | VolunteerHoursSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1961,6 +1971,98 @@ export interface FeeWaiver {
   createdAt: string;
 }
 /**
+ * One game day of the volunteer roster. Managed from Club office, then Volunteers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-weeks".
+ */
+export interface VolunteerWeek {
+  id: number;
+  season: string;
+  date: string;
+  label?: string | null;
+  status: 'draft' | 'open' | 'confirmed';
+  confirmedAt?: string | null;
+  confirmedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A job to fill on a game day (for example the canteen). Its name is copied here so renaming a shift type never rewrites history.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-shifts".
+ */
+export interface VolunteerShift {
+  id: number;
+  week: number | VolunteerWeek;
+  shiftTypeKey: string;
+  labelSnapshot: string;
+  hours: number;
+  slots: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A person rostered on a shift. One row per person per shift so each has a stable id.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-assignments".
+ */
+export interface VolunteerAssignment {
+  id: number;
+  shift: number | VolunteerShift;
+  member: number | Member;
+  kind: 'volunteer' | 'paid';
+  hours: number;
+  state: 'rostered' | 'confirmed' | 'no-show' | 'cancelled';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A volunteer’s Yes, No or Maybe for a game day. Written only from their personal link or by the committee.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-availability".
+ */
+export interface VolunteerAvailability {
+  id: number;
+  member: number | Member;
+  week: number | VolunteerWeek;
+  state: 'yes' | 'no' | 'maybe';
+  preferredShiftKeys?: string[] | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hours worked, from a confirmed roster week or typed in by an admin. Paid hours are kept apart from volunteer hours. A mistake is voided with a reason, not edited.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-hours".
+ */
+export interface VolunteerHour {
+  id: number;
+  member: number | Member;
+  date: string;
+  hours: number;
+  kind: 'volunteer' | 'paid';
+  shiftTypeKey?: string | null;
+  week?: (number | null) | VolunteerWeek;
+  /**
+   * At most one live row per assignment; the database enforces it.
+   */
+  assignment?: (number | null) | VolunteerAssignment;
+  source: 'roster' | 'manual';
+  note?: string | null;
+  recordedBy?: (number | null) | User;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2175,6 +2277,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'fee-waivers';
         value: number | FeeWaiver;
+      } | null)
+    | ({
+        relationTo: 'volunteer-weeks';
+        value: number | VolunteerWeek;
+      } | null)
+    | ({
+        relationTo: 'volunteer-shifts';
+        value: number | VolunteerShift;
+      } | null)
+    | ({
+        relationTo: 'volunteer-assignments';
+        value: number | VolunteerAssignment;
+      } | null)
+    | ({
+        relationTo: 'volunteer-availability';
+        value: number | VolunteerAvailability;
+      } | null)
+    | ({
+        relationTo: 'volunteer-hours';
+        value: number | VolunteerHour;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3249,6 +3371,80 @@ export interface FeeWaiversSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-weeks_select".
+ */
+export interface VolunteerWeeksSelect<T extends boolean = true> {
+  season?: T;
+  date?: T;
+  label?: T;
+  status?: T;
+  confirmedAt?: T;
+  confirmedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-shifts_select".
+ */
+export interface VolunteerShiftsSelect<T extends boolean = true> {
+  week?: T;
+  shiftTypeKey?: T;
+  labelSnapshot?: T;
+  hours?: T;
+  slots?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-assignments_select".
+ */
+export interface VolunteerAssignmentsSelect<T extends boolean = true> {
+  shift?: T;
+  member?: T;
+  kind?: T;
+  hours?: T;
+  state?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-availability_select".
+ */
+export interface VolunteerAvailabilitySelect<T extends boolean = true> {
+  member?: T;
+  week?: T;
+  state?: T;
+  preferredShiftKeys?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "volunteer-hours_select".
+ */
+export interface VolunteerHoursSelect<T extends boolean = true> {
+  member?: T;
+  date?: T;
+  hours?: T;
+  kind?: T;
+  shiftTypeKey?: T;
+  week?: T;
+  assignment?: T;
+  source?: T;
+  note?: T;
+  recordedBy?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3817,7 +4013,7 @@ export interface SocialSetting {
   createdAt?: string | null;
 }
 /**
- * Currency, language and the names of the address lines used in the club office exports. Later modules add their own settings here.
+ * Currency, language and the names of the address lines used in the club office exports. The volunteer jobs for the roster live here too. Later modules add their own settings.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "office-settings".
@@ -3845,6 +4041,22 @@ export interface OfficeSetting {
     region?: string | null;
     postalCode?: string | null;
   };
+  /**
+   * The jobs you roster on a game day, such as canteen or gate. The code is a short word that never changes once a job has been rostered; the name can be changed at any time. Mark a job “Paid” only if the people doing it are paid: paid and volunteer hours are kept apart in reports.
+   */
+  shiftTypes?:
+    | {
+        /**
+         * Lower case letters, numbers and dashes, for example canteen.
+         */
+        key: string;
+        label: string;
+        defaultHours: number;
+        defaultSlots: number;
+        kind: 'volunteer' | 'paid';
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4252,6 +4464,16 @@ export interface OfficeSettingsSelect<T extends boolean = true> {
         locality?: T;
         region?: T;
         postalCode?: T;
+      };
+  shiftTypes?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        defaultHours?: T;
+        defaultSlots?: T;
+        kind?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

@@ -43,6 +43,9 @@ import { OfficeView as OfficeView_02d9eb8379f522ab9fa2c2bf4a3eff7d } from '../..
 import { OfficeMembersView as OfficeMembersView_6460107d220dcb467884fb13590a52d2 } from '../../../payload/components/OfficeMembersView'
 import { OfficeFeesView as OfficeFeesView_40330d560a2f7706fef3cca4de47d936 } from '../../../payload/components/OfficeFeesView'
 import { OfficeFeeMemberView as OfficeFeeMemberView_d85925b91f6c29badb741a87d88ebf71 } from '../../../payload/components/OfficeFeeMemberView'
+import { OfficeVolunteersView as OfficeVolunteersView_1c1134743fbde45b5a80264324c52375 } from '../../../payload/components/OfficeVolunteersView'
+import { OfficeVolunteerWeekView as OfficeVolunteerWeekView_777db59a0a43e5258d1716e79b405677 } from '../../../payload/components/OfficeVolunteerWeekView'
+import { OfficeVolunteerHoursView as OfficeVolunteerHoursView_e5b43c2f28a158409de7281b111caf8d } from '../../../payload/components/OfficeVolunteerHoursView'
 import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
@@ -94,6 +97,9 @@ export const importMap = {
   "/payload/components/OfficeMembersView#OfficeMembersView": OfficeMembersView_6460107d220dcb467884fb13590a52d2,
   "/payload/components/OfficeFeesView#OfficeFeesView": OfficeFeesView_40330d560a2f7706fef3cca4de47d936,
   "/payload/components/OfficeFeeMemberView#OfficeFeeMemberView": OfficeFeeMemberView_d85925b91f6c29badb741a87d88ebf71,
+  "/payload/components/OfficeVolunteersView#OfficeVolunteersView": OfficeVolunteersView_1c1134743fbde45b5a80264324c52375,
+  "/payload/components/OfficeVolunteerWeekView#OfficeVolunteerWeekView": OfficeVolunteerWeekView_777db59a0a43e5258d1716e79b405677,
+  "/payload/components/OfficeVolunteerHoursView#OfficeVolunteerHoursView": OfficeVolunteerHoursView_e5b43c2f28a158409de7281b111caf8d,
   "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e

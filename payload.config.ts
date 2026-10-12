@@ -42,6 +42,7 @@ import { OfficeAuditLog } from './payload/collections/OfficeAuditLog'
 import { MembershipTiers } from './payload/collections/MembershipTiers'
 import { Memberships } from './payload/collections/Memberships'
 import { FeeCharges, FeePayments, FeeSeasons, FeeWaivers } from './payload/collections/feeLedger'
+import { VolunteerAssignments, VolunteerAvailability, VolunteerHours, VolunteerShifts, VolunteerWeeks } from './payload/collections/volunteers'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -103,13 +104,16 @@ export default buildConfig({
         officeMembers: { Component: '/payload/components/OfficeMembersView#OfficeMembersView', path: '/office/members', meta: { title: 'Members' } },
         officeFees: { Component: '/payload/components/OfficeFeesView#OfficeFeesView', path: '/office/fees', exact: true, meta: { title: 'Fees' } },
         officeFeeMember: { Component: '/payload/components/OfficeFeeMemberView#OfficeFeeMemberView', path: '/office/fees/member/:id', meta: { title: 'Member fees' } },
+        officeVolunteers: { Component: '/payload/components/OfficeVolunteersView#OfficeVolunteersView', path: '/office/volunteers', exact: true, meta: { title: 'Volunteers' } },
+        officeVolunteerWeek: { Component: '/payload/components/OfficeVolunteerWeekView#OfficeVolunteerWeekView', path: '/office/volunteers/week/:id', meta: { title: 'Volunteer week' } },
+        officeVolunteerHours: { Component: '/payload/components/OfficeVolunteerHoursView#OfficeVolunteerHoursView', path: '/office/volunteers/hours', meta: { title: 'Volunteer hours' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

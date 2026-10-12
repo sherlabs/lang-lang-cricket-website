@@ -18,8 +18,8 @@ function walk(rel: string, out: string[] = []): string[] {
   return out
 }
 
-/** Routes under `app/(frontend)` that may touch office data. Empty until the volunteer and unsubscribe token routes exist. */
-const PUBLIC_OFFICE_ALLOWLIST: string[] = []
+/** Routes under `app/(frontend)` that may touch office data: the volunteer token page (the unsubscribe route joins when bulk email ships). */
+const PUBLIC_OFFICE_ALLOWLIST: string[] = ['app/(frontend)/volunteer/[token]/page.tsx', 'app/(frontend)/volunteer/[token]/actions.ts']
 
 const OFFICE_SOURCE = [
   ...walk('lib/office'),
@@ -33,6 +33,10 @@ const OFFICE_SOURCE = [
   'payload/collections/MembershipTiers.ts',
   'payload/collections/Memberships.ts',
   'payload/collections/feeLedger.ts',
+  'payload/collections/volunteers.ts',
+  'lib/volunteer-link.ts',
+  'lib/volunteer-public.ts',
+  ...walk('app/(frontend)/volunteer'),
   'payload/globals/OfficeSettings.ts',
 ]
 
@@ -58,6 +62,7 @@ describe('office guards', () => {
     for (const r of routes) {
       const text = read(r)
       if (r.includes('/export/')) expect(text, r).toContain('auditedExport')
+      else if (r.includes('/volunteers/')) expect(text, r).toContain('requireOfficeStaff') // the roster is the committee's; hours and paid status are admin-checked inside the queries
       else expect(text, r).toContain('requireOfficeAdmin')
       expect(text, r).toMatch(/export async function POST/)
       expect(text, r).not.toMatch(/export async function GET/)
@@ -102,6 +107,43 @@ describe('office guards', () => {
       expect(queries.slice(at, at + 400), fn).toContain('adminOnly(user)')
     }
   }, 60_000)
+
+  it('the volunteer roster has no REST write, and every roster action checks the caller first', async () => {
+    const config = await loadSanitizedConfig()
+    for (const slug of ['volunteer-weeks', 'volunteer-shifts', 'volunteer-assignments', 'volunteer-availability', 'volunteer-hours']) {
+      const col = config.collections.find((c) => c.slug === slug)!
+      for (const op of ['create', 'update', 'delete'] as const) {
+        const fn = col.access[op] as (a: { req: { user: unknown } }) => unknown
+        expect(fn({ req: { user: { id: 1, role: 'admin' } } }), `${slug} ${op} for an admin over REST`).toBe(false)
+      }
+    }
+    const queries = read('lib/volunteers-office-queries.ts')
+    const admin = ['setAssignmentKind', 'addManualHours', 'voidHours']
+    const staff = ['createWeeksForSeason', 'addWeek', 'setWeekStatus', 'deleteWeek', 'addShift', 'removeShift', 'assign', 'unassign', 'setAssignmentState', 'confirmWeek', 'reopenWeek', 'rotateVolunteerLink']
+    for (const [list, guard] of [[admin, 'adminOnly(user)'], [staff, 'staffOnly(user)']] as const) {
+      for (const fn of list) {
+        const at = queries.indexOf(`export async function ${fn}(`)
+        expect(at, fn).toBeGreaterThan(-1)
+        expect(queries.slice(at, at + 300), fn).toContain(guard)
+      }
+    }
+    // Paid or volunteer is derived from the shift type on the server; a form never supplies it to the roster actions an editor can reach.
+    const assign = queries.slice(queries.indexOf('export async function assign('), queries.indexOf('async function assignmentContext('))
+    expect(assign).not.toMatch(/raw\.kind/)
+    // The editor-facing report is computed on the server, so no per-person row ever reaches a non-admin.
+    expect(queries.slice(queries.indexOf('if (!admin) return'), queries.indexOf('if (!admin) return') + 120)).toContain('people: null')
+  }, 60_000)
+
+  it('the public volunteer page reads only the caller\'s own rows and shows no other person', () => {
+    const publicLib = read('lib/volunteer-public.ts')
+    expect(publicLib).toContain('claimedMemberId')
+    // Every query of the person-specific collections is filtered to this member.
+    expect(publicLib).toMatch(/volunteer-assignments[\s\S]{0,200}member: \{ equals: memberId \}/)
+    expect(publicLib).toMatch(/volunteer-availability[\s\S]{0,200}member: \{ equals: memberId \}/)
+    const page = read('app/(frontend)/volunteer/[token]/page.tsx')
+    expect(page).toContain("ipHit(payload, 'vol'")
+    expect(page).toContain('notFound()')
+  })
 
   it('GraphQL stays disabled, so REST and the Local API are the only doors', async () => {
     const config = await loadSanitizedConfig()

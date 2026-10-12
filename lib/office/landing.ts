@@ -1,7 +1,9 @@
 import 'server-only'
 import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { memberCompleteness } from '@/lib/members-queries'
+import { nextGameDay } from '@/lib/volunteers-office-queries'
 import { officeCopy } from '@/payload/admin/copy'
+import { gameDayLabel } from './game-day'
 import type { OfficeModuleKey } from './modules'
 
 /**
@@ -17,6 +19,10 @@ export async function landingStats(user: unknown, keys: readonly OfficeModuleKey
     } catch (err) {
       console.warn('[office] members stat unavailable:', (err as Error).message)
     }
+  }
+  if (keys.includes('volunteers')) {
+    const g = await nextGameDay(user)
+    out.volunteers = g ? officeCopy.volunteers.stat(gameDayLabel(g.date), g.empty, g.slots) : officeCopy.volunteers.stat(null, 0, 0)
   }
   if (keys.includes('fees')) {
     const f = await feeOwingSummary(user)

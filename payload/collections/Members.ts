@@ -74,12 +74,12 @@ export const Members: CollectionConfig = {
   disableDuplicate: true,
   access: { read: isAdmin, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {
-    // A member with fee records is never hard-deleted: the ledger keeps its history. Archive them or remove their personal details.
+    // A member with fee or volunteer records is never hard-deleted: the ledgers keep their history. Archive them or remove their personal details.
     beforeDelete: [
       async ({ id, req }) => {
-        for (const collection of ['memberships', 'fee-payments', 'fee-waivers', 'fee-charges'] as const) {
+        for (const collection of ['memberships', 'fee-payments', 'fee-waivers', 'fee-charges', 'volunteer-assignments', 'volunteer-hours', 'volunteer-availability'] as const) {
           const used = await req.payload.count({ collection, where: { member: { equals: id as number } }, overrideAccess: true, req })
-          if (used.totalDocs > 0) throw new ValidationError({ errors: [{ path: 'firstName', message: 'This member has fee records, so they cannot be deleted. Mark them as a past member, or remove their personal details, instead.' }] })
+          if (used.totalDocs > 0) throw new ValidationError({ errors: [{ path: 'firstName', message: 'This member has fee records or volunteer records, so they cannot be deleted. Mark them as a past member, or remove their personal details, instead.' }] })
         }
       },
     ],

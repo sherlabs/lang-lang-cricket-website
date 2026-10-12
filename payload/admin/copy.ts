@@ -89,6 +89,15 @@ export const officeCopy = {
     stat: (members: number, owed: string) => (members === 0 ? 'Nothing owing in the open season (unmatched appearances are not counted)' : `${members} ${plural(members, 'member owes', 'members owe')} ${owed} in match fees (open season, unmatched appearances not counted)`),
     notification: (members: number, owed: string) => `${members} ${plural(members, 'member owes', 'members owe')} ${owed} in match fees (open season, unmatched appearances not counted)`,
   },
+  volunteers: {
+    excludes: 'Voided entries, people who did not turn up, weeks that are not confirmed yet and any group of fewer than 3 people are not shown. Hours of past members still count in the totals.',
+    stat: (when: string | null, empty: number, slots: number) =>
+      when === null ? 'No volunteer weeks set up yet' : slots === 0 ? `No jobs set up yet for ${when}` : `${empty} of ${slots} volunteer ${plural(slots, 'place is', 'places are')} empty for ${when} (cancelled and no-show people are not counted)`,
+    notification: (empty: number, when: string) => `${empty} volunteer ${plural(empty, 'place is', 'places are')} still empty for ${when} (cancelled and no-show people are not counted)`,
+    warning: (w: { kind: 'double-booked' | 'over-capacity' | 'said-no' }, name: string, job: string) =>
+      w.kind === 'double-booked' ? `${name} is on more than one job this day.` : w.kind === 'over-capacity' ? `${job} has more people than it needs.` : `${name} said they cannot do this day.`,
+    fewer: 'Fewer than 3 people',
+  },
   landing: {
     empty: 'Nothing else is set up for the committee here yet. When more of the club office is switched on, it will appear on this page.',
     adminOnlyNote: 'Members, and the exports and sends log, are for admins only.',

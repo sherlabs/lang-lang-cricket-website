@@ -27,6 +27,9 @@
  * It also writes demo membership fees (types, memberships, part payments, a credit, a waiver, a closed past season, a household with a split
  * payment) when there are no membership types yet.
  *
+ * It also writes a demo volunteer roster (six game days, two confirmed with hours, answers from about a dozen volunteers) when there are
+ * no volunteer weeks yet.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -46,6 +49,7 @@ import { seedDemoVotes } from '../seed/demo-votes'
 import { seedDemoSocial, seedDemoSocialQueue } from '../seed/demo-social'
 import { seedDemoMembers } from '../seed/demo-members'
 import { seedDemoFees } from '../seed/demo-fees'
+import { seedDemoVolunteers } from '../seed/demo-volunteers'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
@@ -508,6 +512,7 @@ async function main() {
     await seedDemoSocialQueue(payload)
     console.log(`[seed:demo] club office members: ${await seedDemoMembers(payload)} added`)
     console.log(`[seed:demo] club office fees: ${await seedDemoFees(payload, currentClubDate())}`)
+    console.log(`[seed:demo] club office volunteers: ${await seedDemoVolunteers(payload, currentClubDate())}`)
   } finally {
     await payload.destroy()
   }
