@@ -4,7 +4,8 @@
  */
 export const SOCIAL_DEFAULTS = {
   defaultStyle: 'bold' as const,
-  hashtags: ['LangLangCC', 'CommunityCricket', 'GoLangLang'],
+  /** Club-neutral; `seedSocialGlobal` adds a tag made from the club's own short name. */
+  hashtags: ['CommunityCricket'],
   signOff: 'Follow us for more from the club.',
   captionTemplates: {
     result: '{club} {grade} v {opponent}: {score}\n{margin}\nPlayed at {venue}. Thanks to everyone who came down to support.\n{link}',

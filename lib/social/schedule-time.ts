@@ -53,7 +53,7 @@ export function insideWindow(time: string, w: PublishWindow): boolean {
   return time >= w.earliest || time <= w.latest
 }
 
-const clock = (t: string, locale = 'en-AU') => {
+const clock = (t: string, locale?: string) => {
   const [h, m] = t.split(':').map(Number)
   return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: m ? '2-digit' : undefined, hour12: true, timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, h, m)))
 }

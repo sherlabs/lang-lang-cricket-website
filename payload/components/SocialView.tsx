@@ -75,6 +75,7 @@ export async function SocialView(view: AdminViewServerProps) {
           unavailable: unavailableNetworks(process.env).map((n) => ({ id: n.id, label: n.label })),
           siteUrlOk: isPublicHttpsUrl(club.siteUrl),
           tz: CLUB_TIMEZONE,
+          locale: CLUB_LOCALE,
           window: settings.publishWindow,
           defaultDate: tomorrow,
           heartbeat,

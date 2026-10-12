@@ -27,7 +27,7 @@ export async function loadSocialPlayers(onDate: string): Promise<Map<number, Soc
       pagination: false,
       depth: 0,
       overrideAccess: true,
-      select: { displayName: true, slug: true, isJunior: true, socialOptIn: true, updatedAt: true },
+      select: { displayName: true, firstName: true, lastName: true, slug: true, isJunior: true, socialOptIn: true, updatedAt: true },
     }),
     getVisibleStatData().catch(() => null),
     getStatsSettings(),
@@ -38,7 +38,7 @@ export async function loadSocialPlayers(onDate: string): Promise<Map<number, Soc
   const out = new Map<number, SocialPlayerInfo>()
   for (const p of res.docs) {
     const info: SocialPlayer = { isJunior: p.isJunior, socialOptIn: p.socialOptIn, juniorCategory: junior.has(p.id) }
-    out.set(p.id, { id: p.id, slug: p.slug ?? '', name: p.displayName ?? '', eligible: isSocialEligible(info, onDate), version: p.updatedAt ?? '' })
+    out.set(p.id, { id: p.id, slug: p.slug ?? '', name: p.displayName?.trim() || `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim(), eligible: isSocialEligible(info, onDate), version: p.updatedAt ?? '' })
   }
   return out
 }

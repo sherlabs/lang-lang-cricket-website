@@ -9,11 +9,14 @@ export async function seedSocialGlobal(payload: Payload, opts: { force?: boolean
   const current = await payload.findGlobal({ slug: 'social-settings', depth: 0, overrideAccess: true })
   const exists = Boolean(current?.updatedAt)
   if (exists && !opts.force) return 'skipped'
+  const club = await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true }).catch(() => null)
+  const own = (club?.shortName || club?.name || '').replace(/[^\p{L}\p{N}]/gu, '')
+  const hashtags = [...(own ? [own] : []), ...SOCIAL_DEFAULTS.hashtags]
   await payload.updateGlobal({
     slug: 'social-settings',
     data: {
       defaultStyle: SOCIAL_DEFAULTS.defaultStyle,
-      hashtags: SOCIAL_DEFAULTS.hashtags.map((tag) => ({ tag })),
+      hashtags: hashtags.map((tag) => ({ tag })),
       signOff: SOCIAL_DEFAULTS.signOff,
       captionTemplates: SOCIAL_DEFAULTS.captionTemplates,
     },

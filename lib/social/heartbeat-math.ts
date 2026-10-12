@@ -33,8 +33,9 @@ export type HeartbeatView = { lastChecked: string; warning: string | null; caden
 export function heartbeatView(o: { lastRunAt: Date | null; observedMinutes: number | null; scheduledCount: number; overdueCount: number; now: Date }): HeartbeatView {
   const lastChecked = o.lastRunAt ? `Last checked ${ago(o.lastRunAt, o.now)}` : 'Not checked yet'
   const limit = overdueAfterMinutes(o.observedMinutes)
-  const stale = o.lastRunAt !== null && (o.now.getTime() - o.lastRunAt.getTime()) / 60_000 > limit
-  const warn = o.overdueCount > 0 || (o.scheduledCount > 0 && stale)
+  // Until one gap between runs has been seen, a working once-a-day scheduler looks the same as a dead one, so say nothing.
+  const stale = o.observedMinutes !== null && o.lastRunAt !== null && (o.now.getTime() - o.lastRunAt.getTime()) / 60_000 > limit
+  const warn = (o.observedMinutes !== null && o.overdueCount > 0) || (o.scheduledCount > 0 && stale)
   const warning = warn
     ? `Scheduled posts are not going out. The scheduler ${o.lastRunAt ? `last checked ${ago(o.lastRunAt, o.now)}` : 'has not checked yet'}. Download and post by hand, or ask whoever manages the website.`
     : null

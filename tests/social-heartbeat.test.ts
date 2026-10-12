@@ -41,4 +41,9 @@ describe('heartbeat', () => {
     expect(heartbeatView({ lastRunAt: minsAgo(1), observedMinutes: 10, scheduledCount: 0, overdueCount: 0, now }).cadence).toContain('about every 10 minutes')
     expect(heartbeatView({ lastRunAt: minsAgo(1), observedMinutes: 1440, scheduledCount: 0, overdueCount: 0, now }).cadence).toContain('24 hours')
   })
+
+  it('says nothing about a late scheduler until one gap between runs has been seen', () => {
+    expect(heartbeatView({ lastRunAt: minsAgo(600), observedMinutes: null, scheduledCount: 2, overdueCount: 1, now }).warning).toBeNull()
+    expect(heartbeatView({ lastRunAt: minsAgo(600), observedMinutes: 10, scheduledCount: 2, overdueCount: 0, now }).warning).toContain('not going out')
+  })
 })

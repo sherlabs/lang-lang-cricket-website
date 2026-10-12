@@ -19,6 +19,7 @@ type Scheduling = {
   unavailable: { id: string; label: string }[]
   siteUrlOk: boolean
   tz: string
+  locale: string
   window: PublishWindow
   defaultDate: string
   heartbeat: { lastChecked: string; warning: string | null; cadence: string | null }
@@ -450,12 +451,12 @@ function SchedulePanel({ scheduling: s, signOff, tags, caption, spec }: { schedu
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
       </div>
-      <p className="club-muted">{s.heartbeat.lastChecked}. {s.heartbeat.cadence ?? 'Posts go out when the scheduler next checks.'}</p>
+      <p className="club-muted">{s.heartbeat.lastChecked}. {s.heartbeat.cadence ?? 'Posts go out when the scheduler next checks. Until it has been seen running more than once, assume a post may go out up to a day after the time you pick.'}</p>
       {s.heartbeat.warning && <p role="alert"><span aria-hidden="true">! </span>{s.heartbeat.warning}</p>}
       {needsTick && (
         <label className="social__choice">
           <input type="checkbox" checked={outside} onChange={(e) => setOutside(e.target.checked)} />
-          <span>{quietHoursText(s.window)}</span>
+          <span>{quietHoursText(s.window, s.locale)}</span>
         </label>
       )}
 
