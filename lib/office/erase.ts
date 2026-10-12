@@ -1,6 +1,7 @@
 import 'server-only'
 import type { Payload, TypedUser } from 'payload'
 import { isAdminUser } from '@/payload/access'
+import { scrubMemberRecipients } from '@/lib/email/recipients'
 import { writeAudit } from './audit-write'
 
 /**
@@ -14,7 +15,7 @@ export type Scrubber = { name: string; run: (payload: Payload, memberId: number)
 
 /**
  * Scrubbers for tables that hold copies of member data. A volunteer's availability notes are free text they typed about themselves,
- * so they are blanked (the answer, the week and the hours stay). WP-6 registers the email recipient snapshots here.
+ * so they are blanked (the answer, the week and the hours stay). The email recipient snapshots are registered here too.
  */
 export const scrubbers: Scrubber[] = [
   {
@@ -23,6 +24,8 @@ export const scrubbers: Scrubber[] = [
       await payload.update({ collection: 'volunteer-availability', where: { member: { equals: memberId } }, data: { note: null }, overrideAccess: true, depth: 0 })
     },
   },
+  // The address and first name copied onto each email the member was sent. The unsubscribe list is kept on purpose (spec 1).
+  { name: 'email recipient snapshots', run: async (payload, memberId) => scrubMemberRecipients(payload, memberId) },
 ]
 
 export const ERASED_FIELDS = {

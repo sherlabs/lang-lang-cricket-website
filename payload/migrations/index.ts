@@ -40,6 +40,7 @@ import * as migration_20261012_070911_d3_volunteers from './20261012_070911_d3_v
 import * as migration_20261012_080420_d4_meetings_seats from './20261012_080420_d4_meetings_seats';
 import * as migration_20261012_084731_d5_diary_plan from './20261012_084731_d5_diary_plan';
 import * as migration_20261012_092416_d5_diary_unique_codes from './20261012_092416_d5_diary_unique_codes';
+import * as migration_20261012_093637_d6_email from './20261012_093637_d6_email';
 
 export const migrations = [
   {
@@ -250,6 +251,11 @@ export const migrations = [
   {
     up: migration_20261012_092416_d5_diary_unique_codes.up,
     down: migration_20261012_092416_d5_diary_unique_codes.down,
-    name: '20261012_092416_d5_diary_unique_codes'
+    name: '20261012_092416_d5_diary_unique_codes',
+  },
+  {
+    up: migration_20261012_093637_d6_email.up,
+    down: migration_20261012_093637_d6_email.down,
+    name: '20261012_093637_d6_email'
   },
 ];

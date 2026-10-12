@@ -76,7 +76,22 @@ export async function sweep(payload: Payload): Promise<void> {
 /** The soft per-IP rules for the selector routes: 60 per 10 minutes, a 10-minute pause. Skipped (allowed) when there is no trusted IP. */
 export const IP_RULE: ThrottleRule = { limit: 60, windowMs: 600_000, lockMs: 600_000 }
 
-export async function ipHit(payload: Payload, bucket: 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login' | 'avail' | 'vol', ip: string | null): Promise<ThrottleResult> {
+/**
+ * Rules for buckets that are not the soft default. `unsub-bad` counts only failed unsubscribe-link checks (a valid link is never
+ * counted), `unsub-undo` is the undo button, `rest-forgot` the forgot-password request.
+ */
+export const BUCKET_RULES: Partial<Record<IpBucket, ThrottleRule>> = {
+  'unsub-bad': { limit: 30, windowMs: 600_000, lockMs: 600_000 },
+  'unsub-undo': { limit: 60, windowMs: 600_000, lockMs: 300_000 },
+  'rest-forgot': { limit: 10, windowMs: 600_000, lockMs: 600_000 },
+}
+
+/** Forgot-password requests for one address: a few per hour, whether or not the address has an account. */
+export const FORGOT_ADDRESS_RULE: ThrottleRule = { limit: 3, windowMs: 3_600_000, lockMs: 900_000 }
+
+export type IpBucket = 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login' | 'avail' | 'vol' | 'rest-forgot' | 'unsub-bad' | 'unsub-undo'
+
+export async function ipHit(payload: Payload, bucket: IpBucket, ip: string | null): Promise<ThrottleResult> {
   if (!ip) return { allowed: true, retryAfterSeconds: 0 }
-  return hit(payload, `${bucket}:ip:${ip}`, IP_RULE)
+  return hit(payload, `${bucket}:ip:${ip}`, BUCKET_RULES[bucket] ?? IP_RULE)
 }

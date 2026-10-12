@@ -90,7 +90,13 @@ export function isOnVercel(env: Env = process.env): boolean {
  * cutover shell sets those flags.
  */
 export function assertSafeEnv(env: Env = process.env, dbVar = 'DATABASE_URI'): void {
-  if (isOnVercel(env)) return
+  if (isOnVercel(env)) {
+    // The mock mail adapter records messages in memory and prints them: fine on a laptop, never on a deployment.
+    if (env.EMAIL_PROVIDER?.trim().toLowerCase() === 'mock') {
+      throw new Error('[env] Refusing to start: EMAIL_PROVIDER=mock is for local development and tests only. Use a real provider (resend) or leave it empty.')
+    }
+    return
+  }
   const url = env[dbVar]
   if (url && !isLocalDbUrl(url) && env.ALLOW_REMOTE_DB !== 'yes') {
     throw new Error(

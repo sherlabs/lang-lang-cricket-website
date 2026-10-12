@@ -49,7 +49,7 @@ Match fees were tracked by hand against a game list that already exists on the s
 - Taking payments, receipts, refunds and any card handling: none. Record money by hand; for a refund, void and re-enter. A payment provider would need its own review.
 - A separate treasurer role: only site admins reach any of this. Whether the treasurer should be an admin or have a narrower role is a decision recorded in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
 - Changing a member's type part way through a season, pro-rata fees and per-season payment pools: not modelled.
-- Exporting to accounting software, member-facing balances and reminders: not built. Emailing members about what they owe depends on the email module ([#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29)).
+- Exporting to accounting software, member-facing balances and reminders: not built. An admin can email the group "Members who owe match fees" from [Bulk email](./bulk-email.mdx); amounts are not put in the message, and the fee pages send nothing themselves.
 - Junior games that are not in the match store are not charged; juniors are expected to use a season-fee type. The page counts the gap rather than guessing.
 - Adjustments only exist for closed seasons; in an open season, add a waiver or fix the match data instead.
 

@@ -100,6 +100,15 @@ export default {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
         ],
       },
+      // The unsubscribe link is also a bearer token in the address (wave D WP-6).
+      {
+        source: '/unsubscribe/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
     ]
   },
 } satisfies NextConfig

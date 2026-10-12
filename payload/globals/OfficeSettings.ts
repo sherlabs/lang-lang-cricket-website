@@ -5,6 +5,7 @@ import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPE
 import { validateShiftTypes } from '../../lib/office/volunteers'
 import { DEFAULT_CATEGORY_LABELS, DEFAULT_DIARY_LEAD_DAYS, DIARY_CATEGORIES, MAX_DIARY_LEAD_DAYS } from '../../lib/office/diary'
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '../../config/site'
+import { DEFAULT_EMAIL_FOOTER, DEFAULT_RECIPIENT_RETENTION_DAYS, DEFAULT_UNSUBSCRIBE_TEXT, MAX_RECIPIENT_RETENTION_DAYS } from '../../lib/office/settings-defaults'
 
 const admin = { read: isAdminField, create: isAdminField, update: isAdminField } as const
 
@@ -81,6 +82,42 @@ export const OfficeSettings: GlobalConfig = {
       access: admin,
       admin: { description: 'What each group of jobs in the season diary is called. Rename them to suit your club; the jobs keep their group.' },
       fields: DIARY_CATEGORIES.map((key) => ({ name: key, label: DEFAULT_CATEGORY_LABELS[key], type: 'text' as const, maxLength: 40, defaultValue: DEFAULT_CATEGORY_LABELS[key], access: admin })),
+    },
+    {
+      name: 'emailFooter',
+      label: 'Email footer: why people get these emails',
+      type: 'textarea',
+      maxLength: 400,
+      defaultValue: DEFAULT_EMAIL_FOOTER,
+      access: admin,
+      admin: { description: 'Shown at the bottom of every club email, with the club name and a way to reply. You can use {clubName} and {contact}.' },
+    },
+    {
+      name: 'unsubscribeText',
+      label: 'Email footer: the unsubscribe sentence',
+      type: 'text',
+      maxLength: 300,
+      defaultValue: DEFAULT_UNSUBSCRIBE_TEXT,
+      access: admin,
+      admin: { description: 'Shown above the unsubscribe link and on the unsubscribe page.' },
+    },
+    {
+      name: 'complianceText',
+      label: 'Email footer: your own legal wording (optional)',
+      type: 'textarea',
+      maxLength: 600,
+      access: admin,
+      admin: { description: 'Anything your local rules ask you to say in a club email, such as a postal address. Left empty by default. The site gives you the unsubscribe link; you are responsible for having permission to email people and for what the email says.' },
+    },
+    {
+      name: 'recipientRetentionDays',
+      label: 'Days to keep who an email went to',
+      type: 'number',
+      min: 1,
+      max: MAX_RECIPIENT_RETENTION_DAYS,
+      defaultValue: DEFAULT_RECIPIENT_RETENTION_DAYS,
+      access: admin,
+      admin: { description: 'After this many days the email addresses and first names kept for a finished email are removed. The counts stay. People who unsubscribed stay unsubscribed.', width: '50%' },
     },
     {
       name: 'shiftTypes',

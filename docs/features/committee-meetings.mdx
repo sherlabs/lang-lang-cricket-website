@@ -48,7 +48,7 @@ Minutes lived in email attachments, jobs agreed at a meeting were forgotten by t
 
 - Per-person votes, mover and seconder tracking and quorum arithmetic: not built (write them into the motion text or the minutes). Follow-up on [#27](https://github.com/sherlabs/lang-lang-cricket-website/issues/27).
 - A browsable history of past seat holders: only the exports and sends log keeps handover lines. The public Committee &amp; contacts page is not built from the seats; keeping both in step is manual ([#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
-- PDF generation of minutes, emailing minutes or agendas, public minutes and recurring meetings: not built. Emailing depends on the email module ([#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29)).
+- PDF generation of minutes, emailing minutes or agendas, public minutes and recurring meetings: not built. Meetings send no mail themselves; [Bulk email](./bulk-email.mdx) can write to members but does not attach minutes.
 - The files are not a secret-grade store. With a storage token the file lives in the site's blob store at an unguessable address that is public to anyone who learns it; the site never gives that address to a browser, but someone with database or storage-list access can read it. Do not keep anything here that must stay secret from the people who run the site. Documents over 4 MB are not supported.
 - Minutes are records the club keeps: this tool records them and does not decide retention or approval wording.
 

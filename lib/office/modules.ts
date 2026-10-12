@@ -2,7 +2,9 @@
  * The club office module registry (wave D spec section 1). One list drives the landing page, its stat lines, the help section and
  * the tests, so a module cannot appear in one place and not another. A module is added here in the same change that builds it.
  */
-export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings' | 'diary'
+import { emailEnabled } from '../email/env'
+
+export type OfficeModuleKey = 'members' | 'fees' | 'volunteers' | 'meetings' | 'diary' | 'email'
 export type OfficeModule = {
   key: OfficeModuleKey
   label: string
@@ -64,11 +66,22 @@ export const officeModules: OfficeModule[] = [
     doc: 'season-diary-and-plan',
     collections: ['diary-jobs', 'plan-pillars', 'plan-objectives'],
   },
+  {
+    key: 'email',
+    label: 'Email',
+    hint: 'Write to your members. Each person can unsubscribe. Admins only.',
+    path: '/office/email',
+    role: 'admin',
+    doc: 'bulk-email',
+    collections: ['email-campaigns', 'email-recipients', 'email-suppressions'],
+  },
 ]
 
 /** The modules a role may see on the landing page. Anyone who is not admin or editor sees none. */
-export function modulesFor(role: string | null | undefined): OfficeModule[] {
-  if (role === 'admin') return officeModules
-  if (role === 'editor') return officeModules.filter((m) => m.role === 'staff')
+export function modulesFor(role: string | null | undefined, emailOn: boolean = emailEnabled()): OfficeModule[] {
+  // The Email module exists only while outbound mail is configured: no tile, no page, nothing to click.
+  const live = officeModules.filter((m) => m.key !== 'email' || emailOn)
+  if (role === 'admin') return live
+  if (role === 'editor') return live.filter((m) => m.role === 'staff')
   return []
 }

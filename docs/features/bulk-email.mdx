@@ -1,0 +1,52 @@
+---
+title: Bulk email and unsubscribes
+status: shipped
+routes: ["/admin/office/email", "/admin/office/email/:id", "/api/admin/office/email/new", "/api/admin/office/email/:id/:action", "/api/admin/office/email/suppression/:action", "/api/cron/email-batch", "/unsubscribe/:token", "/api/public/unsubscribe/:token"]
+collections: [email-campaigns, email-recipients, email-suppressions, office-settings, office-audit-log, users]
+admin: "Club office, then Email (admins only, and only when email is switched on in the environment); Club office settings for the footer wording and how long addresses are kept"
+owner: "The club's admin (secretary or communications lead who is a site admin)"
+related: [club-office, member-directory, volunteer-roster, membership-fees, users-and-authentication, selector-accounts, multi-club-template, admin-notifications]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary or an admin** who wants to write to members (a season start note, a working bee reminder, a fees reminder) without exporting a list into a personal mail program.
+- **A member or parent** who gets the email and wants to stop getting it with one click.
+- **A selector or committee member who forgot their password** and wants a reset link by email.
+
+## Why it was built
+
+Club news went out from a personal mail account to a pasted list, with nothing to honour an unsubscribe. This is issue [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29). The site now sends mail through one switchable seam, keeps a list of people who must not be emailed, and gives every message a working opt-out. The same seam sends the password-reset link, which was switched off until now because the site had no way to send mail.
+
+## What it does
+
+- **Off unless configured.** Nothing is sent, shown or scheduled unless `EMAIL_PROVIDER` (`resend` or `mock`) and `EMAIL_FROM_ADDRESS` are set, and for `resend` also `RESEND_API_KEY`. With any of them missing the Email tile is not on Club office, `/admin/office/email` is a not-found page, every email route answers 404, the scheduled run does nothing, forgot-password stays refused, and no network call is tried. Optional settings: `EMAIL_FROM_NAME` (default: the club name), `EMAIL_REPLY_TO` (default: the club contact email), `EMAIL_BATCH_SIZE` (50), `EMAIL_RATE_PER_SECOND` (2) and `EMAIL_MAX_RECIPIENTS` (2000).
+- **Providers.** `resend` posts to Resend over its plain HTTP API (no extra package) with an idempotency key per recipient, so a retried send cannot deliver twice. `mock` is for development and tests: it keeps messages in memory and prints each one to the server log; the site refuses to start with `EMAIL_PROVIDER=mock` on Vercel. In test mode the page says so.
+- **Write once, check, then send.** Admins go to Club office, then Email. A new email has a subject, a plain-text message (a blank line starts a paragraph) and an audience. Merge tags: `{firstName}`, `{firstName|there}` (with a fallback), `{clubName}` and `{volunteerLink}` (that person's own volunteer availability page). Any other `{tag}` is refused with the tag named. A first name such as `<b>` is escaped and cannot add markup. The saved draft shows a preview with the sample name Sam.
+- **Audience.** The same member filters the directory uses (current or past members, a role, juniors only) plus two groups: **Members who owe match fees** (from the fee ledger, admins only) and **Volunteers**. The saved audience holds only those choices, never names or addresses. Before sending, the page says, for example, "412 match; 380 will receive this; 20 have no email; 12 unsubscribed; 4 juniors go to a guardian". A junior with no email of their own goes to the parents or guardians who have one; people marked do not email, removed members and unsubscribed addresses are left out; an address shared by two members gets one copy. More people than `EMAIL_MAX_RECIPIENTS` blocks the send.
+- **One confirm step.** The page shows the exact subject and the count ("You are about to send “…” to 380 people") with one button. If the list changed since the page loaded (the count differs), nothing is sent and the admin looks again. **Send me a copy first** sends one message, marked [TEST], to the admin's own login address; it creates no recipient and changes no counts.
+- **Sending is paced and can be closed.** Sending freezes the audience into one row per address, then sends in batches of `EMAIL_BATCH_SIZE`, spaced to `EMAIL_RATE_PER_SECOND`. The page runs the batches with a progress bar. If the tab is closed, **Continue sending** (no scripts needed) or the daily scheduled run (`/api/cron/email-batch`, `CRON_SECRET`) carries on. Two batches at once never send the same person twice (rows are claimed with `FOR UPDATE SKIP LOCKED`). Temporary failures retry twice, after 2 and then 10 minutes (double for rate limits); a permanent failure is final and shown in the counts. A provider that rejects the API key pauses sending and tries again later. Pressing send twice, or from two devices, starts it once. **Stop sending** ends it; people already sent keep their copy.
+- **Suppression is checked three times:** when the audience is built, when each person is claimed (so an unsubscribe in the middle of a send is honoured), and inside `sendCampaignMessage`, the only function that may send non-transactional mail.
+- **Unsubscribe.** Every message carries the sender's name and contact address, the reason the person is receiving it, a visible unsubscribe link and the `List-Unsubscribe` and one-click `List-Unsubscribe-Post` headers. The link is a signed token (no expiry, so it works long after the send). Opening it shows "Stop emails to j***@example.com?" with a button and never changes anything, so mail scanners that open links cannot unsubscribe anyone. The button (and a mail program's one-click POST to `/api/public/unsubscribe/:token`) saves the opt-out at once; the done page has "Undo, I changed my mind", which removes only an unsubscribe, never a bounce, a complaint or an admin's entry. A valid link is never rate limited. Only links that fail to check are counted against the caller's address. The link keeps working if email is later switched off. Pages are not indexed and not cached.
+- **Do-not-email list.** Admins see who is on it on the Email page, can add an address and can allow one again; both are logged. It is keyed by a hash of the address, so it survives a member being deleted or having their details removed.
+- **Privacy.** Addresses and first names kept for a sent email are blanked after the number of days set in Club office settings (default 30), keeping the status and the counts; the daily run does it. Removing a member's personal details blanks their copies at once, and refuses to run if it cannot. The unsubscribe list is kept on purpose. The audit log records each send and each list change with counts and filter keys only. Campaigns, recipients and the list are admin only over REST, nothing writes to them over REST, and a sent email can no longer be edited or deleted.
+- **Wording is yours.** Club office settings hold the footer sentence ("You are receiving this because you are connected with {clubName}. Contact: {contact}"), the unsubscribe sentence and an optional block for any legal wording your area asks for (for example a postal address). The app gives you the mechanism: the club is responsible for having permission to email people, for what the email says, and for checking the rules where it operates (for the Australian deployment, the Spam Act is the relevant law). Password-reset and similar mail is transactional: it is not subject to the list and never has a marketing footer.
+- **Password reset by email.** When mail is on, forgot-password works for every account, selectors included. The link is built from the configured site address only (a forged `Host` header cannot redirect it). The reply is the same for a known and an unknown address, and the mail is sent after the reply goes out. Each IP and each address is rate limited. A disabled account is sent nothing. A reset changes the password only (never the role), and a selector who resets still cannot open the admin.
+
+## How to use it
+
+1. An operator sets `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS` and (for Resend) `RESEND_API_KEY` on the host, with the sending domain verified at the provider (SPF, DKIM and DMARC are the provider's and the club's DNS to set up). For a try-out on a laptop use `EMAIL_PROVIDER=mock`.
+2. As an admin open **Club office**, then **Email**. Check the footer wording once in **Club office settings**.
+3. **Write a new email**, save the draft, read the preview, pick who it goes to, press **Send me a copy first** if you like, then read the counts and press **Yes, send to N people**.
+4. Leave the page open to watch the progress, or close it; **Continue sending** and the daily run finish the job.
+5. **Not getting emails** lists unsubscribed addresses; add or allow an address there.
+
+## Not included / deferred
+
+- Bounce and complaint feedback: the provider can tell the site about bounces and complaints by a signed webhook, which is not built. Today a bounce only shows as an immediate permanent failure in the counts, and nothing is added to the do-not-email list automatically.
+- A rich-text editor, images, attachments, scheduled sends, templates, open and click tracking, and per-campaign reports beyond the counts: not built.
+- The preview updates when the draft is saved, not as you type.
+- A selector who resets their password lands on the admin sign-in afterwards and must go back to the selector sign-in page; a selector-specific reset page is not built.
+- Other notification emails (approvals, reminders for due jobs, volunteer rosters) can use the transactional send function but nothing calls it yet. See [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29) and [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Only Resend is built behind the seam; another provider is a new adapter file.

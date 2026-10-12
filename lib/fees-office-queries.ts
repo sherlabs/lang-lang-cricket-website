@@ -115,6 +115,20 @@ export async function feeOwingSummary(user: unknown): Promise<{ members: number;
   }
 }
 
+/** Ids of members who owe something in the open seasons, for the "owes match fees" email segment. Admin only; ids, never amounts. */
+export async function feeOwingMemberIds(user: unknown): Promise<Set<number> | null> {
+  if (!adminOnly(user)) return null
+  try {
+    const { model, seasonsWithMemberships } = await loadFees(user)
+    const ids = new Set<number>()
+    for (const season of seasonsWithMemberships.filter((s) => !model.closedSeasons.has(s))) for (const r of feeReport(model, season).rows) if (r.owedCents > 0) ids.add(r.memberId)
+    return ids
+  } catch (err) {
+    console.warn('[office] fee segment unavailable:', (err as Error).message)
+    return null
+  }
+}
+
 // ---- writes ------------------------------------------------------------------------------------------------------------------
 
 export type ActionResult = { ok: true; notice: string } | { ok: false; code: FeeFormError }

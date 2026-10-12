@@ -18,8 +18,8 @@ function walk(rel: string, out: string[] = []): string[] {
   return out
 }
 
-/** Routes under `app/(frontend)` that may touch office data: the volunteer token page (the unsubscribe route joins when bulk email ships). */
-const PUBLIC_OFFICE_ALLOWLIST: string[] = ['app/(frontend)/volunteer/[token]/page.tsx', 'app/(frontend)/volunteer/[token]/actions.ts']
+/** Routes under `app/(frontend)` that may touch office data: the volunteer token page and the unsubscribe page (both signed-link only). */
+const PUBLIC_OFFICE_ALLOWLIST: string[] = ['app/(frontend)/volunteer/[token]/page.tsx', 'app/(frontend)/volunteer/[token]/actions.ts', 'app/(frontend)/unsubscribe/[token]/page.tsx', 'app/(frontend)/unsubscribe/[token]/actions.ts']
 
 const OFFICE_SOURCE = [
   ...walk('lib/office'),
@@ -42,6 +42,12 @@ const OFFICE_SOURCE = [
   'lib/volunteer-link.ts',
   'lib/volunteer-public.ts',
   ...walk('app/(frontend)/volunteer'),
+  ...walk('app/(frontend)/unsubscribe'),
+  ...walk('lib/email'),
+  'lib/email-office-queries.ts',
+  'payload/collections/email.ts',
+  'app/api/cron/email-batch/route.ts',
+  'app/api/public/unsubscribe/[token]/route.ts',
   'payload/globals/OfficeSettings.ts',
 ]
 

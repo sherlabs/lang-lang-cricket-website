@@ -132,6 +132,9 @@ export interface Config {
     'plan-pillars': PlanPillar;
     'plan-objectives': PlanObjective;
     'diary-jobs': DiaryJob;
+    'email-campaigns': EmailCampaign;
+    'email-recipients': EmailRecipient;
+    'email-suppressions': EmailSuppression;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -214,6 +217,9 @@ export interface Config {
     'plan-pillars': PlanPillarsSelect<false> | PlanPillarsSelect<true>;
     'plan-objectives': PlanObjectivesSelect<false> | PlanObjectivesSelect<true>;
     'diary-jobs': DiaryJobsSelect<false> | DiaryJobsSelect<true>;
+    'email-campaigns': EmailCampaignsSelect<false> | EmailCampaignsSelect<true>;
+    'email-recipients': EmailRecipientsSelect<false> | EmailRecipientsSelect<true>;
+    'email-suppressions': EmailSuppressionsSelect<false> | EmailSuppressionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2408,6 +2414,93 @@ export interface DiaryJob {
   createdAt: string;
 }
 /**
+ * Emails to members. Write and send them from Club office, then Email. Only admins can see this, and only when email is switched on for the site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-campaigns".
+ */
+export interface EmailCampaign {
+  id: number;
+  /**
+   * Shown as the email’s subject line.
+   */
+  subject: string;
+  /**
+   * Plain text. A blank line starts a new paragraph. You can use {firstName}, {firstName|there}, {clubName} and {volunteerLink}.
+   */
+  body: string;
+  /**
+   * Set from the Email page. Holds the filter only, never names or addresses.
+   */
+  audience?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  status: 'draft' | 'sending' | 'sent' | 'cancelled';
+  counts?: {
+    queued?: number | null;
+    sent?: number | null;
+    failed?: number | null;
+    skipped?: number | null;
+  };
+  createdBy?: (number | null) | User;
+  sentAt?: string | null;
+  /**
+   * The addresses and first names kept for this email are removed after the retention period set in Club office settings.
+   */
+  recipientsPurgedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who an email was sent to. Written by the system only; addresses are removed after the retention period.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-recipients".
+ */
+export interface EmailRecipient {
+  id: number;
+  campaign: number | EmailCampaign;
+  member?: (number | null) | Member;
+  email?: string | null;
+  emailHash: string;
+  firstName?: string | null;
+  status: 'queued' | 'sending' | 'sent' | 'failed' | 'skipped-suppressed' | 'skipped-no-email';
+  attempts?: number | null;
+  claimToken?: string | null;
+  claimedAt?: string | null;
+  nextAttemptAt?: string | null;
+  providerId?: string | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * People who asked not to get club emails, and addresses that bounced. Manage them from Club office, then Email.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-suppressions".
+ */
+export interface EmailSuppression {
+  id: number;
+  emailHash: string;
+  /**
+   * Empty when the address was removed from the sending record.
+   */
+  email?: string | null;
+  reason: 'unsubscribed' | 'manual' | 'bounced' | 'complaint';
+  source?: string | null;
+  at: string;
+  campaign?: (number | null) | EmailCampaign;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2690,6 +2783,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'diary-jobs';
         value: number | DiaryJob;
+      } | null)
+    | ({
+        relationTo: 'email-campaigns';
+        value: number | EmailCampaign;
+      } | null)
+    | ({
+        relationTo: 'email-recipients';
+        value: number | EmailRecipient;
+      } | null)
+    | ({
+        relationTo: 'email-suppressions';
+        value: number | EmailSuppression;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -4039,6 +4144,63 @@ export interface DiaryJobsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-campaigns_select".
+ */
+export interface EmailCampaignsSelect<T extends boolean = true> {
+  subject?: T;
+  body?: T;
+  audience?: T;
+  status?: T;
+  counts?:
+    | T
+    | {
+        queued?: T;
+        sent?: T;
+        failed?: T;
+        skipped?: T;
+      };
+  createdBy?: T;
+  sentAt?: T;
+  recipientsPurgedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-recipients_select".
+ */
+export interface EmailRecipientsSelect<T extends boolean = true> {
+  campaign?: T;
+  member?: T;
+  email?: T;
+  emailHash?: T;
+  firstName?: T;
+  status?: T;
+  attempts?: T;
+  claimToken?: T;
+  claimedAt?: T;
+  nextAttemptAt?: T;
+  providerId?: T;
+  error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-suppressions_select".
+ */
+export interface EmailSuppressionsSelect<T extends boolean = true> {
+  emailHash?: T;
+  email?: T;
+  reason?: T;
+  source?: T;
+  at?: T;
+  campaign?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -4657,6 +4819,22 @@ export interface OfficeSetting {
     other?: string | null;
   };
   /**
+   * Shown at the bottom of every club email, with the club name and a way to reply. You can use {clubName} and {contact}.
+   */
+  emailFooter?: string | null;
+  /**
+   * Shown above the unsubscribe link and on the unsubscribe page.
+   */
+  unsubscribeText?: string | null;
+  /**
+   * Anything your local rules ask you to say in a club email, such as a postal address. Left empty by default. The site gives you the unsubscribe link; you are responsible for having permission to email people and for what the email says.
+   */
+  complianceText?: string | null;
+  /**
+   * After this many days the email addresses and first names kept for a finished email are removed. The counts stay. People who unsubscribed stay unsubscribed.
+   */
+  recipientRetentionDays?: number | null;
+  /**
    * The jobs you roster on a game day, such as canteen or gate. The code is a short word that never changes once a job has been rostered; the name can be changed at any time. Mark a job “Paid” only if the people doing it are paid: paid and volunteer hours are kept apart in reports.
    */
   shiftTypes?:
@@ -5094,6 +5272,10 @@ export interface OfficeSettingsSelect<T extends boolean = true> {
         events?: T;
         other?: T;
       };
+  emailFooter?: T;
+  unsubscribeText?: T;
+  complianceText?: T;
+  recipientRetentionDays?: T;
   shiftTypes?:
     | T
     | {

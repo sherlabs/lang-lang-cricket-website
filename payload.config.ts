@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { BRANDING } from './config/site'
 import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
 import { restrictBuiltinCollections } from './payload/access/builtins'
+import { emailAdapterForPayload } from './lib/email/payload-adapter'
 import { assertLocalDb, assertSafeEnv, blobToken, csrfOrigins, requireEnv, resolveServerURL } from './payload/env'
 import { AiDraftCounter } from './payload/collections/AiDraftCounter'
 import { Announcements } from './payload/collections/Announcements'
@@ -45,6 +46,7 @@ import { FeeCharges, FeePayments, FeeSeasons, FeeWaivers } from './payload/colle
 import { VolunteerAssignments, VolunteerAvailability, VolunteerHours, VolunteerShifts, VolunteerWeeks } from './payload/collections/volunteers'
 import { CommitteeSeats } from './payload/collections/CommitteeSeats'
 import { CommitteeDocuments, MeetingActions, MeetingAttendance, MeetingItems, MeetingMotions, MeetingTemplates, Meetings } from './payload/collections/meetings'
+import { EmailCampaigns, EmailRecipients, EmailSuppressions } from './payload/collections/email'
 import { OfficeFiles } from './payload/collections/OfficeFiles'
 import { DiaryJobs, PlanObjectives, PlanPillars } from './payload/collections/diary'
 import { SocialPosts } from './payload/collections/SocialPosts'
@@ -116,6 +118,8 @@ export default buildConfig({
         officeMeetingDocuments: { Component: '/payload/components/OfficeMeetingDocumentsView#OfficeMeetingDocumentsView', path: '/office/meetings/documents', meta: { title: 'Office-bearer documents' } },
         officeMeetingMinutes: { Component: '/payload/components/OfficeMeetingMinutesView#OfficeMeetingMinutesView', path: '/office/meetings/:id/minutes', meta: { title: 'Minutes' } },
         officeMeeting: { Component: '/payload/components/OfficeMeetingView#OfficeMeetingView', path: '/office/meetings/:id', meta: { title: 'Meeting' } },
+        officeEmail: { Component: '/payload/components/OfficeEmailView#OfficeEmailView', path: '/office/email', exact: true, meta: { title: 'Email' } },
+        officeEmailCampaign: { Component: '/payload/components/OfficeEmailCampaignView#OfficeEmailCampaignView', path: '/office/email/:id', meta: { title: 'Email' } },
         officeDiary: { Component: '/payload/components/OfficeDiaryView#OfficeDiaryView', path: '/office/diary', exact: true, meta: { title: 'Season diary' } },
         officePlan: { Component: '/payload/components/OfficePlanView#OfficePlanView', path: '/office/plan', exact: true, meta: { title: 'Strategic plan' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
@@ -124,7 +128,9 @@ export default buildConfig({
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs],
+  // Present only when outbound mail is configured (EMAIL_PROVIDER, key, from address); otherwise forgot-password stays refused.
+  email: emailAdapterForPayload(),
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

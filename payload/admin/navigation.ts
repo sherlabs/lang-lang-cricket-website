@@ -125,6 +125,10 @@ export const officeCollections: OfficeCollection[] = [
   { slug: 'plan-pillars', role: 'staff' },
   { slug: 'plan-objectives', role: 'staff' },
   { slug: 'diary-jobs', role: 'staff' },
+  // Bulk email (WP-6): campaigns, per-address send rows and the unsubscribed list. Personal data, so admin only; the module is also hidden unless email is configured.
+  { slug: 'email-campaigns', role: 'admin' },
+  { slug: 'email-recipients', role: 'admin' },
+  { slug: 'email-suppressions', role: 'admin' },
 ]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */

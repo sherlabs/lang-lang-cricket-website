@@ -8,5 +8,6 @@
  * through a leaked config took another path). Every file now starts from a clean slate, whatever
  * the previous one managed to clean up.
  */
-for (const name of ['PAYLOAD_BLOB_FAKE', 'PAYLOAD_ETL']) delete process.env[name]
+// Mail is off unless a file switches it on (WP-6); a leaked EMAIL_* would also change whether the config has a mail adapter.
+for (const name of ['PAYLOAD_BLOB_FAKE', 'PAYLOAD_ETL', 'EMAIL_PROVIDER', 'EMAIL_FROM_ADDRESS', 'EMAIL_FROM_NAME', 'EMAIL_REPLY_TO', 'EMAIL_BATCH_SIZE', 'EMAIL_RATE_PER_SECOND', 'EMAIL_MAX_RECIPIENTS', 'RESEND_API_KEY', 'TRUSTED_IP_HEADER']) delete process.env[name]
 ;(globalThis as { _payload?: Map<string, unknown> })._payload?.clear()

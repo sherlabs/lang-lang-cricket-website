@@ -15,3 +15,9 @@ export const DEFAULT_SHIFT_TYPES: readonly ShiftType[] = [
 
 /** What the yearly meeting is called where you live. Neutral default; the club renames it in Club office settings. */
 export const DEFAULT_ANNUAL_MEETING_NAME = 'Annual general meeting'
+
+/** Wording for club email, neutral. The club rewrites it in Club office settings; the law that applies is for the club to check. */
+export const DEFAULT_EMAIL_FOOTER = 'You are receiving this because you are connected with {clubName}. Contact: {contact}'
+export const DEFAULT_UNSUBSCRIBE_TEXT = 'You can stop these emails at any time.'
+export const DEFAULT_RECIPIENT_RETENTION_DAYS = 30
+export const MAX_RECIPIENT_RETENTION_DAYS = 365

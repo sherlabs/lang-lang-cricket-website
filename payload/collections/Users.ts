@@ -2,7 +2,9 @@ import { APIError, AuthenticationError, Forbidden, ValidationError, type Collect
 import { clientIp } from '../../lib/client-ip'
 import { passwordIsRight } from '../../lib/password-check'
 import { MIN_PASSWORD_LENGTH } from '../../lib/selector-status'
-import { ipHit } from '../../lib/throttle'
+import { emailEnabled } from '../../lib/email/env'
+import { resetMarker } from '../../lib/email/payload-adapter'
+import { FORGOT_ADDRESS_RULE, hit, ipHit } from '../../lib/throttle'
 import { isAdminField, isAdminUser, isSelectorUser, isStaff, isStaffUser, isSignedIn, nobodyField, type Role } from '../access'
 import { adminOnlyCondition, hiddenFromEditors } from '../admin/visibility'
 
@@ -49,8 +51,20 @@ const beforeOperationGuard: NonNullable<NonNullable<CollectionConfig['hooks']>['
     throw new Forbidden(req.t)
   }
   if (operation === 'forgotPassword') {
-    // Forgot-password is disabled: there is no email adapter, so Payload would write the reset link and token to the server logs.
-    throw new APIError('Password reset by email is not available. Ask an admin to set a new password.', 403, null, true)
+    // Off unless outbound mail is configured: without an adapter Payload would write the reset link and token to the server logs.
+    if (!emailEnabled()) throw new APIError('Password reset by email is not available. Ask an admin to set a new password.', 403, null, true)
+    // Two caps, both independent of whether the address has an account, so a refusal never says who is registered.
+    const ip = clientIp(req.headers ?? new Headers())
+    const address = typeof (args as { data?: Body }).data?.email === 'string' ? ((args as { data: Body }).data.email as string).trim().toLowerCase().slice(0, 254) : ''
+    const blocked = (ip && !(await ipHit(req.payload, 'rest-forgot', ip)).allowed) || (address && !(await hit(req.payload, `rest-forgot:addr:${address}`, FORGOT_ADDRESS_RULE)).allowed)
+    if (blocked) throw new APIError('Too many tries. Please wait a while and try again.', 429, null, true)
+    return args
+  }
+  if (operation === 'resetPassword') {
+    // The reset runs below the collection hooks that enforce the length, so it is checked here, before the token is spent.
+    const password = (args as { data?: Body }).data?.password
+    if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) throw new APIError(`Use at least ${MIN_PASSWORD_LENGTH} characters for the password.`, 400, null, true)
+    return args
   }
   const user = req.user
   if (!isSignedIn(user) || isAdminUser(user) || (operation !== 'create' && operation !== 'update')) return args
@@ -202,6 +216,18 @@ export const Users: CollectionConfig = {
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
     cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' },
+    forgotPassword: {
+      // The link is built from the configured serverURL only; the request's Host and X-Forwarded-Host are never read. The body is a
+      // marker, not the finished email: the themed message is built after the response has gone (see lib/email/payload-adapter.ts),
+      // so a known and an unknown address cost the same. An empty body (a disabled account) sends nothing.
+      generateEmailHTML: (args) => {
+        if (!args) return ''
+        const { req, token, user } = args
+        if (!req || (user as { disabled?: boolean | null } | undefined)?.disabled) return ''
+        const config = req.payload.config
+        return resetMarker(`${config.serverURL.replace(/\/+$/, '')}${config.routes.admin}${config.admin.routes.reset}/${token}`)
+      },
+    },
   },
   access: {
     // Only the committee opens the admin; a selector who signs in gets Payload's unauthorised page.

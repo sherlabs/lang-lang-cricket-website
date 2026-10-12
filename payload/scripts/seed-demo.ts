@@ -30,6 +30,7 @@
  * It also writes a demo volunteer roster (six game days, two confirmed with hours, answers from about a dozen volunteers) when there are
  * no volunteer weeks yet.
  *
+ * It also writes one draft email campaign and a few do-not-email entries (never sends; the Email module stays hidden until EMAIL_PROVIDER is set).
  * It also writes demo committee seats, the standard meeting agendas, three meetings (two closed, one with a restricted finance item, and a
  * planned yearly general meeting), a few committee actions (one overdue) and two office-bearer documents when there are no seats yet.
  *
@@ -58,6 +59,7 @@ import { seedDemoFees } from '../seed/demo-fees'
 import { seedDemoVolunteers } from '../seed/demo-volunteers'
 import { seedDemoMeetings } from '../seed/demo-meetings'
 import { seedDemoDiary } from '../seed/demo-diary'
+import { seedDemoEmail } from '../seed/demo-email'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
@@ -523,6 +525,7 @@ async function main() {
     console.log(`[seed:demo] club office volunteers: ${await seedDemoVolunteers(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office meetings: ${await seedDemoMeetings(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office diary and plan: ${await seedDemoDiary(payload, currentClubDate())}`)
+    console.log(`[seed:demo] club office email: ${await seedDemoEmail(payload)}`)
   } finally {
     await payload.destroy()
   }
