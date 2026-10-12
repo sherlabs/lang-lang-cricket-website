@@ -194,6 +194,8 @@ export async function enterSelectorBallot(user: TypedUser, fixtureId: number, pi
 /** Open, close or exclude one game. Writes `votesState` / `countsForAwards` (the collection is closed to REST, so only code writes them). */
 export async function setGameVotes(user: TypedUser, fixtureId: number, patch: { votesState?: unknown; countsForAwards?: unknown }): Promise<Done> {
   assertSelection(user)
+  // These switches change the public board at once, so only staff (admin or editor) may use them; a selector is refused.
+  if (!isStaffUser(user)) return { ok: false, error: 'Only a committee member can change a game\'s voting state.' }
   const payload = await getPayloadClient()
   const data: Record<string, unknown> = {}
   if (patch.votesState !== undefined) {

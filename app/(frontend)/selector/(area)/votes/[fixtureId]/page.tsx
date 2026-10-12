@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { SelectorBallotForm } from '@/components/votes/selector-forms'
 import { btnPrimary, btnQuiet } from '@/components/selector/styles'
 import { CopyButton } from '@/components/selector/ui'
-import { VOTES, votePaths, selectorPaths } from '@/config/site'
+import { CLUB_TIMEZONE, VOTES, votePaths, selectorPaths } from '@/config/site'
 import { getClub } from '@/lib/club'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { requireSelection } from '@/lib/selector-auth'
@@ -43,7 +43,7 @@ export default async function VoteGamePage({ params }: Props) {
         {game.counts ? 'This game counts.' : `It needs ${game.needed} votes to count.`}{game.countsForAwards ? '' : ' It is excluded from the awards.'}
       </p>
 
-      <section aria-labelledby="state" className="mt-6">
+      {detail.isStaff && <section aria-labelledby="state" className="mt-6">
         <h2 id="state" className="text-lg font-bold text-brand-black">Voting for this game</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           {game.status !== 'closed' && <form action={setGameStateAction} className={stateForm}><input type="hidden" name="fixtureId" value={game.id} /><input type="hidden" name="votesState" value="closed" /><button type="submit" className={btnQuiet}>Close voting now</button></form>}
@@ -52,7 +52,7 @@ export default async function VoteGamePage({ params }: Props) {
           <form action={setGameStateAction} className={stateForm}><input type="hidden" name="fixtureId" value={game.id} /><input type="hidden" name="countsForAwards" value={game.countsForAwards ? 'false' : 'true'} /><button type="submit" className={btnQuiet}>{game.countsForAwards ? 'Do not count this game (washed out)' : 'Count this game'}</button></form>
         </div>
         <p className="mt-2 text-xs text-brand-grey">Automatic means voting stays open for {settings.voteWindowDays} days after the game.</p>
-      </section>
+      </section>}
 
       <section aria-labelledby="chase" className="mt-8">
         <h2 id="chase" className="text-lg font-bold text-brand-black">Not voted yet ({detail.chase.length})</h2>
@@ -93,7 +93,7 @@ export default async function VoteGamePage({ params }: Props) {
           <ul className="mt-2 space-y-2 text-sm">
             {audit.map((a, i) => (
               <li key={`${a.name}-${i}`} className="flex items-center justify-between gap-3">
-                <span>{a.name} ({a.source === 'selector' ? 'entered by a selector' : 'voted'}{a.castAt ? `, ${new Date(a.castAt).toLocaleString(locale)}` : ''})</span>
+                <span>{a.name} ({a.source === 'selector' ? 'entered by a selector' : 'voted'}{a.castAt ? `, ${new Date(a.castAt).toLocaleString(locale, { timeZone: CLUB_TIMEZONE })}` : ''})</span>
               </li>
             ))}
           </ul>

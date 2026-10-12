@@ -255,6 +255,20 @@ export async function publicLeaderboardOn(payload: Payload): Promise<boolean> {
   return s.enabled && s.publicLeaderboard
 }
 
+/** Sitemap: the plain `/votes` address is a real page only when the whole-club board is public (grade-only redirects to a grade). */
+export async function publicLeaderboardIndexable(payload: Payload): Promise<boolean> {
+  const s = await getVoteSettings(payload)
+  return s.enabled && s.publicLeaderboard && s.publicScope !== 'grade'
+}
+
+/** Grade-only scope: the first grade with a board, so `/votes` can send visitors there instead of a 404. */
+export async function firstPublicGradeId(payload: Payload, now?: Date): Promise<string | null> {
+  const s = await getVoteSettings(payload)
+  if (!s.enabled || !s.publicLeaderboard || s.publicScope !== 'grade') return null
+  const board = await computeBoard(payload, { audience: 'public', locale: 'en', now, settings: s })
+  return board.grades[0]?.gradeId ?? null
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------
 // The player's own flow (reached through the availability link; the caller proved the player with the signed cookie).
 // ---------------------------------------------------------------------------------------------------------------------------

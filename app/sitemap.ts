@@ -5,7 +5,7 @@ import { listPublishedNewsSlugs } from '@/lib/news-queries'
 import { listPublishedPageSlugs } from '@/lib/pages-queries'
 import { listPublishedGamesForSitemap } from '@/lib/teams-queries'
 import { listPublishedYearbookSlugs } from '@/lib/yearbooks-queries'
-import { publicLeaderboardOn } from '@/lib/votes-queries'
+import { publicLeaderboardIndexable } from '@/lib/votes-queries'
 
 export const dynamic = 'force-dynamic' // DB-backed (Payload Local API): revalidate=3600 would bake a static-only sitemap at build
 
@@ -106,7 +106,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({ url: `${SITE_URL}/teams/${g.gameId}`, lastModified: g.lastModified, changeFrequency: 'daily', priority: 0.4 })
     }
     // The best-player leaderboard exists only while the committee has switched it on.
-    if (await publicLeaderboardOn(payload)) entries.push({ url: `${SITE_URL}/votes`, changeFrequency: 'weekly', priority: 0.4 })
+    if (await publicLeaderboardIndexable(payload)) entries.push({ url: `${SITE_URL}/votes`, changeFrequency: 'weekly', priority: 0.4 })
     for (const e of eventRows) {
       entries.push({ url: `${SITE_URL}/events/${e.id}`, lastModified: e.createdAt, changeFrequency: 'weekly', priority: 0.6 })
     }

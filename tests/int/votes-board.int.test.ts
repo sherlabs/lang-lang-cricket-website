@@ -5,7 +5,7 @@ import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } f
 import { resetSelection } from './selection-helpers'
 import { ballotCount, makeFinalGame, makeTeam, settingsPatch, votesOn } from './votes-helpers'
 import { auditVoters, deleteBallot, enterSelectorBallot, exportVotesCsv, loadPresentSnapshot, loadPrivateBoard, loadVoteGame, loadVoteSettingsView, loadVotesHome, saveVoteSettings, setGameVotes } from '@/lib/selector-votes-queries'
-import { computeBoard, getPublicBoard, publicLeaderboardOn, writeBallot } from '@/lib/votes-queries'
+import { computeBoard, firstPublicGradeId, getPublicBoard, publicLeaderboardIndexable, publicLeaderboardOn, writeBallot } from '@/lib/votes-queries'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
 vi.mock('next/cache', () => cache)
@@ -192,12 +192,15 @@ describe('best-player votes: the board, the public page and who can see what', (
       expect(saved).toMatchObject({ ok: true, warning: expect.stringMatching(/last 4 digits/) })
     })
 
-    it('anyone in the area can open, close or exclude a game; a bad value changes nothing', async () => {
-      expect(await setGameVotes(selector, closedGame.id, { votesState: 'open' })).toEqual({ ok: true })
-      expect((await loadVotesHome(selector)).games.find((g) => g.id === closedGame.id)!.status).toBe('open')
-      expect(await setGameVotes(selector, closedGame.id, { votesState: 'weird' })).toMatchObject({ ok: false })
-      expect(await setGameVotes(selector, closedGame.id, { countsForAwards: 'no' })).toMatchObject({ ok: false })
-      expect(await setGameVotes(selector, closedGame.id, { countsForAwards: false })).toEqual({ ok: true })
+    it('only staff can open, close or exclude a game; a selector is refused and a bad value changes nothing', async () => {
+      expect(await setGameVotes(selector, closedGame.id, { votesState: 'open' })).toMatchObject({ ok: false })
+      expect((await loadVotesHome(selector)).games.find((g) => g.id === closedGame.id)!.status).not.toBe('open')
+      expect(await setGameVotes(editor, closedGame.id, { votesState: 'open' })).toEqual({ ok: true })
+      expect((await loadVotesHome(editor)).games.find((g) => g.id === closedGame.id)!.status).toBe('open')
+      expect(await setGameVotes(editor, closedGame.id, { votesState: 'weird' })).toMatchObject({ ok: false })
+      expect(await setGameVotes(editor, closedGame.id, { countsForAwards: 'no' })).toMatchObject({ ok: false })
+      expect(await setGameVotes(selector, closedGame.id, { countsForAwards: false })).toMatchObject({ ok: false })
+      expect(await setGameVotes(editor, closedGame.id, { countsForAwards: false })).toEqual({ ok: true })
       const pub = await getPublicBoard(payload, { locale: LOCALE })
       expect(pub!.result.rows).toEqual([])
     })
@@ -229,6 +232,12 @@ describe('best-player votes: the board, the public page and who can see what', (
       await settingsPatch(payload, { publicScope: 'grade' })
       expect(await getPublicBoard(payload, { locale: LOCALE })).toBeNull()
       expect(await getPublicBoard(payload, { locale: LOCALE, gradeId: grade })).not.toBeNull()
+      // Grade-only scope: /votes redirects to a grade and stays out of the sitemap.
+      expect(await firstPublicGradeId(payload)).toBe(grade)
+      expect(await publicLeaderboardIndexable(payload)).toBe(false)
+      await settingsPatch(payload, { publicScope: 'club' })
+      expect(await firstPublicGradeId(payload)).toBeNull()
+      expect(await publicLeaderboardIndexable(payload)).toBe(true)
     })
 
     it('holds only totals of closed games over the minimum, and counts the rest as "not counted yet"', async () => {

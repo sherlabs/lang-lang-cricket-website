@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { PageHeader } from '@/components/page-header'
 import { LeaderboardTable } from '@/components/votes/leaderboard-table'
 import { RaceChart } from '@/components/votes/race-chart'
@@ -8,7 +8,7 @@ import { VOTES, votePaths } from '@/config/site'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 import { canonicalFor, titleWithSuffix } from '@/lib/site-metadata'
-import { getPublicBoard } from '@/lib/votes-queries'
+import { firstPublicGradeId, getPublicBoard } from '@/lib/votes-queries'
 import { buildRace } from '@/lib/votes/chart'
 import { ballotValuesLabel } from '@/lib/votes/settings'
 import { cn } from '@/lib/utils'
@@ -44,7 +44,12 @@ export default async function VotesPage({ searchParams }: Props) {
   const seasonRaw = one(sp.season)
   const gradeRaw = one(sp.grade)
   const board = await getPublicBoard(payload, { season: /^\d{4}$/.test(seasonRaw) ? Number(seasonRaw) : null, gradeId: gradeRaw && gradeRaw.length <= 120 ? gradeRaw : null, locale: club.locale })
-  if (!board) notFound()
+  if (!board) {
+    // Grade-only scope has no whole-club board: send visitors to the first grade rather than a dead end.
+    const first = gradeRaw ? null : await firstPublicGradeId(payload)
+    if (first) redirect(`${votePaths.publicBoard}?${new URLSearchParams({ grade: first })}`)
+    notFound()
+  }
   const { settings, result } = board
   const href = (grade: string | null, season: number) => `${votePaths.publicBoard}?${new URLSearchParams({ ...(grade ? { grade } : {}), ...(season !== board.seasons[0] ? { season: String(season) } : {}) })}`.replace(/\?$/, '')
   const showGrades = settings.publicScope !== 'club' && board.grades.length > 0

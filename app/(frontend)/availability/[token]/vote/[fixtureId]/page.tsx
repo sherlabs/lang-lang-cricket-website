@@ -11,7 +11,7 @@ import { getClub } from '@/lib/club'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { getPayloadClient } from '@/lib/payload/client'
 import { loadVoteView } from '@/lib/votes-queries'
-import { BALLOT_MESSAGES, voteWord, type BallotError } from '@/lib/votes/ballot'
+import { BALLOT_MESSAGES, voteWord } from '@/lib/votes/ballot'
 import { castVoteAction } from './actions'
 
 // The link token is in the address: no indexing, no referrer, no caching (also set in next.config headers).
@@ -35,7 +35,7 @@ export default async function VotePage({ params, searchParams }: Props) {
   const { locale } = await getClub()
   const first = view.player.name.split(/\s+/)[0]
   const when = formatMatchDay(view.fixture.localDate, locale)
-  const flash = sp.e ? FLASH[sp.e as BallotError] ?? BALLOT_MESSAGES.bad_input : null
+  const flash = sp.e ? (Object.hasOwn(FLASH, sp.e) ? FLASH[sp.e] : BALLOT_MESSAGES.bad_input) : null
   const names = new Map(view.options.map((o) => [o.id, o.name]))
   return (
     <main className="container-site max-w-xl py-8 sm:py-12">

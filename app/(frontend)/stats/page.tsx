@@ -8,6 +8,8 @@ import { LeaderboardTable, type LeaderboardRow } from '@/components/stats/leader
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { getClub } from '@/lib/club'
+import { getPayloadClient } from '@/lib/payload/client'
+import { publicLeaderboardOn } from '@/lib/votes-queries'
 import { getStatsSettings } from '@/lib/site-settings'
 import { getLabelMap } from '@/lib/stats/label-queries'
 import { canonicalGrade } from '@/lib/stats/labels'
@@ -65,6 +67,7 @@ export default async function StatsPage({ searchParams }: Props) {
   const copy = club.pageCopy.stats
   const rules = settings.gradeRules
   const rawParams = await searchParams
+  const votesOn = await publicLeaderboardOn(await getPayloadClient()).catch(() => false)
   const seasonNames = data.seasons.map((s) => s.seasonName)
   const labelMap = await getLabelMap()
   const parsed = parseStatsParams(rawParams, { seasons: seasonNames, grades: gradeNames(data.rows), canonicalGrade: (raw) => canonicalGrade(raw, labelMap) })
@@ -142,7 +145,7 @@ export default async function StatsPage({ searchParams }: Props) {
       <JsonLd data={playerListJsonLd(`${boards[0]?.metric.label ?? 'Leaderboard'} leaders`, top.slice(0, 10), club)} />
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
       <section className="container-site space-y-8 py-12 lg:py-16">
-        <StatsSubNav current="/stats" />
+        <StatsSubNav current="/stats" showVotes={votesOn} />
         {(board || matchItems.length > 0) && (
           <MilestoneStrip
             heading={club.pageCopy.players.milestones.heading} note={board?.note ?? ''} approaching={board?.approaching ?? []} achieved={board?.achievedNow ?? []}
