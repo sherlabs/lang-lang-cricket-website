@@ -48,8 +48,9 @@ function KindBlock({ k, labels }: { k: KindSummary; labels: Record<string, strin
     <section className="office-box">
       <h2>{KIND_TITLE[k.kind]}</h2>
       <p>{k.hours === null ? 'The total is not shown because a small group would be easy to work out from it.' : <><strong>{k.hours} hours</strong> from {k.people} people.</>}</p>
-      <Breakdown title="By job" table={k.byType} label={(key) => labels[key] ?? key} />
-      <Breakdown title="By month" table={k.byMonth} label={(key) => key} />
+      {k.byType ? <Breakdown title="By job" table={k.byType} label={(key) => labels[key] ?? key} /> : null}
+      {k.byMonth ? <Breakdown title="By month" table={k.byMonth} label={(key) => key} /> : null}
+      {k.hours === null ? <p className="club-muted">{officeCopy.volunteers.withheld}</p> : null}
     </section>
   )
 }

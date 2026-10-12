@@ -683,8 +683,9 @@ export async function hoursExportTable(user: TypedUser, q: HoursQuery, scope: 'a
       out.push([kind, 'All', 'Fewer than 3 people', ''])
       continue
     }
-    out.push([kind, 'All', k.hours ?? 'Hidden (small groups)', k.people])
+    out.push([kind, 'All', k.hours ?? 'Not shown (small groups)', k.people])
     for (const [dimension, t] of [['Job', k.byType], ['Month', k.byMonth]] as const) {
+      if (!t) continue
       for (const c of t.cells) out.push([kind, `${dimension}: ${dimension === 'Job' ? (labels[c.key] ?? c.key) : c.key}`, c.hours, c.people])
       if (t.other) out.push([kind, `${dimension}: Other`, t.other.hours ?? 'Fewer than 3 people', t.other.people ?? ''])
     }

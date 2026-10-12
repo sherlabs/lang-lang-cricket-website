@@ -97,6 +97,7 @@ export const officeCopy = {
     warning: (w: { kind: 'double-booked' | 'over-capacity' | 'said-no' }, name: string, job: string) =>
       w.kind === 'double-booked' ? `${name} is on more than one job this day.` : w.kind === 'over-capacity' ? `${job} has more people than it needs.` : `${name} said they cannot do this day.`,
     fewer: 'Fewer than 3 people',
+    withheld: 'Some figures are not shown because a small group could be worked out from them, for example by taking one table away from another.',
   },
   landing: {
     empty: 'Nothing else is set up for the committee here yet. When more of the club office is switched on, it will appear on this page.',

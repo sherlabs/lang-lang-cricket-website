@@ -223,12 +223,22 @@ export function smallCountTable(rows: readonly HoursRow[], keyOf: (r: HoursRow) 
 export type KindSummary =
   | { kind: HoursKind; state: 'none' }
   | { kind: HoursKind; state: 'hidden' }
-  | { kind: HoursKind; state: 'shown'; people: number; hours: number | null; byType: SmallCountTable; byMonth: SmallCountTable }
+  | {
+      kind: HoursKind
+      state: 'shown'
+      people: number
+      hours: number | null
+      /** Either breakdown is null when it was withheld so the other cannot be subtracted from it (see `aggregateHours`). */
+      byType: SmallCountTable | null
+      byMonth: SmallCountTable | null
+    }
 
 /**
  * The name-free aggregate (grant reports, and the only hours view an editor gets). Paid and volunteer hours are separate datasets:
  * a kind with fewer than 3 distinct people is not reported at all, so nothing shown includes it and it cannot be recovered by
- * subtraction. Within a kind the headline total is withheld when either breakdown has a hidden "other".
+ * subtraction. Within a kind the two breakdowns (by job, by month) both add up to the same true total, so when one of them has a
+ * hidden "other" the other must not be shown at all: its cells would add up to the true total and the hidden group would be the
+ * difference. Only the breakdown that still has its hidden group is shown, without a total; the headline total is withheld too.
  */
 export function aggregateHours(rows: readonly HoursRow[]): KindSummary[] {
   return HOURS_KINDS.map((kind): KindSummary => {
@@ -238,8 +248,11 @@ export function aggregateHours(rows: readonly HoursRow[]): KindSummary[] {
     if (people < SMALL_COUNT) return { kind, state: 'hidden' }
     const byType = smallCountTable(mine, (r) => r.shiftTypeKey)
     const byMonth = smallCountTable(mine, (r) => r.date.slice(0, 7))
-    const hours = byType.totalHours !== null && byMonth.totalHours !== null ? round(mine.reduce((s, r) => s + r.hours, 0)) : null
-    return { kind, state: 'shown', people, hours, byType, byMonth }
+    const typeHidden = byType.totalHours === null
+    const monthHidden = byMonth.totalHours === null
+    if (!typeHidden && !monthHidden) return { kind, state: 'shown', people, hours: round(mine.reduce((s, r) => s + r.hours, 0)), byType, byMonth }
+    // The breakdown that keeps a hidden group is safe on its own (no total to subtract from); the complete one is withheld.
+    return { kind, state: 'shown', people, hours: null, byType: typeHidden ? byType : null, byMonth: typeHidden ? null : byMonth }
   })
 }
 

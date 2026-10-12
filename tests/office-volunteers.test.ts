@@ -168,6 +168,7 @@ describe('confirming a week', () => {
   })
 })
 
+const round2 = (n: number): number => Math.round(n * 100) / 100
 const h = (memberId: number, hours: number, kind: HoursRow['kind'] = 'volunteer', shiftTypeKey = 'canteen', date = '2026-10-17'): HoursRow => ({ memberId, hours, kind, shiftTypeKey, date })
 
 describe('the small-count rule', () => {
@@ -221,6 +222,43 @@ describe('the name-free aggregate keeps paid and volunteer apart', () => {
     const rows = [h(1, 3), h(2, 3), h(3, 3), h(1, 2, 'volunteer', 'gate')]
     const [v] = aggregateHours(rows)
     expect(v).toMatchObject({ state: 'shown', people: 3, hours: null })
+  })
+  it('never shows two breakdowns that add up to the same total when one of them hides a group', () => {
+    // Three people in the canteen in one month, and one person on the gate the same month: by month is complete, by job hides the gate.
+    const rows = [h(1, 3), h(2, 3), h(3, 3), h(4, 4, 'volunteer', 'gate')]
+    const [v] = aggregateHours(rows)
+    if (v.state !== 'shown') throw new Error('expected a shown summary')
+    expect(v.hours).toBeNull()
+    expect(v.byMonth).toBeNull() // would sum to 13 and give the gate away
+    expect(v.byType).not.toBeNull()
+    expect(v.byType!.totalHours).toBeNull()
+    expect(v.byType!.other).toEqual({ hours: null, people: null })
+    // And the other way round: the month is the small one, the job table is the complete one.
+    const [w] = aggregateHours([h(1, 3, 'volunteer', 'canteen', '2026-03-07'), h(2, 3, 'volunteer', 'canteen', '2026-03-07'), h(3, 3, 'volunteer', 'canteen', '2026-03-07'), h(4, 5, 'volunteer', 'canteen', '2026-04-04')])
+    if (w.state !== 'shown') throw new Error('expected a shown summary')
+    expect(w.byType).toBeNull()
+    expect(w.byMonth).not.toBeNull()
+    expect(w.byMonth!.totalHours).toBeNull()
+  })
+  it('whatever is shown, no table adds up to the true total while a group is hidden', () => {
+    const cases: HoursRow[][] = [
+      [h(1, 3), h(2, 3), h(3, 3), h(4, 4, 'volunteer', 'gate')],
+      [h(1, 3), h(2, 3), h(3, 3), h(1, 2, 'volunteer', 'gate'), h(2, 1, 'volunteer', 'bar', '2026-11-07')],
+      [h(1, 3), h(2, 3), h(3, 3), h(4, 1, 'volunteer', 'gate'), h(5, 1, 'volunteer', 'bar'), h(6, 1, 'volunteer', 'scorer')],
+    ]
+    for (const rows of cases) {
+      const truth = round2(rows.reduce((s, r) => s + r.hours, 0))
+      const [v] = aggregateHours(rows)
+      if (v.state !== 'shown') continue
+      const tables = [v.byType, v.byMonth].filter((t): t is NonNullable<typeof t> => t !== null)
+      const hiddenSomewhere = tables.some((t) => t.other && t.other.hours === null)
+      if (!hiddenSomewhere) continue
+      expect(v.hours).toBeNull()
+      for (const t of tables) {
+        const shown = t.cells.reduce((s, c) => s + c.hours, 0) + (t.other?.hours ?? 0)
+        expect(round2(shown), JSON.stringify(rows)).not.toBe(truth)
+      }
+    }
   })
   it('per-person totals split paid and volunteer for admins', () => {
     expect(hoursByPerson([h(1, 3), h(1, 2.5, 'paid'), h(2, 1)]).find((r) => r.memberId === 1)).toEqual({ memberId: 1, volunteer: 3, paid: 2.5 })

@@ -40,7 +40,7 @@ export const officeModules: OfficeModule[] = [
   {
     key: 'volunteers',
     label: 'Volunteers',
-    hint: 'Who is on the canteen, bar and gate each game day, and the hours they give.',
+    hint: 'Who is helping on each game day, and the hours they give.',
     path: '/office/volunteers',
     role: 'staff',
     doc: 'volunteer-roster',
