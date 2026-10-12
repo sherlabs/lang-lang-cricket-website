@@ -1,6 +1,6 @@
 /** Wave D WP-0: the toss graphic, the name-only sponsor thank-you and the minimal-style season leaders spacing (#21). Pure, no database. */
 import { describe, expect, it } from 'vitest'
-import { availableHeight, footerHeight, layoutHeight } from '@/lib/social/fit'
+import { availableHeight, FILL_SCALE_CAP, footerHeight, layoutHeight } from '@/lib/social/fit'
 import { DEFAULT_CAPTIONS, CAPTION_VARS, fillTemplate } from '@/lib/social/caption'
 import { SPECS } from '@/lib/social/specs'
 import type { LeadersData } from '@/lib/social/specs/stats-leaders'
@@ -139,11 +139,11 @@ describe('season leaders: minimal fills its page', () => {
     const { used, avail } = fits(SPECS['stats-leaders'].layout(rowsOf(count), style, size), size, style)
     return { used, avail, ratio: used / avail }
   }
-  const MIN_DENSITY = 0.6
+  const MIN_DENSITY = 0.8
 
-  it('minimal uses at least 60% of the room on the square and wide pages (3 and 5 rows), and always fits', () => {
+  it('minimal uses at least 80% of the room on every page size (3 and 5 rows), and always fits', () => {
     for (const count of [3, 5]) {
-      for (const size of ['square', 'landscape'] as const) {
+      for (const size of SIZE_KEYS) {
         const d = density(count, size, 'minimal')
         expect(d.ratio, `${count} rows ${size}: ${d.used}px of ${d.avail}px`).toBeGreaterThanOrEqual(MIN_DENSITY)
         expect(d.used).toBeLessThanOrEqual(d.avail)
@@ -159,7 +159,7 @@ describe('season leaders: minimal fills its page', () => {
       expect(rows?.kind === 'rows' && rows.rows.length).toBe(count)
     }
   })
-  it('bold and classic are unchanged (no scale), minimal differs only by the row scale, capped at 1.35', () => {
+  it('bold and classic are unchanged (no scale), minimal differs only by the row scale, capped at the fill cap', () => {
     for (const count of [3, 5]) for (const size of SIZE_KEYS) {
       const bold = SPECS['stats-leaders'].layout(rowsOf(count), 'bold', size)
       const classic = SPECS['stats-leaders'].layout(rowsOf(count), 'classic', size)
@@ -171,7 +171,7 @@ describe('season leaders: minimal fills its page', () => {
       const rows = minimal.blocks.find((b) => b.kind === 'rows')
       const scale = rows?.kind === 'rows' ? (rows.scale ?? 1) : 1
       expect(scale).toBeGreaterThanOrEqual(1)
-      expect(scale).toBeLessThanOrEqual(1.35)
+      expect(scale).toBeLessThanOrEqual(FILL_SCALE_CAP)
     }
   })
 })

@@ -20,7 +20,9 @@ export function photoHeight(size: SizeKey, last: boolean): number {
 }
 
 /** The metrics with row height and row text scaled (a rows block with room to spare, see `fillRowsScale`). */
-export const scaleMetrics = (m: Metrics, scale: number | undefined): Metrics => (scale && scale !== 1 ? { ...m, row: Math.round(m.row * scale), rowText: Math.round(m.rowText * scale) } : m)
+/** Row text grows no more than this, however tall the row gets, so a long name still fits across the page. */
+const TEXT_SCALE_CAP = 1.35
+export const scaleMetrics = (m: Metrics, scale: number | undefined): Metrics => (scale && scale !== 1 ? { ...m, row: Math.round(m.row * scale), rowText: Math.round(m.rowText * Math.min(scale, TEXT_SCALE_CAP)) } : m)
 
 /** A list row that carries a second line (`detail`) under its main text. */
 export const detailRowHeight = (m: Metrics): number => m.row + Math.round(m.rowText * 0.72 * LINE)
@@ -165,7 +167,7 @@ export function layoutHeight(layout: GraphicLayout, size: SizeKey, style: StyleK
 }
 
 /** The most a list's rows may be enlarged to use spare height, and the share of the page a filled list aims for. */
-export const FILL_SCALE_CAP = 1.35
+export const FILL_SCALE_CAP = 4
 export const FILL_TARGET = 0.92
 
 /**

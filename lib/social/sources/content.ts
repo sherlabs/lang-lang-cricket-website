@@ -37,11 +37,14 @@ async function publicSponsors() {
 
 export async function sponsorChoices(): Promise<SourceList> {
   const docs = await publicSponsors()
-  // A logo that is missing or is not a PNG or JPG cannot be drawn; the picture then shows the name, and the composer says so.
-  const drawable = (d: (typeof docs)[number]): boolean => typeof d.logo === 'object' && d.logo !== null && isDrawableImageType(d.logo.mimeType)
+  // A logo that is missing, is not a PNG or JPG, or fails to load (the same cached fetch the picture uses) cannot be drawn;
+  // the picture then shows the name, and the composer says so.
+  const drawable = async (d: (typeof docs)[number]): Promise<boolean> =>
+    typeof d.logo === 'object' && d.logo !== null && isDrawableImageType(d.logo.mimeType) && (await loadImageDataUri(toSponsor(d).logoUrl, d.logo.updatedAt)) !== null
+  const ok = await Promise.all(docs.map(drawable))
   return {
     multi: true,
-    choices: docs.map((d) => ({ id: String(d.id), label: `${d.name} (${d.tier})`, ...(drawable(d) ? {} : { note: `${d.name} has no logo we can draw, so the name is shown.` }) })),
+    choices: docs.map((d, i) => ({ id: String(d.id), label: `${d.name} (${d.tier})`, ...(ok[i] ? {} : { note: `${d.name} has no logo we can draw, so the name is shown.` }) })),
     empty: 'No sponsors have been added yet.',
   }
 }
