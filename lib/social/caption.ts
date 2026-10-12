@@ -26,8 +26,23 @@ export const DEFAULT_CAPTIONS: Record<GraphicType, string> = {
   milestone: 'Congratulations {player} on {milestone}!\n{link}',
   'stats-leaders': '{metric} leaders for {season}: {leader} is out in front.\n{link}',
   'event-promo': '{event}\n{date} {time}\n{place}\n{link}',
-  'sponsor-thanks': 'Thank you to {sponsor}, a {tier} sponsor of {club}.\n{link}',
+  'sponsor-thanks': 'Thank you to {sponsor}.\n{tier} sponsor of {club}.\n{link}',
   'season-wrap': '{season} at {club}: {record}\n{link}',
+}
+
+/**
+ * What the composer sends when it saves the caption wording. The club's own wording is stored only where it differs from the standard
+ * text; a wording equal to the standard is sent as empty, so no default is ever frozen into the settings and a later change to the
+ * standard wording still reaches the club.
+ */
+export function templatesToSave(templates: Record<GraphicType, string>): Partial<Record<GraphicType, string>> {
+  const out: Partial<Record<GraphicType, string>> = {}
+  for (const type of Object.keys(DEFAULT_CAPTIONS) as GraphicType[]) {
+    const v = templates[type]
+    if (typeof v !== 'string') continue
+    out[type] = v.trim() === DEFAULT_CAPTIONS[type].trim() ? '' : v
+  }
+  return out
 }
 
 const PLACEHOLDER = /\{([a-zA-Z][a-zA-Z0-9]*)\}/g

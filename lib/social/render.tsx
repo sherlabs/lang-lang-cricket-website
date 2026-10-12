@@ -3,30 +3,16 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import { WHITE } from '@/lib/theme/neutral'
 import type { ResolvedTheme } from '@/lib/theme/resolve'
 import { headlineSize, METRICS, type Metrics } from './density'
+import { availableHeight, detailRowHeight, footerHeight, logosFor, photoHeight, type LogoGrid } from './fit'
+import { STYLE_KITS, type StyleKit } from './kits'
 import { rgba, styleTokens, type StyleTokens } from './style'
-import type { Block, GraphicLayout, Row, SizeKey, StyleKey } from './types'
+import { SIZES, type Block, type GraphicLayout, type Row, type SizeKey, type StyleKey } from './types'
 
 /**
  * The one renderer behind every graphic (wave C spec 3.1). A style is a `StyleKit`: token choices (in `style.ts`) plus three
  * structural switches. Type x style x size is composed from these primitives, not hand-written per cell. Everything is flex (satori),
  * text is always a text node, and colours come only from the style tokens.
  */
-type StyleKit = {
-  /** `bar`: an accent bar across the top; `band`: a coloured band carrying the crest; `plain`: nothing. */
-  frame: 'bar' | 'band' | 'plain'
-  /** Where the crest and club name sit. */
-  masthead: 'top-left' | 'band' | 'corner'
-  headlineUpper: boolean
-  align: 'left' | 'center'
-  /** Accent underline beneath the headline. */
-  headlineRule: boolean
-}
-
-export const STYLE_KITS: Record<StyleKey, StyleKit> = {
-  bold: { frame: 'bar', masthead: 'top-left', headlineUpper: true, align: 'left', headlineRule: false },
-  classic: { frame: 'band', masthead: 'band', headlineUpper: true, align: 'center', headlineRule: true },
-  minimal: { frame: 'plain', masthead: 'corner', headlineUpper: false, align: 'left', headlineRule: true },
-}
 
 export type RenderInput = {
   layout: GraphicLayout
@@ -42,7 +28,7 @@ export type RenderInput = {
   strip: { src: string; name: string }[]
 }
 
-type Ctx = { m: Metrics; t: StyleTokens; kit: StyleKit; size: SizeKey; theme: ResolvedTheme }
+type Ctx = { m: Metrics; t: StyleTokens; kit: StyleKit; size: SizeKey; theme: ResolvedTheme; grid: LogoGrid | null }
 
 const col = (extra: CSSProperties = {}): CSSProperties => ({ display: 'flex', flexDirection: 'column', ...extra })
 const row = (extra: CSSProperties = {}): CSSProperties => ({ display: 'flex', flexDirection: 'row', ...extra })
@@ -75,15 +61,21 @@ function Masthead({ c, input, where }: { c: Ctx; input: RenderInput; where: 'ban
 function RowLine({ r, c, compact }: { r: Row; c: Ctx; compact: boolean }) {
   const { m, t } = c
   const fs = compact ? Math.round(m.rowText * 0.9) : m.rowText
+  // The main text takes what is left; the lead, badges and figure keep their size (flexShrink 0), so a long venue or grade never
+  // pushes the name of the opponent out of the row.
+  const fixed = { flexShrink: 0 } as const
   return (
-    <div style={row({ alignItems: 'center', height: m.row, borderBottom: `2px solid ${rgba(t.text, 0.16)}`, fontSize: fs })}>
-      {r.lead !== undefined && <Text style={{ width: Math.round(fs * (r.lead.length > 2 ? 2.2 : 1.5)), fontFamily: 'Display', color: t.accentText }}>{r.lead}</Text>}
-      <Text style={{ flex: 1, minWidth: 0, color: t.text, fontWeight: 700, ...ellipsis }}>{r.text}</Text>
-      {r.sub && <Text style={{ marginLeft: 14, fontSize: Math.round(fs * 0.72), color: t.textMuted, ...ellipsis }}>{r.sub}</Text>}
+    <div style={row({ alignItems: 'center', height: r.detail ? detailRowHeight(m) : m.row, borderBottom: `2px solid ${rgba(t.text, 0.16)}`, fontSize: fs })}>
+      {r.lead !== undefined && <Text style={{ ...fixed, width: Math.round(fs * (r.lead.length > 2 ? 2.2 : 1.5)), fontFamily: 'Display', color: t.accentText }}>{r.lead}</Text>}
+      <div style={col({ flex: 1, minWidth: 0, justifyContent: 'center' })}>
+        <Text style={{ color: t.text, fontWeight: 700, ...ellipsis }}>{r.text}</Text>
+        {r.detail && <Text style={{ fontSize: Math.round(fs * 0.72), color: t.textMuted, ...ellipsis }}>{r.detail}</Text>}
+      </div>
+      {r.sub && <Text style={{ ...fixed, marginLeft: 14, fontSize: Math.round(fs * 0.72), color: t.textMuted, maxWidth: '38%', ...ellipsis }}>{r.sub}</Text>}
       {(r.badges ?? []).map((bd) => (
-        <Text key={bd} style={{ marginLeft: 8, padding: '2px 10px', borderRadius: 999, fontSize: Math.round(fs * 0.62), background: t.accent, color: t.onAccent }}>{bd}</Text>
+        <Text key={bd} style={{ ...fixed, marginLeft: 8, padding: '2px 10px', borderRadius: 999, fontSize: Math.round(fs * 0.62), background: t.accent, color: t.onAccent }}>{bd}</Text>
       ))}
-      {r.value && <Text style={{ marginLeft: 16, fontFamily: 'Display', color: t.text }}>{r.value}</Text>}
+      {r.value && <Text style={{ ...fixed, marginLeft: 16, fontFamily: 'Display', color: t.text }}>{r.value}</Text>}
     </div>
   )
 }
@@ -111,7 +103,7 @@ function Rows({ b, c }: { b: Extract<Block, { kind: 'rows' }>; c: Ctx }) {
 function Photo({ b, c, last }: { b: Extract<Block, { kind: 'photo' }>; c: Ctx; last: boolean }) {
   const { m, t, size } = c
   // A photo that is the whole story gets the room; one that shares the page with a list stays shorter.
-  const height = last ? (size === 'story' ? 1150 : size === 'square' ? 560 : 330) : size === 'story' ? 760 : size === 'square' ? 340 : 230
+  const height = photoHeight(size, last)
   const s = t.scrim
   return (
     <div style={{ position: 'relative', display: 'flex', width: '100%', height, background: t.surfaceAlt, overflow: 'hidden', borderRadius: 10 }}>
@@ -178,22 +170,29 @@ function renderBlock(b: Block, i: number, c: Ctx, last: boolean): ReactElement |
           <Photo b={b} c={c} last={last} />
         </div>
       )
-    case 'logos':
+    case 'logos': {
+      const g = c.grid
+      if (!g) return null
+      const cellWidth = `${Math.floor(100 / g.columns)}%`
       return (
         <div key={i} style={row({ width: '100%', marginTop: m.gap, justifyContent: center ? 'center' : 'flex-start', flexWrap: 'wrap' })}>
           {b.items.map((l, k) => (
-            <div key={k} style={col({ alignItems: 'center', marginRight: 28, marginBottom: 20 })}>
-              {l.src ? (
-                <div style={{ display: 'flex', background: WHITE, padding: 16, borderRadius: 14 }}>
-                  <img src={l.src} height={m.logo * 2} style={{ height: m.logo * 2 }} alt="" />
-                </div>
-              ) : null}
-              <Text style={{ marginTop: 10, fontSize: m.subhead, fontWeight: 700, color: t.text }}>{l.name}</Text>
-              {l.tier && <Text style={{ fontSize: m.body, color: t.accentText }}>{l.tier}</Text>}
+            <div key={k} style={col({ alignItems: center ? 'center' : 'flex-start', width: g.columns === 1 ? '100%' : cellWidth, paddingRight: g.columns === 1 ? 0 : 14, marginBottom: 14 })}>
+              {/* A sponsor without a usable logo still gets a tile (its initial), so the grid stays even. */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: l.src ? WHITE : t.surfaceAlt, padding: 12, borderRadius: 14, height: g.logo + 24, minWidth: g.logo + 24 }}>
+                {l.src ? (
+                  <img src={l.src} height={g.logo} style={{ height: g.logo, maxWidth: g.columns === 1 ? 640 : Math.floor((SIZES[c.size].width - 2 * m.pad) / g.columns) - 60, objectFit: 'contain' }} alt="" />
+                ) : (
+                  <Text style={{ fontFamily: 'Display', fontSize: Math.round(g.logo * 0.6), color: t.accentText }}>{l.name.slice(0, 1).toUpperCase()}</Text>
+                )}
+              </div>
+              {l.name && <Text style={{ marginTop: 6, fontSize: g.name, fontWeight: 700, color: t.text, maxWidth: '100%', ...ellipsis }}>{l.name}</Text>}
+              {l.tier && <Text style={{ fontSize: g.tier, color: t.accentText }}>{l.tier}</Text>}
             </div>
           ))}
         </div>
       )
+    }
   }
 }
 
@@ -201,12 +200,13 @@ function Footer({ c, input }: { c: Ctx; input: RenderInput }) {
   const { m, t, kit } = c
   const center = kit.align === 'center'
   const hasText = Boolean(input.siteHost || input.attribution)
-  if (!input.strip.length && !hasText) return null
+  const strip = input.layout.noStrip ? [] : input.strip
+  if (!strip.length && !hasText) return null
   return (
     <div style={col({ width: '100%', marginTop: m.gap, alignItems: center ? 'center' : 'flex-start' })}>
-      {input.strip.length > 0 && (
+      {strip.length > 0 && (
         <div style={row({ alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', flexWrap: 'nowrap', overflow: 'hidden', width: '100%' })}>
-          {input.strip.map((l, i) => (
+          {strip.map((l, i) => (
             <div key={i} style={{ display: 'flex', background: WHITE, padding: 8, borderRadius: 10, marginRight: 14 }}>
               <img src={l.src} height={m.logo} style={{ height: m.logo }} alt="" />
             </div>
@@ -214,7 +214,7 @@ function Footer({ c, input }: { c: Ctx; input: RenderInput }) {
         </div>
       )}
       {hasText && (
-        <div style={row({ marginTop: input.strip.length ? 10 : 0, fontSize: m.footer, color: t.textMuted, justifyContent: center ? 'center' : 'flex-start' })}>
+        <div style={row({ marginTop: strip.length ? 10 : 0, fontSize: m.footer, color: t.textMuted, justifyContent: center ? 'center' : 'flex-start' })}>
           {input.siteHost && <Text style={{ marginRight: input.attribution ? 18 : 0 }}>{input.siteHost}</Text>}
           {input.attribution && <Text style={{ ...ellipsis }}>{input.attribution}</Text>}
         </div>
@@ -228,11 +228,15 @@ export function renderGraphic(input: RenderInput): ReactElement {
   const m = METRICS[input.size]
   const kit = STYLE_KITS[input.style]
   const t = styleTokens(input.theme, input.style)
-  const c: Ctx = { m, t, kit, size: input.size, theme: input.theme }
   const center = kit.align === 'center'
+  const available = availableHeight(input.size, input.style, footerHeight(input.size, { strip: !input.layout.noStrip && input.strip.length > 0, text: Boolean(input.siteHost || input.attribution) }))
+  const c: Ctx = { m, t, kit, size: input.size, theme: input.theme, grid: logosFor(input.layout, input.size, input.style, available) }
   const blocks = input.layout.empty
     ? [<Text key="empty" style={{ marginTop: m.gap, fontSize: m.subhead, color: t.textMuted, justifyContent: center ? 'center' : 'flex-start' }}>{input.layout.empty}</Text>]
-    : input.layout.blocks.map((b, i, all) => renderBlock(b, i, c, i === all.length - 1))
+    : input.layout.blocks.map((b, i, all) => (
+        // A block never shrinks: if the page is too full the bottom is cut, never two blocks drawn over each other.
+        <div key={i} style={col({ width: '100%', flexShrink: 0, alignItems: center ? 'center' : 'flex-start' })}>{renderBlock(b, i, c, i === all.length - 1)}</div>
+      ))
   return (
     <div style={col({ width: '100%', height: '100%', fontFamily: 'Body', background: t.surface, color: t.text, ...(kit.frame === 'bar' ? { borderTop: `14px solid ${t.accent}` } : {}) })}>
       {kit.frame === 'band' && (

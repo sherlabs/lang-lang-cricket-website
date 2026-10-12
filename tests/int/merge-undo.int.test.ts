@@ -137,6 +137,17 @@ describe('merge writes a log and undo restores identity', () => {
     expect((await rest('POST', `/players/merge-log/${log.id}/undo`, { token: admin })).status).toBe(409)
   })
 
+  it('keeps the social-media safeguards on the safe side, and undo puts the target back', async () => {
+    const source = await player('Jamie', 'Junior', { isJunior: true, socialOptIn: false })
+    const target = await player('James', 'Junior', { isJunior: false, socialOptIn: true })
+    const res = await rest('POST', `/players/${source}/merge`, { token: editor, body: { targetId: target } })
+    expect(res.status).toBe(200)
+    expect(await payload.findByID({ collection: 'players', id: target, depth: 0, joins: false })).toMatchObject({ isJunior: true, socialOptIn: false })
+    const log = (await rows('merge_log'))[0]
+    expect((await rest('POST', `/players/merge-log/${log.id}/undo`, { token: admin })).status).toBe(200)
+    expect(await payload.findByID({ collection: 'players', id: target, depth: 0, joins: false })).toMatchObject({ isJunior: false, socialOptIn: true })
+  })
+
   it('keeps edits made to the target since the merge', async () => {
     const s = await setup()
     await rest('POST', `/players/${s.source}/merge`, { token: editor, body: { targetId: s.target } })

@@ -23,7 +23,7 @@ export const isStyleKey = (v: unknown): v is StyleKey => typeof v === 'string' &
 export const isGraphicType = (v: unknown): v is GraphicType => typeof v === 'string' && (TYPE_KEYS as readonly string[]).includes(v)
 
 /** One line of a list block. `lead` is a rank or order number, `value` the right-hand figure, `sub` a smaller second line. */
-export type Row = { lead?: string; text: string; value?: string; sub?: string; badges?: string[] }
+export type Row = { lead?: string; text: string; value?: string; /** A smaller note on the same line, after the text. */ sub?: string; /** A smaller second line under the text (taller row, counted by the density rules). */ detail?: string; badges?: string[] }
 
 /** What a layout is made of. Text only: no markup ever comes from user input. */
 export type Block =
@@ -38,7 +38,7 @@ export type Block =
   | { kind: 'photo'; src: string | null; title: string; lines: string[] }
   | { kind: 'logos'; items: { src: string | null; name: string; tier?: string }[] }
 
-export type GraphicLayout = { blocks: Block[]; /** Shown instead of the blocks when there is nothing to draw. */ empty?: string }
+export type GraphicLayout = { blocks: Block[]; /** Shown instead of the blocks when there is nothing to draw. */ empty?: string; /** Leave the sponsor strip off (a graphic that already shows the sponsors). */ noStrip?: boolean }
 
 /** Query-string style input, already decoded. */
 export type RawParams = Record<string, string | undefined>

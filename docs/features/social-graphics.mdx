@@ -26,14 +26,14 @@ The site could only make one player card and the lineup picture. Posting a resul
 | Kind | Drawn from |
 | --- | --- |
 | Results | One stored game (score and margin), the same with the top batters and bowlers, or a whole round on one date. |
-| Weekend preview | The upcoming games of one weekend. |
+| Weekend preview | The upcoming games of one weekend: the opponent is the main text of each row, with the grade and venue on a smaller line under it (on the wide size the grade follows on the same line and the venue is left out). |
 | Team announcement | A published team (all three sizes; the public lineup picture routes are unchanged). |
 | Best player (the club's award word, `VOTE_LABEL`) | You pick the game, then a player who was in that game. Votes are never used. The stat line is filled from that game and can be edited. |
 | Milestone | A milestone reached this season, or one a player is close to. Only real milestones from the milestone board can be drawn. |
-| Season leaders | The top 3 or 5 for runs, wickets, catches, sixes or games, for the current season or all seasons. |
+| Season leaders | The top 3 or 5 for runs, wickets, catches, sixes or games, for the current season or all seasons. A choice is listed only when it would show someone, so nothing in the list draws "No one has qualified". |
 | Event promo | An upcoming event, with its cover picture if it has one. |
-| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. |
-| Season wrap | A published yearbook: cover, record, top run scorer and top wicket taker. |
+| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. The logos shrink to fit the page, a sponsor with no usable logo gets a tile with its initial, and the footer sponsor strip is left off because the sponsors are the picture. The caption names a sponsor's level only when one sponsor is thanked. |
+| Season wrap | A published yearbook: cover, record, top run scorer and top wicket taker. The cover is left out on the wide size, and when the yearbook has none the title is drawn as text instead of an empty box. |
 
 **Three sizes**: Square 1080 x 1080, Story 1080 x 1920 and Wide 1200 x 630. **Three styles**: Bold (your main colour, big type), Classic (a light card with a coloured band carrying the crest) and Minimal (plain and airy). The picture is composed from shared building blocks, not drawn by hand per combination, so a long list is always cut at a whole row with "+ N more" and long names are shortened by length.
 
@@ -43,7 +43,7 @@ The site could only make one player card and the lineup picture. Posting a resul
 
 **The composer** (`/admin/social`, three steps on one page, phone first): pick a kind and what it is about; preview one size at a time (only the selected size is made, and a size already seen is kept for the session) with a style switcher and, for some kinds, one editable line (stat line, thank-you line); then **Share or save to Photos** (the phone's share sheet, with Save Image going to Photos; a plain download on desktop), **Download picture (PNG)** and a caption you can edit and copy. The choice lives in the address (`?type=&source=&style=&size=`), so a refresh keeps it.
 
-**Captions.** Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
+**Captions.** (Saving the wording from the composer stores only wording that differs from the standard text, so later improvements to the standard reach the club.) Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
 
 **Settings** (Advanced, admin only: Social graphics settings): the default style, the sponsor logo strip (which levels, how many; PNG and JPG logos only, a WebP or SVG logo is skipped quietly and the strip simply does not show if none can be drawn), whether the website address shows, and a small line under the footer.
 
@@ -63,5 +63,5 @@ The site could only make one player card and the lineup picture. Posting a resul
 - Scheduling and publishing posts, the posting queue and network adapters: [#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23).
 - Live posting to any network, AI-written captions or match summaries, video or carousel posts.
 - A fixture list that includes junior grades, and player photos on pictures.
-- Merging two players does not combine the junior and opt-in ticks: the player kept keeps its own.
+- Merging two players keeps the safer social-media settings: the player kept is a junior if either was, and is OK to post only if both were (an undo puts the old ticks back unless they were edited since). If the statistics cannot be read when a picture is made, no player is treated as eligible, so no names or figures are drawn.
 - A date of birth is not stored on players, so juniors are identified by the tick, a junior grade in their latest season, or both. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

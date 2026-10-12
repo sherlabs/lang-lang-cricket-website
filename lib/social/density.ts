@@ -48,8 +48,11 @@ export function headlineSize(text: string, base: number): number {
 }
 
 /** Cut a list to what the size fits. `reserve` takes rows away for other content on the page. */
-export function cutRows(rows: readonly Row[], size: SizeKey, reserve = 0, columns = 1): { rows: Row[]; more: number } {
-  const fit = Math.max(1, (METRICS[size].maxRows - reserve) * columns)
+export function cutRows(rows: readonly Row[], size: SizeKey, reserve = 0, columns = 1, withDetail = false): { rows: Row[]; more: number } {
+  const m = METRICS[size]
+  // Rows with a second line are taller, so fewer fit.
+  const tall = withDetail ? (m.row + Math.round(m.rowText * 0.72 * 1.25)) / m.row : 1
+  const fit = Math.max(1, Math.floor(((m.maxRows - reserve) / tall) * columns))
   if (rows.length <= fit) return { rows: [...rows], more: 0 }
   // Keep a row for the "+ N more" line, so the list stays inside the space.
   const keep = Math.max(1, fit - 1)

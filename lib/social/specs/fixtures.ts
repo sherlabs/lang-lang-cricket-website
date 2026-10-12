@@ -15,8 +15,15 @@ export const fixturesSpec: GraphicSpec<FixturesParams, FixturesData> = {
   },
   layout(d, _style, size) {
     if (!d.games.length) return { blocks: [], empty: 'No games are listed for this weekend yet.' }
-    const rows: Row[] = d.games.map((g) => ({ lead: g.dayLabel.slice(0, 3), text: `${g.grade} v ${rowName(g.opponent, size)}`, value: g.time, sub: size === 'landscape' ? undefined : g.venue }))
-    const cut = cutRows(rows, size, 0)
+    // The opponent is the main text; the grade and venue sit on a second line (wide is short, so there only the grade, beside it).
+    const wide = size === 'landscape'
+    const rows: Row[] = d.games.map((g) => ({
+      lead: g.dayLabel.slice(0, 3),
+      text: `v ${rowName(g.opponent, size)}`,
+      value: g.time,
+      ...(wide ? { sub: g.grade } : { detail: [g.grade, g.venue].filter(Boolean).join(', ') }),
+    }))
+    const cut = cutRows(rows, size, 0, 1, !wide)
     return { blocks: [{ kind: 'kicker', text: d.weekLabel }, { kind: 'headline', text: 'This weekend' }, { kind: 'rows', rows: cut.rows, more: cut.more }] }
   },
   captionVars: (d) => ({ date: d.weekLabel, count: String(d.games.length) }),

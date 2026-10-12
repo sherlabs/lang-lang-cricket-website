@@ -76,7 +76,7 @@ export async function mergePlayerInto(
   }
 
   const [sourceSeasons, targetSeasons] = await Promise.all([seasonsOf(sId), seasonsOf(tId)])
-  const asP = (p: typeof source) => ({ photo: typeof p.photo === 'number' ? p.photo : (p.photo?.id ?? null), bio: p.bio ?? '', isActiveDerived: Boolean(p.isActiveDerived) })
+  const asP = (p: typeof source) => ({ photo: typeof p.photo === 'number' ? p.photo : (p.photo?.id ?? null), bio: p.bio ?? '', isActiveDerived: Boolean(p.isActiveDerived), isJunior: p.isJunior === true, socialOptIn: p.socialOptIn === true })
   const asRow = (r: (typeof sourceSeasons)[number]) => ({ id: r.id, teamId: r.teamId, ...pickCounts(r as never) })
   const plan = planMerge(asP(source), asP(target), sourceSeasons.map(asRow), targetSeasons.map(asRow))
 
@@ -112,7 +112,7 @@ export async function mergePlayerInto(
       targetBefore: asP(target), plan, peopleIds: peopleRows.map((r) => int(r.id)), playerSponsorIds: sponsorRows.map((r) => int(r.id)), importedSeasons,
     })
 
-    // 1. Target patch (photo/bio fill-if-empty, OR of derived activity).
+    // 1. Target patch (photo/bio fill-if-empty, OR of derived activity, and the social-media safeguards only ever tighten).
     await tx.update(t.players).set({ ...plan.targetPatch, updatedAt: stamp }).where(eq(t.players.id, tId))
     // 2. Aliases follow the identity.
     await tx.update(t.player_aliases).set({ player: tId, updatedAt: stamp }).where(eq(t.player_aliases.player, sId))
@@ -212,7 +212,7 @@ export async function undoMerge(payload: Payload, logId: number, userId: number 
     if (snap.votes) await restoreBallots(tx, t, sId, tId, snap.votes, stamp)
     if (snap.nets) await restoreAttendance(tx, t, sId, tId, snap.nets, stamp)
     // The target patch is reverted only for fields still holding the merged value.
-    const patch = revertTargetPatch(snap, { photo: target.photo === null || target.photo === undefined ? null : int(target.photo), bio: target.bio ?? '', isActiveDerived: target.isActiveDerived === true })
+    const patch = revertTargetPatch(snap, { photo: target.photo === null || target.photo === undefined ? null : int(target.photo), bio: target.bio ?? '', isActiveDerived: target.isActiveDerived === true, isJunior: target.isJunior === true, socialOptIn: target.socialOptIn === true })
     if (Object.keys(patch).length) await tx.update(t.players).set({ ...patch, updatedAt: stamp }).where(eq(t.players.id, tId))
 
     await tx.update(t.merge_log).set({ status: 'undone', undoneAt: stamp, undoneBy: userId, updatedAt: stamp }).where(eq(t.merge_log.id, logId))

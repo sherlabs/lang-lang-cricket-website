@@ -3,7 +3,7 @@
 import { toast } from '@payloadcms/ui'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { saveCaptionSettings } from '@/lib/social-actions'
-import { composeCopyText } from '@/lib/social/caption'
+import { composeCopyText, templatesToSave } from '@/lib/social/caption'
 import { SIZE_KEYS, SIZES, STYLE_KEYS, STYLE_LABELS, type GraphicType, type SizeKey, type SourceChoice, type SourceList, type StyleKey } from '@/lib/social/types'
 
 type TypeTile = { key: GraphicType; label: string; hint: string; textField: { label: string; hint: string } | null }
@@ -221,9 +221,9 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
       {tile && source && (
         <section aria-labelledby="social-step-2" className="club-panel">
           <h2 id="social-step-2" className="club-field__title">2. Check the picture</h2>
-          <div role="tablist" aria-label="Picture size" className="social__tabs">
+          <div role="group" aria-label="Picture size" className="social__tabs">
             {SIZE_KEYS.map((s) => (
-              <button key={s} role="tab" type="button" aria-selected={s === size} className="social__tab" onClick={() => setSize(s)}>
+              <button key={s} type="button" aria-pressed={s === size} className="social__tab" onClick={() => setSize(s)}>
                 {SIZES[s].label} <span className="club-muted">{SIZES[s].width} x {SIZES[s].height}</span>
               </button>
             ))}
@@ -289,7 +289,7 @@ function CaptionPanel({ type, settings }: { type: GraphicType | ''; settings: Pr
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     setBusy(true)
-    const res = await saveCaptionSettings({ hashtags: tags.split(/[\s,]+/).filter(Boolean), signOff, captionTemplates: templates })
+    const res = await saveCaptionSettings({ hashtags: tags.split(/[\s,]+/).filter(Boolean), signOff, captionTemplates: templatesToSave(templates) })
     setBusy(false)
     if (res.ok) toast.success('Saved.')
     else toast.error(res.error)

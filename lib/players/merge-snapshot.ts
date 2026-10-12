@@ -22,9 +22,9 @@ export type MergeSnapshot = {
   honours: { id: number; order: number; years: string | null; title: string }[]
   /** Highest `_order` of the target's own honours when the merge ran (source honours were appended after it). */
   targetMaxHonourOrder: number
-  targetBefore: { photo: number | null; bio: string; isActiveDerived: boolean }
+  targetBefore: { photo: number | null; bio: string; isActiveDerived: boolean; isJunior?: boolean; socialOptIn?: boolean }
   /** What the merge wrote to the target, so an undo reverts a field only while it still holds the merged value. */
-  targetMerged: { photo?: number; bio?: string; isActiveDerived: boolean }
+  targetMerged: { photo?: number; bio?: string; isActiveDerived: boolean; isJunior?: boolean; socialOptIn?: boolean }
   peopleIds: number[]
   playerSponsorIds: number[]
   importedSeasons?: ImportedSeasonsSnapshot
@@ -68,13 +68,16 @@ export function buildMergeSnapshot(i: SnapshotInput): MergeSnapshot {
   }
 }
 
-export type TargetNow = { photo: number | null; bio: string; isActiveDerived: boolean }
+export type TargetNow = { photo: number | null; bio: string; isActiveDerived: boolean; isJunior?: boolean; socialOptIn?: boolean }
 
 /** The target patch that reverts the merge, only for fields still equal to what the merge wrote. */
-export function revertTargetPatch(s: MergeSnapshot, now: TargetNow): Partial<{ photo: number | null; bio: string; isActiveDerived: boolean }> {
-  const patch: Partial<{ photo: number | null; bio: string; isActiveDerived: boolean }> = {}
+export function revertTargetPatch(s: MergeSnapshot, now: TargetNow): Partial<{ photo: number | null; bio: string; isActiveDerived: boolean; isJunior: boolean; socialOptIn: boolean }> {
+  const patch: Partial<{ photo: number | null; bio: string; isActiveDerived: boolean; isJunior: boolean; socialOptIn: boolean }> = {}
   if (s.targetMerged.photo !== undefined && now.photo === s.targetMerged.photo) patch.photo = s.targetBefore.photo
   if (s.targetMerged.bio !== undefined && now.bio === s.targetMerged.bio) patch.bio = s.targetBefore.bio
   if (now.isActiveDerived === s.targetMerged.isActiveDerived && s.targetBefore.isActiveDerived !== s.targetMerged.isActiveDerived) patch.isActiveDerived = s.targetBefore.isActiveDerived
+  // The social-media flags go back too, but only while they still hold what the merge wrote (a later edit is never overwritten).
+  if (s.targetMerged.isJunior !== undefined && now.isJunior === s.targetMerged.isJunior && s.targetBefore.isJunior !== undefined) patch.isJunior = s.targetBefore.isJunior
+  if (s.targetMerged.socialOptIn !== undefined && now.socialOptIn === s.targetMerged.socialOptIn && s.targetBefore.socialOptIn !== undefined) patch.socialOptIn = s.targetBefore.socialOptIn
   return patch
 }

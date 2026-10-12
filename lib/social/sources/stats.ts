@@ -21,15 +21,26 @@ import { clubToday, loadSocialPlayers } from './shared'
 /** The statistics offered on a leaders graphic: the handful people post about. */
 const LEADER_METRICS = ['runs', 'wickets', 'catches', 'sixes', 'games'].filter((k) => LEADERBOARD_METRIC_KEYS.includes(k))
 
+type StatData = Awaited<ReturnType<typeof getVisibleStatData>>
+type StatSettings = Awaited<ReturnType<typeof getStatsSettings>>
+
+/** The ranked rows of a leaders board that may be shown: only players the junior rule allows, in rank order. */
+function eligibleRanked(data: StatData, settings: StatSettings, players: Awaited<ReturnType<typeof loadSocialPlayers>>, season: string, metricKey: string, cats: readonly (typeof GRADE_CATEGORIES)[number][]) {
+  const board = buildLeaderboard(data.rows, { season, grade: ALL, metric: metricKey }, [...cats], settings)
+  return board.result.ranked.filter((r) => players.get(r.item.playerId)?.eligible === true)
+}
+
 export async function leadersChoices(): Promise<SourceList> {
-  const data = await getVisibleStatData()
+  const [data, settings, players] = await Promise.all([getVisibleStatData(), getStatsSettings(), loadSocialPlayers(clubToday())])
   const current = currentSeasonName(data.rows)
   const choices: SourceList['choices'] = []
+  // A choice is offered only when it would draw someone: the ranking can be empty (no one qualified yet, or only players the junior rule hides).
+  const hasLeader = (season: string, key: string) => eligibleRanked(data, settings, players, season, key, settings.defaultIncludedCategories).length > 0
   for (const key of LEADER_METRICS) {
     const m = getMetric(key)
     if (!m) continue
-    if (current) choices.push({ id: `${key}|${current}|default|5`, label: `${m.label}, ${shortSeason(current)}`, variants: [{ id: `${key}|${current}|default|5`, label: 'Top 5' }, { id: `${key}|${current}|default|3`, label: 'Top 3' }] })
-    choices.push({ id: `${key}|${ALL}|default|5`, label: `${m.label}, all seasons`, variants: [{ id: `${key}|${ALL}|default|5`, label: 'Top 5' }, { id: `${key}|${ALL}|default|3`, label: 'Top 3' }] })
+    if (current && hasLeader(current, key)) choices.push({ id: `${key}|${current}|default|5`, label: `${m.label}, ${shortSeason(current)}`, variants: [{ id: `${key}|${current}|default|5`, label: 'Top 5' }, { id: `${key}|${current}|default|3`, label: 'Top 3' }] })
+    if (hasLeader(ALL, key)) choices.push({ id: `${key}|${ALL}|default|5`, label: `${m.label}, all seasons`, variants: [{ id: `${key}|${ALL}|default|5`, label: 'Top 5' }, { id: `${key}|${ALL}|default|3`, label: 'Top 3' }] })
   }
   return { choices, empty: 'No statistics are available yet.' }
 }
@@ -41,11 +52,9 @@ export async function loadLeaders(p: LeadersParams): Promise<LeadersData | null>
   if (p.season !== ALL && !data.seasons.some((s) => s.seasonName === p.season)) return null
   const cats = p.cat === 'default' ? settings.defaultIncludedCategories : (GRADE_CATEGORIES as readonly string[]).includes(p.cat) ? [p.cat as (typeof GRADE_CATEGORIES)[number]] : null
   if (!cats) return null
-  const board = buildLeaderboard(data.rows, { season: p.season, grade: ALL, metric: p.metric }, cats, settings)
   const players = await loadSocialPlayers(clubToday())
   const ctx = boardContext(metric)
-  const rows = board.result.ranked
-    .filter((r) => players.get(r.item.playerId)?.eligible === true)
+  const rows = eligibleRanked(data, settings, players, p.season, p.metric, cats)
     .slice(0, p.count)
     .map((r, i) => ({ rank: i + 1, name: data.players.get(r.item.playerId)?.name ?? players.get(r.item.playerId)!.name, value: r.display, context: `${ctx.text(r.item.counts)} ${ctx.label.toLowerCase()}` }))
   const scope = p.cat === 'default' ? '' : CATEGORY_LABELS[p.cat as keyof typeof CATEGORY_LABELS]

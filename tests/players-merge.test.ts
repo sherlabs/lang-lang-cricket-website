@@ -18,4 +18,13 @@ describe('planMerge', () => {
     expect(planMerge(p({ photo: 7, bio: 'x', isActiveDerived: true }), p(), [], []).targetPatch).toEqual({ photo: 7, bio: 'x', isActiveDerived: true })
     expect(planMerge(p({ photo: 7 }), p({ photo: 8 }), [], []).targetPatch).toEqual({ isActiveDerived: false })
   })
+  it('never loosens the social-media safeguards: junior is OR, opt-in is AND', () => {
+    // A junior folded into an adult record makes the record a junior, and the adult record's consent does not cover the child.
+    expect(planMerge(p({ isJunior: true }), p({ isJunior: false, socialOptIn: true }), [], []).targetPatch).toEqual({ isActiveDerived: false, isJunior: true, socialOptIn: false })
+    // An adult folded into a junior record changes neither flag.
+    expect(planMerge(p({ isJunior: false }), p({ isJunior: true, socialOptIn: false }), [], []).targetPatch).toEqual({ isActiveDerived: false })
+    // Consent held by both is kept; held by one is not.
+    expect(planMerge(p({ isJunior: true, socialOptIn: true }), p({ isJunior: true, socialOptIn: true }), [], []).targetPatch).toEqual({ isActiveDerived: false })
+    expect(planMerge(p({ isJunior: true, socialOptIn: false }), p({ isJunior: true, socialOptIn: true }), [], []).targetPatch).toEqual({ isActiveDerived: false, socialOptIn: false })
+  })
 })

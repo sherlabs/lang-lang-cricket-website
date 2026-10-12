@@ -32,7 +32,9 @@ export async function loadSocialPlayers(onDate: string): Promise<Map<number, Soc
     getVisibleStatData().catch(() => null),
     getStatsSettings(),
   ])
-  const junior = stats ? juniorCategoryIds(stats.rows, (r) => categoryOf(r, settings.gradeRules) === 'junior') : new Set<number>()
+  // Without the stats we cannot tell which players are juniors by grade, so nobody is eligible (fail closed).
+  if (!stats) return new Map()
+  const junior = juniorCategoryIds(stats.rows, (r) => categoryOf(r, settings.gradeRules) === 'junior')
   const out = new Map<number, SocialPlayerInfo>()
   for (const p of res.docs) {
     const info: SocialPlayer = { isJunior: p.isJunior, socialOptIn: p.socialOptIn, juniorCategory: junior.has(p.id) }

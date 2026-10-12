@@ -42,6 +42,16 @@ describe('merge snapshot', () => {
     expect(revertTargetPatch(s, { photo: 7, bio: 'Opener.', isActiveDerived: false })).toEqual({ photo: null, bio: '' })
   })
 
+  it('puts the social-media flags back on undo, only while they still hold the merged value', () => {
+    const before = { ...targetBefore, isJunior: false, socialOptIn: true }
+    const plan = planMerge({ photo: null, bio: '', isActiveDerived: false, isJunior: true, socialOptIn: false }, before, [], [])
+    const s = buildMergeSnapshot({ source: { id: 5, slug: 's', firstName: 'A', lastName: 'B' }, aliases: [], honours: [], targetMaxHonourOrder: 0, targetBefore: before, plan, peopleIds: [], playerSponsorIds: [] })
+    expect(s.targetMerged).toMatchObject({ isJunior: true, socialOptIn: false })
+    expect(revertTargetPatch(s, { photo: null, bio: '', isActiveDerived: false, isJunior: true, socialOptIn: false })).toEqual({ isJunior: false, socialOptIn: true })
+    // The committee changed the flag since the merge: their edit stays.
+    expect(revertTargetPatch(s, { photo: null, bio: '', isActiveDerived: false, isJunior: true, socialOptIn: true })).toEqual({ isJunior: false })
+  })
+
   it('does not touch a field the merge did not change', () => {
     const plan = planMerge({ photo: 7, bio: 'x', isActiveDerived: false }, { photo: 8, bio: 'mine', isActiveDerived: false }, [], [])
     const s = buildMergeSnapshot({ source, aliases: [], honours: [], targetMaxHonourOrder: 0, targetBefore: { photo: 8, bio: 'mine', isActiveDerived: false }, plan, peopleIds: [], playerSponsorIds: [] })

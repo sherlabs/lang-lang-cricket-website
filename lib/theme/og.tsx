@@ -88,7 +88,7 @@ export function allowedImageHosts(): string[] {
 
 /**
  * Any uploaded image (sponsor logo, event cover) as a data URI satori can draw, or null (never throws): PNG/JPEG only, a short timeout,
- * and only from `allowedImageHosts()`. A relative URL is resolved against the site. Cached per process on `url + updatedAt`, so an
+ * and only from `allowedImageHosts()` (redirects are refused, so a redirect cannot leave the allowed hosts). A relative URL is resolved against the site. Cached per process on `url + updatedAt`, so an
  * edited image refetches and an unchanged one does not; the fetch also goes through the Next data cache for cold serverless instances.
  */
 export async function loadImageDataUri(url: string, updatedAt: string | number | Date | null = ''): Promise<string | null> {
@@ -98,7 +98,7 @@ export async function loadImageDataUri(url: string, updatedAt: string | number |
   try {
     const abs = new URL(url, resolveServerURL())
     if ((abs.protocol === 'https:' || abs.protocol === 'http:') && allowedImageHosts().includes(abs.host)) {
-      const res = await fetch(abs, { signal: AbortSignal.timeout(LOGO_TIMEOUT_MS), next: { revalidate: 86400, tags: ['sponsor-logos'] } })
+      const res = await fetch(abs, { signal: AbortSignal.timeout(LOGO_TIMEOUT_MS), redirect: 'error', next: { revalidate: 86400, tags: ['sponsor-logos'] } })
       const type = res.headers.get('content-type')
       if (res.ok && isDrawableImageType(type)) value = asDataUri(Buffer.from(await res.arrayBuffer()), type!.split(';')[0])
       else console.warn(`[og] image ${abs.pathname} is not a drawable PNG/JPEG (status ${res.status}); skipped`)

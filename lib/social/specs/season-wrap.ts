@@ -20,8 +20,13 @@ export const seasonWrapSpec: GraphicSpec<SeasonWrapParams, SeasonWrapData> = {
   parse(raw) {
     return isSafeId(raw.source) ? { slug: raw.source } : null
   },
-  layout(d) {
-    const blocks: Block[] = [{ kind: 'kicker', text: d.seasonLabel }, { kind: 'photo', src: d.cover, title: d.title, lines: [d.premiership].filter(Boolean) }]
+  layout(d, _style, size) {
+    // The cover only when there is one and the page is tall enough to share with the figures (wide is 630 px high): otherwise the
+    // title and the premiership are drawn as text, never as an empty photo box.
+    const blocks: Block[] =
+      d.cover && size !== 'landscape'
+        ? [{ kind: 'kicker', text: d.seasonLabel }, { kind: 'photo', src: d.cover, title: d.title, lines: [d.premiership].filter(Boolean) }]
+        : [{ kind: 'kicker', text: d.seasonLabel }, { kind: 'headline', text: d.title }, ...(d.premiership ? [{ kind: 'subhead' as const, text: d.premiership }] : [])]
     const rows = [
       d.record ? { text: 'Record', value: d.record } : null,
       d.topRuns ? { text: `Most runs: ${d.topRuns.name}`, value: d.topRuns.value } : null,
