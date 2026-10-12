@@ -57,10 +57,13 @@ export async function destroyTestPayload(payload: Payload | undefined): Promise<
         // Closing each client ends its backend. pool.end() is not awaited: it waits for the client Payload
         // checked out and never released (now closed, but pg-pool only drops checked-out clients on release),
         // which cost 5 s per file when it was raced.
-        await Promise.allSettled((pool._clients ?? []).map((c) => c.end()))
+        // _clients is a private pg-pool field (3.14); fail loudly if an upgrade renames it, or ~230 connections leak silently.
+        if (!Array.isArray(pool._clients)) throw new Error('[int] pg-pool no longer exposes _clients: update destroyTestPayload to close pool connections')
+        await Promise.allSettled(pool._clients.map((c) => c.end()))
         void Promise.resolve(pool.end?.()).catch(() => undefined)
       }
-    } catch {
+    } catch (err) {
+      if ((err as Error).message?.startsWith('[int] pg-pool')) throw err
       // already ended; nothing to release
     }
     // Even when destroy throws, the next file must not be handed this instance.

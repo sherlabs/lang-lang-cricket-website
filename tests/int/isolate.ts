@@ -15,7 +15,8 @@
  *     unstubGlobals config flags are NOT used: they undo after every TEST, which breaks the
  *     files that stub fetch in beforeAll (etl, media-register).
  *  4. INT_LEAKS=1 (pnpm test:int:leaks) audits instead: fails a file that leaves env keys,
- *     globalThis keys or open database connections behind, and lists tables it left rows in.
+ *     globalThis keys or open database connections behind, and, before the next file's truncate, warns
+ *     which tables the previous file left rows in (named by file and row count).
  * The advisory run lock in setup.ts keeps two int runs from sharing langlang_test.
  *
  * Hypotheses (H1-H6 in docs/superpowers/specs/2026-10-12-wave-e-iq-design.md section 2.2):
@@ -25,15 +26,17 @@
  *  H3 leaked process state: PROVEN for PAYLOAD_BLOB_FAKE (wp1-verification never deleted it); env restore
  *     now covers any name. Stubs: unstubGlobals/unstubEnvs config flags REJECTED (they undo per test and broke
  *     etl and media-register, which stub fetch in beforeAll); undone per file in the afterAll below instead.
- *  H4 time/async race in office-email "stopping ends sending": REJECTED as a code race. The test awaits every
- *     step; 20/20 green alone under full-core CPU load. The earlier failures match leaked EMAIL_* env between
- *     tests/files (stubEnv without restore), cured by H3.
+ *  H4 time/async race in office-email "stopping ends sending": NOT REPRODUCED. The test awaits every step and
+ *     was 20/20 green alone under full-core CPU load. Earlier failures may have come from leaked EMAIL_* env
+ *     from a predecessor file, now cured by the env restore (H3), but that is unmeasured: the leak audit never
+ *     attributed a failure to EMAIL_*. No code fix was made; if it recurs, treat it as an open race.
  *  H5 connections: PROVEN. Payload's drizzle destroy() never ends the pg pool and connect() holds one client
  *     forever, so each file leaked its pool (about 3 connections x 76 files). destroyTestPayload now ends them.
  *  H6 unit + int competing for CPU: not measured separately; full runs (unit + int) were green 5 of 5.
- * Unproven remainder: under saturating CPU load (yes x every core) etl, media-register and club-apparel
- * still hit vitest's own 60 s test timeout or its worker RPC timeout in a few runs of 20 (see the WP-0
- * commit message for the measured rates). They are load-induced timeouts, not logic failures, and pass alone.
+ * Re-measured on the committed code (after the env and pool-close fixes), 20 runs each alone with 10 `yes`
+ * processes saturating all 10 cores: etl 20/20, media-register 20/20, club-apparel 20/20. The earlier
+ * 16-18/20 rates predate those fixes and no longer describe HEAD. Not measured: the full unit+int suite under
+ * the same saturation (full runs without load were green 5 of 5), and H6.
  *
  * Runs before every int test file (vitest `setupFiles`). Files share one fork, one process
  * environment and Payload's `global._payload` cache, and a file's own cleanup runs only if its
@@ -118,6 +121,11 @@ async function truncateAll(): Promise<void> {
   }
 }
 
+if (leakMode) {
+  // Count what the previous file left behind BEFORE the truncate erases it, and name that file.
+  const left = Object.entries(await withClient(residue)).map(([t, n]) => `${t}=${n}`)
+  if (left.length) console.warn(`[int:leaks] ${store.lastFile ?? 'a previous run'} left rows: ${left.join(' ')}`)
+}
 await truncateAll()
 if (leakMode) store.pidsAtStart = new Set(await withClient(async (c) => (await c.query("SELECT pid FROM pg_stat_activity WHERE datname = current_database() AND backend_type = 'client backend' AND pid <> pg_backend_pid()")).rows.map((r) => r.pid as number)))
 
@@ -130,6 +138,9 @@ afterAll(() => {
 if (leakMode) {
   afterAll(async () => {
     const problems: string[] = []
+    // Undo this file's stubs first: this hook runs before the unstub hook above (hooks stack).
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
     // VIPSHOME is set by sharp when it loads (benign, process-wide).
     const extraEnv = restoreEnv({ ...process.env }, store.env!).filter((k) => k !== 'VIPSHOME')
     if (extraEnv.length) problems.push(`env keys added/changed/removed: ${extraEnv.join(', ')}`)
@@ -138,14 +149,9 @@ if (leakMode) {
     const extraGlobals = Object.getOwnPropertyNames(globalThis).filter((k) => !store.globalKeys!.has(k) && !expectedGlobal(k))
     if (extraGlobals.length) problems.push(`globalThis keys added: ${extraGlobals.join(', ')}`)
     await new Promise((r) => setTimeout(r, 500)) // let a just-destroyed pool finish closing
-    const { rows, conns } = await withClient(async (c) => ({
-      rows: await residue(c),
-      conns: await blockers(c, store.pidsAtStart),
-    }))
+    const conns = await withClient((c) => blockers(c, store.pidsAtStart))
     if (conns) problems.push(`database connections opened by this file and still open after it:\n${conns}`)
-    const left = Object.entries(rows).map(([t, n]) => `${t}=${n}`)
-    // Row residue is informational: the per-file truncate is the contract. Printed so cleanup can be tightened.
-    if (left.length) console.warn(`[int:leaks] ${testFile()} left rows: ${left.join(' ')}`)
+    // Row residue is reported by the next file's start (above); the truncate is the contract, not a failure.
     store.lastFile = testFile()
     if (problems.length) throw new Error(`[int:leaks] ${testFile()}\n${problems.join('\n')}`)
   }, 60_000)
