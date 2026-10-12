@@ -99,6 +99,15 @@ export const officeCopy = {
     fewer: 'Fewer than 3 people',
     withheld: 'Some figures are not shown because a small group could be worked out from them, for example by taking one table away from another.',
   },
+  meetings: {
+    excludes: 'Done and dropped actions are not counted. Restricted actions are counted only for office-bearers.',
+    stat: (next: string | null, overdue: number) =>
+      `${next ? `Next meeting ${next}` : 'No meeting planned'}; ${overdue === 0 ? 'no committee actions are overdue' : `${overdue} committee ${plural(overdue, 'action is', 'actions are')} overdue`} (done and dropped actions are not counted; restricted actions only for office-bearers)`,
+    overdue: (n: number) => `${n} committee ${plural(n, 'action is', 'actions are')} overdue (done and dropped actions are not counted; restricted actions only for office-bearers)`,
+    blocked: (n: number) => `${n} committee ${plural(n, 'action is', 'actions are')} blocked (done and dropped actions are not counted; restricted actions only for office-bearers)`,
+    hiddenItems: (n: number) => `${n} restricted ${plural(n, 'item is', 'items are')} only visible to office-bearers.`,
+    hiddenMeetings: (n: number) => `${n} restricted ${plural(n, 'meeting is', 'meetings are')} only visible to office-bearers.`,
+  },
   landing: {
     empty: 'Nothing else is set up for the committee here yet. When more of the club office is switched on, it will appear on this page.',
     adminOnlyNote: 'Members, and the exports and sends log, are for admins only.',

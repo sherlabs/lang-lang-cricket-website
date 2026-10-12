@@ -57,3 +57,27 @@ export async function getLinkedPeople(playerIds: readonly number[]): Promise<Map
   }
   return out
 }
+
+/**
+ * Names only, for the club office pickers and labels (committee meetings): `id` and `name` of every person, or of the given ids,
+ * sorted by name. Nothing else about a person leaves this function, and the collection stays read through this one file.
+ */
+export async function peopleNames(ids?: readonly number[]): Promise<{ id: number; name: string }[]> {
+  if (ids && ids.length === 0) return []
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'people',
+    ...(ids ? { where: { id: { in: [...new Set(ids)] } } } : {}),
+    sort: 'name',
+    pagination: false,
+    depth: 0,
+    select: { name: true },
+  })
+  return (docs as unknown as { id: number; name?: string | null }[]).map((p) => ({ id: p.id, name: p.name ?? '' }))
+}
+
+/** Whether a person record exists (so a form cannot name a missing one). */
+export async function personExists(id: number): Promise<boolean> {
+  const payload = await getPayloadClient()
+  return Boolean(await payload.findByID({ collection: 'people', id, depth: 0, select: { name: true } }).catch(() => null))
+}

@@ -32,10 +32,19 @@ const EXPECTED: Record<string, Record<'anonymous' | 'selector' | 'editor' | 'adm
   'volunteer-assignments': { anonymous: [], selector: [], editor: READ, admin: READ },
   'volunteer-availability': { anonymous: [], selector: [], editor: READ, admin: READ },
   'volunteer-hours': { anonymous: [], selector: [], editor: [], admin: READ },
+  // WP-4: the committee reads seats and unrestricted meeting data (restricted rows and the documents are covered in office-meetings.int.test.ts, which has an
+  // office-bearer editor as a fifth persona). Seats are admin-edited; agendas are the committee's to edit; nobody writes meetings over REST, not even an admin.
+  'committee-seats': { anonymous: [], selector: [], editor: READ, admin: ALL },
+  'meeting-templates': { anonymous: [], selector: [], editor: [...READ, 'create', 'update'], admin: ALL },
+  meetings: { anonymous: [], selector: [], editor: READ, admin: READ },
+  'meeting-items': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'meeting-attendance': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'meeting-motions': { anonymous: [], selector: [], editor: READ, admin: READ },
+  'meeting-actions': { anonymous: [], selector: [], editor: READ, admin: READ },
 }
 
 /** A valid row for each collection (the matrix probes with real data, so a validation failure cannot read as "denied"). */
-type Ctx = { member: number; probeMember: number; tier: number; probeTier: number; week: number; probeWeek: number; shift: number; n: number; probe: boolean }
+type Ctx = { member: number; probeMember: number; tier: number; probeTier: number; week: number; probeWeek: number; shift: number; meeting: number; n: number; probe: boolean }
 const SAMPLE: Record<string, (ctx: Ctx) => Record<string, unknown>> = {
   members: ({ n }) => ({ firstName: 'Probe', lastName: `Row${n}`, roles: ['supporter'] }),
   'office-audit-log': () => ({ at: new Date().toISOString(), action: 'export', module: 'members' }),
@@ -52,6 +61,13 @@ const SAMPLE: Record<string, (ctx: Ctx) => Record<string, unknown>> = {
   'volunteer-assignments': ({ shift, member, probeMember, probe }) => ({ shift, member: probe ? probeMember : member, hours: 2, kind: 'volunteer', state: 'rostered' }),
   'volunteer-availability': ({ member, week, probeWeek, probe }) => ({ member, week: probe ? probeWeek : week, state: 'yes' }),
   'volunteer-hours': ({ member }) => ({ member, date: new Date().toISOString(), hours: 1, kind: 'volunteer', source: 'manual' }),
+  'committee-seats': ({ n }) => ({ title: `Probe seat ${n}` }),
+  'meeting-templates': ({ n }) => ({ name: `Probe agenda ${n}`, kind: 'ordinary', items: [{ title: 'Welcome', kind: 'welcome' }] }),
+  meetings: ({ n }) => ({ title: `Probe meeting ${n}`, kind: 'ordinary', startsAt: new Date().toISOString(), status: 'planned', restricted: false }),
+  'meeting-items': ({ meeting }) => ({ meeting, order: 1, title: 'Welcome', kind: 'welcome' }),
+  'meeting-attendance': ({ meeting }) => ({ meeting, guestName: 'Guest', state: 'present' }),
+  'meeting-motions': ({ meeting }) => ({ meeting, text: 'A motion', result: 'carried' }),
+  'meeting-actions': ({ meeting }) => ({ meeting, text: 'An action', status: 'open' }),
 }
 const PATCH: Record<string, Record<string, unknown>> = {
   members: { notes: 'x' },
@@ -67,6 +83,13 @@ const PATCH: Record<string, Record<string, unknown>> = {
   'volunteer-assignments': { hours: 3 },
   'volunteer-availability': { note: 'changed' },
   'volunteer-hours': { note: 'changed' },
+  'committee-seats': { handoverNote: 'changed' },
+  'meeting-templates': { name: 'Renamed agenda' },
+  meetings: { venue: 'changed' },
+  'meeting-items': { notes: 'changed' },
+  'meeting-attendance': { state: 'absent' },
+  'meeting-motions': { text: 'changed' },
+  'meeting-actions': { text: 'changed' },
 }
 
 describe('office access matrix', () => {
@@ -74,9 +97,9 @@ describe('office access matrix', () => {
   const users: Record<string, { id: number; role: string; collection: 'users' } | undefined> = { anonymous: undefined }
   const tokens: Record<string, string> = {}
   const seeded: Record<string, number> = {}
-  const ctx: Ctx = { member: 0, probeMember: 0, tier: 0, probeTier: 0, week: 0, probeWeek: 0, shift: 0, n: 0, probe: false }
+  const ctx: Ctx = { member: 0, probeMember: 0, tier: 0, probeTier: 0, week: 0, probeWeek: 0, shift: 0, meeting: 0, n: 0, probe: false }
   const wipe = async () => {
-    for (const c of ['volunteer-hours', 'volunteer-availability', 'volunteer-assignments', 'volunteer-shifts', 'volunteer-weeks', 'fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
+    for (const c of ['meeting-actions', 'meeting-motions', 'meeting-attendance', 'meeting-items', 'meetings', 'meeting-templates', 'committee-seats', 'volunteer-hours', 'volunteer-availability', 'volunteer-assignments', 'volunteer-shifts', 'volunteer-weeks', 'fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
   }
 
   beforeAll(async () => {
@@ -102,6 +125,7 @@ describe('office access matrix', () => {
         ctx.probeWeek = (await payload.create({ collection: 'volunteer-weeks', data: { season: '2040/41', date: new Date(Date.UTC(2039, 5, 1, 12)).toISOString(), status: 'draft' } as never, overrideAccess: true })).id
       }
       if (slug === 'volunteer-shifts') ctx.shift = row.id
+      if (slug === 'meetings') ctx.meeting = row.id
       if (slug === 'membership-tiers') {
         ctx.tier = row.id
         ctx.probeTier = (await payload.create({ collection: 'membership-tiers', data: { season: '2032/33', name: 'Probe tier', kind: 'free' } as never, overrideAccess: true })).id

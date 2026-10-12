@@ -3,6 +3,7 @@ import { allCaughtUp, notificationLines, type NotificationInput, type RunFacts }
 import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { gameDayLabel } from '@/lib/office/game-day'
 import { nextGameDay } from '@/lib/volunteers-office-queries'
+import { meetingStats } from '@/lib/meetings-office-queries'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions } from '@/lib/players/duplicate-queries'
 import { socialCounts } from '@/lib/social-queries'
@@ -49,7 +50,7 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
  * only drops its line.
  */
 export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
-  const [pending, run, duplicateCount, imports, social, fees, game] = await Promise.all([
+  const [pending, run, duplicateCount, imports, social, fees, game, meetings] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
     isAdmin ? getDuplicateSuggestions().then((s) => s.length).catch(() => null) : Promise.resolve(null),
@@ -59,8 +60,9 @@ export async function NotificationCentre({ payload, isAdmin, user }: { payload: 
     socialFacts(payload),
     isAdmin ? feeOwingSummary(user) : Promise.resolve(null),
     nextGameDay(user),
+    meetingStats(user),
   ])
-  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
+  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

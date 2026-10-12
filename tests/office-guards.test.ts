@@ -34,6 +34,10 @@ const OFFICE_SOURCE = [
   'payload/collections/Memberships.ts',
   'payload/collections/feeLedger.ts',
   'payload/collections/volunteers.ts',
+  'payload/collections/meetings.ts',
+  'payload/collections/CommitteeSeats.ts',
+  'payload/collections/OfficeFiles.ts',
+  'payload/access/officeBearer.ts',
   'lib/volunteer-link.ts',
   'lib/volunteer-public.ts',
   ...walk('app/(frontend)/volunteer'),
@@ -62,6 +66,7 @@ describe('office guards', () => {
     for (const r of routes) {
       const text = read(r)
       if (r.includes('/export/')) expect(text, r).toContain('auditedExport')
+      else if (r.includes('/meetings/')) expect(text, r).toContain('requireOfficeStaff') // the committee runs meetings; restricted items, documents and seat handover are checked inside the queries
       else if (r.includes('/volunteers/')) expect(text, r).toContain('requireOfficeStaff') // the roster is the committee's; hours and paid status are admin-checked inside the queries
       else expect(text, r).toContain('requireOfficeAdmin')
       expect(text, r).toMatch(/export async function POST/)
@@ -156,5 +161,30 @@ describe('office guards', () => {
     const asRead = members.access.read as (a: { req: { user: unknown } }) => unknown
     expect(asRead({ req: { user: undefined } })).toBe(false)
     expect(asRead({ req: { user: { id: 2, role: 'editor' } } })).toBe(false)
+  })
+  it('office-bearer files: own storage instance with client uploads off, not listed in the browser-upload instance, and served as attachments', () => {
+    const cfg = read('payload.config.ts')
+    // Exactly one instance names office-files, and it turns browser-direct uploads off.
+    const instances = cfg.split('vercelBlobStorage({').slice(1)
+    const own = (i: string) => i.slice(0, i.indexOf('}),') + 3)
+    const withOffice = instances.map(own).filter((i) => i.includes("'office-files'"))
+    expect(withOffice).toHaveLength(1)
+    expect(withOffice[0]).toContain('clientUploads: false')
+    const main = own(instances.find((i) => i.includes('clientUploads: true'))!)
+    expect(main).not.toContain('office-files')
+    // The access-controlled download route stays on: the storage option that switches it off must not be set for this collection.
+    expect(withOffice[0].replace(/\/\/.*$/gm, '')).not.toContain('disablePayloadAccessControl')
+    const files = read('payload/collections/OfficeFiles.ts')
+    for (const header of ['Content-Disposition', 'nosniff', 'noindex', 'no-store']) expect(files).toContain(header)
+    expect(files).toContain('OFFICE_FILE_MAX_BYTES')
+    expect(files).not.toContain('clientUploadInMemory')
+  })
+
+  it('restricted meeting data and documents are read through access functions, not left to the collection default', () => {
+    const text = read('payload/collections/meetings.ts')
+    expect(text).toContain('staffReadsMeetingData')
+    expect(text).toContain('staffReadsMeetingChild')
+    expect(text).toContain('bearerOnly')
+    expect(read('payload/access/officeBearer.ts')).toContain('isOfficeBearer')
   })
 })

@@ -1,7 +1,7 @@
 import { ValidationError, type GlobalConfig } from 'payload'
 import { isAdmin, isAdminField } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
-import { DEFAULT_ADDRESS_LABELS, DEFAULT_SHIFT_TYPES } from '../../lib/office/settings-defaults'
+import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPES } from '../../lib/office/settings-defaults'
 import { validateShiftTypes } from '../../lib/office/volunteers'
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '../../config/site'
 
@@ -62,6 +62,7 @@ export const OfficeSettings: GlobalConfig = {
         { name: 'postalCode', label: 'Postal code line', type: 'text', maxLength: 60, defaultValue: DEFAULT_ADDRESS_LABELS.postalCode, access: admin },
       ],
     },
+    { name: 'annualMeetingName', label: 'Name of the yearly meeting', type: 'text', maxLength: 60, defaultValue: DEFAULT_ANNUAL_MEETING_NAME, access: admin, admin: { description: 'What your club calls the yearly general meeting. It is the name shown on the Meetings page for that kind of meeting.' } },
     {
       name: 'shiftTypes',
       label: 'Volunteer jobs',

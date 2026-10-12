@@ -120,6 +120,15 @@ export interface Config {
     'volunteer-assignments': VolunteerAssignment;
     'volunteer-availability': VolunteerAvailability;
     'volunteer-hours': VolunteerHour;
+    'committee-seats': CommitteeSeat;
+    'meeting-templates': MeetingTemplate;
+    meetings: Meeting;
+    'meeting-items': MeetingItem;
+    'meeting-attendance': MeetingAttendance;
+    'meeting-motions': MeetingMotion;
+    'meeting-actions': MeetingAction;
+    'office-files': OfficeFile;
+    'committee-documents': CommitteeDocument;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -190,6 +199,15 @@ export interface Config {
     'volunteer-assignments': VolunteerAssignmentsSelect<false> | VolunteerAssignmentsSelect<true>;
     'volunteer-availability': VolunteerAvailabilitySelect<false> | VolunteerAvailabilitySelect<true>;
     'volunteer-hours': VolunteerHoursSelect<false> | VolunteerHoursSelect<true>;
+    'committee-seats': CommitteeSeatsSelect<false> | CommitteeSeatsSelect<true>;
+    'meeting-templates': MeetingTemplatesSelect<false> | MeetingTemplatesSelect<true>;
+    meetings: MeetingsSelect<false> | MeetingsSelect<true>;
+    'meeting-items': MeetingItemsSelect<false> | MeetingItemsSelect<true>;
+    'meeting-attendance': MeetingAttendanceSelect<false> | MeetingAttendanceSelect<true>;
+    'meeting-motions': MeetingMotionsSelect<false> | MeetingMotionsSelect<true>;
+    'meeting-actions': MeetingActionsSelect<false> | MeetingActionsSelect<true>;
+    'office-files': OfficeFilesSelect<false> | OfficeFilesSelect<true>;
+    'committee-documents': CommitteeDocumentsSelect<false> | CommitteeDocumentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1807,7 +1825,7 @@ export interface OfficeAuditLog {
   id: number;
   at: string;
   user?: (number | null) | User;
-  action: 'export' | 'email-send' | 'erase' | 'bulk-change';
+  action: 'export' | 'email-send' | 'erase' | 'bulk-change' | 'handover';
   module: string;
   /**
    * Filter keys and counts only.
@@ -2063,6 +2081,224 @@ export interface VolunteerHour {
   createdAt: string;
 }
 /**
+ * The offices on your committee. Hand them over at the yearly general meeting from Club office, then Meetings.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "committee-seats".
+ */
+export interface CommitteeSeat {
+  id: number;
+  /**
+   * For example President or Secretary.
+   */
+  title: string;
+  sortOrder?: number | null;
+  /**
+   * From Committee & contacts. Leave empty if the seat is vacant.
+   */
+  holder?: (number | null) | Person;
+  /**
+   * Only needed if this person signs in to the admin. Selectors cannot hold a seat login.
+   */
+  holderUser?: (number | null) | User;
+  /**
+   * Tick for seats that may open office-bearer documents and restricted minutes (for example president, secretary, treasurer). Needs their login above.
+   */
+  officeBearer?: boolean | null;
+  termStart?: string | null;
+  /**
+   * Optional. After this date the seat no longer gives access.
+   */
+  termEnd?: string | null;
+  /**
+   * What the next holder should know. Visible to the whole committee, so keep it free of private details.
+   */
+  handoverNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The agenda a new meeting starts from. “Add the standard agendas” on the Meetings page creates generic ones to edit.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-templates".
+ */
+export interface MeetingTemplate {
+  id: number;
+  name: string;
+  /**
+   * A special meeting starts restricted. A yearly general meeting gets the “Hand over seats” step.
+   */
+  kind: 'ordinary' | 'annual' | 'special';
+  items?:
+    | {
+        title: string;
+        kind: 'general' | 'welcome' | 'minutes' | 'business' | 'report' | 'financial' | 'election' | 'close';
+        defaultNotes?: string | null;
+        /**
+         * Only office-bearers see a restricted item. Finance items are always restricted.
+         */
+        restricted?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Committee meetings. Run them from Club office, then Meetings.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meetings".
+ */
+export interface Meeting {
+  id: number;
+  title: string;
+  kind: 'ordinary' | 'annual' | 'special';
+  /**
+   * Shown exactly as typed, with no time zone conversion.
+   */
+  startsAt: string;
+  venue?: string | null;
+  status: 'planned' | 'in-progress' | 'closed' | 'cancelled';
+  chairSeat?: (number | null) | CommitteeSeat;
+  minuteTakerSeat?: (number | null) | CommitteeSeat;
+  /**
+   * Only office-bearers can see a restricted meeting at all.
+   */
+  restricted: boolean;
+  minutesText?: string | null;
+  minutesStatus: 'draft' | 'approved';
+  approvedAtMeeting?: (number | null) | Meeting;
+  closedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One line of a meeting’s agenda. Managed from the meeting page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-items".
+ */
+export interface MeetingItem {
+  id: number;
+  meeting: number | Meeting;
+  order: number;
+  title: string;
+  kind: 'general' | 'welcome' | 'minutes' | 'business' | 'report' | 'financial' | 'election' | 'close';
+  notes?: string | null;
+  outcome?: string | null;
+  restricted: boolean;
+  /**
+   * Set by the system from the item and meeting. Do not change it.
+   */
+  effectiveRestricted: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who came to a meeting, sent an apology or did not come.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-attendance".
+ */
+export interface MeetingAttendance {
+  id: number;
+  meeting: number | Meeting;
+  person?: (number | null) | Person;
+  guestName?: string | null;
+  state: 'present' | 'apology' | 'absent';
+  /**
+   * Set by the system from the item and meeting. Do not change it.
+   */
+  effectiveRestricted: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A motion put to a meeting, with vote counts. Counts only: who voted how is not kept.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-motions".
+ */
+export interface MeetingMotion {
+  id: number;
+  meeting: number | Meeting;
+  item?: (number | null) | MeetingItem;
+  text: string;
+  votesFor?: number | null;
+  votesAgainst?: number | null;
+  abstain?: number | null;
+  result?: ('carried' | 'lost' | 'tabled' | 'withdrawn') | null;
+  /**
+   * Set by the system from the item and meeting. Do not change it.
+   */
+  effectiveRestricted: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A job agreed at a meeting, with an owner and a date. It follows the seat, not the person.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-actions".
+ */
+export interface MeetingAction {
+  id: number;
+  meeting: number | Meeting;
+  item?: (number | null) | MeetingItem;
+  text: string;
+  ownerSeat?: (number | null) | CommitteeSeat;
+  ownerPerson?: (number | null) | Person;
+  due?: string | null;
+  status: 'open' | 'done' | 'blocked' | 'dropped';
+  doneOn?: string | null;
+  /**
+   * Set by the system from the item and meeting. Do not change it.
+   */
+  effectiveRestricted: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The files behind office-bearer documents. Manage them from Club office, then Meetings, then Documents.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-files".
+ */
+export interface OfficeFile {
+  id: number;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Files only office-bearers can open (insurance, governance, finance). Managed from Club office, then Meetings, then Documents.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "committee-documents".
+ */
+export interface CommitteeDocument {
+  id: number;
+  title: string;
+  category: 'governance' | 'finance' | 'insurance' | 'legal' | 'policy' | 'other';
+  file: number | OfficeFile;
+  meeting?: (number | null) | Meeting;
+  uploadedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2297,6 +2533,42 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'volunteer-hours';
         value: number | VolunteerHour;
+      } | null)
+    | ({
+        relationTo: 'committee-seats';
+        value: number | CommitteeSeat;
+      } | null)
+    | ({
+        relationTo: 'meeting-templates';
+        value: number | MeetingTemplate;
+      } | null)
+    | ({
+        relationTo: 'meetings';
+        value: number | Meeting;
+      } | null)
+    | ({
+        relationTo: 'meeting-items';
+        value: number | MeetingItem;
+      } | null)
+    | ({
+        relationTo: 'meeting-attendance';
+        value: number | MeetingAttendance;
+      } | null)
+    | ({
+        relationTo: 'meeting-motions';
+        value: number | MeetingMotion;
+      } | null)
+    | ({
+        relationTo: 'meeting-actions';
+        value: number | MeetingAction;
+      } | null)
+    | ({
+        relationTo: 'office-files';
+        value: number | OfficeFile;
+      } | null)
+    | ({
+        relationTo: 'committee-documents';
+        value: number | CommitteeDocument;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3445,6 +3717,155 @@ export interface VolunteerHoursSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "committee-seats_select".
+ */
+export interface CommitteeSeatsSelect<T extends boolean = true> {
+  title?: T;
+  sortOrder?: T;
+  holder?: T;
+  holderUser?: T;
+  officeBearer?: T;
+  termStart?: T;
+  termEnd?: T;
+  handoverNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-templates_select".
+ */
+export interface MeetingTemplatesSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        kind?: T;
+        defaultNotes?: T;
+        restricted?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meetings_select".
+ */
+export interface MeetingsSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  startsAt?: T;
+  venue?: T;
+  status?: T;
+  chairSeat?: T;
+  minuteTakerSeat?: T;
+  restricted?: T;
+  minutesText?: T;
+  minutesStatus?: T;
+  approvedAtMeeting?: T;
+  closedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-items_select".
+ */
+export interface MeetingItemsSelect<T extends boolean = true> {
+  meeting?: T;
+  order?: T;
+  title?: T;
+  kind?: T;
+  notes?: T;
+  outcome?: T;
+  restricted?: T;
+  effectiveRestricted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-attendance_select".
+ */
+export interface MeetingAttendanceSelect<T extends boolean = true> {
+  meeting?: T;
+  person?: T;
+  guestName?: T;
+  state?: T;
+  effectiveRestricted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-motions_select".
+ */
+export interface MeetingMotionsSelect<T extends boolean = true> {
+  meeting?: T;
+  item?: T;
+  text?: T;
+  votesFor?: T;
+  votesAgainst?: T;
+  abstain?: T;
+  result?: T;
+  effectiveRestricted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meeting-actions_select".
+ */
+export interface MeetingActionsSelect<T extends boolean = true> {
+  meeting?: T;
+  item?: T;
+  text?: T;
+  ownerSeat?: T;
+  ownerPerson?: T;
+  due?: T;
+  status?: T;
+  doneOn?: T;
+  effectiveRestricted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "office-files_select".
+ */
+export interface OfficeFilesSelect<T extends boolean = true> {
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "committee-documents_select".
+ */
+export interface CommitteeDocumentsSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
+  file?: T;
+  meeting?: T;
+  uploadedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -4042,6 +4463,10 @@ export interface OfficeSetting {
     postalCode?: string | null;
   };
   /**
+   * What your club calls the yearly general meeting. It is the name shown on the Meetings page for that kind of meeting.
+   */
+  annualMeetingName?: string | null;
+  /**
    * The jobs you roster on a game day, such as canteen or gate. The code is a short word that never changes once a job has been rostered; the name can be changed at any time. Mark a job “Paid” only if the people doing it are paid: paid and volunteer hours are kept apart in reports.
    */
   shiftTypes?:
@@ -4465,6 +4890,7 @@ export interface OfficeSettingsSelect<T extends boolean = true> {
         region?: T;
         postalCode?: T;
       };
+  annualMeetingName?: T;
   shiftTypes?:
     | T
     | {

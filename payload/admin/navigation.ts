@@ -110,6 +110,17 @@ export const officeCollections: OfficeCollection[] = [
   { slug: 'volunteer-availability', role: 'staff' },
   // Per-person hours are employment information, so the ledger is admin only even though the rest of the roster is the committee's.
   { slug: 'volunteer-hours', role: 'admin' },
+  // Meetings (WP-4): the committee reads unrestricted rows, office-bearers the rest; documents and files are office-bearer only (an editor
+  // who holds a seat), so they stay un-hidden for editors and are guarded by access, not by hiding.
+  { slug: 'committee-seats', role: 'staff' },
+  { slug: 'meeting-templates', role: 'staff' },
+  { slug: 'meetings', role: 'staff' },
+  { slug: 'meeting-items', role: 'staff' },
+  { slug: 'meeting-attendance', role: 'staff' },
+  { slug: 'meeting-motions', role: 'staff' },
+  { slug: 'meeting-actions', role: 'staff' },
+  { slug: 'committee-documents', role: 'staff' },
+  { slug: 'office-files', role: 'staff' },
 ]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */

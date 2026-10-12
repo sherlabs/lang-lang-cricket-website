@@ -56,3 +56,6 @@ logos/
 
 # operator backfill logs
 backfill-matches-*.log
+
+# office-bearer files stored locally in development and tests
+/.private/

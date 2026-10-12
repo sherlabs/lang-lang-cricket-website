@@ -3,8 +3,8 @@
  * holds keys and counts only, never a name, an address or free text. `sanitiseSummary` enforces that by construction: the caller
  * declares, for every key, either the closed list of values it may take or `number` / `boolean`; anything else is dropped.
  */
-export type AuditAction = 'export' | 'email-send' | 'erase' | 'bulk-change'
-export const AUDIT_ACTIONS: readonly AuditAction[] = ['export', 'email-send', 'erase', 'bulk-change']
+export type AuditAction = 'export' | 'email-send' | 'erase' | 'bulk-change' | 'handover'
+export const AUDIT_ACTIONS: readonly AuditAction[] = ['export', 'email-send', 'erase', 'bulk-change', 'handover']
 
 export type SummarySpec = Record<string, readonly string[] | 'number' | 'boolean'>
 export type SummaryValue = string | number | boolean

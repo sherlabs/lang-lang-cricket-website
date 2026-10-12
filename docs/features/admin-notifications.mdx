@@ -5,7 +5,7 @@ routes: ["/admin"]
 collections: [player-sync-runs, stories, event-photos, merge-log, matches, player-seasons]
 admin: "Home, Needs your attention (everyone; extra lines for admins)"
 owner: "Committee (everyday lines); the site admin (technical lines)"
-related: [membership-fees, volunteer-roster, social-posting-queue, committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
+related: [membership-fees, volunteer-roster, committee-meetings, social-posting-queue, committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
 added: feat/payload-cms
 ---
 
@@ -29,6 +29,8 @@ Failures were only visible in the Sync runs list, which volunteers never open ([
 - **No "milestones crossed" line.** Counting crossings from match rows would use the wrong baseline (milestones start from season totals) and a rolling window would announce one crossing on seven nightly runs. The existing Milestones widget stays on Home.
 
 **Volunteers (the committee).** When the next game day is within three days and a volunteer place is still empty: "N volunteer places are still empty for Sat 17 Oct (cancelled and no-show people are not counted)" (a warning, links to Volunteers). See [Volunteer roster and hours](./volunteer-roster.mdx).
+
+**Committee actions (the committee).** "N committee actions are overdue (done and dropped actions are not counted; restricted actions only for office-bearers)" and "N committee actions are blocked ..." (warnings, link to Committee actions), shown only when the count is above zero. Restricted actions are counted only for office-bearers. See [Committee meetings](./committee-meetings.mdx).
 
 **Match fees (admins only).** When members owe match fees in the open season: "N members owe $X in match fees (open season, unmatched appearances not counted)" (information, links to Fees). Nothing is shown when no one owes, and editors never see it. See [Membership and match fees](./membership-fees.mdx).
 

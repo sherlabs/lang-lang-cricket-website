@@ -1,6 +1,7 @@
 import 'server-only'
 import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { memberCompleteness } from '@/lib/members-queries'
+import { meetingStats } from '@/lib/meetings-office-queries'
 import { nextGameDay } from '@/lib/volunteers-office-queries'
 import { officeCopy } from '@/payload/admin/copy'
 import { gameDayLabel } from './game-day'
@@ -23,6 +24,10 @@ export async function landingStats(user: unknown, keys: readonly OfficeModuleKey
   if (keys.includes('volunteers')) {
     const g = await nextGameDay(user)
     out.volunteers = g ? officeCopy.volunteers.stat(gameDayLabel(g.date), g.empty, g.slots) : officeCopy.volunteers.stat(null, 0, 0)
+  }
+  if (keys.includes('meetings')) {
+    const m = await meetingStats(user)
+    if (m) out.meetings = officeCopy.meetings.stat(m.next ? m.next.when : null, m.overdue)
   }
   if (keys.includes('fees')) {
     const f = await feeOwingSummary(user)

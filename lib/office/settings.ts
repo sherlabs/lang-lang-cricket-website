@@ -1,11 +1,11 @@
 import { OFFICE_CURRENCY, OFFICE_LOCALE } from '@/config/site'
 
-import { DEFAULT_ADDRESS_LABELS, DEFAULT_SHIFT_TYPES, type AddressLabels, type ShiftType } from './settings-defaults'
+import { DEFAULT_ADDRESS_LABELS, DEFAULT_ANNUAL_MEETING_NAME, DEFAULT_SHIFT_TYPES, type AddressLabels, type ShiftType } from './settings-defaults'
 import { isHoursKind, isShiftKey } from './volunteers'
 
 export { DEFAULT_ADDRESS_LABELS, DEFAULT_SHIFT_TYPES, type AddressLabels, type ShiftType }
 
-export type OfficeSettings = { currency: string; locale: string; chargeFillIns: boolean; addressLabels: AddressLabels; shiftTypes: ShiftType[] }
+export type OfficeSettings = { currency: string; locale: string; chargeFillIns: boolean; addressLabels: AddressLabels; shiftTypes: ShiftType[]; annualMeetingName: string }
 
 const text = (v: unknown, max = 60): string | null => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null)
 
@@ -43,5 +43,6 @@ export function resolveOfficeSettings(doc: unknown): OfficeSettings {
       postalCode: text(labels.postalCode) ?? DEFAULT_ADDRESS_LABELS.postalCode,
     },
     shiftTypes: resolveShiftTypes(d.shiftTypes),
+    annualMeetingName: text(d.annualMeetingName, 60) ?? DEFAULT_ANNUAL_MEETING_NAME,
   }
 }

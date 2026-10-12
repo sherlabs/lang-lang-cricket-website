@@ -43,6 +43,9 @@ import { MembershipTiers } from './payload/collections/MembershipTiers'
 import { Memberships } from './payload/collections/Memberships'
 import { FeeCharges, FeePayments, FeeSeasons, FeeWaivers } from './payload/collections/feeLedger'
 import { VolunteerAssignments, VolunteerAvailability, VolunteerHours, VolunteerShifts, VolunteerWeeks } from './payload/collections/volunteers'
+import { CommitteeSeats } from './payload/collections/CommitteeSeats'
+import { CommitteeDocuments, MeetingActions, MeetingAttendance, MeetingItems, MeetingMotions, MeetingTemplates, Meetings } from './payload/collections/meetings'
+import { OfficeFiles } from './payload/collections/OfficeFiles'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -107,13 +110,18 @@ export default buildConfig({
         officeVolunteers: { Component: '/payload/components/OfficeVolunteersView#OfficeVolunteersView', path: '/office/volunteers', exact: true, meta: { title: 'Volunteers' } },
         officeVolunteerWeek: { Component: '/payload/components/OfficeVolunteerWeekView#OfficeVolunteerWeekView', path: '/office/volunteers/week/:id', meta: { title: 'Volunteer week' } },
         officeVolunteerHours: { Component: '/payload/components/OfficeVolunteerHoursView#OfficeVolunteerHoursView', path: '/office/volunteers/hours', meta: { title: 'Volunteer hours' } },
+        officeMeetings: { Component: '/payload/components/OfficeMeetingsView#OfficeMeetingsView', path: '/office/meetings', exact: true, meta: { title: 'Meetings' } },
+        officeMeetingActions: { Component: '/payload/components/OfficeMeetingActionsView#OfficeMeetingActionsView', path: '/office/meetings/actions', meta: { title: 'Committee actions' } },
+        officeMeetingDocuments: { Component: '/payload/components/OfficeMeetingDocumentsView#OfficeMeetingDocumentsView', path: '/office/meetings/documents', meta: { title: 'Office-bearer documents' } },
+        officeMeetingMinutes: { Component: '/payload/components/OfficeMeetingMinutesView#OfficeMeetingMinutesView', path: '/office/meetings/:id/minutes', meta: { title: 'Minutes' } },
+        officeMeeting: { Component: '/payload/components/OfficeMeetingView#OfficeMeetingView', path: '/office/meetings/:id', meta: { title: 'Meeting' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
@@ -132,6 +140,18 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
+    // Office-bearer files: a separate instance with client uploads OFF, so the browser never receives a blob address, and with
+    // Payload's access-controlled download route ON (spec 6.5). The first instance below does not manage this collection.
+    guardLegacyBlobDeletes(
+      vercelBlobStorage({
+        enabled: Boolean(token),
+        token,
+        clientUploads: false,
+        alwaysInsertFields: true,
+        // No disablePayloadAccessControl: the default is the access-controlled download route.
+        collections: { 'office-files': { prefix: 'office' } },
+      }),
+    ),
     guardLegacyBlobDeletes(
       vercelBlobStorage({
         enabled: Boolean(token),

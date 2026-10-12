@@ -30,6 +30,17 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'club-meetings',
+    title: 'Run committee meetings and keep the minutes',
+    steps: [
+      'Click "Club office", then "Meetings". The first time, press "Add the standard agendas".',
+      'Press "Start a new meeting", pick an agenda and the date. Everyone who holds a seat starts as present; tap Apology or Absent for anyone who is not.',
+      'On each agenda item add notes, record a motion with the votes, and add an action with the seat that owns it and a date. Private matters can be restricted to office-bearers.',
+      'When you are done press "Close the meeting and draft the minutes", tidy the draft and save it. Use "Print the minutes" and your browser\u2019s Save as PDF if you need a file. Approve them at the next meeting.',
+      '"Committee actions" lists what is still to do, overdue first. Press Done when a job is finished. After the yearly general meeting an admin uses "Hand over seats" so the new committee gets the jobs and the right access.',
+    ],
+  },
+  {
     id: 'club-office',
     title: 'Look after the club members (admins)',
     steps: [

@@ -12,3 +12,6 @@ export const DEFAULT_SHIFT_TYPES: readonly ShiftType[] = [
   { key: 'bar', label: 'Bar', defaultHours: 4, defaultSlots: 2, kind: 'volunteer' },
   { key: 'gate', label: 'Gate', defaultHours: 2, defaultSlots: 1, kind: 'volunteer' },
 ]
+
+/** What the yearly meeting is called where you live. Neutral default; the club renames it in Club office settings. */
+export const DEFAULT_ANNUAL_MEETING_NAME = 'Annual general meeting'

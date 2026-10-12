@@ -46,6 +46,11 @@ import { OfficeFeeMemberView as OfficeFeeMemberView_d85925b91f6c29badb741a87d88e
 import { OfficeVolunteersView as OfficeVolunteersView_1c1134743fbde45b5a80264324c52375 } from '../../../payload/components/OfficeVolunteersView'
 import { OfficeVolunteerWeekView as OfficeVolunteerWeekView_777db59a0a43e5258d1716e79b405677 } from '../../../payload/components/OfficeVolunteerWeekView'
 import { OfficeVolunteerHoursView as OfficeVolunteerHoursView_e5b43c2f28a158409de7281b111caf8d } from '../../../payload/components/OfficeVolunteerHoursView'
+import { OfficeMeetingsView as OfficeMeetingsView_1a6cee4fcdc0e419b0ea0873105c378d } from '../../../payload/components/OfficeMeetingsView'
+import { OfficeMeetingActionsView as OfficeMeetingActionsView_9073a232bbcd8f0dd3db1823580c8ad9 } from '../../../payload/components/OfficeMeetingActionsView'
+import { OfficeMeetingDocumentsView as OfficeMeetingDocumentsView_40e05f91bc381378fc5a55d8e58fda4e } from '../../../payload/components/OfficeMeetingDocumentsView'
+import { OfficeMeetingMinutesView as OfficeMeetingMinutesView_302b35cd928e4c066992a2ff4ce55401 } from '../../../payload/components/OfficeMeetingMinutesView'
+import { OfficeMeetingView as OfficeMeetingView_c0df34f826197593ec44d135ecf7dba1 } from '../../../payload/components/OfficeMeetingView'
 import { HelpView as HelpView_c8a28b0cb85f83c7750007a1dd297317 } from '../../../payload/components/HelpView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
@@ -100,6 +105,11 @@ export const importMap = {
   "/payload/components/OfficeVolunteersView#OfficeVolunteersView": OfficeVolunteersView_1c1134743fbde45b5a80264324c52375,
   "/payload/components/OfficeVolunteerWeekView#OfficeVolunteerWeekView": OfficeVolunteerWeekView_777db59a0a43e5258d1716e79b405677,
   "/payload/components/OfficeVolunteerHoursView#OfficeVolunteerHoursView": OfficeVolunteerHoursView_e5b43c2f28a158409de7281b111caf8d,
+  "/payload/components/OfficeMeetingsView#OfficeMeetingsView": OfficeMeetingsView_1a6cee4fcdc0e419b0ea0873105c378d,
+  "/payload/components/OfficeMeetingActionsView#OfficeMeetingActionsView": OfficeMeetingActionsView_9073a232bbcd8f0dd3db1823580c8ad9,
+  "/payload/components/OfficeMeetingDocumentsView#OfficeMeetingDocumentsView": OfficeMeetingDocumentsView_40e05f91bc381378fc5a55d8e58fda4e,
+  "/payload/components/OfficeMeetingMinutesView#OfficeMeetingMinutesView": OfficeMeetingMinutesView_302b35cd928e4c066992a2ff4ce55401,
+  "/payload/components/OfficeMeetingView#OfficeMeetingView": OfficeMeetingView_c0df34f826197593ec44d135ecf7dba1,
   "/payload/components/HelpView#HelpView": HelpView_c8a28b0cb85f83c7750007a1dd297317,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e

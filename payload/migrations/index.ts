@@ -37,6 +37,7 @@ import * as migration_20261012_051834_d1_members_office from './20261012_051834_
 import * as migration_20261012_060836_d2_membership_fees from './20261012_060836_d2_membership_fees';
 import * as migration_20261012_065830_d2_payment_form_key from './20261012_065830_d2_payment_form_key';
 import * as migration_20261012_070911_d3_volunteers from './20261012_070911_d3_volunteers';
+import * as migration_20261012_080420_d4_meetings_seats from './20261012_080420_d4_meetings_seats';
 
 export const migrations = [
   {
@@ -232,6 +233,11 @@ export const migrations = [
   {
     up: migration_20261012_070911_d3_volunteers.up,
     down: migration_20261012_070911_d3_volunteers.down,
-    name: '20261012_070911_d3_volunteers'
+    name: '20261012_070911_d3_volunteers',
+  },
+  {
+    up: migration_20261012_080420_d4_meetings_seats.up,
+    down: migration_20261012_080420_d4_meetings_seats.down,
+    name: '20261012_080420_d4_meetings_seats'
   },
 ];
