@@ -1,6 +1,9 @@
 import type { SizeKey } from '../types'
 
 /** The networks a post can go to. `mock` is the Test network: it never reaches a real service. */
+/** The environment as the social code reads it (a plain record, so tests can pass a few keys). */
+export type SocialEnv = Record<string, string | undefined>
+
 export const NETWORKS = ['facebook', 'instagram', 'x', 'mock'] as const
 export type Network = (typeof NETWORKS)[number]
 export const isNetwork = (v: unknown): v is Network => typeof v === 'string' && (NETWORKS as readonly string[]).includes(v)
@@ -24,6 +27,6 @@ export interface NetworkAdapter {
   /** Sizes the network accepts, default first. */
   sizes: readonly SizeKey[]
   limits: { maxChars: number; maxHashtags: number }
-  isConfigured(env: NodeJS.ProcessEnv): boolean
+  isConfigured(env: SocialEnv): boolean
   publish(input: PublishInput, signal: AbortSignal): Promise<PublishResult>
 }

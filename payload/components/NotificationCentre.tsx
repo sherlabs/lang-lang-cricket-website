@@ -2,11 +2,29 @@ import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { allCaughtUp, notificationLines, type NotificationInput, type RunFacts } from '@/lib/admin/notifications'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions } from '@/lib/players/duplicate-queries'
+import { socialCounts } from '@/lib/social-queries'
+import { readHeartbeat } from '@/lib/social/heartbeat'
+import { overdueAfterMinutes } from '@/lib/social/heartbeat-math'
+import { zonedToUtc } from '@/lib/social/schedule-time'
+import { currentClubDate } from '@/lib/selection/club-date'
 import type { Payload } from 'payload'
 import { getPendingCounts } from '../admin/approvals'
 import { notificationCopy } from '../admin/copy'
 
 const dateFormat = new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE, day: 'numeric', month: 'short', year: 'numeric' })
+
+/** Posts that did not go out, posts due today and posts overdue, from the queue (counts only). A failure drops the lines, never the page. */
+async function socialFacts(payload: Payload) {
+  try {
+    const today = currentClubDate()
+    const next = new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
+    const dayEnd = zonedToUtc(next, '00:00', CLUB_TIMEZONE) ?? new Date(Date.now() + 86_400_000)
+    const beat = await readHeartbeat(payload, overdueAfterMinutes)
+    return await socialCounts(dayEnd, overdueAfterMinutes(beat.observedMinutes))
+  } catch {
+    return null
+  }
+}
 
 async function latestRun(payload: Payload): Promise<RunFacts | null> {
   try {
@@ -28,15 +46,16 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
  * only drops its line.
  */
 export async function NotificationCentre({ payload, isAdmin }: { payload: Payload; isAdmin: boolean }) {
-  const [pending, run, duplicateCount, imports] = await Promise.all([
+  const [pending, run, duplicateCount, imports, social] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
     isAdmin ? getDuplicateSuggestions().then((s) => s.length).catch(() => null) : Promise.resolve(null),
     isAdmin
       ? listImportBatches(payload).then((b) => (b.length ? { count: b.length, latest: { at: b[0].at, seasons: b[0].seasons, matches: b[0].matches } } : { count: 0, latest: null })).catch(() => null)
       : Promise.resolve(null),
+    socialFacts(payload),
   ])
-  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports }
+  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social }
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

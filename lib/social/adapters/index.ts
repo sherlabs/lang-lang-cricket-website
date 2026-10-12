@@ -1,13 +1,14 @@
 import { mockAdapter } from './mock'
 import { facebookAdapter, instagramAdapter, xAdapter } from './stubs'
 import type { Network, NetworkAdapter } from './types'
+import type { SocialEnv } from './types'
 
 const ADAPTERS: Record<Network, NetworkAdapter> = { facebook: facebookAdapter, instagram: instagramAdapter, x: xAdapter, mock: mockAdapter }
 
 export const allAdapters = (): NetworkAdapter[] => Object.values(ADAPTERS)
 
 /** The adapter for a network, only when its credentials are present in `env` (otherwise undefined: it is never tried). */
-export function getAdapter(network: Network, env: NodeJS.ProcessEnv = process.env): NetworkAdapter | undefined {
+export function getAdapter(network: Network, env: SocialEnv = process.env): NetworkAdapter | undefined {
   const a = ADAPTERS[network]
   return a && a.isConfigured(env) ? a : undefined
 }
@@ -17,11 +18,11 @@ export function getAdapter(network: Network, env: NodeJS.ProcessEnv = process.en
  * with full credentials gets none of them until the live calls are built. The composer lists exactly this, and the schedule action
  * re-checks it on the server.
  */
-export function configuredNetworks(env: NodeJS.ProcessEnv = process.env): NetworkAdapter[] {
+export function configuredNetworks(env: SocialEnv = process.env): NetworkAdapter[] {
   return allAdapters().filter((a) => a.live && a.isConfigured(env))
 }
 
 /** Networks the composer shows as "not available yet" with the download fallback beside them. */
-export function unavailableNetworks(env: NodeJS.ProcessEnv = process.env): NetworkAdapter[] {
+export function unavailableNetworks(env: SocialEnv = process.env): NetworkAdapter[] {
   return allAdapters().filter((a) => a.id !== 'mock' && !(a.live && a.isConfigured(env)))
 }

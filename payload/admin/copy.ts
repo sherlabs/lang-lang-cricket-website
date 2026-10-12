@@ -41,6 +41,9 @@ export const notificationCopy = {
     syncFailed: "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator.",
     stories: (n: number) => `${n} ${n === 1 ? 'story is' : 'stories are'} waiting for approval`,
     photos: (n: number) => `${n} ${n === 1 ? 'photo is' : 'photos are'} waiting for approval`,
+    socialFailed: (n: number) => `${n} social ${n === 1 ? 'post needs' : 'posts need'} your attention`,
+    socialToday: (n: number) => `${n} ${n === 1 ? 'post is' : 'posts are'} scheduled for today`,
+    socialOverdue: (n: number) => `${n} scheduled ${n === 1 ? 'post is' : 'posts are'} overdue. The scheduler may not be running`,
     caughtUp: 'Nothing is waiting. You are all caught up.',
   },
   admin: {

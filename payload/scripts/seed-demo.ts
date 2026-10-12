@@ -37,7 +37,7 @@ import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedDemoSelection, seedDemoTeams } from '../seed/demo-selection'
 import { seedDemoNets } from '../seed/demo-nets'
 import { seedDemoVotes } from '../seed/demo-votes'
-import { seedDemoSocial } from '../seed/demo-social'
+import { seedDemoSocial, seedDemoSocialQueue } from '../seed/demo-social'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
@@ -496,6 +496,7 @@ async function main() {
     await seedDemoVotes(payload)
     await seedDemoNets(payload)
     await seedDemoSocial(payload)
+    await seedDemoSocialQueue(payload)
   } finally {
     await payload.destroy()
   }

@@ -83,3 +83,23 @@ describe('notification lines', () => {
     expect(allCaughtUp(lines)).toBe(true)
   })
 })
+
+describe('social queue lines', () => {
+  it('say nothing when the queue is quiet or unavailable', () => {
+    expect(notificationLines(input({ social: { failed: 0, dueSoon: 0, overdue: 0 } }), opts(false)).map((l) => l.key)).toEqual(['sync-ok'])
+    expect(notificationLines(input({ social: null }), opts(false)).map((l) => l.key)).toEqual(['sync-ok'])
+  })
+  it('warn about failed and overdue posts first, then mention what is due today, with counts only', () => {
+    const lines = notificationLines(input({ social: { failed: 2, dueSoon: 1, overdue: 3 } }), opts(false))
+    expect(lines.map((l) => l.key)).toEqual(['social-overdue', 'social-failed', 'sync-ok', 'social-today'])
+    expect(lines.find((l) => l.key === 'social-failed')).toMatchObject({ tone: 'warn', text: '2 social posts need your attention', href: '/admin/social?tab=attention' })
+    expect(lines.find((l) => l.key === 'social-today')).toMatchObject({ tone: 'info', text: '1 post is scheduled for today' })
+    expect(lines.find((l) => l.key === 'social-overdue')?.text).toContain('3 scheduled posts are overdue')
+    expect(allCaughtUp(lines)).toBe(false)
+  })
+  it('is shown to the committee as well as admins', () => {
+    expect(notificationLines(input({ social: { failed: 1, dueSoon: 0, overdue: 0 } }), opts(true)).some((l) => l.key === 'social-failed')).toBe(true)
+    expect(notificationLines(input({ social: { failed: 1, dueSoon: 0, overdue: 0 } }), opts(false)).some((l) => l.key === 'social-failed')).toBe(true)
+  })
+})
+

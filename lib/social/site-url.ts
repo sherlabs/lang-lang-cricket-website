@@ -1,3 +1,4 @@
+import type { SocialEnv } from '@/lib/social/adapters/types'
 /**
  * Networks fetch the picture from a link on the club's own site, so that site must be a public https address (spec 4.1).
  * `http`, `localhost`, loopback and private addresses can never be fetched. For local acceptance runs a non-production override
@@ -13,7 +14,7 @@ function privateHost(host: string): boolean {
   return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || a >= 224
 }
 
-export function isPublicHttpsUrl(url: string | null | undefined, env: NodeJS.ProcessEnv = process.env): boolean {
+export function isPublicHttpsUrl(url: string | null | undefined, env: SocialEnv = process.env): boolean {
   if (!url) return false
   if (env.SOCIAL_ALLOW_LOCAL_SITE_URL === 'yes' && env.NODE_ENV !== 'production') return /^https?:\/\//i.test(url)
   let u: URL

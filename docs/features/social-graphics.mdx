@@ -5,7 +5,7 @@ routes: ["/admin/social", "/api/admin/social/graphic", "/api/admin/social/source
 collections: [social-settings, players, sponsors, matches, selection-fixtures, events, yearbooks]
 admin: "Social posts (Advanced, for the committee and admins) and a Home tile; Social graphics settings (Advanced, admin only)"
 owner: "The committee member who posts the club's results and news on social media"
-related: [theme-editor, team-selection-and-announce, stat-cards, sponsors, committee-admin, milestones, season-yearbooks, match-data-store]
+related: [social-posting-queue, theme-editor, team-selection-and-announce, stat-cards, sponsors, committee-admin, milestones, season-yearbooks, match-data-store]
 added: feat/payload-cms
 ---
 
@@ -17,7 +17,7 @@ added: feat/payload-cms
 
 ## Why it was built
 
-The site could only make one player card and the lineup picture. Posting a result, a milestone or an event meant redoing it by hand in a design app. This is the picture half of issue [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): every graphic type, in the sizes social networks want, in styles that all come from the club theme. Scheduling posts is the next work package ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+The site could only make one player card and the lineup picture. Posting a result, a milestone or an event meant redoing it by hand in a design app. This is the picture half of issue [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): every graphic type, in the sizes social networks want, in styles that all come from the club theme. Scheduling posts is described in [Social posting queue](./social-posting-queue.mdx) ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
 
 ## What it does
 
@@ -60,8 +60,8 @@ The site could only make one player card and the lineup picture. Posting a resul
 
 ## Not included / deferred
 
-- Scheduling and publishing posts, the posting queue and network adapters: [#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23).
-- Live posting to any network, AI-written captions or match summaries, video or carousel posts.
+- Scheduling and publishing: see [Social posting queue](./social-posting-queue.mdx). Live posting to Facebook, Instagram and X is still deferred there ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+- AI-written captions or match summaries, video or carousel posts.
 - A fixture list that includes junior grades, and player photos on pictures.
 - Merging two players keeps the safer social-media settings: the player kept is a junior if either was, and is OK to post only if both were (an undo puts the old ticks back unless they were edited since). If the statistics cannot be read when a picture is made, no player is treated as eligible, so no names or figures are drawn.
 - A date of birth is not stored on players, so juniors are identified by the tick, a junior grade in their latest season, or both. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

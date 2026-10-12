@@ -1,18 +1,19 @@
 import type { SizeKey } from '../types'
 import type { NetworkAdapter, PublishInput, PublishResult } from './types'
+import type { SocialEnv } from './types'
 
 /**
  * The Test network. It never reaches a real service. Used by every test and, for demos, enabled only with `SOCIAL_MOCK_NETWORK=yes`.
  * In production it is refused unless a second flag says the demo is intended (`SOCIAL_MOCK_ALLOW_PROD_DEMO=yes`). This does not
  * depend on VERCEL_ENV, which is absent on self-hosted runs.
  */
-export function mockAllowed(env: NodeJS.ProcessEnv): boolean {
+export function mockAllowed(env: SocialEnv): boolean {
   if (env.SOCIAL_MOCK_NETWORK !== 'yes') return false
   return env.NODE_ENV !== 'production' || env.SOCIAL_MOCK_ALLOW_PROD_DEMO === 'yes'
 }
 
 /** True when the mock was asked for but is not allowed here: the server refuses to start. */
-export const mockRequestedButRefused = (env: NodeJS.ProcessEnv): boolean => env.SOCIAL_MOCK_NETWORK === 'yes' && !mockAllowed(env)
+export const mockRequestedButRefused = (env: SocialEnv): boolean => env.SOCIAL_MOCK_NETWORK === 'yes' && !mockAllowed(env)
 
 export type MockOutcome = 'success' | 'retryable' | 'rejected' | 'unknown' | 'throw' | 'slow'
 const OUTCOMES: readonly MockOutcome[] = ['success', 'retryable', 'rejected', 'unknown', 'throw', 'slow']
@@ -32,7 +33,7 @@ export const mockControl = {
   },
 }
 
-function outcomeFor(env: NodeJS.ProcessEnv): MockOutcome {
+function outcomeFor(env: SocialEnv): MockOutcome {
   const next = mockControl.queue.shift()
   if (next) return next
   if (mockControl.fallback) return mockControl.fallback

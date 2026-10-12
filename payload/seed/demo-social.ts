@@ -86,3 +86,81 @@ export async function seedDemoSocial(payload: Payload): Promise<void> {
   )
   console.log('[seed-demo] social demo game: 1 stored game with a 112 not out, and two juniors (one with the social opt-in) created')
 }
+
+type SeedTarget = { network: string; size: string; status: string; attempts?: number; finalText?: string | null; nextAttemptAt?: string | null; lastError?: string; errorCode?: string; remoteId?: string; manual?: boolean; publishedAt?: string }
+type SeedPost = { title: string; status: string; hoursFromNow: number; targets: SeedTarget[]; finishedHoursAgo?: number }
+
+const WORDS = 'Thank you to our sponsors.\n\n#club #cricket'
+
+/**
+ * Wave C WP-2 demo data: six queued posts covering every state the queue shows (a draft, two scheduled with one already due so a local
+ * run of `GET /api/cron/social-posts` publishes it through the Test network, one posted by hand, one failed with a plain reason and one
+ * with an unknown outcome). They draw from the seeded sponsors, so the pictures and the download fallback work. Idempotent by a hidden
+ * title key. Nothing here reaches a network; to see the scheduler publish, start the site with SOCIAL_MOCK_NETWORK=yes (documented in
+ * .env.example), never in code.
+ */
+export async function seedDemoSocialQueue(payload: Payload): Promise<void> {
+  const sponsors = await payload.find({ collection: 'sponsors', where: { name: { like: 'Demo' } }, limit: 4, sort: 'name', depth: 0, overrideAccess: true })
+  if (sponsors.docs.length === 0) {
+    console.log('[seed-demo] social queue: no demo sponsors, skipped')
+    return
+  }
+  // The snapshot is built here rather than loaded through the picture pipeline (which is behind `server-only`): the same logos, drawn from the same PNG source.
+  const logoOf = (name: string) => `data:image/png;base64,${demoLogoPng([...(SPONSORS.find((x) => x.name === name)?.color ?? [90, 90, 90])] as [number, number, number]).toString('base64')}`
+  const data = { sponsors: sponsors.docs.map((d) => ({ name: d.name, tier: d.tier, logo: logoOf(d.name) })), line: '' }
+  const admin = await payload.find({ collection: 'users', where: { role: { equals: 'admin' } }, limit: 1, depth: 0, overrideAccess: true })
+  const approver = admin.docs[0]?.id
+  if (approver === undefined) console.log('[seed-demo] social queue: no admin user yet (run seed:admin first); scheduled posts will fail with the approver message')
+  const spec = {
+    type: 'sponsor-thanks', style: 'bold', raw: { source: sponsors.docs.map((s) => s.id).join(',') },
+    snapshot: { data, players: [] }, playerIds: [], sponsorIds: sponsors.docs.map((s) => s.id),
+  }
+  const hours = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString()
+  const posts: SeedPost[] = [
+    { title: 'Demo post: draft thank-you', status: 'draft', hoursFromNow: 48, targets: [{ network: 'mock', size: 'square', status: 'pending', finalText: null }] },
+    { title: 'Demo post: scheduled for tomorrow', status: 'scheduled', hoursFromNow: 24, targets: [{ network: 'mock', size: 'square', status: 'pending', finalText: WORDS }] },
+    { title: 'Demo post: due now (run the scheduler)', status: 'scheduled', hoursFromNow: -1, targets: [{ network: 'mock', size: 'landscape', status: 'pending', finalText: WORDS }] },
+    {
+      title: 'Demo post: already posted', status: 'published', hoursFromNow: -26, finishedHoursAgo: 26,
+      targets: [
+        { network: 'facebook', size: 'landscape', status: 'published', attempts: 1, finalText: WORDS, remoteId: 'manual', manual: true, publishedAt: hours(-26) },
+        { network: 'x', size: 'landscape', status: 'published', attempts: 1, finalText: WORDS, remoteId: 'manual', manual: true, publishedAt: hours(-26) },
+      ],
+    },
+    {
+      title: 'Demo post: did not post', status: 'failed', hoursFromNow: -3, finishedHoursAgo: 3,
+      targets: [
+        { network: 'instagram', size: 'square', status: 'failed', attempts: 3, finalText: WORDS, errorCode: 'media_rejected', lastError: 'The network could not use the picture.' },
+        { network: 'mock', size: 'square', status: 'published', attempts: 1, finalText: WORDS, remoteId: 'mock-demo-1', publishedAt: hours(-3) },
+      ],
+    },
+    {
+      title: 'Demo post: not sure it went out', status: 'failed', hoursFromNow: -5, finishedHoursAgo: 5,
+      targets: [{ network: 'x', size: 'landscape', status: 'unknown', attempts: 1, finalText: WORDS, errorCode: 'unknown_outcome', lastError: 'Not sure it went out. Check the page.' }],
+    },
+  ]
+  let n = 0
+  for (const p of posts) {
+    const have = await payload.count({ collection: 'social-posts', where: { title: { equals: p.title } }, overrideAccess: true })
+    if (have.totalDocs > 0) continue
+    const live = p.status === 'scheduled'
+    const created = await payload.create({
+      collection: 'social-posts',
+      data: {
+        title: p.title, status: p.status, spec: spec as never, caption: 'Thank you to our sponsors.', hashtags: ['club', 'cricket'],
+        scheduledFor: hours(p.hoursFromNow), nextRunAt: live ? hours(p.hoursFromNow) : undefined, finishedAt: p.finishedHoursAgo ? hours(-p.finishedHoursAgo) : undefined,
+        approvedBy: p.status === 'draft' ? undefined : approver, approvedAt: p.status === 'draft' || approver === undefined ? undefined : new Date().toISOString(), createdBy: approver, revision: 1,
+      } as never,
+      overrideAccess: true, depth: 0, context: CTX,
+    })
+    for (const t of p.targets) {
+      await payload.create({
+        collection: 'social-post-targets',
+        data: { post: created.id, network: t.network, size: t.size, finalText: t.finalText, status: t.status, attempts: t.attempts ?? 0, nextAttemptAt: t.nextAttemptAt, lastError: t.lastError, errorCode: t.errorCode, remoteId: t.remoteId, publishedAt: t.publishedAt, manual: t.manual ?? false } as never,
+        overrideAccess: true, depth: 0, context: CTX,
+      })
+    }
+    n++
+  }
+  console.log(`[seed-demo] social queue: ${n} posts created`)
+}

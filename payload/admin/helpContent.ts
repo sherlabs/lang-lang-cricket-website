@@ -28,6 +28,8 @@ export const helpSections: HelpSection[] = [
       'On a phone, tap "Share or save to Photos". On a computer, click "Download picture".',
       'Tap "Copy caption", then paste it into Facebook, Instagram or X. You can change the words first.',
       'A player under 18 only appears on pictures once a parent or guardian has agreed and you have ticked "OK to post on social media" on the player.',
+      'To post later, scroll to "Schedule it": pick the network, the day and the time, check the words, then click Schedule. Use "Save as draft" to come back to it.',
+      'Your posts are listed below. If one did not go out, open "Needs attention": you can retry it, or download the picture and copy the caption and post it by hand, then click "Mark as posted".',
     ],
   },
   {

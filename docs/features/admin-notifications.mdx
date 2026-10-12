@@ -5,7 +5,7 @@ routes: ["/admin"]
 collections: [player-sync-runs, stories, event-photos, merge-log, matches, player-seasons]
 admin: "Home, Needs your attention (everyone; extra lines for admins)"
 owner: "Committee (everyday lines); the site admin (technical lines)"
-related: [committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
+related: [social-posting-queue, committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
 added: feat/payload-cms
 ---
 
@@ -27,6 +27,8 @@ Failures were only visible in the Sync runs list, which volunteers never open ([
 - Problems come first; "You are all caught up" shows only when nothing needs attention.
 - The wording lives in `payload/admin/copy.ts`.
 - **No "milestones crossed" line.** Counting crossings from match rows would use the wrong baseline (milestones start from season totals) and a rolling window would announce one crossing on seven nightly runs. The existing Milestones widget stays on Home.
+
+**Social posts.** When the committee uses the posting queue ([Social posting queue](./social-posting-queue.mdx)): "N social posts need your attention" (a warning, links to the queue), "N posts are scheduled for today" (information) and "N scheduled posts are overdue. The scheduler may not be running" (a warning). Counts only, from one grouped query; a failure drops these lines, never the page.
 
 ## How to use it
 

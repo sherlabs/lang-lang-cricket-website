@@ -17,6 +17,7 @@ import { derivePostStatus } from './status'
 import { targetFacts } from './publisher'
 import { GRAPHICS } from './registry'
 import { WITHHELD_NAME } from '@/lib/teams-queries'
+import type { SocialEnv } from '@/lib/social/adapters/types'
 
 type Row = Record<string, unknown>
 const rows = async (payload: Payload, q: ReturnType<typeof sql>): Promise<Row[]> => ((await payload.db.drizzle.execute(q)) as unknown as { rows: Row[] }).rows
@@ -49,7 +50,7 @@ export async function pausePost(payload: Payload, id: number): Promise<Result> {
   return { ok: true }
 }
 
-export type SaveOptions = { env?: NodeJS.ProcessEnv; now?: Date }
+export type SaveOptions = { env?: SocialEnv; now?: Date }
 
 /**
  * Save a draft or schedule a post. Scheduling is the human approval: only this function moves a post to `scheduled`, the staff

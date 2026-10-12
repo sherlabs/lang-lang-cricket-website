@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
     '/selector/teams/[gameId]/preview-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/admin/social/graphic': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/social/image/[postId]/[size]': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+    '/api/admin/social/post-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/admin/social/post-now': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/cron/social-posts': [`./public${BRANDING.logo}`, './assets/fonts/**'],
   },

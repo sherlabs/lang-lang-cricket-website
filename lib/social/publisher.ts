@@ -16,6 +16,7 @@ import { loadSocialPlayers, clubToday } from './sources/shared'
 import { renderBytesFromSpec } from './spec-render'
 import { derivePostStatus, type TargetFacts, type TargetStatus } from './status'
 import type { SizeKey } from './types'
+import type { SocialEnv } from '@/lib/social/adapters/types'
 
 /**
  * The publisher (wave C spec 4.6). EVERY write here is explicit SQL against "payload"."social_posts" and "payload"."social_post_targets":
@@ -30,7 +31,7 @@ const rows = async (payload: Payload, q: ReturnType<typeof sql>): Promise<Row[]>
 export type PublishOptions = {
   /** "Post now": claim exactly this post, if it is `scheduled`, whatever its time. */
   onlyId?: number
-  env?: NodeJS.ProcessEnv
+  env?: SocialEnv
   /** Tests inject adapters (including fakes standing in for the real networks). */
   adapters?: Partial<Record<Network, NetworkAdapter>>
   now?: Date
@@ -81,7 +82,7 @@ export async function targetFacts(payload: Payload, postId: number): Promise<Tar
   return (await rows(payload, sql`SELECT status, attempts, next_attempt_at FROM "payload"."social_post_targets" WHERE post_id = ${postId} ORDER BY id`)).map(toFacts)
 }
 
-async function failTarget(payload: Payload, targetId: number, code: string, reason?: string, env: NodeJS.ProcessEnv = process.env, from: 'pending' | 'publishing' = 'pending') {
+async function failTarget(payload: Payload, targetId: number, code: string, reason?: string, env: SocialEnv = process.env, from: 'pending' | 'publishing' = 'pending') {
   await rows(payload, sql`
     UPDATE "payload"."social_post_targets" SET status = 'failed', error_code = ${code}, last_error = ${storedReason(reason ?? REASONS[code] ?? 'It did not post.', env)}
     WHERE id = ${targetId} AND status = ${from} RETURNING id`)
@@ -171,7 +172,7 @@ async function processPost(payload: Payload, id: number, token: string, ignoreTi
   await finishPost(payload, id, token, derived)
 }
 
-async function recordOutcome(payload: Payload, targetId: number, attempts: number, r: PublishResult, now: Date, env: NodeJS.ProcessEnv) {
+async function recordOutcome(payload: Payload, targetId: number, attempts: number, r: PublishResult, now: Date, env: SocialEnv) {
   if (r.ok) {
     await rows(payload, sql`
       UPDATE "payload"."social_post_targets"

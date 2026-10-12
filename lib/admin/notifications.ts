@@ -22,6 +22,8 @@ export type NotificationInput = {
   /** Admin only; null when not loaded or unavailable. */
   duplicateCount: number | null
   imports: { count: number; latest: { at: string; seasons: number; matches: number } | null } | null
+  /** Counts for the social posting queue (wave C spec 4.8); null when unavailable. Committee-visible. */
+  social?: { failed: number; dueSoon: number; overdue: number } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
 
@@ -64,6 +66,12 @@ export function notificationLines(
   }
   if (input.pending.stories > 0) lines.push({ key: 'stories', tone: 'warn', text: copy.committee.stories(input.pending.stories), href: `${r}/collections/stories?where[status][equals]=pending` })
   if (input.pending.photos > 0) lines.push({ key: 'photos', tone: 'warn', text: copy.committee.photos(input.pending.photos), href: `${r}/approvals` })
+  const social = input.social
+  if (social) {
+    if (social.overdue > 0) lines.push({ key: 'social-overdue', tone: 'warn', text: copy.committee.socialOverdue(social.overdue), href: `${r}/social?tab=scheduled` })
+    if (social.failed > 0) lines.push({ key: 'social-failed', tone: 'warn', text: copy.committee.socialFailed(social.failed), href: `${r}/social?tab=attention` })
+    if (social.dueSoon > 0) lines.push({ key: 'social-today', tone: 'info', text: copy.committee.socialToday(social.dueSoon), href: `${r}/social?tab=scheduled` })
+  }
   if (o.isAdmin) {
     if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })
     if (input.imports && input.imports.count > 0 && input.imports.latest) {

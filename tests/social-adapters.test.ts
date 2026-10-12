@@ -4,7 +4,7 @@ import { mockAdapter, mockAllowed, mockControl, mockRequestedButRefused } from '
 import { scrubSecrets, storedReason } from '@/lib/social/adapters/scrub'
 import { facebookAdapter, instagramAdapter, xAdapter } from '@/lib/social/adapters/stubs'
 
-const FULL: NodeJS.ProcessEnv = {
+const FULL: Record<string, string | undefined> = {
   FACEBOOK_PAGE_ID: '123', FACEBOOK_PAGE_ACCESS_TOKEN: 'fb-token-secret-value', INSTAGRAM_BUSINESS_ACCOUNT_ID: '456', INSTAGRAM_ACCESS_TOKEN: 'ig-token-secret-value',
   X_API_KEY: 'x-key-secret-value', X_API_SECRET: 'x-secret-secret-value', X_ACCESS_TOKEN: 'x-token-secret-value', X_ACCESS_TOKEN_SECRET: 'x-token-secret-2',
 }
