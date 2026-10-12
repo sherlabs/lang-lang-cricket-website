@@ -176,6 +176,38 @@ describe('merge writes a log and undo restores identity', () => {
     expect(after.find((r) => r.team_id === 'IMP-B' && r.player_id === s.target)).toMatchObject({ games: '5', bat_runs: '40' })
   })
 
+  it('moves the club-office member to the surviving player, and undo gives it back', async () => {
+    await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."members"'))
+    const a = await player('Moe', 'Mem')
+    const b = await player('Moey', 'Mem')
+    const m = await payload.create({ collection: 'members', data: { player: a, roles: ['player'], email: 'moe@example.com' } as never, overrideAccess: true, depth: 0, context: ctx })
+    expect((await rest('POST', `/players/${a}/merge`, { token: editor, body: { targetId: b } })).status).toBe(200)
+    const moved = await payload.findByID({ collection: 'members', id: m.id, depth: 0, overrideAccess: true })
+    expect(moved.player).toBe(b)
+    expect(moved.displayName).toBeTruthy()
+    const log = (await rows('merge_log'))[0]
+    expect((await rest('POST', `/players/merge-log/${log.id}/undo`, { token: admin })).status).toBe(200)
+    expect((await payload.findByID({ collection: 'members', id: m.id, depth: 0, overrideAccess: true })).player).toBe(a)
+    await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."members"'))
+  })
+
+  it('keeps the source member, named and unlinked, when the target already has its own member', async () => {
+    await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."members"'))
+    const a = await player('Ann', 'Dup')
+    const b = await player('Anne', 'Dup')
+    const ma = await payload.create({ collection: 'members', data: { player: a, roles: ['player'] } as never, overrideAccess: true, depth: 0, context: ctx })
+    const mb = await payload.create({ collection: 'members', data: { player: b, roles: ['player'] } as never, overrideAccess: true, depth: 0, context: ctx })
+    expect((await rest('POST', `/players/${a}/merge`, { token: editor, body: { targetId: b } })).status).toBe(200)
+    const kept = await payload.findByID({ collection: 'members', id: ma.id, depth: 0, overrideAccess: true })
+    expect(kept.player ?? null).toBeNull()
+    expect(kept).toMatchObject({ firstName: 'Ann', lastName: 'Dup', displayName: 'Ann Dup' })
+    expect((await payload.findByID({ collection: 'members', id: mb.id, depth: 0, overrideAccess: true })).player).toBe(b)
+    const log = (await rows('merge_log'))[0]
+    expect((await rest('POST', `/players/merge-log/${log.id}/undo`, { token: admin })).status).toBe(200)
+    expect((await payload.findByID({ collection: 'members', id: ma.id, depth: 0, overrideAccess: true })).player).toBe(a)
+    await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."members"'))
+  })
+
   it('is refused once the player it was merged into has itself been merged away', async () => {
     const s = await setup()
     const third = await player('Johnny', 'Smythe')

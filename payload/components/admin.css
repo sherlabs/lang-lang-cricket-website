@@ -907,6 +907,7 @@ a[href$='/forgot'] {
 .office-table, .office-table tbody, .office-table tr, .office-table th, .office-table td { display: block; }
 .office-table tr { margin: 0 0 0.75rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
 .office-table th[scope='row'], .office-table td { padding: 0.2rem 0; border: 0; text-align: left; }
+.office-table th[scope='row'], .office-table td { overflow-wrap: anywhere; }
 .office-table td::before { content: attr(data-label) ': '; font-weight: 600; color: var(--club-grey); }
 @media (min-width: 48rem) {
   .office-filters { grid-template-columns: 2fr 1fr 1fr auto; }

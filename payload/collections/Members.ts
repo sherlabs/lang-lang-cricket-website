@@ -1,7 +1,7 @@
 import type { CollectionConfig, FieldHook } from 'payload'
 import { ValidationError } from 'payload'
 import { isAdmin } from '../access'
-import { hiddenFromEditors } from '../admin/visibility'
+import { adminOnlyCondition, hiddenFromEditors } from '../admin/visibility'
 import { noCardNumbers } from '../../lib/office/card'
 import { displayNameFor, IMPORT_SOURCES, MEMBER_ROLES, MEMBER_STATUSES, ROLE_LABELS } from '../../lib/office/members'
 import { isValidEmail, normaliseEmail, normalisePhone, trimOrNull } from '../../lib/office/member-input'
@@ -150,5 +150,10 @@ export const Members: CollectionConfig = {
     { name: 'erasedAt', label: 'Personal details removed on', type: 'date', access: serverOwnedAccess, admin: { readOnly: true, position: 'sidebar' } },
     { name: 'importedFrom', label: 'Added by', type: 'select', defaultValue: 'manual', options: IMPORT_SOURCES.map((value) => ({ label: value, value })), admin: { position: 'sidebar', readOnly: true } },
     { name: 'volunteerLinkVersion', type: 'number', defaultValue: 0, access: serverOwnedAccess, hooks: { beforeChange: [bumpLinkVersion] }, admin: { hidden: true, readOnly: true } },
+    {
+      name: 'removeDetails',
+      type: 'ui',
+      admin: { position: 'sidebar', condition: adminOnlyCondition(), components: { Field: '/payload/components/MemberRemoveDetailsField#MemberRemoveDetailsField' } },
+    },
   ]),
 }

@@ -30,6 +30,8 @@ export type MergeSnapshot = {
   importedSeasons?: ImportedSeasonsSnapshot
   /** Best-player ballots moved by the merge (additive; absent on older snapshots). */
   votes?: VotesMergeSnapshot
+  /** Club-office members repointed to the target, or kept unlinked with the source's name when the target had its own (additive). */
+  members?: { movedIds: number[]; detachedIds: number[] }
   /** Net session check-ins moved by the merge (additive; absent on older snapshots). */
   nets?: NetsMergeSnapshot
 }

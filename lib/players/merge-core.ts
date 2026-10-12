@@ -140,7 +140,23 @@ export async function mergePlayerInto(
     // 6e. Net check-ins follow the identity the same way.
     const netMove = await repointAttendance(tx, t, sId, tId, stamp)
     netsCounts = netMove.counts
-    const withVotesOnly = voteMove.counts.ballotsMoved || voteMove.snapshot.picksMoved.length ? { ...snapshot, votes: voteMove.snapshot } : snapshot
+    // 6f. The club-office member linked to the source follows the identity. When the target already has its own member
+    // (one member per player), the source's member is kept as a plain member with the source's name instead of losing it.
+    const members = payload.db.tables.members
+    const memberMove: { movedIds: number[]; detachedIds: number[] } = { movedIds: [], detachedIds: [] }
+    const srcMembers: { id: number }[] = await tx.select({ id: members.id }).from(members).where(eq(members.player, sId))
+    if (srcMembers.length) {
+      const [tgtMember] = await tx.select({ id: members.id }).from(members).where(eq(members.player, tId))
+      if (!tgtMember) {
+        await tx.update(members).set({ player: tId, updatedAt: stamp }).where(eq(members.player, sId))
+        memberMove.movedIds = srcMembers.map((m) => int(m.id))
+      } else {
+        await tx.update(members).set({ player: null, firstName: sql`COALESCE(${members.firstName}, ${String(srcRow.firstName ?? '')})`, lastName: sql`COALESCE(${members.lastName}, ${String(srcRow.lastName ?? '')})`, displayName: sourceName, updatedAt: stamp }).where(eq(members.player, sId))
+        memberMove.detachedIds = srcMembers.map((m) => int(m.id))
+      }
+    }
+    const withMembers = memberMove.movedIds.length || memberMove.detachedIds.length ? { ...snapshot, members: memberMove } : snapshot
+    const withVotesOnly = voteMove.counts.ballotsMoved || voteMove.snapshot.picksMoved.length ? { ...withMembers, votes: voteMove.snapshot } : withMembers
     const withVotes = netMove.counts.attendanceMoved || netMove.counts.collisionsDeleted ? { ...withVotesOnly, nets: netMove.snapshot } : withVotesOnly
     // 7. The log row (inside the transaction, so it exists exactly when the merge happened), then the source and anything still pointing at it.
     const [log] = await tx
@@ -193,6 +209,10 @@ export async function undoMerge(payload: Payload, logId: number, userId: number 
     for (const h of snap.honours) {
       await tx.update(t.players_honours).set({ _parentID: sId, _order: h.order }).where(and(eq(t.players_honours.id, h.id), eq(t.players_honours._parentID, tId)))
     }
+    // A member that followed the merge goes back to the restored player; a detached one is relinked only while it is still unlinked.
+    const members = payload.db.tables.members
+    if (snap.members?.movedIds.length) await tx.update(members).set({ player: sId, updatedAt: stamp }).where(and(inArray(members.id, snap.members.movedIds), eq(members.player, tId)))
+    if (snap.members?.detachedIds.length) await tx.update(members).set({ player: sId, updatedAt: stamp }).where(and(inArray(members.id, snap.members.detachedIds), sql`${members.player} IS NULL`))
     if (snap.peopleIds.length) await tx.update(t.people).set({ player: sId, updatedAt: stamp }).where(and(inArray(t.people.id, snap.peopleIds), eq(t.people.player, tId)))
     if (snap.playerSponsorIds.length) await tx.update(t.player_sponsors).set({ player: sId, updatedAt: stamp }).where(and(inArray(t.player_sponsors.id, snap.playerSponsorIds), eq(t.player_sponsors.player, tId)))
     // Imported season rows (no sync recreates them): moved ones go back, combined ones are restored and the target row's

@@ -40,6 +40,9 @@ export function juniorCutoff(today: string): string {
   return m ? `${Number(m[1]) - 18}${m[2]}` : today
 }
 
+/** Escapes the LIKE wildcards so a search for `%` or `_` matches those characters only. */
+export const escapeLike = (v: string): string => v.replace(/[\\%_]/g, (c) => `\\${c}`)
+
 /** The query as a `Where`. `today` is the club date, so "junior" matches `isJunior` from the socials rule. */
 export function memberWhere(query: MemberQuery, today: string): Where {
   const and: Where[] = []
@@ -52,7 +55,8 @@ export function memberWhere(query: MemberQuery, today: string): Where {
   if (query.missing === 'both') and.push({ email: { exists: false } }, { phone: { exists: false } })
   if (query.missing === 'guardian') and.push({ guardians: { exists: false } })
   if (query.q) {
-    and.push({ or: [{ displayName: { contains: query.q } }, { 'player.displayName': { contains: query.q } }, { firstName: { contains: query.q } }, { lastName: { contains: query.q } }, { email: { contains: query.q } }] })
+    const q = escapeLike(query.q)
+    and.push({ or: [{ displayName: { contains: q } }, { 'player.displayName': { contains: q } }, { firstName: { contains: q } }, { lastName: { contains: q } }, { email: { contains: q } }] })
   }
   return and.length ? { and } : {}
 }

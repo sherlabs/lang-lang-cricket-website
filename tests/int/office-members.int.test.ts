@@ -132,10 +132,22 @@ describe('member directory', () => {
       expect(await names({ q: 'ada@example' })).toEqual(['Ada Adult'])
     })
 
+    it('treats %, _ and \\ in the search as plain characters', async () => {
+      await seed()
+      await member({ firstName: 'Under', lastName: 'Score', email: 'a_b@example.org' })
+      await member({ firstName: 'Axb', lastName: 'Match', email: 'axb@example.org' })
+      expect(await names({ q: '%' })).toEqual([])
+      expect(await names({ q: '_' })).toEqual(['Under Score'])
+      expect(await names({ q: 'a_b' })).toEqual(['Under Score'])
+      expect(await names({ q: '\\' })).toEqual([])
+    })
+
     it('counts what is incomplete among active members only, and flags shared emails', async () => {
       await seed()
       const { memberCompleteness, duplicateEmailCount, duplicateEmailMemberIds } = await import('@/lib/members-queries')
-      expect(await memberCompleteness(user.admin)).toEqual({ total: 10, noEmail: 5, noPhone: 5, noBoth: 4 })
+      expect(await memberCompleteness(user.admin)).toEqual({ total: 10, noEmail: 5, noPhone: 5, noBoth: 4, noEmailAny: 5 })
+      await member({ firstName: 'Dne', lastName: 'Phoned', doNotEmail: true, phone: '0400000000' })
+      expect(await memberCompleteness(user.admin)).toMatchObject({ noEmail: 5, noEmailAny: 6 })
       expect(await duplicateEmailCount(user.admin)).toBe(1)
       expect((await duplicateEmailMemberIds(user.admin)).size).toBe(2)
     })

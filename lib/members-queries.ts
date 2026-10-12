@@ -33,6 +33,8 @@ export type DirectoryRow = {
   doNotEmail: boolean
   erased: boolean
   playerLinked: boolean
+  /** The linked player's derived activity flag; null when no player is linked. */
+  playedThisSeason: boolean | null
 }
 
 export type Directory = { rows: DirectoryRow[]; total: number; page: number; totalPages: number }
@@ -51,10 +53,41 @@ type MemberDoc = {
   guardians?: unknown[] | null
   doNotEmail?: boolean | null
   erasedAt?: string | null
-  player?: { id: number; displayName?: string | null; firstName?: string | null; lastName?: string | null; isJunior?: boolean | null } | number | null
+  player?: { id: number; displayName?: string | null; firstName?: string | null; lastName?: string | null; isJunior?: boolean | null; isActiveDerived?: boolean | null } | number | null
   person?: { name?: string | null } | number | null
 }
 const obj = <T extends object>(v: T | number | null | undefined): T | null => (v && typeof v === 'object' ? v : null)
+
+function toRow(m: MemberDoc, today: string): DirectoryRow {
+  const player = obj(m.player)
+  const erased = Boolean(m.erasedAt)
+  return {
+    id: m.id,
+    name: displayNameFor({ ...m, player, person: obj(m.person) }),
+    roles: m.roles ?? [],
+    status: m.status === 'past' ? 'past' : 'active',
+    email: m.email ?? null,
+    phone: m.phone ?? null,
+    junior: !erased && memberIsJunior({ dateOfBirth: m.dateOfBirth, player }, today),
+    hasGuardian: (m.guardians ?? []).length > 0,
+    doNotEmail: m.doNotEmail === true,
+    erased,
+    playerLinked: player !== null || typeof m.player === 'number',
+    playedThisSeason: player ? player.isActiveDerived === true : null,
+  }
+}
+
+/** One member as a directory row (for the confirm-removal box, which must work from any page of the list). */
+export async function getMemberRow(user: unknown, id: number): Promise<DirectoryRow | null> {
+  if (!adminOnly(user)) return null
+  const payload = await getPayloadClient()
+  try {
+    const doc = await payload.findByID({ collection: 'members', id, depth: 1, user, overrideAccess: false })
+    return toRow(doc as unknown as MemberDoc, currentClubDate())
+  } catch {
+    return null
+  }
+}
 
 /** A page of the directory. The name shown is live from the linked player; the stored title only drives the native list. */
 export async function listMembers(user: unknown, query: MemberQuery): Promise<Directory | null> {
@@ -71,27 +104,11 @@ export async function listMembers(user: unknown, query: MemberQuery): Promise<Di
     user,
     overrideAccess: false,
   })
-  const rows = (res.docs as unknown as MemberDoc[]).map((m): DirectoryRow => {
-    const player = obj(m.player)
-    const erased = Boolean(m.erasedAt)
-    return {
-      id: m.id,
-      name: displayNameFor({ ...m, player, person: obj(m.person) }),
-      roles: m.roles ?? [],
-      status: m.status === 'past' ? 'past' : 'active',
-      email: m.email ?? null,
-      phone: m.phone ?? null,
-      junior: !erased && memberIsJunior({ dateOfBirth: m.dateOfBirth, player }, today),
-      hasGuardian: (m.guardians ?? []).length > 0,
-      doNotEmail: m.doNotEmail === true,
-      erased,
-      playerLinked: player !== null || typeof m.player === 'number',
-    }
-  })
+  const rows = (res.docs as unknown as MemberDoc[]).map((m) => toRow(m, today))
   return { rows, total: res.totalDocs, page: res.page ?? 1, totalPages: Math.max(1, res.totalPages) }
 }
 
-export type Completeness = { total: number; noEmail: number; noPhone: number; noBoth: number }
+export type Completeness = { total: number; noEmail: number; noPhone: number; noBoth: number; /** No email at all, do-not-email members included (the "complete" sentence is true only when this and noPhone are zero). */ noEmailAny: number }
 
 /** Counts over active members only; the email count also leaves out people on the do-not-email list (wording in `officeCopy`). */
 export async function memberCompleteness(user: unknown): Promise<Completeness | null> {
@@ -99,13 +116,14 @@ export async function memberCompleteness(user: unknown): Promise<Completeness | 
   const payload = await getPayloadClient()
   const active: Where = { status: { equals: 'active' } }
   const count = async (extra: Where[]) => (await payload.count({ collection: 'members', where: { and: [active, ...extra] }, user, overrideAccess: false })).totalDocs
-  const [total, noEmail, noPhone, noBoth] = await Promise.all([
+  const [total, noEmail, noPhone, noBoth, noEmailAny] = await Promise.all([
     count([]),
     count([{ email: { exists: false } }, { doNotEmail: { not_equals: true } }]),
     count([{ phone: { exists: false } }]),
     count([{ email: { exists: false } }, { phone: { exists: false } }]),
+    count([{ email: { exists: false } }]),
   ])
-  return { total, noEmail, noPhone, noBoth }
+  return { total, noEmail, noPhone, noBoth, noEmailAny }
 }
 
 /** Email addresses held by more than one member (emails are stored lowercase, so grouping is exact). Count only, never the addresses. */

@@ -1,6 +1,6 @@
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
-import { duplicateEmailCount, duplicateEmailMemberIds, listMembers, memberCompleteness } from '@/lib/members-queries'
+import { duplicateEmailCount, duplicateEmailMemberIds, getMemberRow, listMembers, memberCompleteness } from '@/lib/members-queries'
 import { ERROR_TEXT, isFormError, isNotice, NOTICE_TEXT } from '@/lib/office/flash'
 import { MISSING_KEYS, parseMemberQuery, queryString, type MemberQuery } from '@/lib/office/member-filters'
 import { MEMBER_ROLES, ROLE_LABELS } from '@/lib/office/members'
@@ -36,7 +36,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
   const notice = first(sp.notice)
   const error = first(sp.error)
   const eraseId = Number(first(sp.erase))
-  const eraseRow = Number.isInteger(eraseId) && eraseId > 0 ? dir?.rows.find((r) => r.id === eraseId) : undefined
+  const eraseRow = Number.isInteger(eraseId) && eraseId > 0 ? (dir?.rows.find((r) => r.id === eraseId) ?? (await getMemberRow(req.user, eraseId))) : null
   const chip = (label: string, patch: Partial<MemberQuery>, active: boolean) => (
     <a key={label} className={`office-chip${active ? ' office-chip--on' : ''}`} href={`${base}${queryString({ ...query, page: 1, ...patch })}`} aria-current={active ? 'true' : undefined}>
       {label}
@@ -65,7 +65,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
         <section className="office-strip" aria-label="How complete the list is">
           <p className="office-strip__total">{officeCopy.members.total(strip.total)}</p>
           <ul>
-            {strip.noEmail + strip.noPhone === 0 ? <li>{officeCopy.members.complete}</li> : null}
+            {strip.noEmailAny + strip.noPhone === 0 ? <li>{officeCopy.members.complete}</li> : null}
             {strip.noEmail > 0 ? <li>{officeCopy.members.noEmail(strip.noEmail)}</li> : null}
             {strip.noPhone > 0 ? <li>{officeCopy.members.noPhone(strip.noPhone)}</li> : null}
             {strip.noBoth > 0 ? <li>{officeCopy.members.noBoth(strip.noBoth)}</li> : null}
@@ -170,38 +170,39 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
           <p className="club-muted" aria-live="polite">
             {dir.total} {dir.total === 1 ? 'member' : 'members'} match. Page {dir.page} of {dir.totalPages}.
           </p>
-          <table className="club-table office-table">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Roles</th>
-                <th scope="col">Email</th>
-                <th scope="col">Phone</th>
-                <th scope="col">Actions</th>
+          <table className="club-table office-table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Name</th>
+                <th scope="col" role="columnheader">Roles</th>
+                <th scope="col" role="columnheader">Email</th>
+                <th scope="col" role="columnheader">Phone</th>
+                <th scope="col" role="columnheader">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {dir.rows.map((r) => (
-                <tr key={r.id}>
-                  <th scope="row" data-label="Name">
+                <tr key={r.id} role="row">
+                  <th scope="row" role="rowheader" data-label="Name">
                     <a href={`${admin}/collections/members/${r.id}`}>{r.name}</a>
                     <span className="office-tags">
                       {r.status === 'past' ? <span className="club-pill">Past</span> : null}
                       {r.junior ? <span className="club-pill">Junior</span> : null}
                       {r.junior && !r.hasGuardian ? <span className="club-pill club-pill--error">No guardian</span> : null}
                       {r.doNotEmail ? <span className="club-pill">Do not email</span> : null}
+                      {r.status === 'active' && r.playedThisSeason ? <span className="club-pill">Played this season</span> : null}
                       {dupeIds.has(r.id) ? <span className="club-pill club-pill--error">Shared email</span> : null}
                     </span>
                   </th>
-                  <td data-label="Roles">{r.roles.map((x) => (x in ROLE_LABELS ? ROLE_LABELS[x as keyof typeof ROLE_LABELS] : x)).join(', ') || 'None'}</td>
-                  <td data-label="Email">{r.erased ? 'Removed' : (r.email ?? 'Missing')}</td>
-                  <td data-label="Phone">{r.erased ? 'Removed' : (r.phone ?? 'Missing')}</td>
-                  <td data-label="Actions">
-                    <a href={`${admin}/collections/members/${r.id}`}>Edit</a>
+                  <td role="cell" data-label="Roles">{r.roles.map((x) => (x in ROLE_LABELS ? ROLE_LABELS[x as keyof typeof ROLE_LABELS] : x)).join(', ') || 'None'}</td>
+                  <td role="cell" data-label="Email">{r.erased ? 'Removed' : (r.email ?? 'Missing')}</td>
+                  <td role="cell" data-label="Phone">{r.erased ? 'Removed' : (r.phone ?? 'Missing')}</td>
+                  <td role="cell" data-label="Actions">
+                    <a href={`${admin}/collections/members/${r.id}`} aria-label={`Edit ${r.name}`}>Edit</a>
                     {r.erased ? null : (
                       <>
                         {' '}
-                        &middot; <a href={`${base}${queryString({ ...query })}${queryString(query) ? '&' : '?'}erase=${r.id}`}>Remove details</a>
+                        &middot; <a href={`${base}${queryString({ ...query })}${queryString(query) ? '&' : '?'}erase=${r.id}`} aria-label={`Remove details for ${r.name}`}>Remove details</a>
                       </>
                     )}
                   </td>
