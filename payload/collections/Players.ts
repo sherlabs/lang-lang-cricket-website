@@ -190,6 +190,22 @@ export const Players: CollectionConfig = {
       admin: { position: 'sidebar', description: 'Tick to keep this player off the public website.' },
     },
     {
+      name: 'isJunior',
+      label: 'Is a junior (under 18)',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { read: isStaffField, create: isStaffField, update: isStaffField },
+      admin: { position: 'sidebar', description: 'Tick for a player under 18. Juniors are kept off pictures for Facebook, Instagram and X unless the box below is ticked.' },
+    },
+    {
+      name: 'socialOptIn',
+      label: 'OK to post on social media',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { read: isStaffField, create: isStaffField, update: isStaffField },
+      admin: { position: 'sidebar', description: "Tick only with a parent or guardian's OK to post this child's name and stats on Facebook, Instagram and X." },
+    },
+    {
       name: 'honours',
       type: 'array',
       labels: { singular: 'Honour', plural: 'Honours & roles' },

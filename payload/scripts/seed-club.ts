@@ -11,6 +11,7 @@ import { getPayload } from 'payload'
 import { CANONICAL_HOST } from '../../config/site'
 import { clubDefaults } from '../seed/club-defaults'
 import { seedClubGlobal } from '../seed/seed-club-global'
+import { seedSocialGlobal } from '../seed/seed-social-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { guard } from './_guard'
 
@@ -32,6 +33,7 @@ async function main() {
     }
     console.log(`[seed-club] theme global ${await seedThemeGlobal(payload, { force })} (Lang Lang colours and font; the crest falls back to the Club details logo)`)
     if (only === 'theme') return
+    console.log(`[seed-club] social settings global ${await seedSocialGlobal(payload, { force })} (the club's caption wording and hashtags)`)
     const canonical = CANONICAL_HOST
     const club = await payload.findGlobal({ slug: 'club', depth: 0 })
     const host = new URL(club.siteUrl || clubDefaults.siteUrl).host

@@ -324,6 +324,6 @@ describe('seeded games', () => {
     expect(await count(source.id)).toBe(0)
     expect(await count(target.id)).toBe(s0 + t0)
     const afterText = JSON.stringify(await getMatchByGameId(gameId))
-    expect(afterText).toBe(beforeText.replaceAll(source.displayName, target.displayName))
+    expect(afterText).toBe(beforeText.replaceAll(`"playerId":${source.id},`, `"playerId":${target.id},`).replaceAll(source.displayName, target.displayName))
   })
 })

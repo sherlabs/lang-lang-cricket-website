@@ -19,6 +19,18 @@ export const helpSections: HelpSection[] = [
     ],
   },
   {
+    id: 'social',
+    title: 'Make a social post',
+    steps: [
+      'Click "Make a social post" on the Home page (or Advanced, then Social posts).',
+      'Pick what to post: a result, the weekend games, a team, the award winner of a game, a milestone, an event or a thank-you to a sponsor.',
+      'Choose the game, player or event it is about. Pick the size you need: Square for most posts, Story for stories, Wide for a link.',
+      'On a phone, tap "Share or save to Photos". On a computer, click "Download picture".',
+      'Tap "Copy caption", then paste it into Facebook, Instagram or X. You can change the words first.',
+      'A player under 18 only appears on pictures once a parent or guardian has agreed and you have ticked "OK to post on social media" on the player.',
+    ],
+  },
+  {
     id: 'event',
     title: 'Add an event',
     steps: [

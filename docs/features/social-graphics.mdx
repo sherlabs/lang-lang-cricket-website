@@ -1,0 +1,67 @@
+---
+title: Social graphics (pictures for Facebook, Instagram and X)
+status: shipped
+routes: ["/admin/social", "/api/admin/social/graphic", "/api/admin/social/sources", "/api/admin/social/caption"]
+collections: [social-settings, players, sponsors, matches, selection-fixtures, events, yearbooks]
+admin: "Social posts (Advanced, for the committee and admins) and a Home tile; Social graphics settings (Advanced, admin only)"
+owner: "The committee member who posts the club's results and news on social media"
+related: [theme-editor, team-selection-and-announce, stat-cards, sponsors, committee-admin, milestones, season-yearbooks, match-data-store]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **An editor on a phone after a game** who wants the result, the player of the match or next weekend's games as a picture, saved to Photos, with a caption ready to paste.
+- **An admin** who sets the club's look once (colours, crest, font, style, sponsor logos) and expects every picture to follow it.
+- **Another club** reusing the same site: its pictures take its own colours, crest, font, sponsors and wording with no code change.
+
+## Why it was built
+
+The site could only make one player card and the lineup picture. Posting a result, a milestone or an event meant redoing it by hand in a design app. This is the picture half of issue [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): every graphic type, in the sizes social networks want, in styles that all come from the club theme. Scheduling posts is the next work package ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+
+## What it does
+
+**Nine kinds of picture** (a chooser lists real choices, newest first; a type with nothing to show says so):
+
+| Kind | Drawn from |
+| --- | --- |
+| Results | One stored game (score and margin), the same with the top batters and bowlers, or a whole round on one date. |
+| Weekend preview | The upcoming games of one weekend. |
+| Team announcement | A published team (all three sizes; the public lineup picture routes are unchanged). |
+| Best player (the club's award word, `VOTE_LABEL`) | You pick the game, then a player who was in that game. Votes are never used. The stat line is filled from that game and can be edited. |
+| Milestone | A milestone reached this season, or one a player is close to. Only real milestones from the milestone board can be drawn. |
+| Season leaders | The top 3 or 5 for runs, wickets, catches, sixes or games, for the current season or all seasons. |
+| Event promo | An upcoming event, with its cover picture if it has one. |
+| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. |
+| Season wrap | A published yearbook: cover, record, top run scorer and top wicket taker. |
+
+**Three sizes**: Square 1080 x 1080, Story 1080 x 1920 and Wide 1200 x 630. **Three styles**: Bold (your main colour, big type), Classic (a light card with a coloured band carrying the crest) and Minimal (plain and airy). The picture is composed from shared building blocks, not drawn by hand per combination, so a long list is always cut at a whole row with "+ N more" and long names are shortened by length.
+
+**The club look, never the code.** Every colour is a theme colour or a mix of theme colours; the crest, the heading font, the club name, the website address and the sponsor logos come from settings and uploads. Text colour is never chosen by hand: it is picked for the surface it sits on so it reaches a 4.5:1 contrast on any saved palette, and text over a photo sits on a scrim that is checked against the worst case (white, black and greys between). A second club saves its own theme and gets its own look.
+
+**Who may appear.** Public on the website is not consent to be pushed to social networks. A junior (a player ticked "Is a junior (under 18)", or whose latest season was in a junior grade) is never named, shown with stats or listed on a picture unless staff ticked "OK to post on social media" on the player after a parent or guardian agreed. This is enforced in every chooser, the player of the match picker, every loader and every list (a junior without the tick is dropped from a lineup, a scorecard, the leaders and milestones). Hidden players never appear. A guest in a lineup has no record to check, so the name is drawn as "Guest player". The public website is not affected.
+
+**The composer** (`/admin/social`, three steps on one page, phone first): pick a kind and what it is about; preview one size at a time (only the selected size is made, and a size already seen is kept for the session) with a style switcher and, for some kinds, one editable line (stat line, thank-you line); then **Share or save to Photos** (the phone's share sheet, with Save Image going to Photos; a plain download on desktop), **Download picture (PNG)** and a caption you can edit and copy. The choice lives in the address (`?type=&source=&style=&size=`), so a refresh keeps it.
+
+**Captions.** Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
+
+**Settings** (Advanced, admin only: Social graphics settings): the default style, the sponsor logo strip (which levels, how many; PNG and JPG logos only, a WebP or SVG logo is skipped quietly and the strip simply does not show if none can be drawn), whether the website address shows, and a small line under the footer.
+
+**Access and limits.** The picture, chooser and caption routes answer only the committee (admin or editor). Signed out, a selector, a disabled account, an unknown kind, a bad id and a picture nobody may see all get the same plain "Not found", never cached or indexed. A person can make 300 pictures in 10 minutes; after that "Slow down for a minute" for a minute. Logos and covers are fetched only from the site's own media host, with a 2 second limit.
+
+## How to use it
+
+1. Open **Social posts** (Advanced, or the Home tile "Make a social post").
+2. Pick what to post, then the game, player, event or sponsor it is about.
+3. Check the preview in the size you need; change the style if you like.
+4. On a phone, tap **Share or save to Photos**. On a computer, **Download picture**. Tap **Copy caption** and paste it into the post.
+5. Admins: change the look in Site look (colours, crest, font) and Social graphics settings (style, sponsor logos).
+6. To allow a junior on pictures, open the player and tick "OK to post on social media" once a parent or guardian has agreed.
+
+## Not included / deferred
+
+- Scheduling and publishing posts, the posting queue and network adapters: [#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23).
+- Live posting to any network, AI-written captions or match summaries, video or carousel posts.
+- A fixture list that includes junior grades, and player photos on pictures.
+- Merging two players does not combine the junior and opt-in ticks: the player kept keeps its own.
+- A date of birth is not stored on players, so juniors are identified by the tick, a junior grade in their latest season, or both. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

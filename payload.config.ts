@@ -53,6 +53,7 @@ import { Club } from './payload/globals/Club'
 import { ClubApparel } from './payload/globals/ClubApparel'
 import { SelectionSettings } from './payload/globals/SelectionSettings'
 import { SiteSettings } from './payload/globals/SiteSettings'
+import { SocialSettings } from './payload/globals/SocialSettings'
 import { Theme } from './payload/globals/Theme'
 import { guardLegacyBlobDeletes } from './payload/plugins/guardLegacyBlobDeletes'
 
@@ -89,6 +90,7 @@ export default buildConfig({
         approvals: { Component: '/payload/components/ApprovalsView#ApprovalsView', path: '/approvals', meta: { title: 'Waiting for approval' } },
         playerDataTools: { Component: '/payload/components/PlayerDataToolsView#PlayerDataToolsView', path: '/player-data-tools', meta: { title: 'Player data tools' } },
         selectors: { Component: '/payload/components/SelectorsView#SelectorsView', path: '/selectors', meta: { title: 'Selectors' } },
+        social: { Component: '/payload/components/SocialView#SocialView', path: '/social', meta: { title: 'Social posts' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
@@ -96,7 +98,7 @@ export default buildConfig({
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
   collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance],
-  globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings],
+  globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),
   onInit: restrictBuiltinCollections,

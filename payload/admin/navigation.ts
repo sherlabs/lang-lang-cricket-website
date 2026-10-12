@@ -47,6 +47,9 @@ export const advancedNav: NavEntry[] = [
   { key: 'users', label: 'Users', path: '/collections/users' },
   // Selectors are an occasional task, so they sit under Advanced; the committee reaches them here and from the Home tile.
   { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
+  // Posting a result is a weekly job for editors, so Social posts is reachable by them here and from a Home tile (wave C spec 3.6).
+  { key: 'social', label: 'Social posts', path: '/social', forEditors: true },
+  { key: 'social-settings', label: 'Social graphics settings', path: '/globals/social-settings' },
   { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings' },
   { key: 'club', label: 'Club details', path: '/globals/club' },
   { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
@@ -97,6 +100,7 @@ export const jobTiles: JobTile[] = [
   { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create' },
   { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create' },
   { key: 'selector', title: 'Add a selector', hint: 'A login for someone who picks the teams', path: '/selectors' },
+  { key: 'social', title: 'Make a social post', hint: 'Results, line-ups, milestones and more', path: '/social' },
   { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help' },
 ]
 

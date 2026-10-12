@@ -7,10 +7,13 @@ import { BRANDING } from '@/config/site'
 import { getTheme } from '@/lib/theme'
 import { isDrawableImageType } from '@/lib/stats/card'
 import { loadThemeFonts } from './fonts-server'
+import { BLACK, WHITE } from './neutral'
+import { blobStoreId } from '@/lib/blob-url'
+import { blobToken, resolveServerURL } from '@/payload/env'
 import type { ResolvedTheme } from './resolve'
 
 /** Neutral constants for text on a dark card. Not theme values (no `ResolvedTheme.white`). */
-export const WHITE = '#ffffff'
+export { WHITE, BLACK }
 export const WHITE_75 = '#ffffffbf'
 
 const LOGO_TIMEOUT_MS = 2000
@@ -65,4 +68,45 @@ export async function themedImageResponse(
   const theme = await getTheme()
   const [fonts, crestDataUri] = await Promise.all([loadThemeFonts(theme), loadCrest(theme.crest.url, theme.version)])
   return new ImageResponse(render({ theme, crestDataUri }), { width: opts.width, height: opts.height, headers: opts.headers, fonts })
+}
+
+const imageCache = new Map<string, string | null>()
+const IMAGE_CACHE_MAX = 200
+
+/** The hosts an image URL may be fetched from: this site (media served by Payload) and this project's Blob store. Nothing else. */
+export function allowedImageHosts(): string[] {
+  const hosts: string[] = []
+  try {
+    hosts.push(new URL(resolveServerURL()).host)
+  } catch {
+    /* no server URL: only the store below */
+  }
+  const store = blobStoreId(blobToken())
+  if (store) hosts.push(`${store}.public.blob.vercel-storage.com`)
+  return hosts
+}
+
+/**
+ * Any uploaded image (sponsor logo, event cover) as a data URI satori can draw, or null (never throws): PNG/JPEG only, a short timeout,
+ * and only from `allowedImageHosts()`. A relative URL is resolved against the site. Cached per process on `url + updatedAt`, so an
+ * edited image refetches and an unchanged one does not; the fetch also goes through the Next data cache for cold serverless instances.
+ */
+export async function loadImageDataUri(url: string, updatedAt: string | number | Date | null = ''): Promise<string | null> {
+  const key = `${url}|${updatedAt instanceof Date ? updatedAt.toISOString() : (updatedAt ?? '')}`
+  if (imageCache.has(key)) return imageCache.get(key) ?? null
+  let value: string | null = null
+  try {
+    const abs = new URL(url, resolveServerURL())
+    if ((abs.protocol === 'https:' || abs.protocol === 'http:') && allowedImageHosts().includes(abs.host)) {
+      const res = await fetch(abs, { signal: AbortSignal.timeout(LOGO_TIMEOUT_MS), next: { revalidate: 86400, tags: ['sponsor-logos'] } })
+      const type = res.headers.get('content-type')
+      if (res.ok && isDrawableImageType(type)) value = asDataUri(Buffer.from(await res.arrayBuffer()), type!.split(';')[0])
+      else console.warn(`[og] image ${abs.pathname} is not a drawable PNG/JPEG (status ${res.status}); skipped`)
+    }
+  } catch (err) {
+    console.warn(`[og] image could not be loaded (${err instanceof Error ? err.message : err}); skipped`)
+  }
+  if (imageCache.size >= IMAGE_CACHE_MAX) imageCache.clear()
+  imageCache.set(key, value)
+  return value
 }

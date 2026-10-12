@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
     '/api/public/players/[slug]/card': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/teams/[gameId]/lineup-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/selector/teams/[gameId]/preview-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+    '/api/admin/social/graphic': [`./public${BRANDING.logo}`, './assets/fonts/**'],
   },
   async redirects() {
     return [

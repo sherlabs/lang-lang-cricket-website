@@ -5,7 +5,7 @@ routes: ["(every page)", "/admin", "/api/public/players/[slug]/card"]
 collections: [theme]
 admin: "Advanced > Site look (colours and fonts); admin only"
 owner: "A club's designer or developer-admin; visitors see the result on every page"
-related: [multi-club-template, club-and-site-settings, stat-cards, committee-admin]
+related: [multi-club-template, club-and-site-settings, stat-cards, committee-admin, social-graphics]
 added: feat/payload-cms
 ---
 
@@ -28,7 +28,7 @@ This repository is reused for other cricket clubs, so no club-specific colour ma
 - **Live sample**: above the readability list the form shows a sample (dark band with accent text and buttons, light band with body text, chips and card fills) and a swatch row with each hex, all recoloured as the designer types. **Suggest the other shades** fills raised dark, accent darker, lighter, pale and deep and the card fill from the accent, dark and light-section colours (`lib/theme/derive.ts`; the deep accent is darkened until it reads on white and on the pale tint), and every field stays editable. **Revert to last saved** reloads the form after a confirmation.
 - **Readability check**: the form shows a live list of colour pairs with their contrast ratios. Required pairs (body text on white, on the light band, on card fills and on the pale tint; secondary text on white, the band and card fills; deep accent text on white, the pale tint, the band and card fills; dark label on the accent; white, accent and light accent on the dark colour and on the raised dark colour) must reach 4.5 to 1 or the save is refused with a message naming the colours involved and saying which way to move them. Advice-only pairs (captions, the accent against white) show as "Check". Lang Lang's own seed has two known advice items (captions on card fills at 4.47, and the gold against white).
 - With no saved theme the Lang Lang seed renders, so an unseeded database looks right. `seed:club`, `seed:demo` and the ETL club step write the seed only if it was never saved.
-- Image routes use `themedImageResponse()` (`lib/theme/og.tsx`), which loads the theme fonts and the crest; the player stat card is the reference ([Stat cards](./stat-cards.mdx)). A new image route must list `./assets/fonts/**` in `outputFileTracingIncludes` in `next.config.ts`.
+- Image routes use `themedImageResponse()` (`lib/theme/og.tsx`), which loads the theme fonts and the crest; the player stat card is the reference ([Stat cards](./stat-cards.mdx)). The committee's social pictures ([Social graphics](./social-graphics.mdx)) use the same helper: every colour is a theme colour or a mix of them, and text colours are picked for readability on whatever palette is saved. A new image route must list `./assets/fonts/**` in `outputFileTracingIncludes` in `next.config.ts`.
 - Per-club values read before the database exists (canonical host, PlayHQ organisation and team prefix, export file prefix, cookie prefix, timezone, locale) stay in environment variables through `config/site.ts`; see [Multi-club template](./multi-club-template.mdx).
 
 ## How to use it

@@ -134,6 +134,8 @@ describe('single source for names and labels', () => {
         'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts',
         // Best-player votes: the PlayHQ grade name of the stored fixture, as for availability and team sheets.
         'app/(frontend)/selector/(area)/votes/[fixtureId]/page.tsx', 'app/(frontend)/selector/(area)/votes/page.tsx', 'app/(frontend)/votes/page.tsx', 'app/(frontend)/availability/[token]/vote/[fixtureId]/page.tsx', 'lib/selector-votes-queries.ts', 'lib/votes-queries.ts',
+        // Social graphics (wave C): stored games go through the label map (`canonicalGrade`); fixtures and published teams show the PlayHQ grade name, as selection does.
+        'lib/social/sources/result.ts', 'lib/social/sources/schedule.ts',
         // Team sheets and the public teams pages: the PlayHQ grade name of the game, as for availability and squads.
         'app/(frontend)/selector/(area)/players/[slug]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/page.tsx', 'app/(frontend)/selector/(area)/teams/page.tsx',
         'app/(frontend)/teams/[gameId]/lineup-image/route.tsx', 'app/(frontend)/teams/[gameId]/page.tsx', 'app/(frontend)/teams/page.tsx',

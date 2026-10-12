@@ -35,10 +35,14 @@ describe('role visibility helpers', () => {
 })
 
 describe('navigation', () => {
-  it('editors get the short plain list and only the Selectors entry of Advanced', () => {
+  it('editors get the short plain list and only the Selectors and Social posts entries of Advanced', () => {
     const nav = navFor('editor')
     // Selectors is an occasional task, so it is an Advanced entry (not a 17th everyday one) that editors can reach; also a Home tile.
-    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors'])
+    // Social posts (wave C) is the same kind of entry: an occasional task with a Home tile. The styling settings stay admin only.
+    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors', 'social'])
+    expect(navFor('admin').advanced.map((e) => e.key)).toContain('social-settings')
+    expect(nav.advanced.map((e) => e.key)).not.toContain('social-settings')
+    expect(navFor(null).advanced.map((e) => e.key)).not.toContain('social')
     expect(navFor('selector').advanced).toEqual([])
     // 12 -> 14: Player sponsors and Club apparel link each need an everyday entry (editors must reach them).
     // 14 -> 16: Pages and News are committee-run content (WP-P); hiding them under Advanced was rejected.
@@ -72,7 +76,9 @@ describe('navigation', () => {
     // 8 -> 10: Add a player sponsor and Change the apparel link.
     // 10 -> 12: Add a page and Post news (WP-P).
     // 12 -> 13: Add a selector (announce teams); creating logins is occasional, so it is a tile and an Advanced entry, not an everyday menu item.
-    expect(jobTiles.length).toBeLessThanOrEqual(13)
+    // 13 -> 14: Make a social post. Posting a result is a weekly job for editors and deserves a Home shortcut; the cap keeps Home
+    // scannable and one more tile does not change that (the apparel tile stays).
+    expect(jobTiles.length).toBeLessThanOrEqual(14)
   })
 
   it('help content has steps in every section', () => {

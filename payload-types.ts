@@ -175,6 +175,7 @@ export interface Config {
     'site-settings': SiteSetting;
     theme: Theme;
     'selection-settings': SelectionSetting;
+    'social-settings': SocialSetting;
   };
   globalsSelect: {
     club: ClubSelect<false> | ClubSelect<true>;
@@ -182,6 +183,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     theme: ThemeSelect<false> | ThemeSelect<true>;
     'selection-settings': SelectionSettingsSelect<false> | SelectionSettingsSelect<true>;
+    'social-settings': SocialSettingsSelect<false> | SocialSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -478,6 +480,14 @@ export interface Player {
    * Tick to keep this player off the public website.
    */
   hidden?: boolean | null;
+  /**
+   * Tick for a player under 18. Juniors are kept off pictures for Facebook, Instagram and X unless the box below is ticked.
+   */
+  isJunior?: boolean | null;
+  /**
+   * Tick only with a parent or guardian's OK to post this child's name and stats on Facebook, Instagram and X.
+   */
+  socialOptIn?: boolean | null;
   /**
    * Awards and roles, e.g. "Club champion". Drag to change the order.
    */
@@ -2083,6 +2093,8 @@ export interface PlayersSelect<T extends boolean = true> {
   activeOverride?: T;
   isActiveDerived?: T;
   hidden?: T;
+  isJunior?: T;
+  socialOptIn?: T;
   honours?:
     | T
     | {
@@ -3116,6 +3128,88 @@ export interface SelectionSetting {
   createdAt?: string | null;
 }
 /**
+ * How the pictures for Facebook, Instagram and X look, and the words that go with them. The committee changes the captions and hashtags from Social posts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-settings".
+ */
+export interface SocialSetting {
+  id: number;
+  /**
+   * Bold: your main colour, big type. Classic: a light card with a coloured band. Minimal: plain and airy. A post can pick a different one.
+   */
+  defaultStyle?: ('bold' | 'classic' | 'minimal') | null;
+  sponsorStrip?: {
+    show?: boolean | null;
+    /**
+     * Logos must be PNG or JPG to appear on pictures.
+     */
+    tiers?: ('Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player')[] | null;
+    max?: number | null;
+  };
+  showSiteHost?: boolean | null;
+  /**
+   * Optional. Leave empty for none.
+   */
+  attribution?: string | null;
+  /**
+   * Without the # sign. Used on posts, and can be removed per post.
+   */
+  hashtags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Words in curly brackets, such as {club} or {opponent}, are filled in from the game. A line with a missing value is left out.
+   */
+  captionTemplates?: {
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    result?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    fixtures?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    lineup?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    potm?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    milestone?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    statsLeaders?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    eventPromo?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    sponsorThanks?: string | null;
+    /**
+     * Leave empty to use the standard wording shown here.
+     */
+    seasonWrap?: string | null;
+  };
+  /**
+   * Optional. Added to the end of every caption.
+   */
+  signOff?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "club_select".
  */
@@ -3452,6 +3546,45 @@ export interface SelectionSettingsSelect<T extends boolean = true> {
         publicScope?: T;
         publicShowBreakdown?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-settings_select".
+ */
+export interface SocialSettingsSelect<T extends boolean = true> {
+  defaultStyle?: T;
+  sponsorStrip?:
+    | T
+    | {
+        show?: T;
+        tiers?: T;
+        max?: T;
+      };
+  showSiteHost?: T;
+  attribution?: T;
+  hashtags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  captionTemplates?:
+    | T
+    | {
+        result?: T;
+        fixtures?: T;
+        lineup?: T;
+        potm?: T;
+        milestone?: T;
+        statsLeaders?: T;
+        eventPromo?: T;
+        sponsorThanks?: T;
+        seasonWrap?: T;
+      };
+  signOff?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

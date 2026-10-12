@@ -16,19 +16,34 @@ import { readStoredBundles, type StoredBundle } from './read'
  */
 
 export type StoredBatting = {
-  appearanceId: string; name: string; isClubSide: boolean; position: number; status: BattingStatus
+  appearanceId: string; /** The club player the row belongs to (club side only); null for the opposition. */ playerId: number | null; name: string; isClubSide: boolean; position: number; status: BattingStatus
   runs: number; balls: number | null; fours: number | null; sixes: number | null
   dismissalType: DismissalType | null; dismissal: string; fowWicket: number | null; fowRuns: number | null
 }
-export type StoredBowling = { appearanceId: string; name: string; isClubSide: boolean; order: number; balls: number; maidens: number; runs: number; wickets: number; wides: number; noBalls: number }
-export type StoredFielding = { appearanceId: string; name: string; isClubSide: boolean; catches: number; keeperCatches: number; stumpings: number; runOutsAssisted: number; runOutsUnassisted: number }
+export type StoredBowling = { appearanceId: string; playerId: number | null; name: string; isClubSide: boolean; order: number; balls: number; maidens: number; runs: number; wickets: number; wides: number; noBalls: number }
+export type StoredFielding = { appearanceId: string; playerId: number | null; name: string; isClubSide: boolean; catches: number; keeperCatches: number; stumpings: number; runOutsAssisted: number; runOutsUnassisted: number }
 export type StoredInnings = InningsRow & { batting: StoredBatting[]; didNotBat: string[]; bowling: StoredBowling[]; fielding: StoredFielding[] }
 export type StoredMatch = { match: MatchRow; innings: StoredInnings[] }
+/** Every visible club player who appeared in a game, including those who neither batted nor bowled. */
+export type MatchSquad = { playerId: number; name: string }[]
+
+/** Pure: the visible club players of one stored bundle (hidden and unresolved players are left out). */
+export function squadOf(bundle: StoredBundle, players: PlayerNames): MatchSquad {
+  return bundle.appearances.flatMap((a) => {
+    if (!a.isClubSide || a.player == null) return []
+    const p = players.get(a.player)
+    return p && !p.hidden ? [{ playerId: a.player, name: p.name }] : []
+  })
+}
 
 /** Pure: shapes one stored match for a reader, applying the visibility rules. `players` holds every club player the rows link to. */
 export function shapeStoredMatch(bundle: StoredBundle, players: PlayerNames): StoredMatch | null {
   if (bundle.match.status !== 'FINAL') return null
   const appearances = new Map(bundle.appearances.map((a) => [a.appearanceId, a]))
+  const playerIdOf = (id: string): number | null => {
+    const a = appearances.get(id)
+    return a && a.isClubSide ? a.player : null
+  }
   const nameOf = (id: string | null): string | null => {
     const a = id ? appearances.get(id) : undefined
     if (!a) return null
@@ -50,7 +65,7 @@ export function shapeStoredMatch(bundle: StoredBundle, players: PlayerNames): St
         .filter((r) => r.battingStatus !== 'did_not_bat')
         .sort((a, b) => a.position - b.position)
         .map((r) => ({
-          appearanceId: r.appearanceId, name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide, position: r.position,
+          appearanceId: r.appearanceId, playerId: playerIdOf(r.appearanceId), name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide, position: r.position,
           status: r.battingStatus, runs: r.runs, balls: r.balls, fours: r.fours, sixes: r.sixes, dismissalType: r.dismissalType,
           dismissal: formatDismissal(r.battingStatus, r.dismissalType, nameOf(r.bowlerAppearanceId), nameOf(r.fielderAppearanceId)),
           fowWicket: r.fowWicket, fowRuns: r.fowRuns,
@@ -59,10 +74,10 @@ export function shapeStoredMatch(bundle: StoredBundle, players: PlayerNames): St
       bowling: bundle.bowling
         .filter((r) => r.inningsSeq === inn.sequenceNo && shown(r.appearanceId))
         .sort((a, b) => a.order - b.order)
-        .map((r) => ({ ...r, name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide })),
+        .map((r) => ({ ...r, playerId: playerIdOf(r.appearanceId), name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide })),
       fielding: bundle.fielding
         .filter((r) => r.inningsSeq === inn.sequenceNo && shown(r.appearanceId))
-        .map((r) => ({ ...r, name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide })),
+        .map((r) => ({ ...r, playerId: playerIdOf(r.appearanceId), name: nameOf(r.appearanceId)!, isClubSide: appearances.get(r.appearanceId)!.isClubSide })),
     }
   })
   return { match: bundle.match, innings }
@@ -85,4 +100,15 @@ export async function getMatchByGameId(gameId: string): Promise<StoredMatch | nu
   if (!bundle) return null
   const ids = [...new Set(bundle.appearances.flatMap((a) => (a.isClubSide && a.player != null ? [a.player] : [])))]
   return shapeStoredMatch(bundle, await loadPlayerNames(payload, ids))
+}
+
+/** A stored match with its squad: what the social graphics need to check that a player was in the game. */
+export async function getMatchWithSquad(gameId: string): Promise<(StoredMatch & { squad: MatchSquad }) | null> {
+  const payload = await getPayloadClient()
+  const [bundle] = await readStoredBundles(payload, { gameIds: [gameId] })
+  if (!bundle) return null
+  const ids = [...new Set(bundle.appearances.flatMap((a) => (a.isClubSide && a.player != null ? [a.player] : [])))]
+  const players = await loadPlayerNames(payload, ids)
+  const shaped = shapeStoredMatch(bundle, players)
+  return shaped ? { ...shaped, squad: squadOf(bundle, players) } : null
 }

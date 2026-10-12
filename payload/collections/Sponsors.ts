@@ -29,8 +29,9 @@ export const Sponsors: CollectionConfig = {
     beforeValidate: [trimStrings(['name', 'linkUrl'])],
     // A sponsor who backs players: remove those sponsorships first (their FK is NOT NULL).
     beforeDelete: [cascadeDelete([{ collection: 'player-sponsors', field: 'sponsor' }])],
-    afterChange: [revalidateAfterChange(PATHS)],
-    afterDelete: [revalidateAfterDelete(PATHS)],
+    // The social pictures cache sponsor logos for a day; a changed or removed sponsor expires them at once.
+    afterChange: [revalidateAfterChange(PATHS, ['sponsor-logos'])],
+    afterDelete: [revalidateAfterDelete(PATHS, ['sponsor-logos'])],
   },
   timestamps: true,
   fields: [
