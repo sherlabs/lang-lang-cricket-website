@@ -288,10 +288,12 @@ export async function getPersonPage(user: unknown, memberId: number): Promise<Pe
   if (!staffOnly(user)) return null
   const payload = await getPayloadClient()
   const today = currentClubDate()
-  const names = await namesFor(payload, [memberId], today)
-  const person = names.get(memberId)
-  if (!person) return null
   const [items, ledger] = await Promise.all([loadItems(payload), loadLedger(payload, { memberId })])
+  // Only people who can be given kit, or who already have a stock record, may be opened: this page must not become an "everyone" directory.
+  const listed = (await listMemberNames(user, 'stock')).find((p) => p.id === memberId)
+  if (!listed && !ledger.issues.length) return null
+  const person = listed ? listed.displayName : ((await namesFor(payload, [memberId], today)).get(memberId) ?? null)
+  if (!person) return null
   const itemMap = new Map(items.map((i) => [i.id, i]))
   const all = ledger.issues
     .map((issue): HeldView => {
@@ -319,7 +321,8 @@ export async function getStocktakePage(user: unknown, typed: ReadonlyMap<number,
   return { rows, review: typed.size > 0, changes: rows.filter((r) => r.delta !== null && r.delta !== 0).length, today: currentClubDate() }
 }
 
-export type StockFigures = { low: number; overdue: number; out: number; outUnits: number }
+/** `out` is units (items) held by people, the same unit as the Owed back tab; `overdue` counts loans. */
+export type StockFigures = { low: number; overdue: number; out: number }
 
 /** The two numbers the Home page and the Club office tile use. Null for anyone who is not committee. A failed read drops the line, not the page. */
 export async function stockFigures(user: unknown): Promise<StockFigures | null> {
@@ -329,7 +332,7 @@ export async function stockFigures(user: unknown): Promise<StockFigures | null> 
     const today = currentClubDate()
     const [items, ledger] = await Promise.all([loadItems(payload), loadLedger(payload)])
     const lines = owedLines(ledger.issues, ledger.settlements, today)
-    return { low: items.filter((i) => i.low).length, overdue: lines.filter((l) => l.overdue).length, out: lines.length, outUnits: lines.reduce((n, l) => n + l.owed, 0) }
+    return { low: items.filter((i) => i.low).length, overdue: lines.filter((l) => l.overdue).length, out: lines.reduce((n, l) => n + l.owed, 0) }
   } catch (err) {
     console.warn('[office] stock figures unavailable:', (err as Error).message)
     return null
@@ -374,13 +377,13 @@ export async function receiveStock(user: unknown, raw: Parameters<typeof validat
   if (!v.ok) return fail(v.code)
   const payload = await getPayloadClient()
   const key = cleanNonce(raw.nonce)
-  if (await keyUsed(payload, key)) return done('received')
+  if (await keyUsed(payload, key)) return done('already-saved')
   const item = (await payload.findByID({ collection: 'stock-items', id: v.value.itemId, depth: 0, overrideAccess: true }).catch(() => null)) as unknown as Doc | null
   if (!item) return fail('not-found')
   try {
     await create(payload, {}, { collection: 'stock-movements', data: { item: v.value.itemId, kind: 'received', qty: v.value.qty, date: noon(v.value.date), note: v.value.note || null, idempotencyKey: key, recordedBy: user.id } })
   } catch (err) {
-    if (await keyUsed(payload, key).catch(() => false)) return done('received')
+    if (await keyUsed(payload, key).catch(() => false)) return done('already-saved')
     console.warn('[office] receive stock failed:', (err as Error).message)
     return fail('save')
   }
@@ -397,7 +400,7 @@ export async function issueStock(user: unknown, raw: Parameters<typeof validateI
   if (!allowed.some((p) => p.id === v.value.memberId)) return fail('person')
   const payload = await getPayloadClient()
   const key = cleanNonce(raw.nonce)
-  if (await keyUsed(payload, key)) return done('issued')
+  if (await keyUsed(payload, key)) return done('already-saved')
   try {
     return await inTransaction(payload, async (req): Promise<ActionResult> => {
       if (!(await lockItems(payload, req, [v.value.itemId]))) return fail('not-found')
@@ -411,7 +414,7 @@ export async function issueStock(user: unknown, raw: Parameters<typeof validateI
       return done('issued')
     })
   } catch (err) {
-    if (await keyUsed(payload, key).catch(() => false)) return done('issued')
+    if (await keyUsed(payload, key).catch(() => false)) return done('already-saved')
     console.warn('[office] issue stock failed:', (err as Error).message)
     return fail('save')
   }
@@ -423,7 +426,7 @@ async function settle(user: TypedUser, raw: Parameters<typeof validateSettle>[0]
   const payload = await getPayloadClient()
   const key = cleanNonce(raw.nonce)
   const notice: StockNotice = kind === 'returned' ? 'returned' : 'lost'
-  if (await keyUsed(payload, key)) return done(notice)
+  if (await keyUsed(payload, key)) return done('already-saved')
   const first = (await payload.findByID({ collection: 'stock-issues', id: v.value.issueId, depth: 0, overrideAccess: true }).catch(() => null)) as unknown as Doc | null
   const itemId = first ? idOf(first.item) : null
   if (!first || itemId === null) return fail('not-found')
@@ -442,7 +445,7 @@ async function settle(user: TypedUser, raw: Parameters<typeof validateSettle>[0]
       return done(notice)
     })
   } catch (err) {
-    if (await keyUsed(payload, key).catch(() => false)) return done(notice)
+    if (await keyUsed(payload, key).catch(() => false)) return done('already-saved')
     console.warn('[office] settle stock issue failed:', (err as Error).message)
     return fail('save')
   }
@@ -465,7 +468,7 @@ export async function removeStock(user: unknown, raw: Parameters<typeof validate
   if (!v.ok) return fail(v.code)
   const payload = await getPayloadClient()
   const key = cleanNonce(raw.nonce)
-  if (await keyUsed(payload, key)) return done('removed')
+  if (await keyUsed(payload, key)) return done('already-saved')
   try {
     return await inTransaction(payload, async (req): Promise<ActionResult> => {
       if (!(await lockItems(payload, req, [v.value.itemId]))) return fail('not-found')
@@ -475,7 +478,7 @@ export async function removeStock(user: unknown, raw: Parameters<typeof validate
       return done('removed')
     })
   } catch (err) {
-    if (await keyUsed(payload, key).catch(() => false)) return done('removed')
+    if (await keyUsed(payload, key).catch(() => false)) return done('already-saved')
     console.warn('[office] remove stock failed:', (err as Error).message)
     return fail('save')
   }
@@ -525,7 +528,7 @@ export async function postStocktake(user: unknown, input: { counts: Count[]; non
   if (!input.counts.length) return fail('nothing')
   const payload = await getPayloadClient()
   const key = cleanNonce(input.nonce)
-  if (key && (await payload.count({ collection: 'stock-movements', where: { idempotencyKey: { like: `${key}:` } }, overrideAccess: true })).totalDocs > 0) return done('stocktake')
+  if (key && (await payload.count({ collection: 'stock-movements', where: { idempotencyKey: { like: `${key}:` } }, overrideAccess: true })).totalDocs > 0) return done('already-saved')
   try {
     return await inTransaction(payload, async (req): Promise<ActionResult> => {
       const ids = input.counts.map((c) => c.itemId)
@@ -561,7 +564,7 @@ export async function owedExportTable(user: TypedUser): Promise<{ header: string
   const names = await fullNamesFor(payload, lines.map((l) => l.issue.memberId).filter((x): x is number => x !== null))
   const rows = lines.map((l) => {
     const item = itemMap.get(l.issue.itemId)
-    return [l.issue.memberId ? (names.get(l.issue.memberId) ?? 'Former member') : 'Former member', item?.name ?? 'Removed item', item?.size ?? '', l.owed, l.issue.issuedOn, l.issue.dueBackOn ?? '', l.daysOverdue, l.overdue ? 'Overdue' : ISSUE_STATUS_LABEL[l.status]]
+    return [l.issue.memberId ? (names.get(l.issue.memberId) ?? 'Former member') : 'Former member', item?.name ?? 'Removed item', item?.size ?? '', l.owed, l.issue.issuedOn, l.issue.dueBackOn ?? '', l.daysOverdue, l.overdue ? (l.status === 'part-returned' ? 'Overdue, part returned' : 'Overdue') : ISSUE_STATUS_LABEL[l.status]]
   })
   return { header: [...OWED_HEADER], rows }
 }

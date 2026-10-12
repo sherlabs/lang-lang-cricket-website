@@ -327,6 +327,7 @@ export const STOCK_NOTICE_TEXT = {
   removed: 'Stock removed.',
   voided: 'Entry voided. The stock has been put back the way it was.',
   stocktake: 'Stocktake saved.',
+  'already-saved': 'Already saved. This form was sent before, so nothing was changed.',
   'stocktake-none': 'Every count matched, so nothing needed changing.',
 } as const
 export type StockNotice = keyof typeof STOCK_NOTICE_TEXT

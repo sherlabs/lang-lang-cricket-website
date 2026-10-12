@@ -108,6 +108,24 @@ describe('stock and merch', () => {
       expect(a.ok && b.ok).toBe(true)
       expect(await issues()).toHaveLength(1)
       expect(await hand(id)).toBe(4)
+      // A form sent again later (Back button, changed values) is told so, not shown a fresh success.
+      expect(await issue(id, ann, 2, { nonce })).toMatchObject({ ok: true, notice: 'already-saved' })
+      expect(await issues()).toHaveLength(1)
+    })
+
+    it('the tile counts units, like the Owed back tab', async () => {
+      const id = await item('Shirt')
+      await receive(id, 5)
+      await issue(id, ann, 2)
+      expect(await q.stockFigures(user.editor)).toMatchObject({ out: 2 })
+      expect((await q.getStockPage(user.editor, {}))!.counts.owedUnits).toBe(2)
+    })
+
+    it('a person page opens only for people who can be given kit or already hold a record', async () => {
+      const parent = (await create('members', { firstName: 'Pat', lastName: 'Parent', roles: ['parent'] })).id
+      expect(await q.getPersonPage(user.editor, parent)).toBeNull()
+      expect(await q.getPersonPage(user.editor, ann)).toMatchObject({ person: 'Ann Player' })
+      expect(await q.getPersonPage(user.selector, ann)).toBeNull()
     })
   })
 
@@ -156,7 +174,7 @@ describe('stock and merch', () => {
       await receive(helmet, 2)
       await issue(helmet, ann, 1, { issuedOn: '2019-12-01', dueBackOn: '2020-01-01' })
       await issue(helmet, ben, 1, { dueBackOn: '2999-01-01' })
-      expect(await q.stockFigures(user.editor)).toMatchObject({ low: 1, overdue: 1, out: 2, outUnits: 2 })
+      expect(await q.stockFigures(user.editor)).toMatchObject({ low: 1, overdue: 1, out: 2 })
       expect(await q.stockFigures(user.selector)).toBeNull()
       expect(await q.getStockPage(user.selector, {})).toBeNull()
     })
