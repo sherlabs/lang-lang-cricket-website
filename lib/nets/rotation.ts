@@ -57,12 +57,31 @@ export function addLatecomer(plan: RotationPlan, player: PlanPlayer, currentRoun
   return next
 }
 
-/** Takes a player out of the groups of rounds after `currentRound` (a round already started keeps its people). Empty groups go. */
+/**
+ * Takes a player out of the groups of rounds after `currentRound` (a round already started keeps its people). Empty groups go, and
+ * the later rounds (and the nets within them) are renumbered without gaps so the timer never spends a turn on nobody.
+ */
 export function removeFromPlan(plan: RotationPlan, key: string, currentRound: number): RotationPlan {
   const next = clone(plan)
   for (const g of next.groups) if (g.round > currentRound) g.players = g.players.filter((p) => p.key !== key)
   next.groups = next.groups.filter((g) => g.players.length > 0 || g.round <= currentRound)
+  const later = [...new Set(next.groups.filter((g) => g.round > currentRound).map((g) => g.round))].sort((a, b) => a - b)
+  const roundAt = new Map(later.map((r, i) => [r, Math.max(currentRound, -1) + 1 + i]))
+  for (const [from, to] of roundAt) {
+    const inRound = next.groups.filter((g) => g.round === from).sort((a, b) => a.net - b.net)
+    inRound.forEach((g, i) => {
+      g.round = to
+      g.net = i + 1
+    })
+  }
   return next
+}
+
+/** True when the plan holds exactly the people checked in (the rotation is current). */
+export function planMatchesKeys(plan: RotationPlan | null, keys: ReadonlySet<string>): boolean {
+  if (!plan) return false
+  const inPlan = planKeys(plan)
+  return inPlan.size === keys.size && [...keys].every((k) => inPlan.has(k))
 }
 
 export type RoundView = {

@@ -9,7 +9,7 @@ import type { PlayerTables } from './db'
  * session the EARLIER `checkedInAt` is kept and the other row is deleted. Undo puts moved rows back only while their key still equals
  * the rewritten value; deleted collision rows are not restored (the merge confirmation says so).
  */
-export type NetsMergeSnapshot = { attendanceMoved: number[] }
+export type NetsMergeSnapshot = { attendanceMoved: number[]; /** Rows deleted because the target was checked in to the same session; never restored by undo. */ collisionsDeleted?: number }
 export type NetsMergeCounts = { attendanceMoved: number; collisionsDeleted: number }
 
 type Tx = {
@@ -43,6 +43,7 @@ export async function repointAttendance(txRaw: unknown, t: PlayerTables, sId: nu
     snapshot.attendanceMoved.push(n(r.id))
     counts.attendanceMoved += 1
   }
+  snapshot.collisionsDeleted = counts.collisionsDeleted
   return { snapshot, counts }
 }
 

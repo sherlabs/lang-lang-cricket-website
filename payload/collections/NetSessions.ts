@@ -1,4 +1,5 @@
 import { NETS } from '../../lib/nets/constants'
+import { cascadeDelete } from '../hooks/cascadeDelete'
 import { codeOnlyAccess, selectionCollection } from './selectionCollection'
 
 /**
@@ -14,6 +15,8 @@ export const NetSessions = selectionCollection({
   description: 'A training session at the nets: who turned up and the rotation timer. Managed by the selectors.',
   defaultColumns: ['title', 'date', 'state'],
   useAsTitle: 'title',
+  // Check-ins belong to the session; the column is NOT NULL, so deleting the session from the admin or REST removes them first.
+  hooks: { beforeDelete: [cascadeDelete([{ collection: 'net-attendance', field: 'session' }])] },
   fields: [
     { name: 'title', type: 'text', required: true, maxLength: 80 },
     { name: 'date', type: 'text', required: true, index: true, admin: { description: 'YYYY-MM-DD, in club time.' } },

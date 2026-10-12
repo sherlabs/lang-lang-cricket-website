@@ -3,7 +3,7 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload, TypedUser, Where } from 'payload'
 import { NETS, type NetState } from '@/lib/nets/constants'
 import { guestKey, playerKey, sanitiseGuestName } from '@/lib/nets/guest'
-import { addLatecomer, buildRotation, parsePlan, removeFromPlan, roundCount, type PlanPlayer, type RotationPlan } from '@/lib/nets/rotation'
+import { addLatecomer, buildRotation, parsePlan, planMatchesKeys, removeFromPlan, roundCount, type PlanPlayer, type RotationPlan } from '@/lib/nets/rotation'
 import { validateSession, type SessionInput } from '@/lib/nets/session'
 import type { NetSnapshot } from '@/lib/nets/snapshot'
 import { netAttendanceSummary, type NetCardSummary } from '@/lib/nets/summary'
@@ -137,8 +137,14 @@ export async function updateSession(user: TypedUser, id: number, input: SessionI
   if (row.state !== 'planned') return { ok: false, error: 'A session that has started cannot be edited.' }
   const checked = validateSession(input)
   if (!checked.ok) return checked
-  // The nets, minutes or group size may have changed, so the rotation built on the old values is dropped.
-  await payload.update({ collection: 'net-sessions', id, data: { ...checked.value, rotationPlan: null, revision: num(row.revision, 1) + 1 } as never, overrideAccess: true, context: CTX })
+  // The nets, minutes or group size may have changed, so the rotation built on the old values is dropped. One guarded statement:
+  // a Start that lands after the read above changes the state or the revision, and this then writes nothing.
+  const v = checked.value
+  const rev = num(row.revision, 1)
+  const res = await payload.db.drizzle.execute(
+    sql`UPDATE "payload"."net_sessions" SET "title" = ${v.title}, "date" = ${v.date}, "start_time" = ${v.startTime}, "nets" = ${v.nets}, "minutes_per_turn" = ${v.minutesPerTurn}, "group_size" = ${v.groupSize}, "notes" = ${v.notes}, "rotation_plan" = NULL, "revision" = ${rev + 1}, "updated_at" = now() WHERE "id" = ${id} AND "state" = 'planned' AND "revision" = ${rev} RETURNING "id"`,
+  )
+  if (!res.rows.length) return { ok: false, error: STALE }
   return { ok: true }
 }
 
@@ -150,8 +156,14 @@ export async function deleteSession(user: TypedUser, id: number): Promise<Action
   if (!row) return { ok: false, error: WRONG }
   if (row.state !== 'planned') return { ok: false, error: 'Only a session that has not started can be deleted.' }
   if (!isStaffUser(user) && idOf(row.createdBy) !== user.id) return { ok: false, error: 'You can delete only sessions you made.' }
-  await payload.delete({ collection: 'net-attendance', where: { session: { equals: id } }, overrideAccess: true, context: CTX })
-  await payload.delete({ collection: 'net-sessions', id, overrideAccess: true, context: CTX })
+  // One guarded statement: the check-ins go in the same statement as the session, and only while it is still planned at the revision
+  // read above, so a Start that lands in between deletes nothing.
+  const rev = num(row.revision, 1)
+  const cond = sql`"id" = ${id} AND "state" = 'planned' AND "revision" = ${rev}`
+  const res = await payload.db.drizzle.execute(
+    sql`WITH gone AS (DELETE FROM "payload"."net_attendance" WHERE "session_id" = ${id} AND EXISTS (SELECT 1 FROM "payload"."net_sessions" WHERE ${cond})) DELETE FROM "payload"."net_sessions" WHERE ${cond} RETURNING "id"`,
+  )
+  if (!res.rows.length) return { ok: false, error: STALE }
   return { ok: true }
 }
 
@@ -194,9 +206,7 @@ export async function getNetDetail(user: TypedUser, id: number): Promise<NetDeta
   const squad = squadIds.flatMap((pid) => (players.get(pid) ? [{ id: pid, name: players.get(pid)!.name, present: present.has(pid) }] : [])).sort((a, b) => a.name.localeCompare(b.name))
   const squadSet = new Set(squadIds)
   const plan = planOf(row)
-  const planKeys = new Set((plan?.groups ?? []).flatMap((g) => g.players.map((p) => p.key)))
-  const attKeys = new Set(att.map((a) => a.playerKey))
-  const planStale = row.state === 'planned' && plan !== null && (planKeys.size !== attKeys.size || [...attKeys].some((k) => !planKeys.has(k)))
+  const planStale = row.state === 'planned' && plan !== null && !planMatchesKeys(plan, new Set(att.map((a) => a.playerKey)))
   return {
     snapshot: snapshotOf(row),
     startTime: row.startTime ?? null,
@@ -351,9 +361,13 @@ async function transition(user: TypedUser, id: number, step: (row: SessionRow, p
 
 export async function startSession(user: TypedUser, id: number): Promise<SnapshotResult> {
   assertSelection(user)
+  // The rotation must hold exactly the people checked in; anyone added or removed since Build means it is out of date.
+  const payload = await getPayloadClient()
+  const keys = new Set((await attendanceOf(payload, id)).map((a) => a.playerKey))
   return transition(user, id, (row, plan, now) => {
     if (row.state !== 'planned') return 'This session has already started.'
     if (!plan || !plan.groups.length) return 'Build the rotation first.'
+    if (!planMatchesKeys(plan, keys)) return 'Check-ins changed since the rotation was built. Build the rotation again, then start.'
     return timerPatch(startWrite(now))
   })
 }

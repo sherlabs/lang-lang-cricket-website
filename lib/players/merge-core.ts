@@ -141,7 +141,7 @@ export async function mergePlayerInto(
     const netMove = await repointAttendance(tx, t, sId, tId, stamp)
     netsCounts = netMove.counts
     const withVotesOnly = voteMove.counts.ballotsMoved || voteMove.snapshot.picksMoved.length ? { ...snapshot, votes: voteMove.snapshot } : snapshot
-    const withVotes = netMove.counts.attendanceMoved ? { ...withVotesOnly, nets: netMove.snapshot } : withVotesOnly
+    const withVotes = netMove.counts.attendanceMoved || netMove.counts.collisionsDeleted ? { ...withVotesOnly, nets: netMove.snapshot } : withVotesOnly
     // 7. The log row (inside the transaction, so it exists exactly when the merge happened), then the source and anything still pointing at it.
     const [log] = await tx
       .insert(t.merge_log)

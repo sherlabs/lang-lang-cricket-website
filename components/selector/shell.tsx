@@ -35,7 +35,7 @@ export function SelectorShell({ name, signOut, children }: { name: string; signO
         <ul className="grid" style={{ gridTemplateColumns: `repeat(${selectorTabs.length}, minmax(0, 1fr))` }}>
           {selectorTabs.map((t) => (
             <li key={t.key}>
-              <Link href={t.href} aria-current={isTabActive(t, pathname) ? 'page' : undefined} className={`flex min-h-14 items-center justify-center px-2 text-sm font-semibold ${isTabActive(t, pathname) ? 'bg-brand-black text-white' : 'text-brand-black'}`}>
+              <Link href={t.href} aria-current={isTabActive(t, pathname) ? 'page' : undefined} className={`flex min-h-14 items-center justify-center px-1 text-xs font-semibold sm:px-2 sm:text-sm ${isTabActive(t, pathname) ? 'bg-brand-black text-white' : 'text-brand-black'}`}>
                 {t.label}
               </Link>
             </li>

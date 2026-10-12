@@ -96,7 +96,7 @@ export function MergePlayerField() {
         body={
           <p>
             <strong>{title || 'This player'}</strong> will be deleted. Their seasons, PlayHQ names and honours move to{' '}
-            <strong>{target?.label}</strong>. This can&apos;t be undone.
+            <strong>{target?.label}</strong>. This can&apos;t be undone. Votes and net check-ins move too; if both players voted in the same game, or were checked in to the same net session, the earlier one is kept and the other is deleted, and undoing the merge does not bring that deleted one back.
           </p>
         }
         confirmLabel="Merge"

@@ -69,7 +69,8 @@ const toView = (playerId: number, r: Row | null, staff: boolean): ProfileView =>
   bowlingStyle: r?.bowlingStyle ?? null,
   notes: r?.notesStaffOnly && !staff ? '' : (r?.notes ?? ''),
   notesStaffOnly: Boolean(r?.notesStaffOnly),
-  hasStaffNote: Boolean(r?.notesStaffOnly && !staff && r?.notes),
+  // Flag alone (not the text): a flagged note is not editable by a selector even while it is empty, matching `saveSelectorFields`.
+  hasStaffNote: Boolean(r?.notesStaffOnly && !staff),
 })
 
 export async function getProfile(user: TypedUser, playerId: number): Promise<ProfileView> {

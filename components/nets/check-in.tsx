@@ -38,8 +38,10 @@ export function CheckIn({ sessionId, squad, others, guestsLeft, actions }: { ses
     setError('')
     setPending(key)
     optimistic?.()
+    let ok = false
     try {
       const res = await fn()
+      ok = res.ok
       if (!res.ok) {
         revert?.()
         setError(res.error)
@@ -51,6 +53,7 @@ export function CheckIn({ sessionId, squad, others, guestsLeft, actions }: { ses
       setPending(null)
       router.refresh()
     }
+    return ok
   }
   const toggle = (p: RosterPlayer) => {
     const on = present.has(p.id)
@@ -125,8 +128,8 @@ export function CheckIn({ sessionId, squad, others, guestsLeft, actions }: { ses
         onSubmit={async (e) => {
           e.preventDefault()
           if (!guest.trim()) return
-          await apply('guest', () => actions.addGuest({ sessionId, name: guest }), undefined, undefined)
-          setGuest('')
+          // Keep the typed name when the add failed, so it need not be typed again.
+          if (await apply('guest', () => actions.addGuest({ sessionId, name: guest }), undefined, undefined)) setGuest('')
         }}
       >
         <label className="block text-sm font-medium text-brand-black">

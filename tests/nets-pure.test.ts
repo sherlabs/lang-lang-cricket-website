@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { NETS } from '@/lib/nets/constants'
 import { guestKey, sanitiseGuestName } from '@/lib/nets/guest'
-import { addLatecomer, buildRotation, removeFromPlan, roundCount, roundView, type PlanPlayer } from '@/lib/nets/rotation'
+import { addLatecomer, buildRotation, planMatchesKeys, removeFromPlan, roundCount, roundView, type PlanPlayer } from '@/lib/nets/rotation'
 import { netAttendanceSummary, netSummarySentence } from '@/lib/nets/summary'
 import { clock, nextRoundWrite, pauseWrite, resumeWrite, startWrite, timerView, type TimerInput } from '@/lib/nets/timer'
 import { BOWLING_STYLES, validateCard } from '@/lib/selection/card'
@@ -79,6 +79,25 @@ describe('addLatecomer and removeFromPlan', () => {
     const solo = buildRotation({ players: people(5), nets: 1, groupSize: 4 }) // 3,2
     const gone = removeFromPlan(removeFromPlan(solo, solo.groups[1].players[0].key, 0), solo.groups[1].players[1].key, 0)
     expect(gone.groups).toHaveLength(1)
+  })
+  it('removeFromPlan renumbers the later rounds so none is empty', () => {
+    const plan = buildRotation({ players: people(6), nets: 1, groupSize: 2 }) // rounds 0, 1, 2
+    const keys = (i: number) => plan.groups[i].players.map((p) => p.key)
+    const next = removeFromPlan(removeFromPlan(plan, keys(1)[0], 0), keys(1)[1], 0)
+    expect(next.groups.map((g) => g.round)).toEqual([0, 1])
+    expect(roundCount(next)).toBe(2)
+    expect(roundView(next, 1).upNow[0].players.map((p) => p.key)).toEqual(keys(2))
+    const wide = buildRotation({ players: people(6), nets: 2, groupSize: 1 }) // 3 rounds of 2 nets
+    const drop = removeFromPlan(wide, wide.groups[2].players[0].key, 0) // net 1 of round 1 goes
+    expect(drop.groups.filter((g) => g.round === 1).map((g) => g.net)).toEqual([1])
+  })
+  it('planMatchesKeys compares the plan with the people checked in', () => {
+    const plan = buildRotation({ players: people(3), nets: 1, groupSize: 2 })
+    const keys = new Set(people(3).map((p) => p.key))
+    expect(planMatchesKeys(plan, keys)).toBe(true)
+    expect(planMatchesKeys(plan, new Set([...keys, 'guest:x']))).toBe(false)
+    expect(planMatchesKeys(plan, new Set([...keys].slice(1)))).toBe(false)
+    expect(planMatchesKeys(null, keys)).toBe(false)
   })
   it('roundView lists up now, up next, waiting and done', () => {
     const plan = buildRotation({ players: people(9), nets: 1, groupSize: 3 })

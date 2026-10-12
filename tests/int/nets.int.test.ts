@@ -243,6 +243,35 @@ describe('net sessions and the editable player card', () => {
     expect(await attendance(own)).toHaveLength(0)
   })
 
+  it('Start is refused while the rotation differs from the check-ins', async () => {
+    const { checkIn, checkOut, buildSessionRotation, startSession } = await q()
+    const id = await session()
+    await checkIn(sel, id, team[0].id)
+    await checkIn(sel, id, team[1].id)
+    await buildSessionRotation(sel, id)
+    await checkIn(sel, id, team[2].id)
+    expect(await startSession(sel, id)).toMatchObject({ ok: false, error: expect.stringContaining('Build the rotation again') })
+    await buildSessionRotation(sel, id)
+    await checkOut(sel, id, `player:${team[2].id}`)
+    expect(await startSession(sel, id)).toMatchObject({ ok: false })
+    await buildSessionRotation(sel, id)
+    expect(await startSession(sel, id)).toMatchObject({ ok: true })
+  })
+
+  it('deleting a session or a player from the admin or REST removes their check-ins', async () => {
+    const { checkIn, addGuest } = await q()
+    const id = await session()
+    await checkIn(sel, id, team[0].id)
+    await addGuest(sel, id, 'Visiting Vic')
+    await payload.delete({ collection: 'net-sessions', id, overrideAccess: true })
+    expect(await attendance(id)).toHaveLength(0)
+    const other = await session()
+    const pl = await makePlayer(payload, 'Doomed', 'Player')
+    await checkIn(sel, other, pl.id)
+    await payload.delete({ collection: 'players', id: pl.id, overrideAccess: true })
+    expect((await attendance(other)).some((r) => r.playerKey === `player:${pl.id}`)).toBe(false)
+  })
+
   it('the state route: 404 to anonymous and unknown ids, no-store JSON to a selector', async () => {
     const id = await session()
     const { GET } = await import('@/app/(frontend)/selector/(area)/nets/[id]/state/route')
@@ -301,6 +330,9 @@ describe('net sessions and the editable player card', () => {
       // The selector (Local API with the access override, as the pages use it) gets nothing.
       const seen = await getProfile(sel, pid)
       expect(seen).toMatchObject({ notes: '', hasStaffNote: true, notesStaffOnly: true })
+      // A flagged but empty note is not editable by a selector either (the form is hidden, so Save cannot fail oddly).
+      expect(await saveSelectorFields(editor, team[3].id, { notes: '', notesStaffOnly: 'on' })).toEqual({ ok: true })
+      expect(await getProfile(sel, team[3].id)).toMatchObject({ hasStaffNote: true })
       expect(JSON.stringify(await profilesForPlayers(sel, [pid]).then((m) => [...m.values()]))).not.toContain('Private matter')
       // Hand-posted edits are refused and the row is unchanged.
       expect(await saveSelectorFields(sel, pid, { notes: 'overwritten' })).toMatchObject({ ok: false })

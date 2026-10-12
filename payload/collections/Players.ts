@@ -65,6 +65,7 @@ export const Players: CollectionConfig = {
         { collection: 'player-aliases', field: 'player' },
         { collection: 'player-seasons', field: 'player' },
         { collection: 'player-sponsors', field: 'player' },
+        { collection: 'net-attendance', field: 'player' },
       ]),
       unlinkPeople,
     ],
