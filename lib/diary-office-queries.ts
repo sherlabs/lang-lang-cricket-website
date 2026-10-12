@@ -228,6 +228,8 @@ export async function getDiaryPage(user: unknown, params: { season?: string; fil
     months.set(k, [...(months.get(k) ?? []), v])
   }
   const seasonSet = new Set<string>(seasonChoices(ctx.today, 4))
+  const upcoming = nextSeasonName(current)
+  if (upcoming) seasonSet.add(upcoming) // so next season can be planned before it holds a job
   const allSeasons = (await payload.find({ collection: 'diary-jobs', pagination: false, depth: 0, overrideAccess: true, select: { season: true } })).docs as unknown as Doc[]
   for (const d of allSeasons) if (isSeasonName(d.season)) seasonSet.add(d.season)
   const next = wanted === 'all' ? null : nextSeasonName(wanted)
@@ -392,6 +394,9 @@ export async function addStarterJobs(user: unknown, season: unknown): Promise<Ac
     })
     return done('starter', ops.length)
   } catch (err) {
+    // A second request that ran at the same moment hit the unique code on (season, source_key): the jobs are already there.
+    const again = (await loadJobs(payload, season)).map((d) => ({ season: str(d.season), sourceKey: str(d.sourceKey) || null, title: str(d.title) }))
+    if (planStarterJobs(season, STARTER_JOBS, again).length === 0) return done('starter-none', 0)
     console.warn('[office] standard jobs not added:', (err as Error).message)
     return fail('save')
   }
@@ -433,6 +438,9 @@ export async function copyRepeatingJobs(user: unknown, season: unknown): Promise
     })
     return done('copied', plan.ops.length)
   } catch (err) {
+    // A simultaneous copy already made them (unique code on season and source key): nothing left to do.
+    const again = (await loadJobs(payload, 'all')).map(toSourceJob)
+    if ((planCopyToNextSeason(season, again, again)?.ops.length ?? 1) === 0) return done('copied-none', 0)
     console.warn('[office] repeating jobs not copied:', (err as Error).message)
     return fail('save')
   }
@@ -606,6 +614,11 @@ export async function addStarterPlan(user: unknown): Promise<ActionResult> {
     })
     return done('plan-starter', ops.pillars.length + ops.objectives.length)
   } catch (err) {
+    // A simultaneous request already added them (unique source codes): nothing left to do.
+    const pAgain = (await payload.find({ collection: 'plan-pillars', pagination: false, depth: 0, overrideAccess: true, select: { sourceKey: true } })).docs as unknown as Doc[]
+    const oAgain = (await payload.find({ collection: 'plan-objectives', pagination: false, depth: 0, overrideAccess: true, select: { sourceKey: true } })).docs as unknown as Doc[]
+    const left = planStarterPlan(STARTER_PILLARS, pAgain.map((p) => str(p.sourceKey)).filter(Boolean), oAgain.map((o) => str(o.sourceKey)).filter(Boolean))
+    if (left.pillars.length === 0 && left.objectives.length === 0) return done('plan-starter-none', 0)
     console.warn('[office] starter plan not added:', (err as Error).message)
     return fail('save')
   }

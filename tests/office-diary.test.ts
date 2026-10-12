@@ -8,6 +8,7 @@ import {
   nextSeasonName,
   objectiveProgress,
   oneYearOn,
+  parseDiaryId,
   planCopyToNextSeason,
   planStarterJobs,
   planStarterPlan,
@@ -72,9 +73,13 @@ describe('owners and callout figures', () => {
     const many = [j('todo', '2026-10-01'), j('todo', '2026-09-01', 2), j('blocked', '2027-01-01'), j('done', '2020-01-01', null), j('blocked', '2026-01-01', null)]
     expect(diaryStats(many, holder, '2026-10-12')).toEqual({ overdue: 3, blocked: 2, unowned: 2 })
   })
+  it('ids must be plain digits', () => {
+    expect(parseDiaryId('12')).toBe(12)
+    for (const bad of ['0x10', '1e3', '-1', '1.5', '', ' ', 'abc', 0]) expect(parseDiaryId(bad)).toBeNull()
+  })
   it('the wording pins what is left out and the singular form', () => {
-    expect(officeCopy.diary.overdue(1)).toBe('1 club job is overdue (done jobs are not counted)')
-    expect(officeCopy.diary.overdue(3)).toBe('3 club jobs are overdue (done jobs are not counted)')
+    expect(officeCopy.diary.overdue(1)).toBe('1 club job is overdue (done jobs are not counted; jobs of every season are counted)')
+    expect(officeCopy.diary.overdue(3)).toBe('3 club jobs are overdue (done jobs are not counted; jobs of every season are counted)')
     expect(officeCopy.diary.unowned(1)).toContain('a seat with nobody in it counts as no owner')
     expect(officeCopy.diary.stat(0, 0, 0)).toContain('done jobs are not counted')
     expect(officeCopy.diary.stat(2, 1, 4)).toBe('2 club jobs are overdue, 1 blocked, 4 without an owner (done jobs are not counted)')

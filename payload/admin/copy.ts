@@ -105,9 +105,9 @@ export const officeCopy = {
       overdue + blocked + unowned === 0
         ? 'No club jobs are overdue, blocked or without an owner (done jobs are not counted)'
         : `${overdue} club ${plural(overdue, 'job is', 'jobs are')} overdue, ${blocked} blocked, ${unowned} without an owner (done jobs are not counted)`,
-    overdue: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} overdue (done jobs are not counted)`,
-    blocked: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} blocked (done jobs are not counted)`,
-    unowned: (n: number) => `${n} club ${plural(n, 'job has', 'jobs have')} no owner (done jobs are not counted; a seat with nobody in it counts as no owner)`,
+    overdue: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} overdue (done jobs are not counted; jobs of every season are counted)`,
+    blocked: (n: number) => `${n} club ${plural(n, 'job is', 'jobs are')} blocked (done jobs are not counted; jobs of every season are counted)`,
+    unowned: (n: number) => `${n} club ${plural(n, 'job has', 'jobs have')} no owner (done jobs are not counted; jobs of every season are counted; a seat with nobody in it counts as no owner)`,
     overBudget: 'Over budget',
     budgetWarning: 'The budgets of the jobs add up to more than the objective\u2019s budget',
   },

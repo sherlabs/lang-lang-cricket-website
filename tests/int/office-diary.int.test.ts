@@ -237,4 +237,37 @@ describe('season diary and plan', () => {
     expect(await q.addObjective(user.editor, { title: 'Orphan', pillar: '999999' })).toEqual({ ok: false, code: 'not-found' })
     expect(await q.addPillar(user.editor, { title: 'Own pillar', summary: 'x' })).toMatchObject({ ok: true })
   })
+
+  it('simultaneous standard-job, copy and starter-plan requests make no duplicates', async () => {
+    await Promise.all([q.addStarterJobs(user.editor, season), q.addStarterJobs(user.editor, season), q.addStarterJobs(user.editor, season)]).then((r) => expect(r.every((x) => x.ok)).toBe(true))
+    expect(await jobs()).toHaveLength(STARTER_JOBS.length)
+    const next = nextSeasonName(season)!
+    const copies = await Promise.all([q.copyRepeatingJobs(user.editor, season), q.copyRepeatingJobs(user.editor, season), q.copyRepeatingJobs(user.editor, season)])
+    expect(copies.every((x) => x.ok)).toBe(true)
+    expect(await jobs({ season: { equals: next } })).toHaveLength(STARTER_JOBS.length)
+    const plans = await Promise.all([q.addStarterPlan(user.editor), q.addStarterPlan(user.editor), q.addStarterPlan(user.editor)])
+    expect(plans.every((x) => x.ok)).toBe(true)
+    expect((await payload.count({ collection: 'plan-pillars', overrideAccess: true })).totalDocs).toBe(STARTER_PILLARS.length)
+    expect((await payload.count({ collection: 'plan-objectives', overrideAccess: true })).totalDocs).toBe(STARTER_PILLARS.reduce((n, p) => n + p.objectives.length, 0))
+  })
+
+  it('a pillar with objectives cannot be deleted, an objective needs a real pillar, and card-like titles are refused on every path', async () => {
+    const pillar = await create('plan-pillars', { title: 'Facilities' })
+    const objective = await create('plan-objectives', { title: 'New nets', pillar: pillar.id })
+    const del = await rest('DELETE', `/plan-pillars/${pillar.id}`, { token: tok.admin })
+    expect(del.status).toBe(400)
+    expect(JSON.stringify(del.json)).toContain('still has objectives')
+    expect(await payload.count({ collection: 'plan-pillars', overrideAccess: true })).toMatchObject({ totalDocs: 1 })
+    expect((await rest('POST', '/plan-objectives', { token: tok.editor, body: { title: 'Orphan', pillar: 99999 } })).status).toBe(400)
+    await payload.delete({ collection: 'plan-objectives', id: objective.id, overrideAccess: true })
+    expect((await rest('DELETE', `/plan-pillars/${pillar.id}`, { token: tok.admin })).status).toBe(200)
+    for (const [path, body] of [['/diary-jobs', { title: '4111 1111 1111 1111', season }], ['/plan-pillars', { title: '4111 1111 1111 1111' }]] as const) {
+      expect((await rest('POST', path, { token: tok.editor, body })).status).toBe(400)
+    }
+  })
+
+  it('next season can be chosen before it holds a job', async () => {
+    const page = (await q.getDiaryPage(user.editor, {}))!
+    expect(page.seasons).toContain(nextSeasonName(season)!)
+  })
 })

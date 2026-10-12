@@ -8,6 +8,12 @@ import { AdminPage, requireUser } from './AdminPage'
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STANDING: Record<JobStanding, string> = { done: 'Done', overdue: 'Overdue', blocked: 'Blocked', 'due-soon': 'Due soon', open: '' }
 const STATUS_TEXT = { todo: 'To do', 'in-progress': 'In progress', blocked: 'Blocked', done: 'Done' } as const
+/** The standing (overdue, due soon) and the status in words, so "Overdue, in progress" keeps both. */
+function statusText(j: JobView): string {
+  const standing = STANDING[j.standing]
+  if (!standing) return STATUS_TEXT[j.status]
+  return standing === STATUS_TEXT[j.status] ? standing : `${standing}, ${STATUS_TEXT[j.status].toLowerCase()}`
+}
 
 /**
  * `/admin/office/diary` (committee): the season's annual jobs by month, with overdue, blocked, due-soon, unowned and "mine" chips.
@@ -47,7 +53,7 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
   const job = (j: JobView) => (
     <li key={j.id} className="diary-job">
       <p className="diary-job__title">
-        <span className="office-badge">{STANDING[j.standing] || STATUS_TEXT[j.status]}</span>{' '}
+        <span className="office-badge">{statusText(j)}</span>{' '}
         <strong>{j.title}</strong>
         {j.overBudget ? <span className="office-badge">{officeCopy.diary.overBudget}</span> : null}
       </p>
@@ -64,10 +70,10 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
       <form method="post" action={`${api}/job-status`} className="office-inline">
         {hidden}
         <input type="hidden" name="id" value={j.id} />
-        {j.status !== 'done' ? <button type="submit" name="status" value="done" className="btn btn--style-primary btn--size-medium">Done</button> : null}
-        {j.status === 'todo' || j.status === 'blocked' ? <button type="submit" name="status" value="in-progress" className="btn btn--style-secondary btn--size-medium">Start</button> : null}
-        {j.status === 'blocked' || j.status === 'in-progress' ? <button type="submit" name="status" value="todo" className="btn btn--style-secondary btn--size-medium">Back to to do</button> : null}
-        {j.status === 'done' ? <button type="submit" name="status" value="todo" className="btn btn--style-secondary btn--size-medium">Reopen</button> : null}
+        {j.status !== 'done' ? <button type="submit" name="status" value="done" aria-label={`Done: ${j.title}`} className="btn btn--style-primary btn--size-medium">Done</button> : null}
+        {j.status === 'todo' || j.status === 'blocked' ? <button type="submit" name="status" value="in-progress" aria-label={`Start: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Start</button> : null}
+        {j.status === 'blocked' || j.status === 'in-progress' ? <button type="submit" name="status" value="todo" aria-label={`Move back to To do: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Move back to To do</button> : null}
+        {j.status === 'done' ? <button type="submit" name="status" value="todo" aria-label={`Reopen: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Reopen</button> : null}
       </form>
       {j.status !== 'done' && j.status !== 'blocked' ? (
         <form method="post" action={`${api}/job-status`} className="office-inline">
@@ -76,9 +82,9 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
           <input type="hidden" name="status" value="blocked" />
           <label>
             <span className="club-muted">Stuck? Say why</span>
-            <input name="reason" required maxLength={500} />
+            <input name="reason" required maxLength={500} aria-label={`Why is it blocked: ${j.title}`} />
           </label>
-          <button type="submit" className="btn btn--style-secondary btn--size-medium">Mark blocked</button>
+          <button type="submit" aria-label={`Mark blocked: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Mark blocked</button>
         </form>
       ) : null}
       {j.unowned && j.status !== 'done' ? (
@@ -87,14 +93,14 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
           <input type="hidden" name="id" value={j.id} />
           <label>
             <span className="club-muted">Who owns it?</span>
-            <select name="ownerSeat" defaultValue="">
+            <select name="ownerSeat" defaultValue="" aria-label={`Owner of ${j.title}`}>
               <option value="">Pick a seat</option>
               {page.seats.map((s) => (
                 <option key={s.id} value={s.id}>{s.title}{s.holder ? ` (${s.holder})` : ' (vacant)'}</option>
               ))}
             </select>
           </label>
-          <button type="submit" className="btn btn--style-secondary btn--size-medium">Set owner</button>
+          <button type="submit" aria-label={`Set owner: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Set owner</button>
         </form>
       ) : null}
       <p><a href={`${admin}/collections/diary-jobs/${j.id}`}>Edit all details</a></p>

@@ -1,4 +1,4 @@
-import { ValidationError, type CollectionConfig } from 'payload'
+import { APIError, ValidationError, type CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffField, nobodyField } from '../access'
 import { noCardNumbers } from '../../lib/office/card'
 import { currentClubDate } from '../../lib/selection/club-date'
@@ -14,15 +14,22 @@ import { isSeasonName } from '../../lib/office/season'
 const options = <T extends string>(values: readonly T[], labels: Record<string, string> = {}) => values.map((value) => ({ label: labels[value] ?? value, value }))
 const access = { read: isStaff, create: isStaff, update: isStaff, delete: isAdmin }
 const dayOnly = { date: { pickerAppearance: 'dayOnly' as const } }
-const sourceKey = {
+/** A required, trimmed title that also refuses card numbers, so the form, the REST API and the diary page agree. */
+const titleField = (max: number) => (value: unknown): true | string => {
+  if (typeof value !== 'string' || !value.trim()) return 'Please give it a title.'
+  if (value.length > max) return `Please keep it under ${max} characters.`
+  return noCardNumbers(value)
+}
+const sourceKeyField = (unique: boolean) => ({
   name: 'sourceKey',
   label: 'Standard item code',
   type: 'text' as const,
   maxLength: 80,
   index: true,
+  ...(unique ? { unique: true } : {}), // one row per standard item, so two requests at once cannot make a copy
   access: { read: isStaffField, create: nobodyField, update: nobodyField },
   admin: { readOnly: true, description: 'Set by the system for standard items, so adding them again never makes a copy.' },
-}
+})
 
 export const PlanPillars: CollectionConfig = {
   slug: 'plan-pillars',
@@ -32,11 +39,20 @@ export const PlanPillars: CollectionConfig = {
   disableDuplicate: true,
   access,
   timestamps: true,
+  hooks: {
+    // The database also refuses (the link is "restrict"), but this gives a plain message instead of a server error.
+    beforeDelete: [
+      async ({ id, req }) => {
+        const n = (await req.payload.count({ collection: 'plan-objectives', where: { pillar: { equals: id } }, overrideAccess: true, req })).totalDocs
+        if (n > 0) throw new APIError('This pillar still has objectives under it. Move or delete them first.', 400, undefined, true)
+      },
+    ],
+  },
   fields: [
-    { name: 'title', label: 'Pillar', type: 'text', required: true, maxLength: 120 },
+    { name: 'title', label: 'Pillar', type: 'text', required: true, maxLength: 120, validate: titleField(120) },
     { name: 'summary', label: 'What it is about', type: 'textarea', maxLength: 600, validate: noCardNumbers },
     { name: 'sortOrder', label: 'Order in the plan', type: 'number', defaultValue: 100, admin: { width: '25%' } },
-    sourceKey,
+    sourceKeyField(true),
   ],
 }
 
@@ -48,9 +64,21 @@ export const PlanObjectives: CollectionConfig = {
   disableDuplicate: true,
   access,
   timestamps: true,
+  hooks: {
+    beforeValidate: [
+      async ({ data, req }) => {
+        const raw = (data as { pillar?: unknown } | undefined)?.pillar
+        const id = typeof raw === 'object' && raw !== null ? (raw as { id?: unknown }).id : raw
+        if (typeof id !== 'number' && typeof id !== 'string') return data
+        const n = (await req.payload.count({ collection: 'plan-pillars', where: { id: { equals: id } }, overrideAccess: true, req })).totalDocs
+        if (n === 0) throw new ValidationError({ errors: [{ path: 'pillar', message: 'Pick a pillar from the list.' }] })
+        return data
+      },
+    ],
+  },
   fields: [
     { name: 'pillar', label: 'Pillar', type: 'relationship', relationTo: 'plan-pillars', required: true, index: true },
-    { name: 'title', label: 'Objective', type: 'text', required: true, maxLength: 160 },
+    { name: 'title', label: 'Objective', type: 'text', required: true, maxLength: 160, validate: titleField(160) },
     { name: 'ownerSeat', label: 'Owned by (committee seat)', type: 'relationship', relationTo: 'committee-seats', admin: { description: 'Jobs follow the seat when its holder changes.' } },
     { name: 'targetDate', label: 'Aim to finish by', type: 'date', admin: { ...dayOnly, width: '50%' } },
     { name: 'budgetCents', label: 'Budget (in cents)', type: 'number', min: 0, max: 100_000_000, admin: { description: 'Whole cents, for example 120000 for 1,200.00. Leave empty if there is none.', width: '50%' } },
@@ -64,7 +92,7 @@ export const PlanObjectives: CollectionConfig = {
     },
     { name: 'progressNote', label: 'Progress note', type: 'textarea', maxLength: 1000, validate: noCardNumbers },
     { name: 'sortOrder', label: 'Order within the pillar', type: 'number', defaultValue: 100, admin: { width: '25%' } },
-    sourceKey,
+    sourceKeyField(true),
   ],
 }
 
@@ -74,6 +102,8 @@ export const DiaryJobs: CollectionConfig = {
   admin: { group: false, hideAPIURL: true, useAsTitle: 'title', defaultColumns: ['title', 'season', 'due', 'status', 'ownerSeat'], description: 'The jobs the club does every year, with who owns them and when they are due. Work with them from Club office, then Diary & plan.' },
   defaultSort: 'due',
   disableDuplicate: true,
+  // The same standard job can appear only once per season (rows with no code are not constrained).
+  indexes: [{ fields: ['season', 'sourceKey'], unique: true }],
   access,
   timestamps: true,
   hooks: {
@@ -97,7 +127,7 @@ export const DiaryJobs: CollectionConfig = {
     ],
   },
   fields: [
-    { name: 'title', label: 'Job', type: 'text', required: true, maxLength: 160 },
+    { name: 'title', label: 'Job', type: 'text', required: true, maxLength: 160, validate: titleField(160) },
     { name: 'season', label: 'Season', type: 'text', required: true, index: true, maxLength: 9, admin: { description: 'The season it belongs to, written like the rest of the site, for example 2026/27.', width: '25%' } },
     { name: 'category', label: 'Group', type: 'select', required: true, defaultValue: 'other', options: options(DIARY_CATEGORIES, DEFAULT_CATEGORY_LABELS), admin: { width: '25%', description: 'The group names can be renamed in Club office settings.' } },
     { name: 'due', label: 'Due', type: 'date', index: true, admin: { ...dayOnly, width: '25%' } },
@@ -128,6 +158,6 @@ export const DiaryJobs: CollectionConfig = {
     { name: 'objective', label: 'Plan objective', type: 'relationship', relationTo: 'plan-objectives', index: true, admin: { description: 'Link the job to an objective of the strategic plan to count it as progress.' } },
     { name: 'repeatsYearly', label: 'Repeats every season', type: 'checkbox', defaultValue: false, admin: { description: 'Jobs that repeat can be copied to the next season in one go.' } },
     { name: 'notes', label: 'Notes', type: 'textarea', maxLength: 2000, validate: noCardNumbers },
-    sourceKey,
+    sourceKeyField(false),
   ],
 }

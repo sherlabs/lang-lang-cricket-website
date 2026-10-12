@@ -37,7 +37,7 @@ export const isObjectiveStatus = oneOf(OBJECTIVE_STATUSES)
 export const isJobFilter = oneOf(JOB_FILTERS)
 
 const posId = (v: unknown): number | null => {
-  const n = typeof v === 'string' || typeof v === 'number' ? Number(v) : NaN
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d{1,10}$/.test(v.trim()) ? Number(v.trim()) : NaN
   return Number.isInteger(n) && n > 0 && n < 2_000_000_000 ? n : null
 }
 export const parseDiaryId = posId
