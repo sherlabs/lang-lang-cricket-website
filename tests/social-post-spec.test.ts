@@ -55,6 +55,7 @@ describe('post input', () => {
 describe('why Schedule is blocked', () => {
   const nets = [{ id: 'mock' as const, label: 'Test network' }]
   const ok = { networks: nets, selected: [{ network: 'mock' as const, size: 'square' as const }], siteUrlOk: true, captionErrors: [], timeError: null }
+  it('needs words of its own, not just a sign-off or hashtags', () => expect(scheduleBlockers({ ...ok, body: '   ' })).toContain('Write the words to go with the picture.'))
   it('is clear when everything holds', () => expect(scheduleBlockers(ok)).toEqual([]))
   it('says so when no network can be scheduled', () => expect(scheduleBlockers({ ...ok, networks: [], selected: [] })[0]).toMatch(/post it by hand/))
   it('asks for a network, a public address, a good caption and a time', () => {

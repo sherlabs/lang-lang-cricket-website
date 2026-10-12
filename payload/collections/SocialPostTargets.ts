@@ -14,7 +14,6 @@ export const SocialPostTargets = internalCollection({
   plural: 'Social post networks (data)',
   description: 'One network a social post goes to, with its words and result. Managed from Social posts; read only here.',
   defaultColumns: ['post', 'network', 'status'],
-  indexes: [{ fields: ['post'] }],
   fields: [
     { name: 'post', type: 'relationship', relationTo: 'social-posts', required: true, access: code },
     { name: 'network', type: 'select', required: true, options: ['facebook', 'instagram', 'x', 'mock'].map((value) => ({ label: value, value })), access: code },

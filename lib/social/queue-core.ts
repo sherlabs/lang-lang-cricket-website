@@ -73,6 +73,7 @@ export async function savePost(payload: Payload, user: TypedUser, raw: unknown, 
   let finals: (string | null)[] = input.targets.map(() => null)
   if (mode === 'schedule') {
     if (input.targets.length === 0) return fail('Pick at least one network.')
+    if (!input.caption.trim()) return fail('Write the words to go with the picture.')
     if (!isPublicHttpsUrl(club.siteUrl, env)) return fail(SITE_URL_BLOCK)
     const time = checkScheduleTime({ date: input.date, time: input.time, tz: CLUB_TIMEZONE, now, window: resolveWindow(settings.publishWindow), allowOutside: input.allowOutside })
     if (!time.ok) return fail(time.error)

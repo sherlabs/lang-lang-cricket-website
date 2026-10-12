@@ -22,7 +22,7 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const id = url.searchParams.get('post') ?? ''
   const size = url.searchParams.get('size') ?? ''
-  if (!/^\d{1,12}$/.test(id) || !isSizeKey(size)) return notFound()
+  if (!/^\d{1,9}$/.test(id) || Number(id) > 2147483647 || !isSizeKey(size)) return notFound()
   const gate = await renderAllowed(actor.id)
   if (!gate.allowed) return new Response('Slow down for a minute', { status: 429, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': String(Math.max(1, gate.retryAfterSeconds)), ...PRIVATE_HEADERS } })
   const payload = await getPayloadClient()

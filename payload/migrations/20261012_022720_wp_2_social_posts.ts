@@ -58,12 +58,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "social_posts_created_by_idx" ON "payload"."social_posts" USING btree ("created_by_id");
   CREATE INDEX "social_posts_updated_at_idx" ON "payload"."social_posts" USING btree ("updated_at");
   CREATE INDEX "social_posts_created_at_idx" ON "payload"."social_posts" USING btree ("created_at");
-  CREATE INDEX "status_nextRunAt_idx" ON "payload"."social_posts" USING btree ("status","next_run_at");
-  CREATE INDEX "createdBy_idx" ON "payload"."social_posts" USING btree ("created_by_id");
+  CREATE INDEX "social_posts_status_idx" ON "payload"."social_posts" USING btree ("status");
+  CREATE INDEX "social_posts_next_run_at_idx" ON "payload"."social_posts" USING btree ("next_run_at");
   CREATE INDEX "social_post_targets_post_idx" ON "payload"."social_post_targets" USING btree ("post_id");
   CREATE INDEX "social_post_targets_updated_at_idx" ON "payload"."social_post_targets" USING btree ("updated_at");
   CREATE INDEX "social_post_targets_created_at_idx" ON "payload"."social_post_targets" USING btree ("created_at");
-  CREATE INDEX "post_idx" ON "payload"."social_post_targets" USING btree ("post_id");
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_social_posts_fk" FOREIGN KEY ("social_posts_id") REFERENCES "payload"."social_posts"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_social_post_targets_fk" FOREIGN KEY ("social_post_targets_id") REFERENCES "payload"."social_post_targets"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "payload_locked_documents_rels_social_posts_id_idx" ON "payload"."payload_locked_documents_rels" USING btree ("social_posts_id");

@@ -9193,17 +9193,11 @@
           "method": "btree",
           "with": {}
         },
-        "status_nextRunAt_idx": {
-          "name": "status_nextRunAt_idx",
+        "social_posts_status_idx": {
+          "name": "social_posts_status_idx",
           "columns": [
             {
               "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "next_run_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -9214,11 +9208,11 @@
           "method": "btree",
           "with": {}
         },
-        "createdBy_idx": {
-          "name": "createdBy_idx",
+        "social_posts_next_run_at_idx": {
+          "name": "social_posts_next_run_at_idx",
           "columns": [
             {
-              "expression": "created_by_id",
+              "expression": "next_run_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -9411,21 +9405,6 @@
           "columns": [
             {
               "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "post_idx": {
-          "name": "post_idx",
-          "columns": [
-            {
-              "expression": "post_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11634,7 +11613,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Lang Lang Cricket Club — junior and senior cricket in Caldermeade, Victoria. A welcoming community club for beginners through to experienced players.'"
+          "default": "'Lang Lang Cricket Club \u2014 junior and senior cricket in Caldermeade, Victoria. A welcoming community club for beginners through to experienced players.'"
         },
         "og_image_id": {
           "name": "og_image_id",
@@ -11932,7 +11911,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Much of the club''s written record had faded or gone missing over the decades. In the 2022–23 season that changed: through the work of the Club Committee, the club''s history records were restored and brought back into the clubrooms.\n\nThose records now sit alongside a modern home ground in Caldermeade, developed with the support of Cardinia Shire Council and Community Bank Lang Lang, giving the next generation of juniors and seniors a place to add their own chapter.'"
+          "default": "'Much of the club''s written record had faded or gone missing over the decades. In the 2022\u201323 season that changed: through the work of the Club Committee, the club''s history records were restored and brought back into the clubrooms.\n\nThose records now sit alongside a modern home ground in Caldermeade, developed with the support of Cardinia Shire Council and Community Bank Lang Lang, giving the next generation of juniors and seniors a place to add their own chapter.'"
         },
         "history_pull_quote": {
           "name": "history_pull_quote",
@@ -11960,14 +11939,14 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'For restoring the club''s history records in 2022–23.'"
+          "default": "'For restoring the club''s history records in 2022\u201323.'"
         },
         "story_submit_intro": {
           "name": "story_submit_intro",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Old photos, scorebooks, match reports, memories from the clubrooms — tell us your Lang Lang story. A committee member reviews every submission before it appears on the site.'"
+          "default": "'Old photos, scorebooks, match reports, memories from the clubrooms \u2014 tell us your Lang Lang story. A committee member reviews every submission before it appears on the site.'"
         },
         "updated_at": {
           "name": "updated_at",

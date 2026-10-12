@@ -22,10 +22,16 @@ export async function POST(request: Request): Promise<Response> {
   const actor = await staffUser(request)
   if (actor === null) return notFound()
   const origin = request.headers.get('origin')
-  if (origin && new URL(origin).host !== new URL(request.url).host) return notFound()
+  if (origin) {
+    try {
+      if (new URL(origin).host !== new URL(request.url).host) return notFound()
+    } catch {
+      return notFound()
+    }
+  }
   if (!(request.headers.get('content-type') ?? '').includes('application/json')) return json({ ok: false, error: 'Something went wrong. Please try again.' }, 415)
   const body = (await request.json().catch(() => null)) as { id?: unknown } | null
-  const id = typeof body?.id === 'number' && Number.isInteger(body.id) && body.id > 0 ? body.id : null
+  const id = typeof body?.id === 'number' && Number.isInteger(body.id) && body.id > 0 && body.id <= 2147483647 ? body.id : null
   if (id === null) return json({ ok: false, error: 'Something went wrong. Please try again.' }, 400)
   const payload = await getPayloadClient()
   const gate = await hit(payload, `social-postnow:${actor.id}`, POST_NOW_RULE)

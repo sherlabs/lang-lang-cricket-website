@@ -108,7 +108,7 @@ export function SocialQueue({ api, rows, initialTab, heartbeat, editBase }: Prop
               {r.canEdit && <a className="social__button" href={`${editBase}${r.id}`}>Edit</a>}
               {r.canPause && <button type="button" className="social__button" disabled={pending} onClick={() => run(() => pauseScheduledPost(r.id), 'Paused. It is a draft again.')}>Pause (back to draft)</button>}
               {r.canPostNow && <button type="button" className="social__button social__button--primary" disabled={pending} onClick={() => postNow(r.id)}>Post now</button>}
-              {r.canRetry && <button type="button" className="social__button social__button--primary" disabled={pending} onClick={() => run(() => retryFailedPost(r.id), 'It will be tried again shortly.')}>Retry now</button>}
+              {r.canRetry && <button type="button" className="social__button social__button--primary" disabled={pending} onClick={() => run(() => retryFailedPost(r.id), 'Queued to try again. It goes out the next time the scheduler checks, or use Post now.')}>Retry</button>}
               {r.canDelete && <button type="button" className="social__button" disabled={pending} onClick={() => { if (window.confirm('Delete this post? This cannot be undone.')) run(() => deleteQueuedPost(r.id), 'Deleted.') }}>Delete</button>}
             </div>
           </li>

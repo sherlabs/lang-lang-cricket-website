@@ -121,6 +121,8 @@ export function scheduleBlockers(o: {
   selected: readonly { network: Network; size: SizeKey }[]
   siteUrlOk: boolean
   captionErrors: readonly string[]
+  /** The words the person wrote, before any sign-off or hashtags are added. */
+  body?: string
   timeError: string | null
 }): Blocker[] {
   const out: Blocker[] = []
@@ -128,6 +130,7 @@ export function scheduleBlockers(o: {
   else if (o.selected.length === 0) out.push('Pick at least one network.')
   else if (o.selected.some((s) => !o.networks.some((n) => n.id === s.network))) out.push('One of the networks you picked is not available.')
   if (!o.siteUrlOk) out.push('The site address is not a public https address, so networks cannot fetch the picture.')
+  if (o.body !== undefined && !o.body.trim()) out.push('Write the words to go with the picture.')
   out.push(...o.captionErrors)
   if (o.timeError) out.push(o.timeError)
   return out

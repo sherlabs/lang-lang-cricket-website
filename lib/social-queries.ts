@@ -81,8 +81,8 @@ export type QueuePost = {
 const iso = (v: unknown): string | null => (v ? new Date(String(v)).toISOString() : null)
 
 /**
- * The posts for the queue tabs, newest first, with their per-network targets. An explicit `select` keeps the lease fields (and the
- * picture snapshot, which is large) out of what the page receives.
+ * The posts for the queue tabs, newest first, with their per-network targets. An explicit `select` keeps the lease fields out of what the
+ * page receives, and the picture snapshot (large: it can hold base64 logos) is cut down in SQL to the three small values the queue needs.
  */
 export async function listQueue(limit = 100): Promise<QueuePost[]> {
   const payload = await getPayloadClient()
@@ -93,9 +93,15 @@ export async function listQueue(limit = 100): Promise<QueuePost[]> {
     depth: 0,
     overrideAccess: true,
     pagination: false,
-    select: { title: true, status: true, caption: true, hashtags: true, scheduledFor: true, nextRunAt: true, finishedAt: true, spec: true },
+    select: { title: true, status: true, caption: true, hashtags: true, scheduledFor: true, nextRunAt: true, finishedAt: true },
   })
   if (posts.docs.length === 0) return []
+  const { sql } = await import('@payloadcms/db-postgres/drizzle')
+  const ids = posts.docs.map((p) => Number(p.id))
+  const specRows = (await payload.db.drizzle.execute(sql`
+    SELECT id, spec->>'type' AS type, spec->>'style' AS style, spec->'raw'->>'source' AS source, spec->'raw'->>'text' AS text
+    FROM "payload"."social_posts" WHERE id IN (${sql.join(ids.map((i) => sql`${i}`), sql`, `)})`)) as unknown as { rows: { id: number; type: string | null; style: string | null; source: string | null; text: string | null }[] }
+  const specById = new Map(specRows.rows.map((r) => [Number(r.id), r]))
   const targets = await payload.find({
     collection: 'social-post-targets',
     where: { post: { in: posts.docs.map((p) => p.id) } },
@@ -117,10 +123,10 @@ export async function listQueue(limit = 100): Promise<QueuePost[]> {
     byPost.set(post, list)
   }
   return posts.docs.map((p) => {
-    const spec = (p.spec ?? {}) as { type?: string; style?: string; raw?: { source?: string; text?: string } }
+    const spec = specById.get(p.id)
     return {
       id: p.id, title: p.title, status: p.status, caption: p.caption ?? '', hashtags: Array.isArray(p.hashtags) ? (p.hashtags as unknown[]).filter((h): h is string => typeof h === 'string') : [],
-      scheduledFor: iso(p.scheduledFor), nextRunAt: iso(p.nextRunAt), finishedAt: iso(p.finishedAt), type: spec.type ?? '', style: spec.style ?? '', source: spec.raw?.source ?? '', text: spec.raw?.text ?? '',
+      scheduledFor: iso(p.scheduledFor), nextRunAt: iso(p.nextRunAt), finishedAt: iso(p.finishedAt), type: spec?.type ?? '', style: spec?.style ?? '', source: spec?.source ?? '', text: spec?.text ?? '',
       targets: byPost.get(p.id) ?? [],
     }
   })
@@ -132,7 +138,7 @@ export async function socialCounts(clubDayEnd: Date, overdueAfterMinutes: number
   const payload = await getPayloadClient()
   const res = (await payload.db.drizzle.execute(sql`
     SELECT count(*) FILTER (WHERE status = 'failed')::int AS failed,
-           count(*) FILTER (WHERE status = 'scheduled' AND next_run_at <= ${clubDayEnd.toISOString()}::timestamptz)::int AS due_soon,
+           count(*) FILTER (WHERE status = 'scheduled' AND next_run_at >= now() AND next_run_at <= ${clubDayEnd.toISOString()}::timestamptz)::int AS due_soon,
            count(*) FILTER (WHERE status = 'scheduled' AND next_run_at < now() - make_interval(mins => ${overdueAfterMinutes}::int))::int AS overdue
     FROM "payload"."social_posts"`)) as unknown as { rows: Record<string, number>[] }
   const r = res.rows[0] ?? {}

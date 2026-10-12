@@ -26,6 +26,7 @@ export async function recordHeartbeat(payload: Payload): Promise<void> {
   await rows(payload, sql`UPDATE "payload"."social_settings" SET last_cron_run_at = now(), observed_cron_interval_minutes = ${next}::numeric WHERE id = ${Number(row.id)} RETURNING id`)
 }
 
+/** `scheduledCount` is the scheduled posts that are already due: a post for next week cannot be late, so it never makes the scheduler look stale. */
 export type HeartbeatFacts = { lastRunAt: Date | null; observedMinutes: number | null; scheduledCount: number; overdueCount: number }
 
 export async function readHeartbeat(payload: Payload, overdueAfterMinutes: (observed: number | null) => number): Promise<HeartbeatFacts> {
@@ -33,7 +34,7 @@ export async function readHeartbeat(payload: Payload, overdueAfterMinutes: (obse
   const observed = h?.observed_cron_interval_minutes == null ? null : Number(h.observed_cron_interval_minutes)
   const limit = overdueAfterMinutes(observed)
   const c = (await rows(payload, sql`
-    SELECT count(*)::int AS scheduled, count(*) FILTER (WHERE next_run_at < now() - make_interval(mins => ${limit}::int))::int AS overdue
+    SELECT count(*) FILTER (WHERE next_run_at <= now())::int AS scheduled, count(*) FILTER (WHERE next_run_at < now() - make_interval(mins => ${limit}::int))::int AS overdue
     FROM "payload"."social_posts" WHERE status = 'scheduled'`))[0]
   return { lastRunAt: h?.last_cron_run_at ? new Date(String(h.last_cron_run_at)) : null, observedMinutes: observed, scheduledCount: Number(c?.scheduled ?? 0), overdueCount: Number(c?.overdue ?? 0) }
 }

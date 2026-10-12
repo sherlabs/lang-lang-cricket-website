@@ -388,7 +388,7 @@ function SchedulePanel({ scheduling: s, signOff, tags, caption, spec }: { schedu
   })
   const timeCheck = date && time ? checkScheduleTime({ date, time, tz: s.tz, now: new Date(), window: s.window, allowOutside: outside }) : ({ ok: false, error: 'Choose a date and time to post.' } as const)
   const needsTick = Boolean(time) && !insideWindow(time, s.window)
-  const blockers = scheduleBlockers({ networks: s.networks, selected, siteUrlOk: s.siteUrlOk, captionErrors: finals.flatMap((f) => f.errors), timeError: timeCheck.ok ? null : timeCheck.error })
+  const blockers = scheduleBlockers({ body: caption, networks: s.networks, selected, siteUrlOk: s.siteUrlOk, captionErrors: finals.flatMap((f) => f.errors), timeError: timeCheck.ok ? null : timeCheck.error })
   const form = () => ({ id: edit?.id, type: spec.type, source: spec.source, text: spec.text, style: spec.style, caption, hashtags: tags, targets: selected, date, time, allowOutside: outside })
 
   const go = async (mode: 'draft' | 'schedule') => {

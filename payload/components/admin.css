@@ -868,7 +868,7 @@ a[href$='/forgot'] {
 .social-queue__tools a.social__button, .club-actions a.social__button { display: inline-flex; align-items: center; text-decoration: none; }
 .social-queue__warn { padding: 0.75rem 1rem; border: 2px solid var(--club-gold); border-radius: 8px; background: var(--theme-elevation-50); font-weight: 600; }
 .social__chips { display: flex; flex-wrap: wrap; gap: 0.5rem; border: 0; padding: 0; margin: 0.5rem 0; }
-.social__final { white-space: pre-wrap; padding: 0.5rem; background: var(--theme-elevation-50); border-radius: 8px; font: inherit; }
+.social__final { white-space: pre-wrap; overflow-wrap: anywhere; padding: 0.5rem; background: var(--theme-elevation-50); border-radius: 8px; font: inherit; }
 .social__blockers { margin: 0.5rem 0; padding-left: 1.25rem; }
 .social__net { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; min-height: 44px; }
 .social__net select { min-height: 44px; }

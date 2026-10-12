@@ -5,12 +5,13 @@ const now = new Date('2026-10-12T12:00:00Z')
 const minsAgo = (m: number) => new Date(now.getTime() - m * 60_000)
 
 describe('heartbeat', () => {
-  it('smooths the observed interval and never goes below a minute', () => {
+  it('smooths the observed interval and ignores gaps under a few minutes', () => {
     expect(smoothInterval(null, null)).toBeNull()
     expect(smoothInterval(null, 10)).toBe(10)
     expect(smoothInterval(10, 20)).toBe(15)
-    expect(smoothInterval(10, 0.2)).toBe(6)
-    expect(smoothInterval(1, 0)).toBe(1)
+    expect(smoothInterval(10, 0.2)).toBe(10) // a hand-made call a moment after the last run is ignored
+    expect(smoothInterval(null, 1)).toBeNull()
+    expect(smoothInterval(1440, 2)).toBe(1440)
     expect(smoothInterval(7, null)).toBe(7)
   })
   it('counts a post overdue after twice the interval, or 30 minutes when none is known', () => {

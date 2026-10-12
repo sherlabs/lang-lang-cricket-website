@@ -3,12 +3,14 @@
  * last ran and the gap it saw, and reports only that. Pure helpers for the numbers and the words.
  */
 const MIN_INTERVAL = 1
+/** Gaps shorter than this are hand-made calls (a test curl, a double click), not the schedule, so they never move the figure. */
+export const MIN_TRUSTED_GAP_MINUTES = 3
 /** Without an observed interval, a post is "overdue" after this many minutes. */
 export const OVERDUE_FLOOR_MINUTES = 30
 
-/** Smooth the gap between runs: half the old figure, half the new, never below a minute. The first run sets none. */
+/** Smooth the gap between runs: half the old figure, half the new. Gaps under a few minutes are ignored. The first run sets none. */
 export function smoothInterval(previous: number | null, gapMinutes: number | null): number | null {
-  if (gapMinutes === null || !Number.isFinite(gapMinutes) || gapMinutes < 0) return previous
+  if (gapMinutes === null || !Number.isFinite(gapMinutes) || gapMinutes < MIN_TRUSTED_GAP_MINUTES) return previous
   const gap = Math.max(MIN_INTERVAL, Math.round(gapMinutes))
   return previous === null ? gap : Math.max(MIN_INTERVAL, Math.round((previous + gap) / 2))
 }
