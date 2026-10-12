@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validatePayment, validateWaiver } from '../lib/office/fee-input'
-import { chargesToStore, derivedSeasonTotal, feeReport, ledgerFor, owingSummary, previewPayment, type FeeModel } from '../lib/office/fee-report'
+import { chargesToStore, feeReport, ledgerFor, owingSummary, previewPayment, type FeeModel } from '../lib/office/fee-report'
 import { allHouseholds, allocate, deriveCharges, householdFor, type Charge, type Payment, type Waiver } from '../lib/office/fees'
 import { formatMoney, parseMoney, parseRate, splitEvenly } from '../lib/office/money'
 import { currentSeason, seasonRange, seasonStartYearOfName } from '../lib/office/season'
@@ -61,7 +61,6 @@ describe('allocate: worked examples', () => {
     const first = allocate([game(1)], [], [pay('p1', 3000)])
     expect(first.creditCents).toBe(2000)
     const later = allocate([game(1), game(1, '2027/28', 1000, '2027-10-02'), { ...game(2, '2027/28', 1500, '2027-10-09'), id: 'game:x2', matchId: 'x2' }], [], [pay('p1', 3000)])
-    expect(later.lines.map((l) => l.status)).toEqual(['paid', 'paid', 'paid'].slice(0, 0).concat(later.lines.map((l) => l.status)))
     expect(later.lines.every((l) => l.owedCents === 0)).toBe(true)
     expect(later.creditCents).toBe(500)
   })

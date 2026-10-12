@@ -24,11 +24,15 @@ const PUBLIC_OFFICE_ALLOWLIST: string[] = []
 const OFFICE_SOURCE = [
   ...walk('lib/office'),
   'lib/members-queries.ts',
+  ...walk('lib').filter((f) => /-office-queries\.ts$/.test(f)),
   ...walk('app/api/admin/office'),
   ...walk('payload/components').filter((f) => path.basename(f).startsWith('Office')),
   'payload/collections/Members.ts',
   'payload/collections/OfficeAuditLog.ts',
   'payload/collections/officeAccess.ts',
+  'payload/collections/MembershipTiers.ts',
+  'payload/collections/Memberships.ts',
+  'payload/collections/feeLedger.ts',
   'payload/globals/OfficeSettings.ts',
 ]
 
@@ -38,7 +42,7 @@ describe('office guards', () => {
   })
 
   it('no public page or public query layer imports the office or the members queries', () => {
-    const publicFiles = [...walk('app/(frontend)'), ...walk('lib').filter((f) => /-queries\.ts$/.test(f) && f !== 'lib/members-queries.ts'), ...walk('components')]
+    const publicFiles = [...walk('app/(frontend)'), ...walk('lib').filter((f) => /-queries\.ts$/.test(f) && f !== 'lib/members-queries.ts' && !/-office-queries\.ts$/.test(f)), ...walk('components')]
     const bad = publicFiles.filter((f) => !PUBLIC_OFFICE_ALLOWLIST.includes(f) && /members-queries|lib\/office|collection:\s*'(members|office-[a-z-]+)'/.test(read(f)))
     expect(bad).toEqual([])
   })
@@ -80,6 +84,24 @@ describe('office guards', () => {
     }
     expect(hits).toEqual([])
   })
+
+  it('the fee ledger takes no card data, no REST write, and its writes go through admin-checked server code', async () => {
+    const config = await loadSanitizedConfig()
+    for (const slug of ['fee-seasons', 'fee-charges', 'fee-payments', 'fee-waivers']) {
+      const col = config.collections.find((c) => c.slug === slug)!
+      for (const op of ['create', 'update', 'delete'] as const) {
+        const fn = col.access[op] as (a: { req: { user: unknown } }) => unknown
+        expect(fn({ req: { user: { id: 1, role: 'admin' } } }), `${slug} ${op} for an admin over REST`).toBe(false)
+      }
+    }
+    const queries = read('lib/fees-office-queries.ts')
+    // Every exported action starts with the admin check; the loaders are reached only from those and the pages.
+    for (const fn of ['recordPayment', 'voidPayment', 'addWaiver', 'voidWaiver', 'voidCharge', 'addAdjustment', 'addMembership', 'removeMembership', 'addTier', 'copyTiers', 'closeSeason']) {
+      const at = queries.indexOf(`export async function ${fn}(`)
+      expect(at, fn).toBeGreaterThan(-1)
+      expect(queries.slice(at, at + 400), fn).toContain('adminOnly(user)')
+    }
+  }, 60_000)
 
   it('GraphQL stays disabled, so REST and the Local API are the only doors', async () => {
     const config = await loadSanitizedConfig()

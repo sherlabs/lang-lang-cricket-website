@@ -1,5 +1,6 @@
 import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { allCaughtUp, notificationLines, type NotificationInput, type RunFacts } from '@/lib/admin/notifications'
+import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions } from '@/lib/players/duplicate-queries'
 import { socialCounts } from '@/lib/social-queries'
@@ -9,7 +10,7 @@ import { zonedToUtc } from '@/lib/social/schedule-time'
 import { currentClubDate } from '@/lib/selection/club-date'
 import type { Payload } from 'payload'
 import { getPendingCounts } from '../admin/approvals'
-import { notificationCopy } from '../admin/copy'
+import { notificationCopy, officeCopy } from '../admin/copy'
 
 const dateFormat = new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE, day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -45,8 +46,8 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
  * admins, the duplicate-player count and the import log. Server component; every source is existing data and a failure in one
  * only drops its line.
  */
-export async function NotificationCentre({ payload, isAdmin }: { payload: Payload; isAdmin: boolean }) {
-  const [pending, run, duplicateCount, imports, social] = await Promise.all([
+export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
+  const [pending, run, duplicateCount, imports, social, fees] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
     isAdmin ? getDuplicateSuggestions().then((s) => s.length).catch(() => null) : Promise.resolve(null),
@@ -54,8 +55,9 @@ export async function NotificationCentre({ payload, isAdmin }: { payload: Payloa
       ? listImportBatches(payload).then((b) => (b.length ? { count: b.length, latest: { at: b[0].at, seasons: b[0].seasons, matches: b[0].matches } } : { count: 0, latest: null })).catch(() => null)
       : Promise.resolve(null),
     socialFacts(payload),
+    isAdmin ? feeOwingSummary(user) : Promise.resolve(null),
   ])
-  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social }
+  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

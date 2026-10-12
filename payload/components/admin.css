@@ -919,3 +919,22 @@ a[href$='/forgot'] {
   .office-table th, .office-table td { display: table-cell; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--theme-elevation-150); }
   .office-table td::before { content: none; }
 }
+
+/* Club office: fees (wave D WP-2). */
+.office-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 0.75rem; margin: 0 0 1.25rem; padding: 0; list-style: none; max-width: 56rem; }
+.office-card { padding: 0.85rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-card__label { display: block; font-weight: 600; color: var(--club-grey); }
+.office-card__value { display: block; font-size: 1.5rem; font-weight: 800; }
+.office-card__hint { display: block; font-size: 0.875rem; color: var(--club-grey); margin-top: 0.25rem; }
+.office-badge { display: inline-flex; align-items: center; min-height: 1.75rem; padding: 0 0.7rem; border: 2px solid var(--club-charcoal); border-radius: 999px; font-weight: 700; font-size: 0.9375rem; }
+.office-status { font-weight: 700; white-space: nowrap; }
+.office-num { text-align: right; font-variant-numeric: tabular-nums; }
+.office-form select, .office-form textarea { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: #fff; }
+.office-split { display: grid; gap: 0.5rem; }
+.office-split__row { display: grid; grid-template-columns: 1fr 7rem; gap: 0.5rem; align-items: center; }
+.office-inline { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.office-void > summary { cursor: pointer; min-height: 2.75rem; display: inline-flex; align-items: center; font-weight: 600; text-decoration: underline; }
+.office-void > summary:focus-visible { outline: 3px solid var(--club-gold); outline-offset: 2px; }
+.office-list { display: grid; gap: 0.5rem; margin: 0 0 1.25rem; padding: 0; list-style: none; max-width: 56rem; }
+.office-list > li { padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-list--voided { opacity: 0.75; text-decoration: line-through; }

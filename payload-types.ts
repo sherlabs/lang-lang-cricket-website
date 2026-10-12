@@ -109,6 +109,12 @@ export interface Config {
     'social-post-targets': SocialPostTarget;
     members: Member;
     'office-audit-log': OfficeAuditLog;
+    'membership-tiers': MembershipTier;
+    memberships: Membership;
+    'fee-seasons': FeeSeason;
+    'fee-charges': FeeCharge;
+    'fee-payments': FeePayment;
+    'fee-waivers': FeeWaiver;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -168,6 +174,12 @@ export interface Config {
     'social-post-targets': SocialPostTargetsSelect<false> | SocialPostTargetsSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
     'office-audit-log': OfficeAuditLogSelect<false> | OfficeAuditLogSelect<true>;
+    'membership-tiers': MembershipTiersSelect<false> | MembershipTiersSelect<true>;
+    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
+    'fee-seasons': FeeSeasonsSelect<false> | FeeSeasonsSelect<true>;
+    'fee-charges': FeeChargesSelect<false> | FeeChargesSelect<true>;
+    'fee-payments': FeePaymentsSelect<false> | FeePaymentsSelect<true>;
+    'fee-waivers': FeeWaiversSelect<false> | FeeWaiversSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1805,6 +1817,146 @@ export interface OfficeAuditLog {
   createdAt: string;
 }
 /**
+ * What each kind of membership costs per season. Easier to set up from Club office, then Fees. Amounts are in cents (2000 is 20.00).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "membership-tiers".
+ */
+export interface MembershipTier {
+  id: number;
+  season: string;
+  name: string;
+  kind: 'upfront' | 'per-match' | 'free';
+  /**
+   * Charged once when the member joins. Leave at 0 for none.
+   */
+  upfrontCents?: number | null;
+  /**
+   * Charged for each final game the member plays. Leave at 0 for none.
+   */
+  perMatchCents?: number | null;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who joined which season. Add members to a season from Club office, then Fees.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships".
+ */
+export interface Membership {
+  id: number;
+  member: number | Member;
+  season: string;
+  tier: number | MembershipTier;
+  /**
+   * Optional. The season fee is dated from this day (otherwise the season start).
+   */
+  joinedOn?: string | null;
+  note?: string | null;
+  upfrontCentsSnapshot?: number | null;
+  perMatchCentsSnapshot?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Which seasons have been closed. A season with no row here is open. Written by the Close season button.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-seasons".
+ */
+export interface FeeSeason {
+  id: number;
+  season: string;
+  status: 'open' | 'closed';
+  closedAt?: string | null;
+  closedBy?: (number | null) | User;
+  chargesTotalCents?: number | null;
+  snapshotCount?: number | null;
+  closedAnyway?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What each member was charged in a closed season. Frozen when the season closed; a correction is a void plus an adjustment.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-charges".
+ */
+export interface FeeCharge {
+  id: number;
+  member: number | Member;
+  season: string;
+  kind: 'season' | 'game' | 'adjustment';
+  date: string;
+  /**
+   * Kept as a value so a later PlayHQ sync or player merge cannot move it.
+   */
+  matchId?: string | null;
+  amountCents: number;
+  description?: string | null;
+  closedAt?: string | null;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Money received, recorded by hand. No card details are ever stored. A mistake is voided with a reason, not edited.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-payments".
+ */
+export interface FeePayment {
+  id: number;
+  member: number | Member;
+  payer?: (number | null) | Member;
+  /**
+   * Shared by the rows made when one payment was split across children.
+   */
+  splitGroup?: string | null;
+  receivedOn: string;
+  amountCents: number;
+  method: 'cash' | 'bank-transfer' | 'other';
+  reference?: string | null;
+  note?: string | null;
+  appliesTo?: {
+    kind?: ('season' | 'charge') | null;
+    season?: string | null;
+    chargeId?: string | null;
+    matchId?: string | null;
+  };
+  recordedBy?: (number | null) | User;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Fees the committee has waived, with the reason. Voided, never edited.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-waivers".
+ */
+export interface FeeWaiver {
+  id: number;
+  member: number | Member;
+  scope: 'game' | 'season' | 'amount';
+  matchId?: string | null;
+  season?: string | null;
+  amountCents?: number | null;
+  note: string;
+  grantedBy?: (number | null) | User;
+  voidedAt?: string | null;
+  voidedBy?: (number | null) | User;
+  voidReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1995,6 +2147,30 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'office-audit-log';
         value: number | OfficeAuditLog;
+      } | null)
+    | ({
+        relationTo: 'membership-tiers';
+        value: number | MembershipTier;
+      } | null)
+    | ({
+        relationTo: 'memberships';
+        value: number | Membership;
+      } | null)
+    | ({
+        relationTo: 'fee-seasons';
+        value: number | FeeSeason;
+      } | null)
+    | ({
+        relationTo: 'fee-charges';
+        value: number | FeeCharge;
+      } | null)
+    | ({
+        relationTo: 'fee-payments';
+        value: number | FeePayment;
+      } | null)
+    | ({
+        relationTo: 'fee-waivers';
+        value: number | FeeWaiver;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2959,6 +3135,115 @@ export interface OfficeAuditLogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "membership-tiers_select".
+ */
+export interface MembershipTiersSelect<T extends boolean = true> {
+  season?: T;
+  name?: T;
+  kind?: T;
+  upfrontCents?: T;
+  perMatchCents?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships_select".
+ */
+export interface MembershipsSelect<T extends boolean = true> {
+  member?: T;
+  season?: T;
+  tier?: T;
+  joinedOn?: T;
+  note?: T;
+  upfrontCentsSnapshot?: T;
+  perMatchCentsSnapshot?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-seasons_select".
+ */
+export interface FeeSeasonsSelect<T extends boolean = true> {
+  season?: T;
+  status?: T;
+  closedAt?: T;
+  closedBy?: T;
+  chargesTotalCents?: T;
+  snapshotCount?: T;
+  closedAnyway?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-charges_select".
+ */
+export interface FeeChargesSelect<T extends boolean = true> {
+  member?: T;
+  season?: T;
+  kind?: T;
+  date?: T;
+  matchId?: T;
+  amountCents?: T;
+  description?: T;
+  closedAt?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-payments_select".
+ */
+export interface FeePaymentsSelect<T extends boolean = true> {
+  member?: T;
+  payer?: T;
+  splitGroup?: T;
+  receivedOn?: T;
+  amountCents?: T;
+  method?: T;
+  reference?: T;
+  note?: T;
+  appliesTo?:
+    | T
+    | {
+        kind?: T;
+        season?: T;
+        chargeId?: T;
+        matchId?: T;
+      };
+  recordedBy?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-waivers_select".
+ */
+export interface FeeWaiversSelect<T extends boolean = true> {
+  member?: T;
+  scope?: T;
+  matchId?: T;
+  season?: T;
+  amountCents?: T;
+  note?: T;
+  grantedBy?: T;
+  voidedAt?: T;
+  voidedBy?: T;
+  voidReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3543,6 +3828,10 @@ export interface OfficeSetting {
    */
   locale?: string | null;
   /**
+   * Off by default: a player who fills in for a game pays only if they are a registered player. Tick to charge every fill-in the per-game rate of their membership.
+   */
+  chargeFillIns?: boolean | null;
+  /**
    * What each address line is called where you live. These words are the column names in the members spreadsheet you download. The form on the member page keeps its standard wording.
    */
   addressLabels?: {
@@ -3950,6 +4239,7 @@ export interface SocialSettingsSelect<T extends boolean = true> {
 export interface OfficeSettingsSelect<T extends boolean = true> {
   currency?: T;
   locale?: T;
+  chargeFillIns?: T;
   addressLabels?:
     | T
     | {

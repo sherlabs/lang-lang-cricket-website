@@ -24,6 +24,8 @@ export type NotificationInput = {
   imports: { count: number; latest: { at: string; seasons: number; matches: number } | null } | null
   /** Counts for the social posting queue (wave C spec 4.8); null when unavailable. Committee-visible. */
   social?: { failed: number; dueSoon: number; overdue: number } | null
+  /** Admin only: members owing match fees in the open season, with the sentence already worded (club office, wave D). */
+  fees?: { members: number; text: string } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
 
@@ -73,6 +75,7 @@ export function notificationLines(
     if (social.dueSoon > 0) lines.push({ key: 'social-today', tone: 'info', text: copy.committee.socialToday(social.dueSoon), href: `${r}/social?tab=scheduled` })
   }
   if (o.isAdmin) {
+    if (input.fees && input.fees.members > 0) lines.push({ key: 'fees-owing', tone: 'info', text: input.fees.text, href: `${r}/office/fees`, linkText: 'Open Fees' })
     if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })
     if (input.imports && input.imports.count > 0 && input.imports.latest) {
       const l = input.imports.latest

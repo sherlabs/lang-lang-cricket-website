@@ -39,6 +39,9 @@ import { NetAttendance } from './payload/collections/NetAttendance'
 import { NetSessions } from './payload/collections/NetSessions'
 import { Members } from './payload/collections/Members'
 import { OfficeAuditLog } from './payload/collections/OfficeAuditLog'
+import { MembershipTiers } from './payload/collections/MembershipTiers'
+import { Memberships } from './payload/collections/Memberships'
+import { FeeCharges, FeePayments, FeeSeasons, FeeWaivers } from './payload/collections/feeLedger'
 import { SocialPosts } from './payload/collections/SocialPosts'
 import { SocialPostTargets } from './payload/collections/SocialPostTargets'
 import { SavedReports } from './payload/collections/SavedReports'
@@ -98,13 +101,15 @@ export default buildConfig({
         social: { Component: '/payload/components/SocialView#SocialView', path: '/social', meta: { title: 'Social posts' } },
         office: { Component: '/payload/components/OfficeView#OfficeView', path: '/office', exact: true, meta: { title: 'Club office' } },
         officeMembers: { Component: '/payload/components/OfficeMembersView#OfficeMembersView', path: '/office/members', meta: { title: 'Members' } },
+        officeFees: { Component: '/payload/components/OfficeFeesView#OfficeFeesView', path: '/office/fees', exact: true, meta: { title: 'Fees' } },
+        officeFeeMember: { Component: '/payload/components/OfficeFeeMemberView#OfficeFeeMemberView', path: '/office/fees/member/:id', meta: { title: 'Member fees' } },
         help: { Component: '/payload/components/HelpView#HelpView', path: '/help', meta: { title: 'Help' } },
       },
     },
   },
   i18n: { translations: adminTranslations },
   graphQL: { disable: true },
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

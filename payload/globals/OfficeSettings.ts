@@ -25,6 +25,14 @@ export const OfficeSettings: GlobalConfig = {
     { name: 'currency', label: 'Currency', type: 'text', maxLength: 3, defaultValue: () => OFFICE_CURRENCY, access: admin, admin: { description: 'A three-letter code such as AUD, NZD, GBP or USD.', width: '50%' } },
     { name: 'locale', label: 'Language and region for dates and amounts', type: 'text', maxLength: 20, defaultValue: () => OFFICE_LOCALE, access: admin, admin: { description: 'For example en-AU, en-GB or en-US.', width: '50%' } },
     {
+      name: 'chargeFillIns',
+      label: 'Charge fill-in players match fees',
+      type: 'checkbox',
+      defaultValue: false,
+      access: admin,
+      admin: { description: 'Off by default: a player who fills in for a game pays only if they are a registered player. Tick to charge every fill-in the per-game rate of their membership.' },
+    },
+    {
       name: 'addressLabels',
       label: 'Names of the address lines',
       type: 'group',

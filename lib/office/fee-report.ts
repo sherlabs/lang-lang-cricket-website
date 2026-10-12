@@ -7,7 +7,7 @@ import { seasonRange } from './season'
  * without a database. Charges for an open season are worked out from the games each member played; charges for a closed season are
  * the stored rows and are never re-derived.
  */
-export type FeeMember = { id: number; name: string; playerId: number | null; status: 'active' | 'past'; erased: boolean; guardianIds: number[] }
+export type FeeMember = { id: number; name: string; roles?: string[]; playerId: number | null; status: 'active' | 'past'; erased: boolean; guardianIds: number[] }
 export type FeeMembership = { memberId: number; season: string; tierName: string; joinedOn?: string | null; upfrontCents: number; perMatchCents: number }
 export type FeeAppearance = AppearanceInput & { playerId: number }
 export type StoredCharge = Charge & { memberId: number; voided?: boolean }

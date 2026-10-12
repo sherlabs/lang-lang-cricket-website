@@ -5,7 +5,7 @@ routes: ["/admin/office/members", "/admin/collections/members", "/api/admin/offi
 collections: [members, players, people, office-audit-log, office-settings]
 admin: "Club office, then Members (admin only); the native member page is the fallback for rare edits"
 owner: "The club's secretary or membership officer (a site admin)"
-related: [club-office, committee-and-contacts, players-directory-and-profiles, social-graphics, multi-club-template]
+related: [club-office, membership-fees, committee-and-contacts, players-directory-and-profiles, social-graphics, multi-club-template]
 added: feat/payload-cms
 ---
 
@@ -49,7 +49,7 @@ The site knew players (public) and committee contacts (public), but nothing priv
 ## Not included / deferred
 
 - Importing a member list from a spreadsheet: it needs a column mapping step and rules for duplicates. Tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
-- Membership fees, payments and per-season membership: [#25](https://github.com/sherlabs/lang-lang-cricket-website/issues/25). Volunteer rosters and hours: [#26](https://github.com/sherlabs/lang-lang-cricket-website/issues/26). Bulk email and unsubscribes: [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29).
+- Membership fees and payments are built: see [Membership and match fees](./membership-fees.mdx). Volunteer rosters and hours: [#26](https://github.com/sherlabs/lang-lang-cricket-website/issues/26). Bulk email and unsubscribes: [#29](https://github.com/sherlabs/lang-lang-cricket-website/issues/29).
 - A member sign-in or self-service page: members cannot see or edit their own details here.
 - Bulk edits of members beyond adding players. Opening one member is not logged; downloads, removals and the add-players action are.
 - The stored list title on the member page's own list can lag behind a player's rename; the directory always shows the current name.

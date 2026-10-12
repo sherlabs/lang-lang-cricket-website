@@ -8,6 +8,17 @@ export const helpIntro = 'Everything on the club website is changed from here. N
 
 export const helpSections: HelpSection[] = [
   {
+    id: 'club-fees',
+    title: 'Keep track of fees and payments (admins)',
+    steps: [
+      'Click "Club office", then "Fees". Pick the season at the top.',
+      'The first time, open "Set up fees", add a membership type (a fee for the season, a fee per game, or both), then add the members to the season.',
+      'Match fees appear by themselves as games are played. Click a member to record a payment, check "Show what this will settle", then save. For a family, tick the children under "Split across".',
+      'To waive a fee, open the member and press "Waive a fee". You must give a reason. To undo a payment or waiver, press "Void" and say why. Nothing is ever deleted.',
+      'At the end of the season press "Close season". The figures are then frozen. Never type card numbers: money is recorded by hand only.',
+    ],
+  },
+  {
     id: 'club-office',
     title: 'Look after the club members (admins)',
     steps: [

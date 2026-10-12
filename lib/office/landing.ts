@@ -1,4 +1,5 @@
 import 'server-only'
+import { feeOwingSummary } from '@/lib/fees-office-queries'
 import { memberCompleteness } from '@/lib/members-queries'
 import { officeCopy } from '@/payload/admin/copy'
 import type { OfficeModuleKey } from './modules'
@@ -16,6 +17,10 @@ export async function landingStats(user: unknown, keys: readonly OfficeModuleKey
     } catch (err) {
       console.warn('[office] members stat unavailable:', (err as Error).message)
     }
+  }
+  if (keys.includes('fees')) {
+    const f = await feeOwingSummary(user)
+    if (f) out.fees = officeCopy.fees.stat(f.members, f.money)
   }
   return out
 }

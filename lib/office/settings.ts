@@ -4,7 +4,7 @@ import { DEFAULT_ADDRESS_LABELS, type AddressLabels } from './settings-defaults'
 
 export { DEFAULT_ADDRESS_LABELS, type AddressLabels }
 
-export type OfficeSettings = { currency: string; locale: string; addressLabels: AddressLabels }
+export type OfficeSettings = { currency: string; locale: string; chargeFillIns: boolean; addressLabels: AddressLabels }
 
 const text = (v: unknown, max = 60): string | null => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null)
 
@@ -15,6 +15,7 @@ export function resolveOfficeSettings(doc: unknown): OfficeSettings {
   return {
     currency: text(d.currency, 3)?.toUpperCase() ?? OFFICE_CURRENCY,
     locale: text(d.locale, 20) ?? OFFICE_LOCALE,
+    chargeFillIns: d.chargeFillIns === true,
     addressLabels: {
       addressLine: text(labels.addressLine) ?? DEFAULT_ADDRESS_LABELS.addressLine,
       locality: text(labels.locality) ?? DEFAULT_ADDRESS_LABELS.locality,

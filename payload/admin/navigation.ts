@@ -98,6 +98,12 @@ export type OfficeCollection = { slug: string; role: 'admin' | 'staff' }
 export const officeCollections: OfficeCollection[] = [
   { slug: 'members', role: 'admin' },
   { slug: 'office-audit-log', role: 'admin' },
+  { slug: 'membership-tiers', role: 'admin' },
+  { slug: 'memberships', role: 'admin' },
+  { slug: 'fee-seasons', role: 'admin' },
+  { slug: 'fee-charges', role: 'admin' },
+  { slug: 'fee-payments', role: 'admin' },
+  { slug: 'fee-waivers', role: 'admin' },
 ]
 
 /** The sidebar a given role gets. Editors never receive `advancedNav`. */

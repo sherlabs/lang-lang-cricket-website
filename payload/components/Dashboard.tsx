@@ -43,7 +43,7 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
         ))}
       </ul>
 
-      <NotificationCentre payload={payload} isAdmin={admin} />
+      <NotificationCentre payload={payload} isAdmin={admin} user={user} />
 
       <MilestonesWidget payload={payload} />
 

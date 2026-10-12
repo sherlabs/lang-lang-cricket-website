@@ -74,6 +74,21 @@ export const officeCopy = {
       total === 0 ? 'No members yet' : `${total} active ${plural(total, 'member', 'members')}, ${noEmail} with no email (past members and the do-not-email list are not counted)`,
     duplicate: (n: number) => `${n} email ${plural(n, 'address is', 'addresses are')} shared by more than one member`,
   },
+  fees: {
+    excludes: 'Archived members, appearances that could not be matched to a member, appearances in games that are not in the match store, and voided rows are not counted.',
+    openNote: 'Figures for the open season are worked out from match data and can change if that data changes (for example after a PlayHQ sync or a player merge). Close the season to freeze them.',
+    paidLabel: 'Paid (all payments to date, targeted payments first)',
+    paidSpecificLabel: 'Paid specifically for this season',
+    quality: (unmatched: number, missing: number) => {
+      const parts: string[] = []
+      if (unmatched > 0) parts.push(`${unmatched} ${plural(unmatched, 'appearance', 'appearances')} could not be matched to a member`)
+      if (missing > 0) parts.push(`${missing} ${plural(missing, 'appearance is', 'appearances are')} in games that are not in the match store (junior games may be missing)`)
+      return `${parts.join(', and ')}, so the totals below may be incomplete.`
+    },
+    drift: (derived: string, stored: string) => `Match data now gives ${derived}; the closed figure is ${stored}. Nothing was changed.`,
+    stat: (members: number, owed: string) => (members === 0 ? 'Nothing owing in the open season (unmatched appearances are not counted)' : `${members} ${plural(members, 'member owes', 'members owe')} ${owed} in match fees (open season, unmatched appearances not counted)`),
+    notification: (members: number, owed: string) => `${members} ${plural(members, 'member owes', 'members owe')} ${owed} in match fees (open season, unmatched appearances not counted)`,
+  },
   landing: {
     empty: 'Nothing else is set up for the committee here yet. When more of the club office is switched on, it will appear on this page.',
     adminOnlyNote: 'Members, and the exports and sends log, are for admins only.',

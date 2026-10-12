@@ -19,6 +19,36 @@ const EXPECTED: Record<string, Record<'anonymous' | 'selector' | 'editor' | 'adm
   members: { anonymous: [], selector: [], editor: [], admin: ALL },
   // The log can be read by admins and written by nobody over REST or the admin; server code writes with the access override.
   'office-audit-log': { anonymous: [], selector: [], editor: [], admin: READ },
+  // WP-2: tiers and memberships are admin-managed; the ledger collections are read-only for admins (only the Fees actions write).
+  'membership-tiers': { anonymous: [], selector: [], editor: [], admin: ALL },
+  memberships: { anonymous: [], selector: [], editor: [], admin: ALL },
+  'fee-seasons': { anonymous: [], selector: [], editor: [], admin: READ },
+  'fee-charges': { anonymous: [], selector: [], editor: [], admin: READ },
+  'fee-payments': { anonymous: [], selector: [], editor: [], admin: READ },
+  'fee-waivers': { anonymous: [], selector: [], editor: [], admin: READ },
+}
+
+/** A valid row for each collection (the matrix probes with real data, so a validation failure cannot read as "denied"). */
+const SAMPLE: Record<string, (ctx: { member: number; tier: number; probeTier: number; n: number; probe: boolean }) => Record<string, unknown>> = {
+  members: ({ n }) => ({ firstName: 'Probe', lastName: `Row${n}`, roles: ['supporter'] }),
+  'office-audit-log': () => ({ at: new Date().toISOString(), action: 'export', module: 'members' }),
+  'membership-tiers': ({ n }) => ({ season: '2031/32', name: `Probe ${n}`, kind: 'free' }),
+  // The seeded row sits in 2031/32; probes use 2032/33 so the one-membership-per-season rule cannot read as a denial.
+  memberships: ({ member, tier, probeTier, probe }) => ({ member, tier: probe ? probeTier : tier, season: probe ? '2032/33' : '2031/32' }),
+  'fee-seasons': ({ n }) => ({ season: `20${40 + (n % 50)}/${41 + (n % 50)}`, status: 'open' }),
+  'fee-charges': ({ member }) => ({ member, season: '2031/32', kind: 'game', date: new Date().toISOString(), amountCents: 100 }),
+  'fee-payments': ({ member }) => ({ member, receivedOn: new Date().toISOString(), amountCents: 100, method: 'cash' }),
+  'fee-waivers': ({ member }) => ({ member, scope: 'amount', amountCents: 100, note: 'probe' }),
+}
+const PATCH: Record<string, Record<string, unknown>> = {
+  members: { notes: 'x' },
+  'office-audit-log': { module: 'other' },
+  'membership-tiers': { name: 'Renamed probe' },
+  memberships: { note: 'probe' },
+  'fee-seasons': { snapshotCount: 1 },
+  'fee-charges': { description: 'probe' },
+  'fee-payments': { note: 'probe' },
+  'fee-waivers': { note: 'changed' },
 }
 
 describe('office access matrix', () => {
@@ -26,6 +56,10 @@ describe('office access matrix', () => {
   const users: Record<string, { id: number; role: string; collection: 'users' } | undefined> = { anonymous: undefined }
   const tokens: Record<string, string> = {}
   const seeded: Record<string, number> = {}
+  const ctx = { member: 0, tier: 0, probeTier: 0, n: 0, probe: false }
+  const wipe = async () => {
+    for (const c of ['fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
+  }
 
   beforeAll(async () => {
     payload = await getTestPayload()
@@ -35,17 +69,25 @@ describe('office access matrix', () => {
       const found = await payload.find({ collection: 'users', where: { email: { equals: `${role}@example.com` } }, limit: 1, depth: 0, overrideAccess: true })
       users[role] = { ...(found.docs[0] as unknown as { id: number; role: string }), collection: 'users' }
     }
-    await clearCollection(payload, 'members')
-    await clearCollection(payload, 'office-audit-log')
+    await wipe()
     const m = await payload.create({ collection: 'members', data: { firstName: 'Matrix', lastName: 'Member', roles: ['supporter'], email: 'matrix@example.org' } as never, overrideAccess: true })
     seeded.members = m.id
+    ctx.member = m.id
     const a = await payload.create({ collection: 'office-audit-log', data: { at: new Date().toISOString(), action: 'export', module: 'members', rowCount: 1 }, overrideAccess: true })
     seeded['office-audit-log'] = a.id
+    for (const slug of Object.keys(SAMPLE).filter((s) => !(s in seeded))) {
+      const row = await payload.create({ collection: slug as CollectionSlug, data: SAMPLE[slug](ctx) as never, overrideAccess: true })
+      seeded[slug] = row.id
+      if (slug === 'membership-tiers') {
+        ctx.tier = row.id
+        ctx.probeTier = (await payload.create({ collection: 'membership-tiers', data: { season: '2032/33', name: 'Probe tier', kind: 'free' } as never, overrideAccess: true })).id
+      }
+    }
+    ctx.n = 1000
   }, 120_000)
 
   afterAll(async () => {
-    await clearCollection(payload, 'members')
-    await clearCollection(payload, 'office-audit-log')
+    await wipe()
     await clearCollection(payload, 'users')
     await destroyTestPayload(payload)
   })
@@ -54,7 +96,7 @@ describe('office access matrix', () => {
     const collection = slug as CollectionSlug
     const user = users[who] as never
     const base = { collection, user, overrideAccess: false, depth: 0 } as const
-    const data = slug === 'members' ? { firstName: 'Probe', lastName: 'Row', roles: ['supporter'] } : { at: new Date().toISOString(), action: 'export', module: 'members' }
+    const data = SAMPLE[slug]({ ...ctx, n: ++ctx.n, probe: true })
     try {
       switch (op) {
         case 'find': {
@@ -73,7 +115,7 @@ describe('office access matrix', () => {
           return true
         }
         case 'update':
-          return Boolean(await payload.update({ ...base, id: seeded[slug], data: (slug === 'members' ? { notes: 'x' } : { module: 'other' }) as never }))
+          return Boolean(await payload.update({ ...base, id: seeded[slug], data: PATCH[slug] as never }))
         case 'delete': {
           // Delete a throw-away row so the seeded one stays for later cases.
           const probe = await payload.create({ collection, data: data as never, overrideAccess: true })

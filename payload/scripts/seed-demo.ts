@@ -24,6 +24,9 @@
  * It also writes about 40 club office members (invented people, example.org addresses; 6 with no email, 9 with no phone, 3 with neither,
  * 4 juniors with a guardian) when `members` is empty, plus links for the first demo players.
  *
+ * It also writes demo membership fees (types, memberships, part payments, a credit, a waiver, a closed past season, a household with a split
+ * payment) when there are no membership types yet.
+ *
  * Idempotent: the `club` global is seeded only when it was never saved, and each collection is
  * filled only when it is empty. Run `seed:admin` separately for the first user.
  */
@@ -42,6 +45,8 @@ import { seedDemoNets } from '../seed/demo-nets'
 import { seedDemoVotes } from '../seed/demo-votes'
 import { seedDemoSocial, seedDemoSocialQueue } from '../seed/demo-social'
 import { seedDemoMembers } from '../seed/demo-members'
+import { seedDemoFees } from '../seed/demo-fees'
+import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
@@ -502,6 +507,7 @@ async function main() {
     await seedDemoSocial(payload)
     await seedDemoSocialQueue(payload)
     console.log(`[seed:demo] club office members: ${await seedDemoMembers(payload)} added`)
+    console.log(`[seed:demo] club office fees: ${await seedDemoFees(payload, currentClubDate())}`)
   } finally {
     await payload.destroy()
   }
