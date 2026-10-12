@@ -11,6 +11,7 @@ import type { NetworkAdapter, PublishResult } from '@/lib/social/adapters/types'
 import { claimDue, finishPost, publishDue } from '@/lib/social/publisher'
 import { clearCollection, destroyTestPayload, getTestPayload, tokenFor } from './helpers'
 import { insertPost, makeDue, plainSpec, postRow, q, resetQueue, seedPlayersAndGame, targetRows } from './social-queue-helpers'
+import { resetMatches } from './match-helpers'
 import { resetSelection } from './selection-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
@@ -39,6 +40,7 @@ describe('social publisher', () => {
     vi.unstubAllGlobals()
     await resetQueue(payload)
     await resetSelection(payload)
+    await resetMatches(payload)
     await clearCollection(payload, 'users')
     await clearCollection(payload, 'sponsors')
     await clearCollection(payload, 'events')

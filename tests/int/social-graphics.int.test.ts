@@ -30,6 +30,7 @@ const calls: string[] = []
 describe('social graphics', () => {
   let payload: Payload
   let admin: string, editor: string, selector: string, disabled: string
+  let selectorId = 0
   let riley: number, jamie: number, casey: number, near: number, juniorNear: number
   const gameId = importedGameId({ date: '2026-10-09', gradeName: 'B Grade', teamName: 'Test B', opponent: 'Rovers', gameRef: null })
   const year = currentSeasonStartYear()
@@ -59,6 +60,8 @@ describe('social graphics', () => {
     payload = await getTestPayload()
     await clearCollection(payload, 'users')
     ;[admin, editor, selector] = [await tokenFor(payload, 'admin'), await tokenFor(payload, 'editor'), await tokenFor(payload, 'selector')]
+    // The sheet's author must be a real user (a foreign key), whatever ids earlier test files used up.
+    selectorId = (await payload.find({ collection: 'users', where: { email: { equals: 'selector@example.com' } }, limit: 1, depth: 0 })).docs[0].id
     // A disabled committee member: signed in as far as the token goes, but nobody.
     disabled = await tokenFor(payload, 'editor', 'gone@example.com')
     const gone = await payload.find({ collection: 'users', where: { email: { equals: 'gone@example.com' } }, limit: 1, depth: 0 })
@@ -124,7 +127,7 @@ describe('social graphics', () => {
     await makeFixture(payload, { gameId: 'game-social', localDate: '2026-10-17' })
     const squad = await makeSquad(payload, year, 'grade-b', 'B Grade')
     for (const id of [riley, jamie, casey]) await addToSquad(payload, squad.id, id)
-    const selector = { id: 1, role: 'selector', collection: 'users', email: 'x@example.com' } as never
+    const selector = { id: selectorId, role: 'selector', collection: 'users', email: 'selector@example.com' } as never
     await saveSheet(selector, { gameId: 'game-social', expectedRevision: 0, size: 11, markedReady: true, slots: [{ playerId: riley, isCaptain: true }, { playerId: jamie, isKeeper: true }, { playerId: casey }, { guestName: 'Visiting Guest' }] } as never)
     await publishSheets(selector, { gameIds: ['game-social'], announce: false, acknowledged: true })
   }

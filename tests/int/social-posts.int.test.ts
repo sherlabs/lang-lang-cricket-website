@@ -12,6 +12,7 @@ import { publishDue } from '@/lib/social/publisher'
 import { utcToClubParts } from '@/lib/social/schedule-time'
 import { clearCollection, destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor } from './helpers'
 import { insertPost, postRow, q, resetQueue, seedPlayersAndGame, targetRows } from './social-queue-helpers'
+import { resetMatches } from './match-helpers'
 import { resetSelection } from './selection-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
@@ -52,6 +53,7 @@ describe('social posts: actions and access', () => {
     await resetQueue(payload)
     await clearCollection(payload, 'sponsors')
     await resetSelection(payload)
+    await resetMatches(payload)
     await clearCollection(payload, 'users')
     await resetGlobal(payload, 'social-settings')
     await resetGlobal(payload, 'club')

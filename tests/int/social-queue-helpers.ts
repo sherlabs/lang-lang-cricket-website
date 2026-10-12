@@ -7,6 +7,7 @@ import { writeBundle } from '@/lib/match-store/write'
 import { playerTables } from '@/lib/players/db'
 import type { PostSpec } from '@/lib/social/post-spec'
 import { FIXTURE_DATA } from '../helpers/social-fixtures'
+import { resetMatches } from './match-helpers'
 import { makePlayer } from './selection-helpers'
 
 const CTX = { disableRevalidate: true } as const
@@ -67,6 +68,7 @@ export async function makeDue(payload: Payload, postId: number): Promise<void> {
 
 /** Visible players with season rows (so the junior rule can read statistics) and one stored game they played in. */
 export async function seedPlayersAndGame(payload: Payload) {
+  await resetMatches(payload)
   const riley = (await makePlayer(payload, 'Riley', 'Starr')).id
   const jamie = (await makePlayer(payload, 'Jamie', 'Junior', { isJunior: true })).id
   const casey = (await makePlayer(payload, 'Casey', 'Consent', { isJunior: true, socialOptIn: true })).id

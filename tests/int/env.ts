@@ -27,6 +27,9 @@ export function intTestEnv(): Record<string, string> {
     PAYLOAD_SECRET: process.env.PAYLOAD_SECRET ?? fileEnv.PAYLOAD_SECRET ?? 'int-test-secret',
     NEXT_PUBLIC_SERVER_URL: 'http://localhost:3000',
     PAYLOAD_PUSH: 'false',
+    // One Payload per test file and the pools are not all released before the next file starts; a smaller pool keeps the whole run
+    // under Postgres's 100 connections (2 deadlocks Payload's own transactions, so not lower than 3).
+    DATABASE_POOL_MAX: '3',
     // The statlab export filename test expects Lang Lang's prefix (config/site.ts).
     EXPORT_FILENAME_PREFIX: 'langlang',
     // Never a real token in tests; files the plugin would store go through PAYLOAD_BLOB_FAKE + mocks.
