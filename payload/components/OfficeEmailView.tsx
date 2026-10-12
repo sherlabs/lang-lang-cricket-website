@@ -16,6 +16,8 @@ const REASON_WORDS: Record<string, string> = { unsubscribed: 'Unsubscribed', man
 const when = (iso: string | null): string => (iso ? new Date(iso).toLocaleString(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE, day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '')
 
 /** The compose fields, shared by the new-email form and the draft editor. */
+const pageHref = (q: string, page: number) => `?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page) }).toString()}`
+
 export function ComposeFields({ subject = '', body = '', status = 'active', role = '', juniors = false, segment = '' }: { subject?: string; body?: string; status?: string; role?: string; juniors?: boolean; segment?: string }) {
   return (
     <>
@@ -83,7 +85,7 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
       </AdminPage>
     )
   }
-  const overview = await getEmailOverview(req.user)
+  const overview = await getEmailOverview(req.user, { query: first(view.searchParams?.q), page: Number(first(view.searchParams?.page)) || 1 })
   if (!overview) notFound()
   const sp = view.searchParams ?? {}
   const notice = first(sp.notice)
@@ -136,6 +138,14 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
         </label>
         <button type="submit" className="btn btn--style-secondary btn--size-medium">Do not email this address</button>
       </form>
+      <form method="get" className="office-inline" role="search">
+        <label>
+          <span className="club-muted">Find an address</span>
+          <input name="q" type="search" defaultValue={overview.suppressionQuery} maxLength={100} autoComplete="off" />
+        </label>
+        <button type="submit" className="btn btn--style-secondary btn--size-medium">Search</button>
+      </form>
+      {overview.suppressions.length === 0 && overview.suppressionQuery ? <p className="club-muted">No address on the list matches that.</p> : null}
       {overview.suppressions.length > 0 ? (
         <ul className="diary-list">
           {overview.suppressions.map((s) => (
@@ -151,6 +161,13 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
             </li>
           ))}
         </ul>
+      ) : null}
+      {overview.suppressionPages > 1 ? (
+        <p className="club-muted">
+          Page {overview.suppressionPage} of {overview.suppressionPages}.{' '}
+          {overview.suppressionPage > 1 ? <a href={pageHref(overview.suppressionQuery, overview.suppressionPage - 1)}>Earlier</a> : null}{' '}
+          {overview.suppressionPage < overview.suppressionPages ? <a href={pageHref(overview.suppressionQuery, overview.suppressionPage + 1)}>Later</a> : null}
+        </p>
       ) : null}
     </AdminPage>
   )

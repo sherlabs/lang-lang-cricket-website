@@ -218,7 +218,7 @@ describe('bulk email', () => {
       expect(sent.map((m) => m.to).sort()).toEqual(['alice@example.org', 'bob@example.org', 'fay@example.org'])
       expect(sent.some((m) => m.to === 'cara@example.org' || m.to === 'dan@example.org' || m.to === 'gus@example.org')).toBe(false)
       for (const m of sent) {
-        expect(m.headers?.['List-Unsubscribe']).toMatch(/^<http:\/\/localhost:3000\/unsubscribe\/[\w.-]+>$/)
+        expect(m.headers?.['List-Unsubscribe']).toMatch(/^<http:\/\/localhost:3000\/api\/public\/unsubscribe\/[\w.-]+>$/)
         expect(m.headers?.['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
         expect(m.from).toEqual({ name: expect.any(String), address: 'club@example.org' })
         expect(m.text).toContain('Unsubscribe: http://localhost:3000/unsubscribe/')
@@ -293,6 +293,42 @@ describe('bulk email', () => {
       expect(mockMail.sent().map((m) => m.to)).not.toContain(queued[0].email)
       expect(mockMail.sent()).toHaveLength(2)
       expect((await preview(id)).counts).toEqual({ queued: 0, sent: 2, failed: 0, skipped: 1 })
+    })
+    it('the address in the List-Unsubscribe header takes the one-click POST and records the opt-out', async () => {
+      const id = await campaign()
+      await sendAll(id)
+      const mail = mockMail.sent().find((m) => m.to === 'bob@example.org')!
+      const href = /^<(.+)>$/.exec(mail.headers!['List-Unsubscribe'])![1]
+      const url = new URL(href)
+      const token = url.pathname.split('/').pop()!
+      expect(url.pathname).toBe(`/api/public/unsubscribe/${token}`)
+      const { POST } = await import('@/app/api/public/unsubscribe/[token]/route')
+      const res = await POST(new Request(href, { method: 'POST', headers: { 'x-test-ip': '198.51.100.9', 'content-type': 'application/x-www-form-urlencoded' }, body: mail.headers!['List-Unsubscribe-Post'] }), { params: Promise.resolve({ token }) })
+      expect(res.status).toBe(200)
+      expect(await suppressed('bob@example.org')).toBe(1)
+    })
+    it('hard-deleting a member with no records blanks the address held on their sent rows', async () => {
+      const id = await campaign()
+      await sendAll(id)
+      await payload.delete({ collection: 'members', id: ids.bob, overrideAccess: true })
+      const rows = await recipients(id)
+      expect(rows.some((r) => r.email === 'bob@example.org')).toBe(false)
+      expect(rows.filter((r) => r.status === 'sent')).toHaveLength(3)
+    })
+    it('Stop sending ends the batch already running', async () => {
+      vi.stubEnv('EMAIL_BATCH_SIZE', '50')
+      const id = await campaign()
+      await q.startSend(user.admin, id, 3)
+      let sleeps = 0
+      const stopAfterFirst = async () => {
+        sleeps += 1
+        if (sleeps === 1) await q.stopSend(user.admin, id)
+      }
+      const r = await q.runBatchFor(id, { sleep: stopAfterFirst })
+      expect(r).toMatchObject({ sent: 1, stopped: true })
+      expect(mockMail.sent()).toHaveLength(1)
+      expect((await recipients(id)).filter((x) => x.status === 'sending')).toHaveLength(0)
+      expect((await preview(id)).status).toBe('cancelled')
     })
     it('a person marked do-not-email after the audience was frozen is skipped too', async () => {
       vi.stubEnv('EMAIL_BATCH_SIZE', '1')
@@ -484,8 +520,11 @@ describe('bulk email', () => {
       expect((await unsubPost(token)).status).toBe(200)
       expect((await unsubPost(token)).status).toBe(200)
       expect(await suppressed('alice@example.org')).toBe(1)
-      const { GET } = (await import('@/app/api/public/unsubscribe/[token]/route')) as unknown as { GET?: unknown }
-      expect(GET).toBeUndefined()
+      // A client that opens the one-click address lands on the confirm page; nothing is changed by a GET.
+      const { GET } = await import('@/app/api/public/unsubscribe/[token]/route')
+      const g = await GET(new Request(`${ORIGIN}/api/public/unsubscribe/${token}`), { params: Promise.resolve({ token }) })
+      expect(g.status).toBe(303)
+      expect(g.headers.get('location')).toBe(`/unsubscribe/${token}`)
     })
     it('resending skips the person who opted out', async () => {
       const { rec } = await sentRecipient('bob@example.org')

@@ -76,7 +76,10 @@ describe('email guards', () => {
     }
     const route = code('app/api/public/unsubscribe/[token]/route.ts')
     expect(route).toMatch(/export async function POST/)
-    expect(route).not.toMatch(/export async function GET/)
+    // GET exists only to send a browser on to the confirm page: it must never touch the database.
+    const get = /export async function GET[\s\S]*?\n}\n/.exec(route)?.[0] ?? ''
+    expect(get).toContain('303')
+    expect(get).not.toMatch(/payload|unsubscribe\(|resolveUnsub/)
   })
 
   it('opening the unsubscribe page writes nothing: only the actions call the writers', () => {

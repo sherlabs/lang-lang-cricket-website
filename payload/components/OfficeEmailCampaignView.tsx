@@ -87,7 +87,7 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
             <h2 id="preview">What people will see</h2>
             <p className="club-muted">Shown with the sample first name Sam. Each person gets their own name and their own unsubscribe link.</p>
             <p><strong>Subject:</strong> {page.preview.subject}</p>
-            {page.preview.html ? <iframe title="Email preview" sandbox="" srcDoc={page.preview.html} style={{ width: '100%', minHeight: '28rem', border: '1px solid var(--theme-elevation-150)', background: '#fff' }} /> : <p className="club-muted">The preview is not available until the message is fixed.</p>}
+            {page.preview.html ? <iframe title="Email preview" sandbox="" srcDoc={page.preview.html} style={{ width: '100%', minHeight: '28rem', border: '1px solid var(--theme-elevation-150)', background: 'var(--theme-elevation-0)' }} /> : <p className="club-muted">The preview is not available until the message is fixed.</p>}
           </section>
 
           <section className="office-box" aria-labelledby="send">

@@ -13,7 +13,7 @@ import { audienceQuery, resolveAudience, type AudienceSpec, type Candidate, type
 import { EMAIL_MAX_ATTEMPTS, nextEmailAttempt } from './backoff'
 import { brandFromTheme } from './brand'
 import { emailLimits, senderIdentity, type SenderIdentity } from './env'
-import { campaignHeaders, unsubscribeUrl } from './headers'
+import { campaignHeaders, oneClickUnsubscribeUrl, unsubscribeUrl } from './headers'
 import { usesTag, type MergeContext } from './merge'
 import { footerLines, renderCampaign, type MailBrand } from './render'
 import { sendCampaignMessage } from './send'
@@ -199,7 +199,8 @@ async function messageFor(payload: Payload, ctx: MailContext, campaign: SampleCa
     const m = (await payload.findByID({ collection: 'members', id: rec.memberId, depth: 0, select: { volunteerLinkVersion: true }, overrideAccess: true }).catch(() => null)) as { volunteerLinkVersion?: number | null } | null
     if (m) volunteerLink = `${ctx.serverURL}/volunteer/${volunteerToken(rec.memberId, m.volunteerLinkVersion ?? 0)}`
   }
-  const link = unsubscribeUrl(ctx.serverURL, unsubToken(rec.id))
+  const tok = unsubToken(rec.id)
+  const link = unsubscribeUrl(ctx.serverURL, tok)
   const mail = renderCampaign({ subject: campaign.subject, body: campaign.body, ctx: { firstName: rec.firstName, clubName: ctx.clubName, volunteerLink }, brand: ctx.brand, footer: footerFor(ctx), unsubscribeUrl: link })
   return {
     to: rec.email,
@@ -208,9 +209,13 @@ async function messageFor(payload: Payload, ctx: MailContext, campaign: SampleCa
     subject: mail.subject,
     html: mail.html,
     text: mail.text,
-    headers: campaignHeaders(link),
+    headers: campaignHeaders(oneClickUnsubscribeUrl(ctx.serverURL, tok)),
     idempotencyKey: `campaign-${rec.id}`,
   }
+}
+
+async function isSending(payload: Payload, campaignId: number): Promise<boolean> {
+  return (await rows(payload, sql`SELECT 1 FROM "payload"."email_campaigns" WHERE "id" = ${campaignId} AND "status" = 'sending'`)).length === 1
 }
 
 /** One batch: claim, then for each row re-check who may be mailed, send, record. Stops early if the provider rejects the key. */
@@ -227,6 +232,12 @@ export async function runBatch(payload: Payload, campaignId: number, deps: Batch
   for (const rec of claimed) {
     if (!first) await sleep(gap)
     first = false
+    // Stop sending has to end the batch in flight too: look again before every send and hand back what is left.
+    if (!(await isSending(payload, campaignId))) {
+      for (const rest of claimed.slice(claimed.indexOf(rec))) await release(payload, rest, token, new Date(), 'Sending was stopped.')
+      result.stopped = true
+      break
+    }
     result.processed += 1
     if (!rec.email) {
       await finish(payload, rec, token, { status: 'skipped-no-email' })

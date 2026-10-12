@@ -7,6 +7,12 @@ export const dynamic = 'force-dynamic'
 
 const headers = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex' }
 
+/** GET: a client that opens the one-click address lands on the confirm page. It never changes anything. */
+export async function GET(_request: Request, ctx: { params: Promise<{ token: string }> }): Promise<Response> {
+  const { token } = await ctx.params
+  return new Response(null, { status: 303, headers: { ...headers, Location: `/unsubscribe/${encodeURIComponent(token)}` } })
+}
+
 /**
  * POST: the one-click unsubscribe a mail program sends (RFC 8058, `List-Unsubscribe=One-Click`). The signed token is the whole
  * authority (and it keeps working if sending is later switched off), so there is no sign-in, no origin check and no rate limit for a valid token. A token that does not check is a plain 404.

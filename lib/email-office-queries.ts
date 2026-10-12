@@ -11,7 +11,7 @@ import { templateProblem } from './email/merge'
 import { sendCampaignMessage } from './email/send'
 import { getEmailAdapter } from './email/select'
 import { addSuppressionForAddress } from './email/suppressions'
-import { campaignHeaders } from './email/headers'
+import { campaignHeaders, oneClickUnsubscribeUrl } from './email/headers'
 import { isValidEmail, normaliseEmail } from './office/member-input'
 import { sanitiseSummary } from './office/audit'
 import { writeAudit } from './office/audit-write'
@@ -38,22 +38,30 @@ const countsOf = (c: CampaignDoc) => ({ queued: c.counts?.queued ?? 0, sent: c.c
 
 export type CampaignRow = { id: number; subject: string; status: CampaignDoc['status']; queued: number; sent: number; failed: number; skipped: number; createdAt: string; sentAt: string | null }
 export type SuppressionRow = { id: number; email: string | null; reason: string; at: string }
-export type EmailOverview = { campaigns: CampaignRow[]; suppressions: SuppressionRow[]; suppressionTotal: number; fromAddress: string; providerLive: boolean; adapterId: string }
+export type EmailOverview = { campaigns: CampaignRow[]; suppressions: SuppressionRow[]; suppressionTotal: number; suppressionPage: number; suppressionPages: number; suppressionQuery: string; fromAddress: string; providerLive: boolean; adapterId: string }
 
-export async function getEmailOverview(user: unknown): Promise<EmailOverview | null> {
+const SUPPRESSION_PAGE = 100
+
+/** `query` narrows the unsubscribed list to addresses containing the text; `page` is 1-based. */
+export async function getEmailOverview(user: unknown, opts: { query?: string; page?: number } = {}): Promise<EmailOverview | null> {
   if (!adminOn(user)) return null
   const payload = await getPayloadClient()
   const adapter = getEmailAdapter()
   const ctx = await loadMailContext(payload)
   if (!adapter || !ctx) return null
+  const query = (opts.query ?? '').trim().toLowerCase().slice(0, 100)
+  const page = Number.isInteger(opts.page) && (opts.page as number) > 0 ? Math.min(opts.page as number, 10_000) : 1
   const [campaigns, sup] = await Promise.all([
     payload.find({ collection: 'email-campaigns', sort: '-createdAt', limit: 30, depth: 0, user, overrideAccess: false }),
-    payload.find({ collection: 'email-suppressions', sort: '-at', limit: 100, depth: 0, user, overrideAccess: false }),
+    payload.find({ collection: 'email-suppressions', sort: '-at', limit: SUPPRESSION_PAGE, page, ...(query ? { where: { email: { contains: query } } } : {}), depth: 0, user, overrideAccess: false }),
   ])
   return {
     campaigns: (campaigns.docs as unknown as CampaignDoc[]).map((c) => ({ id: c.id, subject: c.subject, status: c.status, ...countsOf(c), createdAt: c.createdAt, sentAt: c.sentAt ?? null })),
     suppressions: (sup.docs as unknown as { id: number; email?: string | null; reason: string; at: string }[]).map((s) => ({ id: s.id, email: s.email ?? null, reason: s.reason, at: s.at })),
     suppressionTotal: sup.totalDocs,
+    suppressionPage: page,
+    suppressionPages: Math.max(sup.totalPages, 1),
+    suppressionQuery: query,
     fromAddress: `${ctx.identity.name} <${ctx.identity.address}>`,
     providerLive: adapter.live,
     adapterId: adapter.id,
@@ -182,7 +190,7 @@ export async function sendTestCopy(user: unknown, idRaw: unknown): Promise<Actio
     subject: `[TEST] ${mail.subject}`,
     html: mail.html,
     text: mail.text,
-    headers: campaignHeaders(unsubscribe),
+    headers: campaignHeaders(oneClickUnsubscribeUrl(ctx.serverURL, 'test')),
   }, { mode: 'test' })
   return out.status === 'sent' ? { ok: true, notice: 'test-sent' } : fail('save')
 }

@@ -81,6 +81,9 @@ export const Members: CollectionConfig = {
           const used = await req.payload.count({ collection, where: { member: { equals: id as number } }, overrideAccess: true, req })
           if (used.totalDocs > 0) throw new ValidationError({ errors: [{ path: 'firstName', message: 'This member has fee records or volunteer records, so they cannot be deleted. Mark them as a past member, or remove their personal details, instead.' }] })
         }
+        // The recipient rows keep only a nulled member link after the delete, so blank the copied address and name now.
+        const { scrubMemberRecipients } = await import('../../lib/email/recipients')
+        await scrubMemberRecipients(req.payload, id as number)
       },
     ],
     beforeValidate: [
