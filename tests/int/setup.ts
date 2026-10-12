@@ -31,6 +31,12 @@ export default async function setup() {
       env: { ...process.env, ...env },
       stdio: ['ignore', 'ignore', 'inherit'],
     })
+    // Sentinel: per-file truncation assumes migrations seed no rows. If one ever does, say so loudly.
+    const tables = (await lock.query("SELECT tablename FROM pg_tables WHERE schemaname = 'payload' AND tablename <> 'payload_migrations'")).rows
+    for (const { tablename } of tables) {
+      const n = Number((await lock.query(`SELECT count(*) AS n FROM payload."${tablename}"`)).rows[0].n)
+      if (n > 0) throw new Error(`[int] migrations left ${n} row(s) in payload.${tablename}; per-file truncation would erase them. Fix the data migration or revisit the baseline decision.`)
+    }
   } catch (err) {
     await lock.end()
     throw err

@@ -42,9 +42,27 @@ export async function clearCollection(payload: Payload, collection: CollectionSl
  * `global._payload`, so a destroyed instance would be handed to the next file.
  */
 export async function destroyTestPayload(payload: Payload | undefined): Promise<void> {
+  // payload.destroy() (drizzle adapter, 3.90) only clears schema state and never ends the pg pool, so every
+  // file used to leave up to DATABASE_POOL_MAX idle connections open for the rest of the run (76 files ~ 230
+  // connections against Postgres's limit; WP-0 hypothesis H5, proven by `pnpm test:int:leaks`). Payload's own
+  // connect() also checks one client out of the pool and never releases it, so pool.end() alone waits forever:
+  // end every client directly.
+  type PgClient = { end: () => Promise<void> | void }
+  const pool = (payload?.db as unknown as { pool?: { end?: () => Promise<void>; ended?: boolean; _clients?: PgClient[] } } | undefined)?.pool
   try {
     await payload?.destroy()
   } finally {
+    try {
+      if (pool && !pool.ended) {
+        // Closing each client ends its backend. pool.end() is not awaited: it waits for the client Payload
+        // checked out and never released (now closed, but pg-pool only drops checked-out clients on release),
+        // which cost 5 s per file when it was raced.
+        await Promise.allSettled((pool._clients ?? []).map((c) => c.end()))
+        void Promise.resolve(pool.end?.()).catch(() => undefined)
+      }
+    } catch {
+      // already ended; nothing to release
+    }
     // Even when destroy throws, the next file must not be handed this instance.
     ;(globalThis as { _payload?: Map<string, unknown> })._payload?.clear()
   }

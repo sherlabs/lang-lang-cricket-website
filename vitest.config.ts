@@ -3,6 +3,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { intTestEnv } from './tests/int/env'
 
+import PathSequencerClass from './tests/sequencer'
+
 const root = path.dirname(fileURLToPath(import.meta.url))
 
 const shared = {
@@ -22,6 +24,8 @@ const server = { deps: { inline: [/@payloadcms\//, /node_modules\/payload\//, /@
 
 export default defineConfig({
   test: {
+    // Root-level (vitest ignores it per project): fixed path order for unit and int, see tests/sequencer.ts.
+    sequence: { sequencer: PathSequencerClass },
     projects: [
       {
         ...shared,

@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "test": "vitest run --project unit",
     "test:int": "vitest run --project int",
+    "test:int:leaks": "INT_LEAKS=1 vitest run --project int",
     "payload": "payload",
     "generate": "payload generate:types && payload generate:importmap",
     "check:generated": "pnpm generate && git diff --exit-code payload-types.ts 'app/(payload)/admin/importMap.js'",

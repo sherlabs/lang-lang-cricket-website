@@ -60,6 +60,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await destroyTestPayload(payload)
+  delete process.env.PAYLOAD_BLOB_FAKE // set in vi.hoisted above; do not leak it into the next file
 })
 
 beforeEach(() => {
