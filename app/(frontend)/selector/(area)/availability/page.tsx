@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AvailabilitySectionNav } from '@/components/selector/section-nav'
 import { AvailabilityBoardView } from '@/components/selector/availability-board'
 import { RefreshFixtures } from '@/components/selector/refresh-fixtures'
 import { CLUB_COUNTRY, selectorPaths } from '@/config/site'
@@ -17,10 +18,8 @@ export default async function AvailabilityPage({ searchParams }: Props) {
   const board = await loadAvailabilityBoard(user, { gradeId: typeof sp.grade === 'string' ? sp.grade : null })
   return (
     <main className="container-site max-w-5xl py-6 sm:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="display text-3xl text-brand-black">Availability</h1>
-        <Link href={selectorPaths.link} className="inline-flex min-h-11 items-center font-semibold text-brand-black underline underline-offset-4">Player link</Link>
-      </div>
+      <AvailabilitySectionNav current="availability" />
+      <h1 className="display text-3xl text-brand-black">Availability</h1>
       {!board.linkEnabled && <p className="mt-3 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">The player link is switched off, so players cannot reply themselves. Switch it on under Player link.</p>}
       {board.guessing && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 ring-1 ring-red-200">Someone is guessing PINs on the availability link. New sign-ins are paused for a while. Consider rotating the link.</p>}
       {board.pinClashes.length > 0 && (

@@ -8,7 +8,7 @@ const CTX = { disableRevalidate: true } as const
 export async function resetSelection(payload: Payload): Promise<void> {
   await resetPlayers(payload)
   await payload.db.drizzle.execute(
-    sql.raw('TRUNCATE "payload"."best_player_ballots", "payload"."team_sheets", "payload"."availability", "payload"."squad_members", "payload"."squads", "payload"."selection_fixtures", "payload"."player_selection_profiles", "payload"."throttle_hits" RESTART IDENTITY CASCADE'),
+    sql.raw('TRUNCATE "payload"."net_attendance", "payload"."net_sessions", "payload"."best_player_ballots", "payload"."team_sheets", "payload"."availability", "payload"."squad_members", "payload"."squads", "payload"."selection_fixtures", "payload"."player_selection_profiles", "payload"."throttle_hits" RESTART IDENTITY CASCADE'),
   )
   await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."selection_settings"'))
   await payload.db.drizzle.execute(sql.raw(`DELETE FROM "payload"."announcements" WHERE "auto_key" LIKE 'teams:%'`))

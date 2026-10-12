@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AvailabilitySectionNav } from '@/components/selector/section-nav'
 import { btnPrimary, btnQuiet } from '@/components/selector/styles'
 import { CopyButton } from '@/components/selector/ui'
 import { selectorPaths } from '@/config/site'
@@ -20,6 +21,7 @@ export default async function LinkPage({ searchParams }: Props) {
   const url = `${club.siteUrl.replace(/\/$/, '')}${info.path}`
   return (
     <main className="container-site max-w-xl py-6 sm:py-10">
+      <AvailabilitySectionNav current="link" />
       <h1 className="display text-3xl text-brand-black">Player link</h1>
       <p className="mt-2 text-sm leading-relaxed text-brand-grey">
         One link for the whole club. Players open it, type their name and PIN, and tell you if they are in, maybe or out for each game. It shows each player only their own answers.

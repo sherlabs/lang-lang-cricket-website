@@ -28,7 +28,7 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   })
 
   it('every exported function of the selector query files checks the caller\'s role first', () => {
-    for (const file of ['lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts', 'lib/selector-votes-queries.ts']) {
+    for (const file of ['lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts', 'lib/selector-votes-queries.ts', 'lib/nets-queries.ts']) {
       const text = code(read(file))
       const fns = [...text.matchAll(/export async function (\w+)\(([^)]*)\)[^{]*\{\n([\s\S]*?)\n\}/g)]
       expect(fns.length, file).toBeGreaterThan(3)
@@ -40,7 +40,7 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   })
 
   it('every selector server action starts with requireSelection()', () => {
-    for (const [file, min] of [['app/(frontend)/selector/board-actions.ts', 12], ['app/(frontend)/selector/team-actions.ts', 3], ['app/(frontend)/selector/votes-actions.ts', 4]] as const) {
+    for (const [file, min] of [['app/(frontend)/selector/board-actions.ts', 12], ['app/(frontend)/selector/team-actions.ts', 3], ['app/(frontend)/selector/votes-actions.ts', 4], ['app/(frontend)/selector/nets-actions.ts', 10]] as const) {
       const text = code(read(file))
       const fns = [...text.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([\s\S]*?)\n\}/g)]
       expect(fns.length, file).toBeGreaterThanOrEqual(min)
@@ -70,12 +70,12 @@ describe('availability and squads guards (announce-teams spec 2, 4)', () => {
   it('phones, PINs and selection data are in no export column set', () => {
     for (const file of ['lib/stats/statlab-columns.ts', 'lib/stats/csv.ts', 'lib/stats/statlab.ts', 'lib/history-import/export.ts']) {
       if (!fs.existsSync(path.join(root, file))) continue
-      expect(/phone|pinHash|player-selection|otc/i.test(read(file)), file).toBe(false)
+      expect(/phone|pinHash|player-selection|otc|net-attendance|net_attendance|guestName|checkedIn|attendance/i.test(read(file)), file).toBe(false)
     }
   })
 
   it('the new paths sit inside the roots the brand-hex and club-name guards scan', () => {
-    for (const p of ['app/(frontend)/availability', 'components/availability', 'components/selector', 'lib/availability.ts', 'lib/availability-link.ts', 'lib/availability-public.ts', 'lib/availability-throttle.ts', 'lib/selection', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts', 'lib/teams-queries.ts', 'lib/team-status.ts', 'app/(frontend)/teams', 'components/teams', 'app/(frontend)/votes', 'components/votes', 'lib/votes', 'lib/votes-queries.ts', 'lib/selector-votes-queries.ts', 'app/api/admin/votes-export']) {
+    for (const p of ['app/(frontend)/availability', 'components/availability', 'components/selector', 'lib/availability.ts', 'lib/availability-link.ts', 'lib/availability-public.ts', 'lib/availability-throttle.ts', 'lib/selection', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-profile-queries.ts', 'lib/selector-team-queries.ts', 'lib/teams-queries.ts', 'lib/team-status.ts', 'app/(frontend)/teams', 'components/teams', 'app/(frontend)/votes', 'components/votes', 'lib/votes', 'lib/votes-queries.ts', 'lib/selector-votes-queries.ts', 'app/api/admin/votes-export', 'lib/nets', 'lib/nets-queries.ts', 'components/nets']) {
       expect(fs.existsSync(path.join(root, p)), p).toBe(true)
       expect(/^(app|components|lib|payload|config)\//.test(p), p).toBe(true)
     }

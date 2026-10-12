@@ -103,6 +103,8 @@ export interface Config {
     'squad-members': SquadMember;
     'team-sheets': TeamSheet;
     'best-player-ballots': BestPlayerBallot;
+    'net-sessions': NetSession;
+    'net-attendance': NetAttendance;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -156,6 +158,8 @@ export interface Config {
     'squad-members': SquadMembersSelect<false> | SquadMembersSelect<true>;
     'team-sheets': TeamSheetsSelect<false> | TeamSheetsSelect<true>;
     'best-player-ballots': BestPlayerBallotsSelect<false> | BestPlayerBallotsSelect<true>;
+    'net-sessions': NetSessionsSelect<false> | NetSessionsSelect<true>;
+    'net-attendance': NetAttendanceSelect<false> | NetAttendanceSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1363,9 +1367,30 @@ export interface PlayerSelectionProfile {
   role?: ('batter' | 'bowler' | 'all-rounder' | 'keeper') | null;
   canKeep?: boolean | null;
   /**
-   * Private to selectors.
+   * Shown on the selector player card only.
+   */
+  battingStyle?: ('right-hand' | 'left-hand') | null;
+  /**
+   * Shown on the selector player card only.
+   */
+  bowlingStyle?:
+    | (
+        | 'none'
+        | 'right-arm fast'
+        | 'right-arm medium'
+        | 'right-arm off-break'
+        | 'right-arm leg-break'
+        | 'left-arm fast'
+        | 'left-arm medium'
+        | 'left-arm orthodox'
+        | 'left-arm wrist spin'
+      )
+    | null;
+  /**
+   * Private to selectors, or to the committee only when "Staff only" is ticked.
    */
   notes?: string | null;
+  notesStaffOnly?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1526,6 +1551,60 @@ export interface BestPlayerBallot {
   castAt?: string | null;
   editedAt?: string | null;
   revision?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A training session at the nets: who turned up and the rotation timer. Managed by the selectors.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "net-sessions".
+ */
+export interface NetSession {
+  id: number;
+  title: string;
+  /**
+   * YYYY-MM-DD, in club time.
+   */
+  date: string;
+  startTime?: string | null;
+  nets: number;
+  minutesPerTurn: number;
+  groupSize: number;
+  state: 'planned' | 'running' | 'paused' | 'finished';
+  round?: number | null;
+  roundStartedAt?: string | null;
+  pausedAt?: string | null;
+  revision?: number | null;
+  rotationPlan?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  finishedAt?: string | null;
+  notes?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who turned up at a net session. Managed by the selectors, never shown publicly.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "net-attendance".
+ */
+export interface NetAttendance {
+  id: number;
+  session: number | NetSession;
+  playerKey: string;
+  player?: (number | null) | Player;
+  guestName?: string | null;
+  checkedInAt?: string | null;
+  checkedInBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -1696,6 +1775,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'best-player-ballots';
         value: number | BestPlayerBallot;
+      } | null)
+    | ({
+        relationTo: 'net-sessions';
+        value: number | NetSession;
+      } | null)
+    | ({
+        relationTo: 'net-attendance';
+        value: number | NetAttendance;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2400,7 +2487,10 @@ export interface PlayerSelectionProfilesSelect<T extends boolean = true> {
   otcExpiresAt?: T;
   role?: T;
   canKeep?: T;
+  battingStyle?: T;
+  bowlingStyle?: T;
   notes?: T;
+  notesStaffOnly?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2517,6 +2607,43 @@ export interface BestPlayerBallotsSelect<T extends boolean = true> {
   castAt?: T;
   editedAt?: T;
   revision?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "net-sessions_select".
+ */
+export interface NetSessionsSelect<T extends boolean = true> {
+  title?: T;
+  date?: T;
+  startTime?: T;
+  nets?: T;
+  minutesPerTurn?: T;
+  groupSize?: T;
+  state?: T;
+  round?: T;
+  roundStartedAt?: T;
+  pausedAt?: T;
+  revision?: T;
+  rotationPlan?: T;
+  finishedAt?: T;
+  notes?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "net-attendance_select".
+ */
+export interface NetAttendanceSelect<T extends boolean = true> {
+  session?: T;
+  playerKey?: T;
+  player?: T;
+  guestName?: T;
+  checkedInAt?: T;
+  checkedInBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

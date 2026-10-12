@@ -78,11 +78,23 @@ export async function issueCodeAction(_prev: FormState, formData: FormData): Pro
   return { ok: 'Give this code to the player to type in place of the PIN. It works once, for 24 hours, and is not shown again.', secret: code }
 }
 
-export async function saveFieldsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+/** The card's Cricket section: role, can keep, batting and bowling style. Allowlisted in `saveSelectorFields`. */
+export async function saveCricketAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireSelection(selectorPaths.availability)
   const playerId = asInt(formData.get('playerId'))
   if (playerId == null) return { error: 'Something went wrong. Please try again.' }
-  const res = await saveSelectorFields(user, playerId, { role: formData.get('role'), canKeep: formData.get('canKeep'), notes: formData.get('notes') })
+  const res = await saveSelectorFields(user, playerId, { role: formData.get('role'), canKeep: formData.get('canKeep'), battingStyle: formData.get('battingStyle'), bowlingStyle: formData.get('bowlingStyle') })
+  return res.ok ? { ok: 'Saved.' } : { error: res.error }
+}
+
+/** The card's Notes section. The staff-only tick is read only when the form has it; the query layer refuses it for a selector. */
+export async function saveNotesAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireSelection(selectorPaths.availability)
+  const playerId = asInt(formData.get('playerId'))
+  if (playerId == null) return { error: 'Something went wrong. Please try again.' }
+  const input: { notes: unknown; notesStaffOnly?: unknown } = { notes: formData.get('notes') }
+  if (formData.get('hasStaffTick') === '1') input.notesStaffOnly = formData.get('notesStaffOnly')
+  const res = await saveSelectorFields(user, playerId, input)
   return res.ok ? { ok: 'Saved.' } : { error: res.error }
 }
 

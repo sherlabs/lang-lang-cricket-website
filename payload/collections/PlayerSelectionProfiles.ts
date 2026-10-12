@@ -1,7 +1,7 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 import { CLUB_COUNTRY } from '../../config/site'
 import { normalisePhone } from '../../lib/selection/phone'
-import { isSelectionField, nobodyField } from '../access'
+import { isSelectionField, isStaffField, nobodyField } from '../access'
 import { codeOnlyAccess, selectionCollection } from './selectionCollection'
 
 /** A stored phone is digits in the club's national format; anything else typed over REST or the admin is refused. */
@@ -46,6 +46,25 @@ export const PlayerSelectionProfiles = selectionCollection({
       admin: { description: 'The selectors’ view of the player. Leave empty to let the site guess from the stats.' },
     },
     { name: 'canKeep', type: 'checkbox', defaultValue: false, label: 'Can keep wicket' },
-    { name: 'notes', type: 'textarea', maxLength: 1000, admin: { description: 'Private to selectors.' } },
+    { name: 'battingStyle', type: 'select', options: [{ label: 'Right-hand bat', value: 'right-hand' }, { label: 'Left-hand bat', value: 'left-hand' }], admin: { description: 'Shown on the selector player card only.' } },
+    {
+      name: 'bowlingStyle',
+      type: 'select',
+      options: [
+        { label: 'Does not bowl', value: 'none' },
+        { label: 'Right-arm fast', value: 'right-arm fast' },
+        { label: 'Right-arm medium', value: 'right-arm medium' },
+        { label: 'Right-arm off-break', value: 'right-arm off-break' },
+        { label: 'Right-arm leg-break', value: 'right-arm leg-break' },
+        { label: 'Left-arm fast', value: 'left-arm fast' },
+        { label: 'Left-arm medium', value: 'left-arm medium' },
+        { label: 'Left-arm orthodox', value: 'left-arm orthodox' },
+        { label: 'Left-arm wrist spin', value: 'left-arm wrist spin' },
+      ],
+      admin: { description: 'Shown on the selector player card only.' },
+    },
+    { name: 'notes', type: 'textarea', maxLength: 1000, admin: { description: 'Private to selectors, or to the committee only when "Staff only" is ticked.' } },
+    // Only an admin or editor can set or change this tick. Server code reading with the access override strips a staff-only note for a selector.
+    { name: 'notesStaffOnly', type: 'checkbox', defaultValue: false, label: 'Note is for the committee only', access: { read: isStaffField, create: isStaffField, update: isStaffField } },
   ],
 })

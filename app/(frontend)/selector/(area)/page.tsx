@@ -2,17 +2,18 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { OverviewCards } from '@/components/selector/weekend-cards'
 import { VOTES, selectorPaths, votePaths } from '@/config/site'
-import { formatMatchDay } from '@/lib/selection/lineup-text'
+import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { loadWeekendBoard } from '@/lib/selector-team-queries'
 import { votesOverview } from '@/lib/selector-votes-queries'
+import { netsTonight } from '@/lib/nets-queries'
 
 export const metadata: Metadata = { title: 'Selectors', robots: { index: false, follow: false } }
 
 const TOOLS = [
   { href: selectorPaths.teams, title: 'Teams', text: 'Pick each grade’s team and announce it.' },
-  { href: selectorPaths.availability, title: 'Availability', text: 'Who is in, maybe or out for each game, and who has not replied.' },
+  { href: selectorPaths.availability, title: 'Availability', text: 'Who is in, maybe or out for each game, and who has not replied. Nets are in here too.' },
   { href: selectorPaths.squads, title: 'Squads', text: 'Who is in each grade this season. Add, move and remove players.' },
   { href: selectorPaths.link, title: 'Player link', text: 'The one link players use to tell you if they can play.' },
   { href: selectorPaths.account, title: 'My account', text: 'Your password and Facebook sign-in.' },
@@ -27,6 +28,7 @@ export default async function SelectorHome({ searchParams }: Props) {
   const sp = await searchParams
   const board = await loadWeekendBoard(user, { weekend: typeof sp.weekend === 'string' ? sp.weekend : null })
   const votes = await votesOverview(user)
+  const tonight = await netsTonight(user)
   const tools = votes.enabled ? [{ href: votePaths.selector, title: `${VOTES.label} votes`, text: votes.openGames ? `${votes.openGames} ${votes.openGames === 1 ? 'game is' : 'games are'} open for voting. See who has voted and chase the rest.` : 'See who has voted, the leaderboard and awards night.' }, ...TOOLS] : TOOLS
   const name = (user as { name?: string | null }).name?.trim().split(/\s+/)[0]
   return (
@@ -35,6 +37,15 @@ export default async function SelectorHome({ searchParams }: Props) {
       {board.notices.map((n) => (
         <p key={n} role="alert" className="mt-3 rounded-lg bg-brand-gold-pale px-3 py-2 text-sm text-brand-black ring-1 ring-brand-gold/30">{n}</p>
       ))}
+      {tonight && (
+        <Link href={selectorPaths.net(tonight.id)} className="mt-4 flex min-h-14 items-center justify-between gap-3 rounded-xl bg-white p-4 ring-1 ring-brand-black/10 hover:ring-brand-gold-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
+          <span>
+            <span className="block text-sm font-semibold uppercase tracking-wide text-brand-grey">Nets tonight</span>
+            <span className="block text-lg font-bold text-brand-black">{tonight.title}{tonight.startTime ? ` at ${formatMatchTime(`${tonight.startTime}:00`)}` : ''}</span>
+          </span>
+          <span className="shrink-0 text-right text-sm font-semibold text-brand-black">{tonight.turnedUp} turned up{tonight.state === 'running' ? ' · running' : tonight.state === 'paused' ? ' · paused' : ''}</span>
+        </Link>
+      )}
       {board.weekends.length > 0 && (
         <>
           <h2 className="mt-6 text-xl font-bold text-brand-black">This weekend</h2>

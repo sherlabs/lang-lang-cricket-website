@@ -5,6 +5,8 @@ import { assertSelection } from '@/lib/selector-role'
 import { normalisePhone, lastFour } from '@/lib/selection/phone'
 import { hashOneTimeCode, hashPin, newOneTimeCode, validPin } from '@/lib/selection/pin'
 import { idOf } from '@/lib/selection/store'
+import { validateCard, type BattingStyle, type BowlingStyle, type CardInput } from '@/lib/selection/card'
+import { isStaffUser } from '@/payload/access'
 
 /**
  * Selector-side reads and writes of a player's private details: phone, PIN, one-time code, and the selectors' own role and notes
@@ -22,10 +24,16 @@ export type ProfileView = {
   oneTimeCodeActive: boolean
   role: 'batter' | 'bowler' | 'all-rounder' | 'keeper' | null
   canKeep: boolean
+  battingStyle: BattingStyle | null
+  bowlingStyle: BowlingStyle | null
+  /** Empty when the note is for the committee only and the caller is not (see `hasStaffNote`). */
   notes: string
+  notesStaffOnly: boolean
+  /** A note exists that this caller may not read ("A committee note exists"). */
+  hasStaffNote: boolean
 }
 
-type Row = { id: number; player: unknown; phone?: string | null; pinHash?: string | null; pinSource?: 'phone' | 'manual' | null; needsManualPin?: boolean | null; otcHash?: string | null; otcExpiresAt?: string | null; role?: ProfileView['role']; canKeep?: boolean | null; notes?: string | null }
+type Row = { id: number; player: unknown; phone?: string | null; pinHash?: string | null; pinSource?: 'phone' | 'manual' | null; needsManualPin?: boolean | null; otcHash?: string | null; otcExpiresAt?: string | null; role?: ProfileView['role']; canKeep?: boolean | null; battingStyle?: BattingStyle | null; bowlingStyle?: BowlingStyle | null; notes?: string | null; notesStaffOnly?: boolean | null }
 
 async function findRow(payload: Payload, playerId: number): Promise<Row | null> {
   const res = await payload.find({ collection: 'player-selection-profiles', where: { player: { equals: playerId } }, limit: 1, depth: 0, showHiddenFields: true, overrideAccess: true })
@@ -44,7 +52,11 @@ async function ensureRow(payload: Payload, playerId: number): Promise<Row> {
   }
 }
 
-const toView = (playerId: number, r: Row | null): ProfileView => ({
+/**
+ * The server reads with the access override, so field access does not protect a staff-only note here: it is stripped for anyone who
+ * is not an admin or editor (wave B spec 4.2). Every read below passes the caller.
+ */
+const toView = (playerId: number, r: Row | null, staff: boolean): ProfileView => ({
   playerId,
   phone: r?.phone ?? null,
   pinSource: r?.pinHash ? (r.pinSource ?? null) : null,
@@ -53,12 +65,16 @@ const toView = (playerId: number, r: Row | null): ProfileView => ({
   oneTimeCodeActive: Boolean(r?.otcHash && r.otcExpiresAt && new Date(r.otcExpiresAt).getTime() > Date.now()),
   role: r?.role ?? null,
   canKeep: Boolean(r?.canKeep),
-  notes: r?.notes ?? '',
+  battingStyle: r?.battingStyle ?? null,
+  bowlingStyle: r?.bowlingStyle ?? null,
+  notes: r?.notesStaffOnly && !staff ? '' : (r?.notes ?? ''),
+  notesStaffOnly: Boolean(r?.notesStaffOnly),
+  hasStaffNote: Boolean(r?.notesStaffOnly && !staff && r?.notes),
 })
 
 export async function getProfile(user: TypedUser, playerId: number): Promise<ProfileView> {
   assertSelection(user)
-  return toView(playerId, await findRow(await getPayloadClient(), playerId))
+  return toView(playerId, await findRow(await getPayloadClient(), playerId), isStaffUser(user))
 }
 
 /** Profiles for many players (phones for tap-to-call, role chips). Phones only; nothing secret. */
@@ -70,7 +86,7 @@ export async function profilesForPlayers(user: TypedUser, playerIds: readonly nu
   const res = await payload.find({ collection: 'player-selection-profiles', where: { player: { in: [...playerIds] } }, limit: playerIds.length, pagination: false, depth: 0, showHiddenFields: true, overrideAccess: true })
   for (const r of res.docs as unknown as Row[]) {
     const id = idOf(r.player)
-    if (id != null) out.set(id, toView(id, r))
+    if (id != null) out.set(id, toView(id, r, isStaffUser(user)))
   }
   return out
 }
@@ -145,14 +161,25 @@ export async function issueOneTimeCode(user: TypedUser, playerId: number): Promi
   return code
 }
 
-const ROLES = ['batter', 'bowler', 'all-rounder', 'keeper'] as const
-export async function saveSelectorFields(user: TypedUser, playerId: number, input: { role: unknown; canKeep: unknown; notes: unknown }): Promise<SaveResult> {
+/**
+ * Saves the card's selector fields (role, can keep, styles, notes), only the keys sent (a form for one section sends only its own).
+ * Everything goes through the allowlist in `lib/selection/card.ts`. The staff-only tick is set only by an admin or editor, and a
+ * note a selector may not read is never edited or overwritten by one; both are refused, whatever the form posted.
+ */
+export async function saveSelectorFields(user: TypedUser, playerId: number, input: CardInput): Promise<SaveResult> {
   assertSelection(user)
+  const staff = isStaffUser(user)
+  const checked = validateCard(input)
+  if (!checked.ok) return checked
+  const patch: Record<string, unknown> = { ...checked.patch }
   const payload = await getPayloadClient()
   const row = await ensureRow(payload, playerId)
-  const role = (ROLES as readonly string[]).includes(String(input.role)) ? String(input.role) : null
-  const notes = typeof input.notes === 'string' ? input.notes.trim().slice(0, 1000) : ''
-  await payload.update({ collection: 'player-selection-profiles', id: row.id, data: { role, canKeep: input.canKeep === true || input.canKeep === 'on', notes: notes || null } as never, overrideAccess: true, context: CTX })
+  if (!staff) {
+    if ('notesStaffOnly' in patch) return { ok: false, error: 'Only the committee can mark a note as committee only.' }
+    if (row.notesStaffOnly && 'notes' in patch) return { ok: false, error: 'A committee note exists on this card. Only the committee can change it.' }
+  }
+  if (!Object.keys(patch).length) return { ok: true }
+  await payload.update({ collection: 'player-selection-profiles', id: row.id, data: patch as never, overrideAccess: true, context: CTX })
   return { ok: true }
 }
 
@@ -166,5 +193,5 @@ export async function getPlayerCard(user: TypedUser, slug: string): Promise<{ pl
   if (!doc) return null
   const { toPlayerLite } = await import('@/lib/selection/store')
   const player = toPlayerLite(doc as never)
-  return { player, profile: toView(player.id, await findRow(payload, player.id)) }
+  return { player, profile: toView(player.id, await findRow(payload, player.id), isStaffUser(user)) }
 }

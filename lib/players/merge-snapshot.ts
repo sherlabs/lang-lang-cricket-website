@@ -1,4 +1,5 @@
 import type { MergePlan } from './merge'
+import type { NetsMergeSnapshot } from './merge-nets'
 import type { VotesMergeSnapshot } from './merge-votes'
 import type { SeasonCounts } from './season-math'
 
@@ -29,6 +30,8 @@ export type MergeSnapshot = {
   importedSeasons?: ImportedSeasonsSnapshot
   /** Best-player ballots moved by the merge (additive; absent on older snapshots). */
   votes?: VotesMergeSnapshot
+  /** Net session check-ins moved by the merge (additive; absent on older snapshots). */
+  nets?: NetsMergeSnapshot
 }
 
 export type ImportedSeasonsSnapshot = {

@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import type { FormState } from '@/lib/selector-form-state'
+import { BATTING_STYLES, BATTING_STYLE_LABEL, BOWLING_STYLES, BOWLING_STYLE_LABEL } from '@/lib/selection/card'
 import type { ProfileView } from '@/lib/selector-profile-queries'
 import { btnPrimary, btnQuiet, field } from './styles'
 import { CopyButton } from './ui'
@@ -70,7 +71,8 @@ export function CodeForm({ action, playerId, active }: { action: Action; playerI
   )
 }
 
-export function FieldsForm({ action, playerId, profile }: { action: Action; playerId: number; profile: ProfileView }) {
+/** Cricket section of the player card: plain selects, saved on its own button. */
+export function CricketForm({ action, playerId, profile }: { action: Action; playerId: number; profile: ProfileView }) {
   const [state, run, pending] = useActionState(action, {})
   return (
     <form action={run} className="space-y-3">
@@ -90,11 +92,50 @@ export function FieldsForm({ action, playerId, profile }: { action: Action; play
         Can keep wicket
       </label>
       <label className="block text-sm font-medium text-brand-black">
-        Notes (only selectors see these)
-        <textarea name="notes" defaultValue={profile.notes} maxLength={1000} rows={4} className="mt-1 block w-full rounded-lg border border-brand-black/20 bg-white px-3 py-2 text-base text-brand-black focus:border-brand-gold-deep focus:outline-none focus:ring-2 focus:ring-brand-gold/50" />
+        Batting style
+        <select name="battingStyle" defaultValue={profile.battingStyle ?? ''} className={`${field} mt-1`}>
+          <option value="">Not set</option>
+          {BATTING_STYLES.map((s) => <option key={s} value={s}>{BATTING_STYLE_LABEL[s]}</option>)}
+        </select>
+      </label>
+      <label className="block text-sm font-medium text-brand-black">
+        Bowling style
+        <select name="bowlingStyle" defaultValue={profile.bowlingStyle ?? ''} className={`${field} mt-1`}>
+          <option value="">Not set</option>
+          {BOWLING_STYLES.map((s) => <option key={s} value={s}>{BOWLING_STYLE_LABEL[s]}</option>)}
+        </select>
       </label>
       <Msg state={state} />
-      <button type="submit" className={btnPrimary} disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>
+      <button type="submit" className={btnPrimary} disabled={pending}>{pending ? 'Saving...' : 'Save cricket details'}</button>
+    </form>
+  )
+}
+
+/**
+ * Notes section. `canMarkStaffOnly` is true only for an admin or editor (the tick is not drawn for a selector, and the server refuses it
+ * anyway). A selector sees "A committee note exists" and nothing else when the note is for the committee only.
+ */
+export function NotesForm({ action, playerId, profile, canMarkStaffOnly }: { action: Action; playerId: number; profile: ProfileView; canMarkStaffOnly: boolean }) {
+  const [state, run, pending] = useActionState(action, {})
+  if (profile.hasStaffNote) {
+    return <p className="rounded-lg bg-brand-stone/60 px-3 py-2 text-sm text-brand-black">A committee note exists. Only the committee can read or change it.</p>
+  }
+  return (
+    <form action={run} className="space-y-3">
+      <input type="hidden" name="playerId" value={playerId} />
+      {canMarkStaffOnly && <input type="hidden" name="hasStaffTick" value="1" />}
+      <label className="block text-sm font-medium text-brand-black">
+        {profile.notesStaffOnly ? 'Notes (committee only)' : 'Notes (only selectors see these)'}
+        <textarea name="notes" defaultValue={profile.notes} maxLength={1000} rows={4} className="mt-1 block w-full rounded-lg border border-brand-black/20 bg-white px-3 py-2 text-base text-brand-black focus:border-brand-gold-deep focus:outline-none focus:ring-2 focus:ring-brand-gold/50" />
+      </label>
+      {canMarkStaffOnly && (
+        <label className="flex min-h-11 items-center gap-3 text-sm text-brand-black">
+          <input type="checkbox" name="notesStaffOnly" defaultChecked={profile.notesStaffOnly} className="size-5" />
+          Staff only: hide this note from selectors
+        </label>
+      )}
+      <Msg state={state} />
+      <button type="submit" className={btnPrimary} disabled={pending}>{pending ? 'Saving...' : 'Save notes'}</button>
     </form>
   )
 }
