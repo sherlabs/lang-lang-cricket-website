@@ -112,6 +112,11 @@ describe('isOfficeBearer memoisation', () => {
 })
 
 describe('planHandover', () => {
+  it('treats a vacant seat that still has a login as changed, so the old login is cleared', () => {
+    const ops = planHandover([{ id: 9, title: 'Vice', holderPersonId: null, holderUserId: 77 }], [{ seatId: 9, newPersonId: null, loginUserId: null }], '2026-10-20')
+    expect(ops).toHaveLength(1)
+    expect(ops[0].set.holderUser).toBeNull()
+  })
   const seats: SeatRow[] = [
     { id: 1, title: 'President', holderPersonId: 10, holderUserId: 100 },
     { id: 2, title: 'Secretary', holderPersonId: 11, holderUserId: 101 },

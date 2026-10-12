@@ -186,6 +186,19 @@ describe('committee meetings', () => {
     expect(await q.reopenMeeting(user.editor, id)).toMatchObject({ ok: true })
   })
 
+  it('restricting an item after the meeting closed scrubs it from the saved minutes; a seat-less editor cannot create a restricted meeting', async () => {
+    const id = await newMeeting('editor', 'ordinary', '2026-10-06')
+    const biz = await itemOf(id, 'business')
+    await q.saveItem(user.editor, { id: biz.id, notes: 'LATE-SECRET-77', outcome: '' })
+    expect(await q.closeMeeting(user.editor, id)).toMatchObject({ ok: true })
+    expect(((await payload.findByID({ collection: 'meetings', id, depth: 0, overrideAccess: true })).minutesText as string)).toContain('LATE-SECRET-77')
+    expect(await q.setItemRestricted(user.bearer, { id: biz.id, restricted: 'true' })).toMatchObject({ ok: true })
+    const stored = (await payload.findByID({ collection: 'meetings', id, depth: 0, overrideAccess: true })).minutesText as string
+    expect(stored).not.toContain('LATE-SECRET-77')
+    expect(JSON.stringify(await q.getMinutesPage(user.editor, id))).not.toContain('LATE-SECRET-77')
+    expect(await q.createMeeting(user.editor, { templateId: templates.special, date: '2026-11-10', time: '19:00', title: '', venue: '' })).toEqual({ ok: false, code: 'restricted-create' })
+  })
+
   it('attendance, guests, motions and actions are recorded; approving the previous minutes marks them approved', async () => {
     const first = await newMeeting('editor', 'ordinary', '2026-11-03')
     expect(await q.setAttendance(user.editor, { meetingId: first, personId: people.Newt, state: 'apology' })).toMatchObject({ ok: true })
@@ -282,11 +295,15 @@ describe('committee meetings', () => {
     expect(await q.handoverSeats(user.admin, { meetingId: ordinary, changes: [{ seatId: seats.president, personId: people.Newt, loginId: '' }] })).toEqual({ ok: false, code: 'not-annual' })
 
     const before = await payload.findByID({ collection: 'committee-seats', id: seats.secretary, depth: 0, overrideAccess: true })
+    // A login picked for a seat whose holder is not changing is refused with a message, and nothing is saved.
+    expect(
+      await q.handoverSeats(user.admin, { meetingId: annual, changes: [{ seatId: seats.secretary, personId: people.Sam, loginId: String((user.newbearer as { id: number }).id) }] }),
+    ).toEqual({ ok: false, code: 'login-unchanged' })
     const res = await q.handoverSeats(user.admin, {
       meetingId: annual,
       changes: [
         { seatId: seats.president, personId: people.Newt, loginId: String((user.newbearer as { id: number }).id) },
-        { seatId: seats.secretary, personId: people.Sam, loginId: String((user.newbearer as { id: number }).id) }, // unchanged person: login offer ignored
+        { seatId: seats.secretary, personId: people.Sam, loginId: '' }, // unchanged
         { seatId: seats.treasurer, personId: 'vacant', loginId: '' },
       ],
     })

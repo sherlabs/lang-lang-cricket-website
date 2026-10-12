@@ -119,6 +119,18 @@ async function resync(payload: Payload, meetingId: number, req: Partial<PayloadR
   for (const row of att) if (Boolean(row.effectiveRestricted) !== mr) await payload.update({ collection: 'meeting-attendance', id: row.id as number, data: { effectiveRestricted: mr }, overrideAccess: true, depth: 0, req: r })
 }
 
+/**
+ * After a restriction change, a saved minutes text may still hold text that is now restricted (it was drafted or typed earlier).
+ * Redraft it from the structured data so only what the meeting's current rules allow is stored. Hand edits to the saved text are
+ * replaced, which is the safe side of a confidentiality change; the approval status is kept.
+ */
+async function redraftMinutes(payload: Payload, meetingId: number, req: Partial<PayloadRequest>): Promise<void> {
+  const meeting = (await payload.findByID({ collection: 'meetings', id: meetingId, depth: 0, overrideAccess: true, req: req as PayloadRequest })) as unknown as Doc
+  if (!str(meeting.minutesText).trim()) return
+  const text = buildMinutes(await minutesInput(meetingId, req), { includeRestricted: Boolean(meeting.restricted) })
+  await payload.update({ collection: 'meetings', id: meetingId, data: { minutesText: text }, overrideAccess: true, depth: 0, req: req as PayloadRequest })
+}
+
 // ---- pages ------------------------------------------------------------------------------------------------------------------
 
 export type MeetingRow = { id: number; title: string; kind: MeetingKind; status: MeetingStatus; startsAt: string; when: string; restricted: boolean }
@@ -332,7 +344,7 @@ export async function meetingStats(user: unknown): Promise<MeetingStats | null> 
     for (const a of actions) {
       const s = actionStanding({ status: a.status as ActionStatus, due: a.due ? day(a.due) : null }, today)
       if (s === 'overdue') overdue++
-      else if (s === 'blocked') blocked++
+      if (a.status === 'blocked') blocked++
     }
     const next = (await payload.find({ collection: 'meetings', where: { and: [{ status: { in: ['planned', 'in-progress'] } }, { startsAt: { greater_than_equal: `${today}T00:00:00.000Z` } }] }, sort: 'startsAt', limit: 1, depth: 0, user, overrideAccess: false })).docs as unknown as Doc[]
     return { overdue, blocked, next: next[0] ? { id: next[0].id as number, title: str(next[0].title), when: meetingWhen(str(next[0].startsAt)) } : null }
@@ -362,15 +374,15 @@ export async function getDocumentsPage(user: unknown): Promise<DocumentsPage | n
 // ---- minutes input ----------------------------------------------------------------------------------------------------------
 
 /** All structured data of a meeting (override: callers filter on `restricted`), shaped for `buildMinutes`. */
-async function minutesInput(meetingId: number): Promise<MinutesInput> {
+async function minutesInput(meetingId: number, req?: Partial<PayloadRequest>): Promise<MinutesInput> {
   const payload = await getPayloadClient()
-  const meeting = (await payload.findByID({ collection: 'meetings', id: meetingId, depth: 0, overrideAccess: true })) as unknown as Doc
+  const meeting = (await payload.findByID({ collection: 'meetings', id: meetingId, depth: 0, overrideAccess: true, ...(req ? { req: req as PayloadRequest } : {}) })) as unknown as Doc
   const where = { meeting: { equals: meetingId } }
   const [items, motions, actions, att, seats] = await Promise.all([
-    payload.find({ collection: 'meeting-items', where, sort: 'order', pagination: false, depth: 0, overrideAccess: true }),
-    payload.find({ collection: 'meeting-motions', where, sort: 'id', pagination: false, depth: 0, overrideAccess: true }),
-    payload.find({ collection: 'meeting-actions', where, sort: 'id', pagination: false, depth: 0, overrideAccess: true }),
-    payload.find({ collection: 'meeting-attendance', where, sort: 'id', pagination: false, depth: 1, overrideAccess: true }),
+    payload.find({ collection: 'meeting-items', where, sort: 'order', pagination: false, depth: 0, overrideAccess: true, ...(req ? { req: req as PayloadRequest } : {}) }),
+    payload.find({ collection: 'meeting-motions', where, sort: 'id', pagination: false, depth: 0, overrideAccess: true, ...(req ? { req: req as PayloadRequest } : {}) }),
+    payload.find({ collection: 'meeting-actions', where, sort: 'id', pagination: false, depth: 0, overrideAccess: true, ...(req ? { req: req as PayloadRequest } : {}) }),
+    payload.find({ collection: 'meeting-attendance', where, sort: 'id', pagination: false, depth: 1, overrideAccess: true, ...(req ? { req: req as PayloadRequest } : {}) }),
     seatNames(payload),
   ])
   const actionViewsAll = await actionViews(payload, actions.docs as unknown as Doc[], seats, currentClubDate(), new Map())
@@ -423,6 +435,8 @@ export async function createMeeting(user: unknown, raw: Parameters<typeof valida
   if (!template) return fail('template')
   const kind = template.kind as MeetingKind
   const restricted = defaultMeetingRestricted(kind)
+  // A restricted meeting is visible to office-bearers only, so only they may create one (others would create what they cannot open).
+  if (restricted && !(await bearerOf(payload, user))) return fail('restricted-create')
   const items = itemsFromTemplate({ kind, items: ((template.items as Doc[]) ?? []).map((i) => ({ title: str(i.title), kind: i.kind as ItemKind, defaultNotes: str(i.defaultNotes), restricted: Boolean(i.restricted) })) })
   // Business arising always exists, because the open actions from earlier meetings are reviewed under it.
   if (!items.some((i) => i.kind === 'business')) {
@@ -558,6 +572,7 @@ export async function setItemRestricted(user: unknown, raw: { id: unknown; restr
   await inTransaction(payload, async (req) => {
     await payload.update({ collection: 'meeting-items', id, data: { restricted: value }, overrideAccess: true, depth: 0, req: req as PayloadRequest })
     await resync(payload, mid, req)
+    await redraftMinutes(payload, mid, req)
   })
   return done('item', { id: mid })
 }
@@ -574,6 +589,7 @@ export async function setMeetingRestricted(user: unknown, raw: { meetingId: unkn
   await inTransaction(payload, async (req) => {
     await payload.update({ collection: 'meetings', id: mid, data: { restricted: value }, overrideAccess: true, depth: 0, req: req as PayloadRequest })
     await resync(payload, mid, req)
+    await redraftMinutes(payload, mid, req)
   })
   return done('status', { id: mid })
 }
@@ -711,6 +727,9 @@ export async function approveMinutes(user: unknown, raw: { meetingId: unknown; p
   const prev = await loadMeeting(e.payload, user, pid)
   if (!prev) return fail('not-found')
   if (prev.status !== 'closed' || prev.minutesStatus === 'approved') return fail('status')
+  // Only what the page offers: the latest earlier closed meeting whose minutes are still a draft.
+  const offered = await e.payload.find({ collection: 'meetings', where: { and: [{ status: { equals: 'closed' } }, { minutesStatus: { equals: 'draft' } }, { startsAt: { less_than: str(e.meeting.startsAt) } }, { id: { not_equals: mid } }] }, sort: '-startsAt', limit: 1, user: user as never, overrideAccess: false, depth: 0 })
+  if ((offered.docs as unknown as Doc[])[0]?.id !== pid) return fail('status')
   await e.payload.update({ collection: 'meetings', id: pid, data: { minutesStatus: 'approved', approvedAtMeeting: mid }, overrideAccess: true, depth: 0 })
   return done('approved', { id: mid })
 }
@@ -745,6 +764,9 @@ export async function handoverSeats(user: unknown, raw: { meetingId: unknown; ch
       // Only an active admin or editor can hold a seat login; a selector never can.
       if (!login || login.disabled || (login.role !== 'admin' && login.role !== 'editor')) return fail('login')
     }
+    const cur = seats.find((x) => x.id === seatId)!
+    // A login picked for a seat whose holder is not changing would be dropped silently, so refuse and say why.
+    if (loginId && personId === cur.holderId) return fail('login-unchanged')
     changes.push({ seatId, newPersonId: personId, loginUserId: personId ? loginId : null })
   }
   const date = day(meeting.startsAt)

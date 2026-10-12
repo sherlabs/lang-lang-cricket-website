@@ -104,7 +104,7 @@ export const officeCopy = {
     stat: (next: string | null, overdue: number) =>
       `${next ? `Next meeting ${next}` : 'No meeting planned'}; ${overdue === 0 ? 'no committee actions are overdue' : `${overdue} committee ${plural(overdue, 'action is', 'actions are')} overdue`} (done and dropped actions are not counted; restricted actions only for office-bearers)`,
     overdue: (n: number) => `${n} committee ${plural(n, 'action is', 'actions are')} overdue (done and dropped actions are not counted; restricted actions only for office-bearers)`,
-    blocked: (n: number) => `${n} committee ${plural(n, 'action is', 'actions are')} blocked (done and dropped actions are not counted; restricted actions only for office-bearers)`,
+    blocked: (n: number) => `${n} committee ${plural(n, 'action is', 'actions are')} blocked (late blocked actions are also counted as overdue; done and dropped actions are not counted; restricted actions only for office-bearers)`,
     hiddenItems: (n: number) => `${n} restricted ${plural(n, 'item is', 'items are')} only visible to office-bearers.`,
     hiddenMeetings: (n: number) => `${n} restricted ${plural(n, 'meeting is', 'meetings are')} only visible to office-bearers.`,
   },

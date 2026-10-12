@@ -105,7 +105,9 @@ export function planHandover(seats: readonly SeatRow[], changes: readonly Handov
     const seat = bySeat.get(c.seatId)
     if (!seat || seen.has(c.seatId)) continue
     seen.add(c.seatId)
-    if (c.newPersonId === seat.holderPersonId) continue
+    // Unchanged unless the person differs, or the seat is vacant but still carries a login (that old login must be cleared).
+    const staleLogin = c.newPersonId === null && seat.holderUserId !== null
+    if (c.newPersonId === seat.holderPersonId && !staleLogin) continue
     const vacant = c.newPersonId === null
     ops.push({
       seatId: seat.id,
@@ -238,6 +240,8 @@ export type MeetingError =
   | 'login'
   | 'closed'
   | 'not-annual'
+  | 'restricted-create'
+  | 'login-unchanged'
   | 'file'
   | 'file-big'
   | 'category'
@@ -345,6 +349,8 @@ export const MEETING_ERROR_TEXT: Record<MeetingError, string> = {
   login: 'That login cannot be linked to a seat. Pick an active admin or editor.',
   closed: 'This meeting is closed. Reopen it to change it.',
   'not-annual': 'Seats are handed over from an annual meeting only.',
+  'login-unchanged': 'Login not linked: the holder of that seat did not change. Change the holder to link a login. Nothing was saved.',
+  'restricted-create': 'That agenda makes a restricted meeting, which only office-bearers can create and see. Ask an office-bearer to create it.',
   file: 'Please choose a PDF, Word, Excel or image file.',
   'file-big': OFFICE_FILE_TOO_BIG,
   category: 'Please pick a category from the list.',

@@ -1,6 +1,6 @@
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
-import { isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT } from '@/lib/office/meetings'
+import { parseId, isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT } from '@/lib/office/meetings'
 import { getActionsPage } from '@/lib/meetings-office-queries'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireUser } from './AdminPage'
@@ -15,8 +15,8 @@ export async function OfficeMeetingActionsView(view: AdminViewServerProps) {
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/meetings`
   const sp = view.searchParams ?? {}
-  const seatParam = Number(first(sp.seat))
-  const page = await getActionsPage(req.user, Number.isInteger(seatParam) && seatParam > 0 ? seatParam : null)
+  const seatParam = parseId(first(sp.seat))
+  const page = await getActionsPage(req.user, seatParam || null)
   if (!page) return null
   const base = `${admin}/office/meetings`
   const notice = first(sp.notice)
