@@ -906,6 +906,7 @@ a[href$='/forgot'] {
 .office-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .office-table, .office-table tbody, .office-table tr, .office-table th, .office-table td { display: block; }
 .office-table tr { margin: 0 0 0.75rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-table caption { display: block; text-align: left; margin: 0 0 0.5rem; }
 .office-table th[scope='row'], .office-table td { padding: 0.2rem 0; border: 0; text-align: left; }
 .office-table th[scope='row'], .office-table td { overflow-wrap: anywhere; }
 .office-table td::before { content: attr(data-label) ': '; font-weight: 600; color: var(--club-grey); }
@@ -913,6 +914,7 @@ a[href$='/forgot'] {
   .office-filters { grid-template-columns: 2fr 1fr 1fr auto; }
   .office-table thead { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .office-table { display: table; width: 100%; }
+  .office-table caption { display: table-caption; }
   .office-table thead { display: table-header-group; }
   .office-table tbody { display: table-row-group; }
   .office-table tr { display: table-row; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
@@ -937,6 +939,7 @@ a[href$='/forgot'] {
 .office-void > summary:focus-visible { outline: 3px solid var(--club-gold); outline-offset: 2px; }
 .office-list { display: grid; gap: 0.5rem; margin: 0 0 1.25rem; padding: 0; list-style: none; max-width: 56rem; }
 .office-list > li { padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-list > li > .office-inline { display: flex; margin-top: 0.5rem; max-width: 100%; }
 .office-list--voided { opacity: 0.75; text-decoration: line-through; }
 .office-minutes { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 1.0625rem; line-height: 1.5; max-width: 48rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.5rem; }
 .office-attendance { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
