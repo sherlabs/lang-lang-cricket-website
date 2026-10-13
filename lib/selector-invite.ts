@@ -36,10 +36,10 @@ export async function findInvitee(payload: Payload, token: unknown): Promise<Inv
  * is disabled). With `facebookId` the link is written in the same statement, so a Facebook id already bound elsewhere (unique
  * index) throws and the invite stays open.
  */
-export async function consumeInvite(payload: Payload, token: unknown, opts: { facebookId?: string } = {}): Promise<Invitee | null> {
+export async function consumeInvite(payload: Payload, token: unknown, opts: { facebookId?: string; via?: 'own' | 'broker' } = {}): Promise<Invitee | null> {
   if (!looksLikeInviteToken(token)) return null
   const hash = hashInviteToken(token)
-  const bind = opts.facebookId ? sql`, facebook_id = ${opts.facebookId}, facebook_linked_at = now()` : sql``
+  const bind = opts.facebookId ? sql`, facebook_id = ${opts.facebookId}, facebook_id_via = ${opts.via ?? 'own'}, facebook_linked_at = now()` : sql``
   const guard = opts.facebookId ? sql` AND facebook_id IS NULL` : sql``
   const res = await payload.db.drizzle.execute(
     sql`UPDATE "payload"."users" SET invite_token_hash = NULL, invite_expires_at = NULL${bind} WHERE invite_token_hash = ${hash} AND invite_expires_at > now() AND role = 'selector' AND NOT COALESCE(disabled, false)${guard} RETURNING id, name, email`,

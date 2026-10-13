@@ -72,6 +72,10 @@ The production values are unused until a deployment of the new app is promoted (
 
 ### A.5 Facebook app (optional, for selector sign-in)
 
+Two ways, chosen on Site settings > Sign-in (`docs/features/sign-in-settings.mdx`): the shared WebSport broker (`AUTH_BROKER_ORIGIN`, `AUTH_BROKER_CLUB_ID`; the operator adds this club's origin, return path and events path to the broker's club list; no Meta app of your own) or the club's own Meta app (the steps below). A deployment that already has the own-app settings keeps working: a stored "broker" with no broker settings falls back to the own app.
+
+- [ ] **After deploy, confirm the effective mode on Site settings > Sign-in** (the status line says which way Facebook sign-in runs and why), and press Test connection if the broker is used.
+
 Steps are in `docs/features/selector-accounts.mdx` ("Setting up Facebook"). Checklist:
 
 - [ ] Meta app created with the use case "Authenticate and request data from users with Facebook Login", named after the club.

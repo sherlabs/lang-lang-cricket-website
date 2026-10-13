@@ -8,6 +8,7 @@ import { stockFigures } from '@/lib/stock-office-queries'
 import { meetingStats } from '@/lib/meetings-office-queries'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions } from '@/lib/players/duplicate-queries'
+import { readSignInState } from '@/lib/signin/state'
 import { socialCounts } from '@/lib/social-queries'
 import { readHeartbeat } from '@/lib/social/heartbeat'
 import { overdueAfterMinutes } from '@/lib/social/heartbeat-math'
@@ -27,6 +28,17 @@ async function socialFacts(payload: Payload) {
     const dayEnd = zonedToUtc(next, '00:00', CLUB_TIMEZONE) ?? new Date(Date.now() + 86_400_000)
     const beat = await readHeartbeat(payload, overdueAfterMinutes)
     return await socialCounts(dayEnd, overdueAfterMinutes(beat.observedMinutes))
+  } catch {
+    return null
+  }
+}
+
+/** Admin only: a failed broker check, and selectors Facebook unlinked in the last week. A read failure drops the lines, never the page. */
+async function signInFacts(payload: Payload) {
+  try {
+    const s = await readSignInState(payload)
+    const recent = s.lastEvent.at && Date.now() - new Date(s.lastEvent.at).getTime() < 7 * 86_400_000
+    return { testFailedAt: s.lastTest.at && !s.lastTest.ok ? s.lastTest.at : null, unlinked: recent ? s.lastEvent.unlinked : 0 }
   } catch {
     return null
   }
@@ -52,7 +64,7 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
  * only drops its line.
  */
 export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
-  const [pending, run, duplicateCount, imports, social, fees, game, meetings, diary, stock] = await Promise.all([
+  const [pending, run, duplicateCount, imports, social, fees, game, meetings, diary, stock, signIn] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
     isAdmin ? getDuplicateSuggestions().then((s) => s.length).catch(() => null) : Promise.resolve(null),
@@ -65,8 +77,9 @@ export async function NotificationCentre({ payload, isAdmin, user }: { payload: 
     meetingStats(user),
     diaryFigures(user),
     stockFigures(user),
+    isAdmin ? signInFacts(payload) : Promise.resolve(null),
   ])
-  const input: NotificationInput = { latestRun: run, pending, duplicateCount, imports, social, stock: stock && (stock.low > 0 || stock.overdue > 0) ? { low: stock.low, overdue: stock.overdue, lowText: officeCopy.stock.low(stock.low), overdueText: officeCopy.stock.overdue(stock.overdue) } : null, diary: diary && (diary.overdue > 0 || diary.blocked > 0 || diary.unowned > 0) ? { ...diary, overdueText: officeCopy.diary.overdue(diary.overdue), blockedText: officeCopy.diary.blocked(diary.blocked), unownedText: officeCopy.diary.unowned(diary.unowned) } : null, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
+  const input: NotificationInput = { signIn, latestRun: run, pending, duplicateCount, imports, social, stock: stock && (stock.low > 0 || stock.overdue > 0) ? { low: stock.low, overdue: stock.overdue, lowText: officeCopy.stock.low(stock.low), overdueText: officeCopy.stock.overdue(stock.overdue) } : null, diary: diary && (diary.overdue > 0 || diary.blocked > 0 || diary.unowned > 0) ? { ...diary, overdueText: officeCopy.diary.overdue(diary.overdue), blockedText: officeCopy.diary.blocked(diary.blocked), unownedText: officeCopy.diary.unowned(diary.unowned) } : null, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

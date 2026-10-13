@@ -60,6 +60,7 @@ import { PlayerSeasons } from './payload/collections/PlayerSeasons'
 import { PlayerSyncRuns } from './payload/collections/PlayerSyncRuns'
 import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
+import { AuthBrokerJtis } from './payload/collections/AuthBrokerJtis'
 import { ThrottleHits } from './payload/collections/ThrottleHits'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
@@ -136,7 +137,7 @@ export default buildConfig({
   graphQL: { disable: true },
   // Present only when outbound mail is configured (EMAIL_PROVIDER, key, from address); otherwise forgot-password stays refused.
   email: emailAdapterForPayload(),
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions, StockItems, StockIssues, StockMovements],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, AuthBrokerJtis, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions, StockItems, StockIssues, StockMovements],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

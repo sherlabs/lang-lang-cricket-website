@@ -88,9 +88,12 @@ export const BUCKET_RULES: Partial<Record<IpBucket, ThrottleRule>> = {
 }
 
 /** Forgot-password requests for one address: a few per hour, whether or not the address has an account. */
+/** Failed broker events (bad signature, wrong audience, replayed junk): 120 an hour across the site. A valid event never touches it. */
+export const BROKER_BAD_RULE: ThrottleRule = { limit: 120, windowMs: 3_600_000, lockMs: 900_000 }
+
 export const FORGOT_ADDRESS_RULE: ThrottleRule = { limit: 3, windowMs: 3_600_000, lockMs: 900_000 }
 
-export type IpBucket = 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login' | 'avail' | 'vol-bad' | 'rest-forgot' | 'unsub-bad' | 'unsub-undo'
+export type IpBucket = 'broker-bad' | 'sel-login' | 'sel-oauth' | 'sel-invite' | 'rest-login' | 'avail' | 'vol-bad' | 'rest-forgot' | 'unsub-bad' | 'unsub-undo'
 
 export async function ipHit(payload: Payload, bucket: IpBucket, ip: string | null): Promise<ThrottleResult> {
   if (!ip) return { allowed: true, retryAfterSeconds: 0 }

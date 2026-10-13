@@ -150,6 +150,8 @@ export const AI_DEFAULTS = {
  * (`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`); only these constants are in code.
  */
 export const FACEBOOK_GRAPH_VERSION = env.FACEBOOK_GRAPH_VERSION?.trim() || 'v25.0'
+/** Where the shared sign-in broker posts events (data deletion, deauthorize). The broker registers this path for the club. */
+export const BROKER_EVENTS_PATH = '/api/websport-auth/events'
 /** How long an invite link works (days). Env `SELECTOR_INVITE_DAYS`. */
 const inviteDays = Number(env.SELECTOR_INVITE_DAYS)
 export const SELECTOR_INVITE_DAYS = Number.isInteger(inviteDays) && inviteDays >= 1 && inviteDays <= 90 ? inviteDays : 14
@@ -161,6 +163,7 @@ export const selectorPaths = {
   invite: (token: string) => `/selector/invite/${token}`,
   facebookStart: '/selector/facebook/start',
   facebookCallback: '/selector/facebook/callback',
+  facebookBrokerCallback: '/selector/facebook/broker-callback',
   facebookDataDeletion: '/selector/facebook/data-deletion',
   facebookDeauthorize: '/selector/facebook/deauthorize',
   facebookDeletionStatus: '/selector/facebook/deletion-status',

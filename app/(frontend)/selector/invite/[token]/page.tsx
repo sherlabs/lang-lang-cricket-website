@@ -5,7 +5,8 @@ import { FacebookButton } from '@/components/selector/facebook-button'
 import { ChoosePasswordForm } from '@/components/selector/forms'
 import { SELECTOR_INVITE_DAYS } from '@/config/site'
 import { clientIp } from '@/lib/client-ip'
-import { facebookConfig, hostSupportsFacebook, looksLikeInAppBrowser } from '@/lib/facebook-login'
+import { looksLikeInAppBrowser } from '@/lib/facebook-login'
+import { resolveSignIn } from '@/lib/signin/mode'
 import { getPayloadClient } from '@/lib/payload/client'
 import { findInvitee } from '@/lib/selector-invite'
 import { FAILURE_MESSAGES, isFailureCode } from '@/lib/selector-oauth'
@@ -35,7 +36,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
     )
   }
   const first = (invitee.name ?? '').trim().split(/\s+/)[0] || 'there'
-  const facebook = Boolean(facebookConfig()) && hostSupportsFacebook(payload.config.serverURL, h.get('host'))
+  const facebook = (await resolveSignIn(payload, { host: h.get('host') })).kind !== 'off'
   const inApp = looksLikeInAppBrowser(h.get('user-agent'))
   const failure = isFailureCode(sp.e) ? FAILURE_MESSAGES[sp.e] : null
   return (

@@ -10,8 +10,8 @@ import {
 import { DEFAULT_MATCH_MINIMUMS, MATCH_MINIMUM_LABELS, type MatchMinimums } from '../../lib/stats/match/minimums'
 import { DEFAULT_QUALIFICATION } from '../../lib/stats/qualify'
 import { CATEGORY_LABELS, GRADE_CATEGORIES, validateRulePattern } from '../../lib/stats/categories'
-import { anyone, isStaff } from '../access'
-import { hiddenFromEditors } from '../admin/visibility'
+import { anyone, isAdminField, isStaff, nobodyField } from '../access'
+import { adminOnlyCondition, hiddenFromEditors } from '../admin/visibility'
 import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { revalidatePaths } from '../hooks/revalidate'
 
@@ -152,6 +152,67 @@ const statsGroup: Field = {
   ],
 }
 
+/**
+ * Facebook sign-in for selectors (wave F spec 3.2, 3.4). Admin only, on an already admin-only global: this global's `read` is open
+ * for the public site, so EVERY field here carries its own `isAdminField` read and update (the public site never reads it; the
+ * server reads the mode with `overrideAccess`). `lastTest` and `lastEvent` are written by code only. The status block, the
+ * registration block and the Test connection button are the `ui` field below.
+ */
+const adminOnly = { read: isAdminField, update: isAdminField }
+const codeWritten = { read: isAdminField, create: nobodyField, update: nobodyField }
+const signInGroup: Field = {
+  name: 'signIn',
+  type: 'group',
+  label: 'Facebook sign-in',
+  access: adminOnly,
+  admin: { condition: adminOnlyCondition(), description: 'How selectors can sign in with Facebook. Passwords always keep working.' },
+  fields: [
+    {
+      name: 'mode',
+      label: 'Facebook sign-in',
+      type: 'select',
+      defaultValue: 'broker',
+      required: true,
+      options: [
+        { label: 'Off (passwords only)', value: 'off' },
+        { label: 'Through the shared sign-in broker', value: 'broker' },
+        { label: "Through the club's own Facebook app", value: 'own-app' },
+      ],
+      access: adminOnly,
+      admin: {
+        description:
+          'The shared broker needs no Facebook app of your own. The club\'s own app needs an app id and secret on the server. If you switch between the two, people who linked Facebook under the other option must link again from My account; passwords keep working.',
+      },
+    },
+    {
+      name: 'lastTest',
+      type: 'group',
+      access: codeWritten,
+      admin: { hidden: true },
+      fields: [
+        { name: 'at', type: 'date', access: codeWritten },
+        { name: 'ok', type: 'checkbox', access: codeWritten },
+        { name: 'summary', type: 'text', access: codeWritten },
+      ],
+    },
+    {
+      name: 'lastEvent',
+      type: 'group',
+      access: codeWritten,
+      admin: { hidden: true },
+      fields: [
+        { name: 'at', type: 'date', access: codeWritten },
+        { name: 'unlinked', type: 'number', access: codeWritten },
+      ],
+    },
+    {
+      name: 'status',
+      type: 'ui',
+      admin: { components: { Field: '/payload/components/SignInPanel#SignInPanel' } },
+    },
+  ],
+}
+
 /** Site behaviour (spec §4.2). Feature flags are deferred to the template work. */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -160,7 +221,10 @@ export const SiteSettings: GlobalConfig = {
   access: { read: anyone, update: isStaff },
   hooks: {
     afterChange: [
-      async ({ doc, req }) => {
+      async ({ doc, previousDoc, req }) => {
+        const was = (previousDoc as { signIn?: { mode?: string } } | undefined)?.signIn?.mode
+        const now = (doc as { signIn?: { mode?: string } }).signIn?.mode
+        if (was && now && was !== now) console.info(`[signin] Facebook sign-in mode changed from ${was} to ${now}`)
         // Stats settings change classification, thresholds and milestones: refresh the stats pages too.
         await revalidatePaths(['/', '/sponsors', '/stats', '/records', '/players', '/stats/opposition', '/records/partnerships'], req.context, ALL_STATS_TAGS)
         return doc
@@ -189,6 +253,7 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         { label: 'Stats', fields: [statsGroup] },
+        { label: 'Sign-in', fields: [signInGroup] },
       ],
     },
   ],

@@ -96,6 +96,7 @@ export interface Config {
     'merge-log': MergeLog;
     'ai-draft-counter': AiDraftCounter;
     'throttle-hits': ThrottleHit;
+    'auth-broker-jtis': AuthBrokerJti;
     'player-selection-profiles': PlayerSelectionProfile;
     'selection-fixtures': SelectionFixture;
     availability: Availability;
@@ -184,6 +185,7 @@ export interface Config {
     'merge-log': MergeLogSelect<false> | MergeLogSelect<true>;
     'ai-draft-counter': AiDraftCounterSelect<false> | AiDraftCounterSelect<true>;
     'throttle-hits': ThrottleHitsSelect<false> | ThrottleHitsSelect<true>;
+    'auth-broker-jtis': AuthBrokerJtisSelect<false> | AuthBrokerJtisSelect<true>;
     'player-selection-profiles': PlayerSelectionProfilesSelect<false> | PlayerSelectionProfilesSelect<true>;
     'selection-fixtures': SelectionFixturesSelect<false> | SelectionFixturesSelect<true>;
     availability: AvailabilitySelect<false> | AvailabilitySelect<true>;
@@ -305,6 +307,7 @@ export interface User {
   inviteExpiresAt?: string | null;
   invitedAt?: string | null;
   facebookId?: string | null;
+  facebookIdVia?: ('own' | 'broker') | null;
   passwordChosenAt?: string | null;
   /**
    * When a Facebook sign-in was linked.
@@ -1410,6 +1413,19 @@ export interface ThrottleHit {
   windowStart: string;
   lockedUntil?: string | null;
   strikes: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Remembers which one-time sign-in tokens from the shared broker were used. Written by the site; read only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "auth-broker-jtis".
+ */
+export interface AuthBrokerJti {
+  id: number;
+  jti: string;
+  expiresAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -2752,6 +2768,10 @@ export interface PayloadLockedDocument {
         value: number | ThrottleHit;
       } | null)
     | ({
+        relationTo: 'auth-broker-jtis';
+        value: number | AuthBrokerJti;
+      } | null)
+    | ({
         relationTo: 'player-selection-profiles';
         value: number | PlayerSelectionProfile;
       } | null)
@@ -2973,6 +2993,7 @@ export interface UsersSelect<T extends boolean = true> {
   inviteExpiresAt?: T;
   invitedAt?: T;
   facebookId?: T;
+  facebookIdVia?: T;
   passwordChosenAt?: T;
   facebookLinkedAt?: T;
   lastLoginAt?: T;
@@ -3605,6 +3626,16 @@ export interface ThrottleHitsSelect<T extends boolean = true> {
   windowStart?: T;
   lockedUntil?: T;
   strikes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "auth-broker-jtis_select".
+ */
+export interface AuthBrokerJtisSelect<T extends boolean = true> {
+  jti?: T;
+  expiresAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4705,6 +4736,24 @@ export interface SiteSetting {
         }[]
       | null;
   };
+  /**
+   * How selectors can sign in with Facebook. Passwords always keep working.
+   */
+  signIn?: {
+    /**
+     * The shared broker needs no Facebook app of your own. The club's own app needs an app id and secret on the server. If you switch between the two, people who linked Facebook under the other option must link again from My account; passwords keep working.
+     */
+    mode: 'off' | 'broker' | 'own-app';
+    lastTest?: {
+      at?: string | null;
+      ok?: boolean | null;
+      summary?: string | null;
+    };
+    lastEvent?: {
+      at?: string | null;
+      unlinked?: number | null;
+    };
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -5345,6 +5394,24 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               label?: T;
               keywords?: T;
               id?: T;
+            };
+      };
+  signIn?:
+    | T
+    | {
+        mode?: T;
+        lastTest?:
+          | T
+          | {
+              at?: T;
+              ok?: T;
+              summary?: T;
+            };
+        lastEvent?:
+          | T
+          | {
+              at?: T;
+              unlinked?: T;
             };
       };
   updatedAt?: T;

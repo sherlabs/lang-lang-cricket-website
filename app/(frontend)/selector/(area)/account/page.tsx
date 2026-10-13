@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { ChangePasswordForm } from '@/components/selector/forms'
 import { FacebookButton } from '@/components/selector/facebook-button'
-import { facebookConfig } from '@/lib/facebook-login'
+import { resolveSignIn } from '@/lib/signin/mode'
+import { getPayloadClient } from '@/lib/payload/client'
+import { headers } from 'next/headers'
 import { requireSelection } from '@/lib/selector-auth'
 import { getOwnAccount } from '@/lib/selector-queries'
 import { changePasswordAction, unlinkFacebookAction } from '../../actions'
@@ -12,7 +14,7 @@ export default async function AccountPage() {
   const user = await requireSelection('/selector/account')
   const account = await getOwnAccount(user)
   const isSelector = account?.role === 'selector'
-  const facebook = Boolean(facebookConfig()) && isSelector
+  const facebook = isSelector && (await resolveSignIn(await getPayloadClient(), { host: (await headers()).get('host') })).kind !== 'off'
   return (
     <main className="container-site max-w-xl py-8 sm:py-12">
       <h1 className="display text-3xl text-brand-black">My account</h1>

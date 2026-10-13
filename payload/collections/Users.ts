@@ -27,7 +27,7 @@ const CREATE_KEYS = ['email', 'password', 'name', 'role']
 const EDITOR_UPDATE_KEYS = ['email', 'password', 'currentPassword', 'name', 'disabled', 'facebookId']
 const SELECTOR_UPDATE_KEYS = ['password', 'currentPassword', 'name']
 /** A selector (or editor) naming one of these is a privilege-escalation attempt: refuse loudly. */
-const SELECTOR_FORBIDDEN_KEYS = ['email', 'role', 'disabled', 'facebookId']
+const SELECTOR_FORBIDDEN_KEYS = ['email', 'role', 'disabled', 'facebookId', 'facebookIdVia']
 
 type Body = Record<string, unknown>
 
@@ -142,7 +142,11 @@ const applyInviteContext: CollectionBeforeChangeHook = ({ data, req }) => {
   return data
 }
 
-/** `facebookId` is only ever set on a selector row, by the OAuth flow (context flag); anyone else may only clear it. */
+/**
+ * `facebookId` is only ever set on a selector row, by the OAuth flow (context flag); anyone else may only clear it. The id space
+ * it was bound in (`facebookIdVia`: the club's own Meta app or the shared broker's) is written with it and cleared with it,
+ * because an app-scoped id from one Meta app means nothing in the other.
+ */
 const facebookIdRules: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   const role = (data.role ?? (originalDoc as { role?: string } | undefined)?.role) as string | undefined
   const incoming = data.facebookId
@@ -152,11 +156,16 @@ const facebookIdRules: CollectionBeforeChangeHook = ({ data, originalDoc, req })
     if (role !== SELECTOR_ROLE) throw new APIError('A Facebook sign-in can only be linked to a selector.', 403, null, true)
     if (!req.context?.facebookBind) throw new Forbidden(req.t)
     data.facebookLinkedAt = new Date().toISOString()
+    data.facebookIdVia = req.context?.facebookVia === 'broker' ? 'broker' : 'own'
   } else if (role !== SELECTOR_ROLE && before) {
     // Changing a selector into anything else drops the link.
     data.facebookId = null
+    data.facebookIdVia = null
   }
-  if ((incoming === null || incoming === '') && before) data.facebookLinkedAt = null
+  if ((incoming === null || incoming === '') && before) {
+    data.facebookLinkedAt = null
+    data.facebookIdVia = null
+  }
   return data
 }
 
@@ -166,6 +175,7 @@ const emailChangeUnlinks: CollectionBeforeChangeHook = ({ data, originalDoc, ope
   const before = (originalDoc as { email?: string } | undefined)?.email
   if (before && data.email.toLowerCase() !== before.toLowerCase()) {
     data.facebookId = null
+    data.facebookIdVia = null
     data.facebookLinkedAt = null
   }
   return data
@@ -283,6 +293,7 @@ export const Users: CollectionConfig = {
     ],
   },
   timestamps: true,
+  indexes: [{ fields: ['facebookId', 'facebookIdVia'], unique: true }],
   fields: [
     { name: 'name', type: 'text', admin: { description: 'Shown in the greeting, e.g. "Hello, Sam".' } },
     {
@@ -313,8 +324,11 @@ export const Users: CollectionConfig = {
     { name: 'inviteExpiresAt', type: 'date', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     { name: 'invitedAt', type: 'date', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     // Normal unique index: Postgres allows many NULLs, so no partial index is needed.
-    { name: 'facebookId', type: 'text', unique: true, hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
+    // Unique together with `facebookIdVia` (see `indexes`): the same digits in two Meta apps are two different people.
+    { name: 'facebookId', type: 'text', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     // When the person chose a password (null for a Facebook-invited selector who never did). Not readable over REST; only the `stampPasswordChosen` hook writes it (a non-admin's body keys are filtered in beforeOperation).
+    // Which id space `facebookId` belongs to: the club's own Meta app, or the shared sign-in broker's. Null on an unlinked row; a null beside an id counts as `own`.
+    { name: 'facebookIdVia', type: 'select', options: [{ label: 'Own app', value: 'own' }, { label: 'Shared broker', value: 'broker' }], hidden: true, access: { read: nobodyField, create: nobodyField, update: nobodyField }, admin: { disableListColumn: true } },
     { name: 'passwordChosenAt', type: 'date', hidden: true, access: { read: nobodyField }, admin: { disableListColumn: true } },
     { name: 'facebookLinkedAt', type: 'date', admin: { readOnly: true, condition: adminOnlyCondition(), description: 'When a Facebook sign-in was linked.' }, access: { create: nobodyField, update: nobodyField } },
     { name: 'lastLoginAt', type: 'date', admin: { readOnly: true, condition: adminOnlyCondition() }, access: { create: nobodyField, update: nobodyField } },

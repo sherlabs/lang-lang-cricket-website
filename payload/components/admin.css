@@ -969,3 +969,46 @@ a[href$='/forgot'] {
 @media print {
   .plan-pillar { break-inside: avoid; }
 }
+
+/* Facebook sign-in settings (SignInPanel, SignInTestButton) */
+.club-signin {
+  margin: var(--base) 0;
+  padding: var(--base);
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: var(--style-radius-m, 8px);
+}
+.club-signin .club-field__title {
+  margin: var(--base) 0 0.25rem;
+  font-size: 1rem;
+}
+.club-signin .club-field__title:first-child {
+  margin-top: 0;
+}
+.club-signin p {
+  margin: 0.25rem 0;
+}
+.club-signin__list {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+}
+.club-signin__pre {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  background: var(--theme-elevation-50);
+  border-radius: var(--style-radius-s, 4px);
+}
+.club-signin__test {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  margin: var(--base) 0 0.5rem;
+}
+.club-signin__checks {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}

@@ -110,8 +110,8 @@ describe('every collection and global is classified (new ones fail here until th
         for (const op of ['create', 'update', 'delete']) {
           expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} must be denied even to admins`).toBe(false)
         }
-        // The merge log holds whole player snapshots and the throttle table holds hashed sign-in keys, so they are admin-only; the other internal collections are readable by staff.
-        expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(e.slug !== 'merge-log' && e.slug !== 'throttle-hits')
+        // The merge log holds whole player snapshots and the throttle and sign-in replay tables hold hashed keys and token ids, so they are admin-only; the other internal collections are readable by staff.
+        expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(e.slug !== 'merge-log' && e.slug !== 'throttle-hits' && e.slug !== 'auth-broker-jtis')
         expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(true)
         expect(access.read({ req: { user: undefined } }), `${e.slug} read is staff only`).toBe(false)
       } else if (officeCollections.some((c) => c.slug === e.slug)) {

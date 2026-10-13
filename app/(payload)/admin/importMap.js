@@ -30,6 +30,7 @@ import { MergePlayerField as MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb }
 import { YearbookDraftButton as YearbookDraftButton_9f1156433eb3a130abcc2da347fd4a1d } from '../../../payload/components/YearbookDraftButton'
 import { MemberRemoveDetailsField as MemberRemoveDetailsField_b31c9d0c216bc541ce62460a5ddf0758 } from '../../../payload/components/MemberRemoveDetailsField'
 import { LabelRenamesHelp as LabelRenamesHelp_f28533af17fbe76ff67314cd71cf7bc4 } from '../../../payload/components/LabelRenamesHelp'
+import { SignInPanel as SignInPanel_3aee8e48a3675b66deec5345a5ccaf4d } from '../../../payload/components/SignInPanel'
 import { ThemeContrast as ThemeContrast_f54b9521d639809a058a047c647eb38a } from '../../../payload/components/ThemeContrast'
 import { Icon as Icon_25a5cf3faf5e08eebe54818d469bcd19 } from '../../../payload/components/Icon'
 import { Logo as Logo_c7b97bbbec2f12a09b3a4e5bba180831 } from '../../../payload/components/Logo'
@@ -97,6 +98,7 @@ export const importMap = {
   "/payload/components/YearbookDraftButton#YearbookDraftButton": YearbookDraftButton_9f1156433eb3a130abcc2da347fd4a1d,
   "/payload/components/MemberRemoveDetailsField#MemberRemoveDetailsField": MemberRemoveDetailsField_b31c9d0c216bc541ce62460a5ddf0758,
   "/payload/components/LabelRenamesHelp#LabelRenamesHelp": LabelRenamesHelp_f28533af17fbe76ff67314cd71cf7bc4,
+  "/payload/components/SignInPanel#SignInPanel": SignInPanel_3aee8e48a3675b66deec5345a5ccaf4d,
   "/payload/components/ThemeContrast#ThemeContrast": ThemeContrast_f54b9521d639809a058a047c647eb38a,
   "/payload/components/Icon#Icon": Icon_25a5cf3faf5e08eebe54818d469bcd19,
   "/payload/components/Logo#Logo": Logo_c7b97bbbec2f12a09b3a4e5bba180831,

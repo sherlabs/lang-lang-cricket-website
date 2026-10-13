@@ -2,6 +2,7 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { syncPlayers } from '@/lib/players/sync'
 import { expireTeamAnnouncements } from '@/lib/selection/announcement-expiry'
 import { refreshSelectionFixtures } from '@/lib/selection-fixtures'
+import { sweepJtis } from '@/lib/signin/broker'
 import { sweep } from '@/lib/throttle'
 
 export const dynamic = 'force-dynamic'
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
   const payload = await getPayloadClient()
   // Housekeeping on the one daily cron: forget idle rate-limit rows. A failure here must not fail the sync.
   await sweep(payload).catch(() => undefined)
+  await sweepJtis(payload).catch(() => undefined)
   await expireTeamAnnouncements(payload).catch((err) => console.error('[teams] announcement expiry failed', err instanceof Error ? err.message : err))
   const result = await syncPlayers(payload)
   // Keep the selectors' upcoming fixtures current too. Its failure must not fail the sync (PlayHQ is already reachable here, so it rarely does).

@@ -55,6 +55,9 @@ export const notificationCopy = {
     imports: (count: number, when: string, seasons: number, matches: number) =>
       `${count} import${count === 1 ? '' : 's'} in the history. The latest was ${when} (${seasons} season ${seasons === 1 ? 'row' : 'rows'}, ${matches} ${matches === 1 ? 'game' : 'games'}).`,
     importsOpen: 'Open Player data tools',
+    signInUnreachable: (when: string) => `Facebook sign-in could not reach the broker (checked ${when}).`,
+    signInUnlinked: (n: number) => `Facebook removed the link for ${n} ${n === 1 ? 'selector' : 'selectors'}.`,
+    signInOpen: 'Open Facebook sign-in settings',
   },
 } as const
 

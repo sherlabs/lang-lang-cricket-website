@@ -278,6 +278,11 @@ async function seedDemoAdminTools(payload: Payload) {
   if (!settings?.stats?.labelRenames?.length) {
     await payload.updateGlobal({ slug: 'site-settings', data: { stats: { ...(settings?.stats ?? {}), labelRenames: [{ kind: 'grade', from: 'Demo Seconds', to: 'Demo B Grade' }] } } as never, context: CTX })
   }
+  // Facebook sign-in mode: the shared broker (the default), so the admin's Sign-in tab renders its status block. No env is set and
+  // no Facebook id is linked here; the demo makes no call to Facebook or the broker.
+  if (settings?.signIn?.mode !== 'broker') {
+    await payload.updateGlobal({ slug: 'site-settings', data: { signIn: { ...(settings?.signIn ?? {}), mode: 'broker' } } as never, context: CTX })
+  }
   // A preferred name (a nickname) on a demo player, and a hand-written (not AI) season summary.
   const alex = await payload.find({ collection: 'players', where: { and: [{ firstName: { equals: 'Alex' } }, { lastName: { equals: 'Turner' } }] }, limit: 1, depth: 0, overrideAccess: true })
   if (alex.docs[0] && !alex.docs[0].preferredName) await payload.update({ collection: 'players', id: alex.docs[0].id, data: { preferredName: 'Turbo' }, overrideAccess: true, context: CTX })

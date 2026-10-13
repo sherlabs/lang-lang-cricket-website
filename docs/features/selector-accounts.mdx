@@ -1,11 +1,11 @@
 ---
 title: Selector accounts and Facebook sign-in
 status: shipped
-routes: ["/selector", "/selector/login", "/selector/invite/[token]", "/selector/account", "/selector/facebook/start", "/selector/facebook/callback", "/selector/facebook/data-deletion", "/selector/facebook/deauthorize", "/admin/selectors"]
+routes: ["/selector", "/selector/login", "/selector/invite/[token]", "/selector/account", "/selector/facebook/start", "/selector/facebook/callback", "/selector/facebook/broker-callback", "/selector/facebook/data-deletion", "/selector/facebook/deauthorize", "/admin/selectors"]
 collections: [users, throttle-hits]
 admin: "Advanced > Selectors (admin and editor), and the Add a selector tile on Home"
 owner: "Committee (editors) and the site admin"
-related: [net-sessions, best-player-votes, users-and-authentication, committee-admin, safety-guards, team-selection-and-announce, match-day-overview]
+related: [sign-in-settings, net-sessions, best-player-votes, users-and-authentication, committee-admin, safety-guards, team-selection-and-announce, match-day-overview]
 added: feat/payload-cms
 ---
 
@@ -30,6 +30,8 @@ Picking and announcing the teams is the weekly job that most needs a quick, priv
 **Facebook sign-in is invite-only.** The only authority to link a Facebook account is a valid, unexpired, unused invite link, or a signed-in selector pressing **Link Facebook** on `/selector/account`. Facebook's email is never requested or compared, so a Facebook account that merely carries a selector's email gets nothing. Only `selector` accounts can use Facebook at all: an admin or editor keeps their password, so a Facebook match can never become a passwordless admin session. The flow never creates a user. After the first link, the selector taps **Continue with Facebook** on the login page. The unique Facebook id is all that is stored (not the name, email or token), and the Facebook sign-in can be removed by the committee (**Unlink Facebook**), by the selector (`/selector/account`) or by Facebook itself (the data-deletion and deauthorize callbacks).
 
 **Safety details.** The one-use OAuth cookie is signed, expires in 10 minutes, carries a nonce that exists only in the cookie (the `state` sent to Facebook is derived from it) and in production is named with the `__Host-` prefix. The `next` address after sign-in must be a plain path inside `/selector`. The page and Facebook routes are `no-store`, `no-referrer` and `noindex`, and `/selector` is disallowed in robots. Sign-in, invite and Facebook routes have a soft per-address rate limit that works on serverless (`throttle-hits`, one atomic statement per hit; it applies on Vercel, or on another host when `TRUSTED_IP_HEADER` names a header the reverse proxy overwrites with the caller's address; with neither, only the per-account lock applies and the site logs a start-up warning). Checking the current password when someone changes it does not count as a sign-in: it neither changes "last sign-in" nor adds a session.
+
+**Three ways to run Facebook.** The admin chooses on Site settings > Sign-in ([Facebook sign-in settings and the shared broker](./sign-in-settings.mdx)): off, through the shared sign-in broker (the default, no Facebook app of your own), or through the club's own Meta app (everything on this page about the Meta console). All three share the same invite-only rules. If the broker is chosen but not set up on the server while the club's own app settings are complete, the club's own app keeps working, so nothing changes for a club that already used it. Each Facebook link records which of the two it was made under; if the admin switches, people link again from My account (passwords keep working).
 
 **Club-neutral by design.** The Facebook app, the cookie prefix, the Graph version and the invite lifetime all come from environment settings (`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_GRAPH_VERSION`, `SELECTOR_INVITE_DAYS`, `COOKIE_PREFIX`, and off Vercel `TRUSTED_IP_HEADER`); colours and the crest come from the theme. With the Facebook settings empty there is no button and every `/selector/facebook/*` route is a 404, so a club that does not want Facebook just leaves them unset.
 

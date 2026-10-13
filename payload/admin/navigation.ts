@@ -73,7 +73,7 @@ export const advancedNav: NavEntry[] = [
  * Collections written only by code (sync, scripts, seed), with no admin UI at all: hidden for every
  * role and never writable through REST. `tests/admin-visibility.test.ts` enforces both.
  */
-export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter', 'throttle-hits']
+export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'auth-broker-jtis']
 
 /**
  * Selection collections (announce-teams spec section 1): data the selectors work with, managed in the selector area, never as raw

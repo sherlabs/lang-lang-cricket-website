@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { AuthCard, OrDivider } from '@/components/selector/auth-card'
 import { FacebookButton } from '@/components/selector/facebook-button'
 import { LoginForm } from '@/components/selector/forms'
-import { facebookConfig, hostSupportsFacebook } from '@/lib/facebook-login'
+import { resolveSignIn } from '@/lib/signin/mode'
 import { getPayloadClient } from '@/lib/payload/client'
 import { safeNext } from '@/lib/safe-next'
 import { getSelectionUser } from '@/lib/selector-auth'
@@ -21,8 +21,8 @@ export default async function SelectorLoginPage({ searchParams }: Props) {
   if (await getSelectionUser()) redirect(next)
   const payload = await getPayloadClient()
   const host = (await headers()).get('host')
-  // The Facebook button only appears when the club's Meta app is set AND this is the host registered with Meta.
-  const facebook = Boolean(facebookConfig()) && hostSupportsFacebook(payload.config.serverURL, host)
+  // The Facebook button only appears when a Facebook sign-in is really on (broker or own app) AND this is the registered host.
+  const facebook = (await resolveSignIn(payload, { host })).kind !== 'off'
   const failure = isFailureCode(sp.e) ? FAILURE_MESSAGES[sp.e] : null
   return (
     <AuthCard title="Selector login" intro="For the people who pick the teams. Your login comes from the committee.">

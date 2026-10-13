@@ -33,6 +33,8 @@ export type NotificationInput = {
   /** Committee-visible: overdue, blocked and unowned season diary jobs, with the sentences already worded. */
   diary?: { overdue: number; blocked: number; unowned: number; overdueText: string; blockedText: string; unownedText: string } | null
   /** Committee-visible: overdue and blocked committee actions this person can see, with the sentences already worded. */
+  /** Admin only: the last Facebook sign-in broker check, and people Facebook removed recently. */
+  signIn?: { testFailedAt: string | null; unlinked: number } | null
   meetings?: { overdue: number; blocked: number; overdueText: string; blockedText: string } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
@@ -91,6 +93,8 @@ export function notificationLines(
   if (input.meetings && input.meetings.overdue > 0) lines.push({ key: 'actions-overdue', tone: 'warn', text: input.meetings.overdueText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
   if (input.meetings && input.meetings.blocked > 0) lines.push({ key: 'actions-blocked', tone: 'warn', text: input.meetings.blockedText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
   if (o.isAdmin) {
+    if (input.signIn?.testFailedAt) lines.push({ key: 'signin-unreachable', tone: 'warn', text: copy.admin.signInUnreachable(o.formatDate(new Date(input.signIn.testFailedAt))), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
+    if (input.signIn && input.signIn.unlinked > 0) lines.push({ key: 'signin-unlinked', tone: 'info', text: copy.admin.signInUnlinked(input.signIn.unlinked), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
     if (input.fees && input.fees.members > 0) lines.push({ key: 'fees-owing', tone: 'info', text: input.fees.text, href: `${r}/office/fees`, linkText: 'Open Fees' })
     if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })
     if (input.imports && input.imports.count > 0 && input.imports.latest) {
