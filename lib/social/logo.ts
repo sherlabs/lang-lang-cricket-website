@@ -20,8 +20,22 @@ async function fetchCapped(url: string): Promise<Buffer | 'too_large' | null> {
   if (!res.ok) return null
   const declared = Number(res.headers.get('content-length') ?? 0)
   if (declared > MAX_INPUT_BYTES) return 'too_large'
-  const buf = Buffer.from(await res.arrayBuffer())
-  return buf.length > MAX_INPUT_BYTES ? 'too_large' : buf
+  if (!res.body) return null
+  // Stream with a byte counter so a body with no content-length is never fully buffered past the cap.
+  const reader = res.body.getReader()
+  const chunks: Buffer[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > MAX_INPUT_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      return 'too_large'
+    }
+    chunks.push(Buffer.from(value))
+  }
+  return Buffer.concat(chunks, total)
 }
 
 async function readBytes(media: LogoMedia, staticDir: string): Promise<Buffer | 'too_large' | null> {

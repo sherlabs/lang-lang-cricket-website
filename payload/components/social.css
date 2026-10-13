@@ -384,6 +384,21 @@
   color: rgb(var(--admin-ink));
   cursor: pointer;
 }
+.social-chip__x {
+  position: relative;
+}
+/* A larger invisible hit area on phones (44px) without changing the visible chip. */
+@media (max-width: 640px) {
+  .social-chip__x::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
 .social-chip__x:hover {
   background: rgb(var(--admin-ink) / 0.1);
 }

@@ -80,6 +80,8 @@ describe('logoFromBytes', () => {
   }
 
   it('accepts same-document references', () => {
+    expect(svgIsSelfContained(SVG('<style>rect{fill:u\\72l(file:///etc/hosts)}</style><rect width="9" height="9"/>'))).toBe(false)
+    expect(svgIsSelfContained(SVG('<rect width="9" height="9" style="fill:ur\\6c(http://x.test/a)"/>'))).toBe(false)
     expect(svgIsSelfContained(SVG('<defs><linearGradient id="g"><stop offset="0" stop-color="#fff"/></linearGradient></defs><rect width="9" height="9" fill="url(#g)"/><use href="#g"/>'))).toBe(true)
   })
 })

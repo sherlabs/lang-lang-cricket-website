@@ -6,7 +6,7 @@ import { SPECS } from '@/lib/social/specs'
 import { SIZE_KEYS, SIZES, STYLE_KEYS, type GraphicType } from '@/lib/social/types'
 import { loadThemeFonts } from '@/lib/theme/fonts-server'
 import { resolveTheme } from '@/lib/theme/resolve'
-import { LAYOUT_CASES, measure, demoLogo } from './helpers/layout-metrics'
+import { LAYOUT_CASES, measure, demoLogo, sponsorMixed } from './helpers/layout-metrics'
 import { TINY_PNG } from './helpers/social-fixtures'
 import { thresholds } from './social-layout-thresholds'
 import type { LineupData } from '@/lib/social/specs/lineup'
@@ -88,4 +88,24 @@ describe('text is fitted, not cut', () => {
     expect(fitted).toBeGreaterThan(100)
     expect(cut).toEqual([])
   }, 240_000)
+})
+
+/** Name-only and mixed sponsor pages (the pixel matrix above only has logo cells): names are centred and fill the page. */
+describe('name-only sponsors are centred and fill the page', () => {
+  const cases: [string, number, number, 'landscape' | 'story'][] = [
+    ['three names, story', 3, 0, 'story'],
+    ['two names, story', 2, 0, 'story'],
+    ['three names, landscape', 3, 0, 'landscape'],
+    ['one logo + one name, landscape', 2, 1, 'landscape'],
+    ['one logo + two names, story', 3, 1, 'story'],
+  ]
+  for (const [label, n, logos, size] of cases) {
+    it(label, async () => {
+      for (const style of STYLE_KEYS) {
+        const m = await measure(await sponsorMixed(n, logos), 'sponsor-thanks', size, style)
+        expect(m.unused, `${label} ${style} empty`).toBeLessThanOrEqual(logos || size === 'landscape' ? 0.65 : 0.5)
+        expect(m.gapV, `${label} ${style} vertical gap`).toBeLessThanOrEqual(0.4)
+      }
+    }, 60_000)
+  }
 })

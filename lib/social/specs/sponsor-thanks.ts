@@ -1,5 +1,6 @@
 import type { GraphicSpec } from '../types'
 import { cleanText } from '../types'
+import { fillNames } from '../fit'
 import { joinNames } from './helpers'
 
 export type SponsorThanksData = { sponsors: { name: string; tier: string; logo: string | null }[]; line: string }
@@ -27,13 +28,13 @@ export const sponsorThanksSpec: GraphicSpec<SponsorThanksParams, SponsorThanksDa
     return {
       // The sponsors are the picture, so the footer strip (which would repeat them) is left off.
       noStrip: true,
-      blocks: [
+      blocks: fillNames([
         { kind: 'kicker', text: singleNameOnly && nameOnly[0].tier ? `Thank you  |  ${nameOnly[0].tier}` : 'Thank you' },
         { kind: 'headline', text: one ? d.sponsors[0].name : 'To our sponsors' },
         ...(withLogo.length ? [{ kind: 'logos' as const, items: withLogo }] : []),
         ...(nameOnly.length && !singleNameOnly ? [{ kind: 'names' as const, items: nameOnly }] : []),
         ...(d.line ? [{ kind: 'text' as const, text: d.line }] : []),
-      ],
+      ], size, _style),
     }
   },
   // A tier is only named for a single sponsor: "a Gold sponsor" is wrong for two sponsors of different tiers (the line is then dropped).

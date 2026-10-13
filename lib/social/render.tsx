@@ -251,22 +251,25 @@ function renderBlock(b: Block, i: number, c: Ctx, last: boolean, input: RenderIn
       )
     }
     case 'names': {
-      // Sponsors without a logo we can draw: the name itself is the picture. One per line for three or fewer, a wrapped line otherwise.
+      // Sponsors without a logo we can draw: the name itself is the picture. Always centred (the logo grid is too), one per line for
+      // three or fewer, a wrapped line otherwise; `scale` enlarges them to fill the page when they are all there is.
       const stacked = namesStacked(b.items.length)
       const boxW = stacked ? width : Math.floor(width * NAME_CELL_MAX)
+      const ns = nameSize(c.size, b.scale)
+      const ts = nameTierSize(c.size, b.scale)
       return (
-        <div key={i} style={row({ width: '100%', marginTop: m.gap, ...(stacked ? { flexDirection: 'column', alignItems: center ? 'center' : 'flex-start' } : { flexWrap: 'wrap', justifyContent: center ? 'center' : 'flex-start', alignItems: 'flex-start' }) })}>
+        <div key={i} style={row({ width: '100%', marginTop: m.gap, ...(stacked ? { flexDirection: 'column', alignItems: 'center' } : { flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }) })}>
           {b.items.map((n, k) => {
             const inline = Boolean(n.tier) && tierInline(c.size)
-            const tierW = inline ? textWidth(`${n.tier}  `, nameTierSize(c.size), BODY_REGULAR) + 12 : 0
-            const fit = c.fit(n.name, boxW - tierW, nameSize(c.size), Math.round(nameSize(c.size) * 0.55), 2, c.face)
+            const tierW = inline ? textWidth(`${n.tier}  `, ts, BODY_REGULAR) + 12 : 0
+            const fit = c.fit(n.name, boxW - tierW, ns, Math.round(ns * 0.55), 2, c.face)
             return (
-              <div key={k} style={col({ alignItems: center ? 'center' : 'flex-start', maxWidth: stacked ? '100%' : `${NAME_CELL_MAX * 100}%`, marginRight: stacked ? 0 : 28, marginBottom: 8 })}>
-                <div style={row({ alignItems: 'baseline', maxWidth: '100%' })}>
-                  <Fitted fit={fit} style={{ fontFamily: 'Display', lineHeight: 1.2, color: t.text, minWidth: 0 }} />
-                  {inline && <Text style={{ flexShrink: 0, marginLeft: 12, fontSize: nameTierSize(c.size), color: t.accentText }}>{n.tier}</Text>}
+              <div key={k} style={col({ alignItems: 'center', maxWidth: stacked ? '100%' : `${NAME_CELL_MAX * 100}%`, marginLeft: stacked ? 0 : 14, marginRight: stacked ? 0 : 14, marginBottom: 8 })}>
+                <div style={row({ alignItems: 'baseline', justifyContent: 'center', maxWidth: '100%' })}>
+                  <Fitted fit={fit} align="center" style={{ fontFamily: 'Display', lineHeight: 1.2, color: t.text, minWidth: 0 }} />
+                  {inline && <Text style={{ flexShrink: 0, marginLeft: 12, fontSize: ts, color: t.accentText }}>{n.tier}</Text>}
                 </div>
-                {n.tier && !inline && <Text style={{ fontSize: nameTierSize(c.size), color: t.accentText }}>{n.tier}</Text>}
+                {n.tier && !inline && <Text style={{ fontSize: ts, color: t.accentText }}>{n.tier}</Text>}
               </div>
             )
           })}

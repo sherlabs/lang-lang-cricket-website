@@ -115,23 +115,23 @@ export function footerHeight(size: SizeKey, opts: { strip: boolean; text: boolea
 const NAME_GAP = 28
 /** A wrapped name is cut at this share of the width, so two always sit side by side. */
 export const NAME_CELL_MAX = 0.46
-export const nameSize = (size: SizeKey): number => Math.round(METRICS[size].subhead * (size === 'landscape' ? 1.1 : 1.35))
-export const nameTierSize = (size: SizeKey): number => Math.round(METRICS[size].body * 0.8)
+export const nameSize = (size: SizeKey, scale = 1): number => Math.round(METRICS[size].subhead * (size === 'landscape' ? 1.1 : 1.35) * scale)
+export const nameTierSize = (size: SizeKey, scale = 1): number => Math.round(METRICS[size].body * 0.8 * Math.min(scale, 1.6))
 /** One name cell: the name line, then the tier line when there is one. */
-const nameCell = (i: { tier?: string }, size: SizeKey): number => Math.round(nameSize(size) * LINE) + (i.tier && !tierInline(size) ? Math.round(nameTierSize(size) * LINE) : 0) + 8
+const nameCell = (i: { tier?: string }, size: SizeKey, scale = 1): number => Math.round(nameSize(size, scale) * LINE) + (i.tier && !tierInline(size) ? Math.round(nameTierSize(size, scale) * LINE) : 0) + 8
 /** The wide page is short, so a sponsor's level sits beside its name instead of under it. */
 export const tierInline = (size: SizeKey): boolean => size === 'landscape'
 /** Whether the names go one per line (three or fewer) rather than in a wrapped line. */
 export const namesStacked = (count: number): boolean => count <= 3
-export function namesHeight(items: readonly { name: string; tier?: string }[], size: SizeKey): number {
-  if (namesStacked(items.length)) return items.reduce((s, i) => s + nameCell(i, size), 0)
+export function namesHeight(items: readonly { name: string; tier?: string }[], size: SizeKey, scale = 1): number {
+  if (namesStacked(items.length)) return items.reduce((s, i) => s + nameCell(i, size, scale), 0)
   const width = SIZES[size].width - 2 * METRICS[size].pad
-  const tall = Math.max(...items.map((i) => nameCell(i, size)))
+  const tall = Math.max(...items.map((i) => nameCell(i, size, scale)))
   // Greedy wrap by estimated width, as the renderer wraps its cells.
   let lineCount = 1
   let used = 0
   for (const i of items) {
-    const w = Math.min(width * NAME_CELL_MAX, textWidth(i.name, nameSize(size), DEFAULT_FACE) + (i.tier && tierInline(size) ? textWidth(`${i.tier}  `, nameTierSize(size), BODY_REGULAR) : 0)) + NAME_GAP
+    const w = Math.min(width * NAME_CELL_MAX, textWidth(i.name, nameSize(size, scale), DEFAULT_FACE) + (i.tier && tierInline(size) ? textWidth(`${i.tier}  `, nameTierSize(size, scale), BODY_REGULAR) : 0)) + NAME_GAP
     if (used > 0 && used + w > width) { lineCount++; used = 0 }
     used += w
   }
@@ -187,7 +187,7 @@ function blockHeight(b: Block, size: SizeKey, style: StyleKey, last: boolean): n
     case 'logos':
       return 0 // sized to the space left, see `layoutHeight`
     case 'names':
-      return m.gap + namesHeight(b.items, size)
+      return m.gap + namesHeight(b.items, size, b.scale)
   }
 }
 
@@ -235,6 +235,24 @@ export function fillRowsScale(blocks: readonly Block[], size: SizeKey, style: St
 export function fillRows(blocks: Block[], size: SizeKey, style: StyleKey): Block[] {
   const scale = fillRowsScale(blocks, size, style)
   return scale > 1 ? blocks.map((b) => (b.kind === 'rows' ? { ...b, scale } : b)) : blocks
+}
+
+/** The most a name-only list is enlarged to fill the page. */
+export const NAMES_SCALE_CAP = 2.4
+
+/** The blocks with a name-only list (no logos, so the names are the whole picture) enlarged to fill the spare page height. */
+export function fillNames(blocks: Block[], size: SizeKey, style: StyleKey): Block[] {
+  const idx = blocks.findIndex((b) => b.kind === 'names')
+  if (idx < 0 || blocks.some((b) => b.kind === 'logos')) return blocks
+  const m = METRICS[size]
+  const names = blocks[idx] as Extract<Block, { kind: 'names' }>
+  const others = blocks.reduce((sum, b, i, all) => (i === idx ? sum : sum + blockHeight(b, size, style, i === all.length - 1)), 0)
+  const target = availableHeight(size, style, footerHeight(size, { strip: false, text: true })) * 0.8 - others - m.gap
+  let scale = 1
+  for (let s = NAMES_SCALE_CAP; s > 1; s = Math.round((s - 0.1) * 10) / 10) {
+    if (namesHeight(names.items, size, s) <= target) { scale = s; break }
+  }
+  return scale > 1 ? blocks.map((b, i) => (i === idx ? { ...names, scale } : b)) : blocks
 }
 
 /**

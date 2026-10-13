@@ -31,6 +31,8 @@ export function svgIsSelfContained(text: string): boolean {
   if (/<\s*(image|script|foreignobject|iframe|embed|object|link|audio|video)\b/.test(t)) return false
   if (t.includes('<!entity') || t.includes('<?xml-stylesheet') || t.includes('@import')) return false
   if (/<!doctype[^[>]*\[/.test(t)) return false
+  // CSS escapes (`u\72l(`, `ur\6c(`) hide `url(` and `@import` from the checks below, so any backslash in CSS is refused.
+  for (const m of t.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>|\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) if ((m[1] ?? m[2] ?? m[3] ?? '').includes('\\')) return false
   for (const m of t.matchAll(/(?:xlink:)?href\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) if (!(m[1] ?? m[2] ?? '').trim().startsWith('#')) return false
   for (const m of t.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/g)) if (!(m[1] ?? m[2] ?? m[3] ?? '').trim().startsWith('#')) return false
   return true

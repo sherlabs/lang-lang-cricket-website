@@ -39,6 +39,7 @@ async function seedSponsors(payload: Payload): Promise<number> {
   return n
 }
 
+/** Hex colours here are deliberate: sample-logo artwork for demo data, not UI tokens (the brand-hex guard skips payload/seed). */
 /** Neutral logos made in code: abstract shapes and two initials, as SVG text. No real brand, no download. */
 const logoSvg = (initials: string, a: string, b: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240"><rect width="480" height="240" rx="24" fill="${a}"/><circle cx="120" cy="120" r="78" fill="${b}"/><rect x="230" y="70" width="190" height="24" rx="12" fill="${b}"/><rect x="230" y="116" width="140" height="24" rx="12" fill="${b}" opacity="0.7"/><rect x="230" y="162" width="100" height="24" rx="12" fill="${b}" opacity="0.45"/><text x="120" y="146" font-family="sans-serif" font-size="72" font-weight="700" text-anchor="middle" fill="${a}">${initials}</text></svg>`

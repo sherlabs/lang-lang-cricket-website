@@ -38,7 +38,7 @@ export type Block =
   | { kind: 'photo'; src: string | null; title: string; lines: string[] }
   | { kind: 'logos'; items: { src: string; name: string; tier?: string }[] }
   /** Names drawn as large text, for sponsors that have no logo we can draw. */
-  | { kind: 'names'; items: { name: string; tier?: string }[] }
+  | { kind: 'names'; items: { name: string; tier?: string }[]; scale?: number }
 
 export type GraphicLayout = { blocks: Block[]; /** Shown instead of the blocks when there is nothing to draw. */ empty?: string; /** Leave the sponsor strip off (a graphic that already shows the sponsors). */ noStrip?: boolean }
 

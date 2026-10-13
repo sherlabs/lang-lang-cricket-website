@@ -99,6 +99,12 @@ export async function sponsorCase(n: number, withLogos = true): Promise<SponsorT
   return { sponsors: Array.from({ length: n }, (_, i) => mk(names[i], ['Platinum', 'Gold', 'Silver', 'Bronze'][i], withLogos ? logos[i] : null)), line: '' }
 }
 
+/** Sponsors where only some (mixed) or none (all name-only) have a logo, for the centring and filling checks. */
+export async function sponsorMixed(n: number, logos: number): Promise<SponsorThanksData> {
+  const base = await sponsorCase(n)
+  return { ...base, sponsors: base.sponsors.map((s, i) => (i < logos ? s : { ...s, logo: null })) }
+}
+
 const g = (i: number, over: Partial<ResultGame> = {}): ResultGame => ({
   gameId: `g${i}`, grade: `${i}. Grade ${i}`, team: 'Test Club', round: 'Round 4', date: '2025-10-11', dateLabel: 'Sat 11 Oct', venue: 'Home Oval', opponent: ['Rivals United', 'Northern Districts Cricket Club', 'Bay City', 'Hill Top'][i % 4],
   letter: i % 2 ? 'W' : 'L', word: i % 2 ? 'Won' : 'Lost', clubScore: '182/6', oppScore: '158', clubShort: '182/6', oppShort: '158', margin: 'by 24 runs', ...over,
