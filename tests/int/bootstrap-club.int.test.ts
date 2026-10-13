@@ -192,6 +192,20 @@ describe('confirmed run', () => {
   })
 })
 
+describe('club honour keywords', () => {
+  it('are stored in club_texts under the path the migration data step uses, and read back as an array', async () => {
+    await payload.updateGlobal({ slug: 'club', data: { honourKeywords: ['rbaa', 'rep'] }, overrideAccess: true, context: { disableRevalidate: true } })
+    const { sql } = await import('@payloadcms/db-postgres/drizzle')
+    const rows = (await payload.db.drizzle.execute(sql`SELECT DISTINCT path FROM payload.club_texts`)) as unknown as { rows: { path: string }[] }
+    expect(rows.rows.map((r) => r.path)).toEqual(['honourKeywords'])
+    const club = (await payload.findGlobal({ slug: 'club', depth: 0, overrideAccess: true })) as unknown as { honourKeywords: string[] }
+    expect([...club.honourKeywords].sort()).toEqual(['rbaa', 'rep'])
+    const { withClubHonourKeywords, DEFAULT_STATS_SETTINGS } = await import('@/lib/site-settings-core')
+    const assoc = withClubHonourKeywords(DEFAULT_STATS_SETTINGS, club.honourKeywords).honourCategories.find((r) => r.label === 'Association honours')!
+    expect(assoc.keywords).toEqual(expect.arrayContaining(['association', 'rbaa', 'rep']))
+  })
+})
+
 describe('refusals', () => {
   it('writes nothing when the environment disagrees with the profile', async () => {
     await wipe()

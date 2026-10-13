@@ -11,7 +11,7 @@ Classes: **A** allowed (comment, preset, migration history, test fixture, develo
 | `payload/seed/club-defaults.ts` | The Lang Lang copy | Picks a set by `CLUB_PRESET`; the words moved verbatim to `payload/seed/presets/lang-lang.ts`; neutral copy comes from `buildClubDefaults` in `payload/seed/club-template.ts`. |
 | `payload/globals/Club.ts` | Lang Lang text as column `DEFAULT`s in the database | Function defaults; the migration `template_neutral_club_defaults` drops the column defaults. A blank migrated database carries no club text (an integration test scans `information_schema`). |
 | `lib/documents.ts`, enum `documents.category` | `CCCA Directory` | `Association directory` (a value rename that keeps rows); the heading visitors see comes from `club.associationLabel`. |
-| `lib/site-settings-core.ts` | `ccca` honour keyword | Removed; `club.honourKeywords` adds a club's own words. |
+| `lib/site-settings-core.ts` | `ccca` honour keyword | Removed; `club.honourKeywords` adds a club's own words. The migration's data step writes `ccca` into Lang Lang's saved club row (only when that row exists), so its honours keep classifying. |
 | `lib/structured-data.ts` | `MELBOURNE`, `melbourneIso` | `CLUB_TZ`, `clubIso`. |
 | `config/site.ts` | Cookie prefix default `llcc` everywhere | `llcc` is a development and test fallback only; production default is the neutral `club`. |
 | `public/googlef3f9083034ceae06.html` | A committed Search Console token | Deleted; served from env `GOOGLE_SITE_VERIFICATION_FILE`. |

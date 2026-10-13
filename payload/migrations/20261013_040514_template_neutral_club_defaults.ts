@@ -78,6 +78,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload"."club" ADD COLUMN "association_label" varchar;
   -- Lang Lang's visitors keep seeing "CCCA Directory": its saved club row gets the label that used to be the stored value.
   UPDATE "payload"."club" SET "association_label" = 'CCCA Directory' WHERE "name" = 'Lang Lang Cricket Club' AND "association_label" IS NULL;
+  -- ...and keeps classifying CCCA honours: the keyword moved out of code into club.honourKeywords (conditional, so a blank database stays empty).
+  INSERT INTO "payload"."club_texts" ("order", "parent_id", "path", "text")
+  SELECT 1, c."id", 'honourKeywords', 'ccca' FROM "payload"."club" c
+  WHERE c."name" = 'Lang Lang Cricket Club'
+    AND NOT EXISTS (SELECT 1 FROM "payload"."club_texts" t WHERE t."parent_id" = c."id" AND t."path" = 'honourKeywords');
   ALTER TABLE "payload"."club_texts" ADD CONSTRAINT "club_texts_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "payload"."club"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "club_texts_order_parent" ON "payload"."club_texts" USING btree ("order","parent_id");`)
 }
