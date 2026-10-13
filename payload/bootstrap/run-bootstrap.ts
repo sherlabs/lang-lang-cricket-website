@@ -116,7 +116,7 @@ export function envProblemsFor(profile: ClubProfile, env: Record<string, string 
 
 export function envLinesFor(profile: ClubProfile): string[] {
   const host = new URL(profile.club.siteUrl).host
-  const prefix = profile.club.shortName.toLowerCase().replace(/\bcc\b|\bcricket club\b/g, '').replace(/[^a-z0-9]/g, '').slice(0, 8) || 'club'
+  const prefix = profile.club.shortName.toLowerCase().replace(/\bcc\b|\bcricket club\b/g, '').replace(/[^a-z0-9]/g, '').slice(0, 12) || 'club'
   return [
     `CLUB_PRESET=template`,
     `CANONICAL_HOST=${host}`,
