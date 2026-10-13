@@ -1,11 +1,33 @@
+import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
+import { getAdminData } from '@/lib/fantasy/admin-view'
+import { isAdminUser, isStaffUser } from '../access'
 import { AdminPage, requireUser } from './AdminPage'
+import { FantasyPanel } from './FantasyPanel'
 
+/**
+ * `/admin/fantasy` (custom view, admin and editor): the club fantasy game. It leads with This week (the share link, the lock, who has
+ * picked, the public switch), then closed-by-default sections for prices, rounds and managers. The staff check is repeated here and
+ * in every action; a selector never reaches it. No PIN or hash is ever read for this page.
+ */
 export async function FantasyView(view: AdminViewServerProps) {
   requireUser(view, '/fantasy')
+  const { req } = view.initPageResult
+  if (!isStaffUser(req.user)) {
+    return (
+      <AdminPage view={view}>
+        <h1 className="club-page__title">Fantasy cricket</h1>
+        <p className="club-page__lead">Only the committee can manage the fantasy game.</p>
+      </AdminPage>
+    )
+  }
+  const data = await getAdminData(req.payload, isAdminUser(req.user))
   return (
     <AdminPage view={view}>
+      <SetStepNav nav={[{ label: 'Fantasy cricket' }]} />
       <h1 className="club-page__title">Fantasy cricket</h1>
+      <p className="club-page__lead">A free game for members: pick a squad within a salary cap and score points from real club games. Share the link below; there are no accounts, only a team name and a PIN. No prizes or entry fees.</p>
+      <FantasyPanel data={data} csvHref="/api/admin/fantasy/leaderboard" />
     </AdminPage>
   )
 }

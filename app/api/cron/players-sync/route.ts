@@ -1,3 +1,4 @@
+import { syncFantasyRounds } from '@/lib/fantasy/sync'
 import { getPayloadClient } from '@/lib/payload/client'
 import { syncPlayers } from '@/lib/players/sync'
 import { expireTeamAnnouncements } from '@/lib/selection/announcement-expiry'
@@ -22,5 +23,6 @@ export async function GET(request: Request) {
   const result = await syncPlayers(payload)
   // Keep the selectors' upcoming fixtures current too. Its failure must not fail the sync (PlayHQ is already reachable here, so it rarely does).
   await refreshSelectionFixtures(payload).catch((err) => console.error('[selection-fixtures] refresh failed', err instanceof Error ? err.message : err))
+  await syncFantasyRounds(payload).catch((err) => console.error('[fantasy] round sync failed', err instanceof Error ? err.message : err))
   return Response.json(result, { status: result.status === 'error' ? 500 : 200 })
 }

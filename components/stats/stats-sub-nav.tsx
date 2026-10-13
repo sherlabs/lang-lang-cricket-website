@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { VOTES, insightsPaths, votePaths } from '@/config/site'
+import { VOTES, fantasyPaths, insightsPaths, votePaths } from '@/config/site'
+import { getCachedFantasyOn } from '@/lib/fantasy/queries'
 import { getCachedPublicLeaderboardOn } from '@/lib/votes-queries'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +16,7 @@ const LINKS = [
   { href: '/matches', label: 'Matches' },
 ] as const
 
-type Current = (typeof LINKS)[number]['href'] | typeof votePaths.publicBoard
+type Current = (typeof LINKS)[number]['href'] | typeof votePaths.publicBoard | typeof fantasyPaths.home
 
 /**
  * Section navigation as links (not a tablist: there are no tab panels). Scrolls inside its own box on phones. The best-player
@@ -24,7 +25,8 @@ type Current = (typeof LINKS)[number]['href'] | typeof votePaths.publicBoard
  */
 export async function StatsSubNav({ current }: { current: Current }) {
   const showVotes = await getCachedPublicLeaderboardOn().catch(() => false)
-  const links: { href: string; label: string }[] = showVotes ? [...LINKS, { href: votePaths.publicBoard, label: VOTES.label }] : [...LINKS]
+  const showFantasy = await getCachedFantasyOn().catch(() => false)
+  const links: { href: string; label: string }[] = [...LINKS, ...(showVotes ? [{ href: votePaths.publicBoard, label: VOTES.label }] : []), ...(showFantasy ? [{ href: fantasyPaths.home, label: 'Fantasy' }] : [])]
   return (
     <nav aria-label="Stats sections" className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
       <ul className="flex w-max gap-2">

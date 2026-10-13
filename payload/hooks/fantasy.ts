@@ -1,5 +1,5 @@
 import type { CollectionBeforeChangeHook } from 'payload'
-import { currentLock } from '../../lib/fantasy/lock-server'
+import { readLock } from '../../lib/fantasy/lock-server'
 
 const idOf = (v: unknown): number | null => (typeof v === 'number' ? v : v && typeof v === 'object' && 'id' in v ? Number((v as { id: unknown }).id) : null)
 
@@ -15,7 +15,8 @@ export const fantasySquadLock: CollectionBeforeChangeHook = async ({ data, origi
   const entry = await req.payload.findByID({ collection: 'fantasy-entries', id: entryId, depth: 0, overrideAccess: true, req })
   const seasonId = idOf((entry as { season?: unknown }).season)
   if (seasonId === null) throw new Error('A squad needs a season.')
-  const lock = await currentLock(req.payload, seasonId, round)
+  // Read only and on this request's own connection: the save action has already stored any lowered lock.
+  const { lock } = await readLock(req.payload, seasonId, round, req)
   if (Date.now() >= lock.getTime()) throw new Error('This round has locked. Squads cannot change after the first game starts.')
   return data
 }
