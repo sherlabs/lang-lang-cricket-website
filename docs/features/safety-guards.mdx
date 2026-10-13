@@ -32,6 +32,7 @@ During the migration the same repository could point at production Neon and the 
 
 - Day to day: just use the local `.env.local` from `.env.example`; the guards stay out of the way.
 - Running a script: `pnpm seed:club --target 127.0.0.1/langlang_dev --confirm`.
+- `pnpm bootstrap:club` uses the same target guard but is a **dry run by default**: `--target` must equal `DATABASE_URI`, a remote host needs `ALLOW_REMOTE_DB=yes`, writing needs `--confirm`, and uploading pictures to a Blob store from your machine needs `ALLOW_REMOTE_BLOB=yes`. A Lang Lang host without `CLUB_PRESET=lang-lang` fails the build and startup (`assertClubPreset`).
 - Before a PR that changes a collection: create the migration, run `pnpm generate`, `pnpm check:migrations`, `pnpm check:generated`.
 
 ## Not included / deferred

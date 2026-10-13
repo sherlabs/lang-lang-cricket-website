@@ -264,16 +264,4 @@ a **Refresh PlayHQ data** action that invalidates the `playhq` cache tag.
 
 ## Template notes
 
-The app is groundwork for other clubs (spec §16). Club-specific content is
-confined to `payload/seed/club-defaults.ts` (names, copy),
-`payload/seed/theme-defaults.ts` (seed colours and heading font; the only file
-allowed to hold brand hex), `config/site.ts`, `public/assets/branding` and the
-env (`CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX`,
-`EXPORT_FILENAME_PREFIX`, `COOKIE_PREFIX`, `CLUB_TIMEZONE`, `CLUB_LOCALE`; see
-`.env.example`; in production the first three have no default and the server
-refuses to start without them). After the first deploy the colours, crest and
-heading font are edited in the admin under Advanced, Site look. A new club forks
-those, then runs `payload migrate`, `seed:admin`, `seed:club` (or `seed:demo`),
-and never runs the ETL. Sport-specific vocabulary (sponsor tiers, people
-sections, document categories) is in `lib/` constants. Cookie names default to
-the `llcc_` prefix.
+This repository is a template for other community cricket clubs. A new club is described by a profile file (`clubs/<slug>/profile.json`; `clubs/example-fc/` is a fictional example) and environment variables, and is stood up with `pnpm bootstrap:club` (a dry run unless `--confirm` is passed). Start at [`docs/template/README.md`](docs/template/README.md); the ordered checklist is `docs/template/new-club-checklist.md`, and `pnpm check:template` reports what is missing. Lang Lang's own deployment selects its copy with `CLUB_PRESET=lang-lang`.

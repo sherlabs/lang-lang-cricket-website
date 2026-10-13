@@ -12,7 +12,7 @@ added: feat/payload-cms
 ## Persona
 
 - **The child safety officer** who needs to publish the updated Code of Conduct the day it is approved.
-- **A parent or new coach** looking for the junior registration form, the game day checklist or the CCCA directory.
+- **A parent or new coach** looking for the junior registration form, the game day checklist or the association directory.
 
 ## Why it was built
 
@@ -20,7 +20,7 @@ The club had 16 policy and safety PDFs scattered across the Wix site. The redesi
 
 ## What it does
 
-- `/documents` lists PDFs grouped by category in a fixed order: Codes of Conduct, Policies, Child Safety, Game Day, CCCA Directory (`lib/documents.ts`). Unknown categories are appended. Each item is a download link.
+- `/documents` lists PDFs grouped by category in a fixed order: Codes of Conduct, Policies, Child Safety, Game Day, Association directory (`lib/documents.ts`; the heading shown for the last one is Club details > Association document section name). Unknown categories are appended. Each item is a download link.
 - A document has a name (what people see), a category and the PDF. PDFs only, up to 25 MB; files go straight to Vercel Blob in production.
 - Public read; staff create, update and delete. Rows imported from the old site keep their old file URL (`legacyUrl`); replacing the file of such a row is refused until decommission, so upload a new document instead (see [uploads and media](./uploads-and-media.mdx)).
 - Saving revalidates `/documents`.

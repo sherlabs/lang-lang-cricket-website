@@ -1,38 +1,46 @@
 ---
-title: Multi-club template groundwork
+title: Multi-club template
 status: shipped
-routes: []
-collections: [club, site-settings]
-admin: "None; developer groundwork"
-owner: "Developers; future beneficiaries are other community sports clubs"
-related: [theme-editor, club-and-site-settings, legacy-etl-and-cutover, safety-guards]
+routes: ["(every public page)"]
+collections: [club, theme, social-settings, office-settings, site-settings, users, media]
+admin: "None for the bootstrap itself (a command-line script run by a developer or the site operator); the result is edited in Club details and Site look"
+owner: "Developers and the site operator; beneficiaries are other community cricket clubs"
+related: [theme-editor, club-and-site-settings, legacy-etl-and-cutover, safety-guards, documents, sign-in-settings]
 added: feat/payload-cms
 ---
 
 ## Persona
 
-- **A developer** asked to stand up the same site for a different club, who wants to change a small, known set of files.
-- **A neighbouring club** that would want its own site without a rewrite.
+- **A new club's volunteer or contractor** who wants the same site for their club without writing code.
+- **The site operator** who stands up and later updates each club's copy.
+- **Lang Lang's own committee**, who must see no change to their site.
 
 ## Why it was built
 
-The Payload migration spec (section 16) records the intent to keep the code reusable. This is groundwork only: it keeps club-specific content in a few places so a later extraction ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)) is practical.
+Other clubs asked for the same site. The earlier groundwork kept club values in a few files but a new club still had to fork code, and a blank database came pre-filled with Lang Lang's wording ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)). The template work removes both: a club is described by a profile file and environment variables, and a blank database holds no club text at all.
 
 ## What it does
 
-- Club-specific content is confined to `payload/seed/club-defaults.ts` (names and copy), `payload/seed/theme-defaults.ts` (the seed colours and heading font, the only place brand hex may appear), `config/site.ts`, `public/assets/branding`, `assets/fonts` and the environment. Colours, crest and heading font are edited in the admin under Advanced, Site look ([Site look](./theme-editor.mdx)); `tests/no-brand-hex.test.ts` fails if a hex colour or club name is hard-coded in app, component, admin or image code.
-- Environment per club: `CANONICAL_HOST`, `REDIRECT_HOSTS`, `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX`, optional `PLAYHQ_CLUB_URL`, `EXPORT_FILENAME_PREFIX`, `VOTE_LABEL`, `COOKIE_PREFIX`, `CLUB_TIMEZONE`, `CLUB_LOCALE`, `OFFICE_CURRENCY` and `OFFICE_LOCALE` (the club office currency and number/date language; they only seed Club office settings, which an admin can edit; see [Club office](./club-office.mdx)). Fees use the club's own season start month and name format (`SEASON_START_MONTH`, `SEASON_NAME_FORMAT`), the office currency, and the setting "Charge fill-in players match fees"; the volunteer roster's jobs (canteen, bar, gate by default), the season diary's warning days and group names (neutral defaults; the standard jobs and starter plan are generic and their dates follow the season start month), and the name of the yearly general meeting ("Annual general meeting" by default) are edited in Club office settings and the personal links use the site's own address, so nothing about them is in code; no amount or season is written in code; for selector sign-in `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` (the club's own Meta app, optional), `SELECTOR_INVITE_DAYS`, and off Vercel `TRUSTED_IP_HEADER` (see `.env.example`). Outside development and test (Vercel production and preview, or a self-hosted `next start`) `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX`, `CANONICAL_HOST` and `COOKIE_PREFIX` are required: `instrumentation.ts` stops the server when any is missing, so a new club (or its preview deployment) can never show Lang Lang's data or call its PlayHQ. The Lang Lang values are defaults for local development and tests only (`NODE_ENV` development or test). The admin sign-in, dashboard and nav icon show the name from Club details; only the browser tab suffix is the neutral "Website Admin". On production a failed theme read makes the page error (Next keeps serving the last good page) instead of caching the seed colours.
-- Sport-specific vocabulary (sponsor tiers, people sections, document categories) sits in `lib/` constants. The document category `CCCA Directory` and the `ccca` honours keyword name Lang Lang's association and are a Postgres enum value, so another club needs a migration to rename them (not done). Cookie names use `COOKIE_PREFIX` (Lang Lang keeps `llcc`).
-- The `club` global merges its saved values over `payload/seed/club-defaults.ts`. That file is the **Lang Lang preset** (names, Caldermeade copy, council, sponsor, e-mail, SEO text), not neutral text: any Club details field a new club leaves empty or unsaved still shows Lang Lang's wording. A new club must therefore either fork `club-defaults.ts` before the first `seed:club` or fill in every Club details field (and check the Site look page). Splitting it into neutral defaults plus a Lang Lang preset is a follow-up, not built ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)).
-- The site URL (canonical links, sitemap, robots, structured data) is `https://<CANONICAL_HOST>` whenever that env var is set, which it must be in production, so it can never disagree with the redirects. `seed:club` fails when Club details > Site URL has another host.
-- A few static files still hold Lang Lang artwork and have no admin upload: `app/favicon.ico`, `public/apple-touch-icon.png`, `public/og-image.jpg` (default share image), `public/assets/branding/hero.jpg` and `logo.png` (the last link of the crest chain and the admin favicon), `public/googlef3f9083034ceae06.html` (Search Console verification), `public/assets/documents/llcc-conflict-resolution-policy.pdf` and the other documents and gallery photos. `tests/branding-files.test.ts` fails when `CANONICAL_HOST` is another club's host and any of the first group is still byte-identical to Lang Lang's.
-- `tests/no-brand-hex.test.ts` also fails when `Lang Lang`, `Caldermeade` or `llcc` appears in code (comments excluded) anywhere except the seeds, scripts, migrations and `config/site.ts`, and its hex scan covers all of `payload/` except those.
-- A new club forks those files, runs `payload migrate`, `seed:admin` and `seed:club` (or `seed:demo`), and never runs the ETL. The README "Template notes" section lists the steps.
+- **A club profile and a bootstrap script.** `clubs/<slug>/profile.json` describes the club (name, location, colours, PlayHQ organisation, first admin, picture files). `pnpm bootstrap:club --profile clubs/<slug>/profile.json --target <host>/<db>` validates the profile and prints a plan; it is a **dry run unless `--confirm` is given**. A confirmed run migrates a blank database, fills Club details, Site look, Social posts, Club office and Site settings, creates the first admin (password from `INITIAL_ADMIN_PASSWORD`, never from the file), uploads the pictures and writes `clubs/<slug>/env-checklist.md` (variable names and status, never values). It refuses a database that already has a Club details record or users unless `--force`; `--force` fills only empty fields and never overwrites a saved value, deletes data or resets an admin. It refuses when the environment disagrees with the profile (canonical host, cookie prefix, PlayHQ organisation and prefix). It makes no network call. The guide is `docs/template/README.md`.
+- **The profile is validated.** Required fields, hex colours, a contrast check of every text and background pair (a failing pair is an error), timezone, locale, currency, an `https://` site address, picture paths that stay inside the club folder, and file type and size. Any key named `password` is rejected.
+- **Neutral copy.** `payload/seed/club-template.ts` has `buildClubDefaults(identity)`, which writes the full set of site wording for any club from its name and place. The Lang Lang words moved verbatim to `payload/seed/presets/lang-lang.ts`. `payload/seed/club-defaults.ts` picks the active set from `CLUB_PRESET` (`lang-lang` in development and test, `template` elsewhere). For the template, the home page, page headings and menus are built from the saved Club details, so they name the right club.
+- **No club text in the database schema.** The `club` global's field defaults are functions, and the migration `template_neutral_club_defaults` removes the old column defaults. An integration test scans the database for preset words.
+- **Lang Lang is protected.** `CLUB_PRESET=lang-lang` must be set on Lang Lang's deployments (production and preview). A build or startup on Lang Lang's host without it fails (`assertClubPreset`), and `verify:cutover` runs the same check.
+- **Association wording.** The document section `CCCA Directory` is now stored as `Association directory`; the heading visitors see comes from Club details > Association document section name (Lang Lang's is "CCCA Directory", set by the migration). Extra association honour words are added in Club details > Extra association honour words. Club details also gained a favicon and a home page hero picture; static icons remain the fallback.
+- **Search Console and credit.** The verification file is no longer committed; the site serves it at `/google<16 hex>.html` only when `GOOGLE_SITE_VERIFICATION_FILE` names it. `AGENCY_CREDIT=off` hides the footer credit.
+- **`pnpm check:template`** (read only) lists every environment variable as set, missing or invalid from one manifest (`config/env-manifest.ts`, which also feeds the generated checklist and the documentation table) and any file under `public/` that is still one of Lang Lang's originals.
+- Guard tests: `tests/no-brand-hex.test.ts` also keeps place, association, host and email words out of code; `tests/template-copy.test.ts` keeps the neutral copy and the example profile free of the preset; the preset file may only be imported by seeds, scripts, tests and `club-defaults.ts`.
 
 ## How to use it
 
-Treat the README "Template notes" section as the checklist. Do not copy this repository's production data.
+1. Follow `docs/template/new-club-checklist.md`: copy `clubs/example-fc/`, edit the profile, create the hosting, set the environment variables, run the dry run, then `--confirm`.
+2. Sign in, check Club details and Site look, and walk the smoke checklist.
+3. Later, merge upstream releases (`docs/template/upstream-updates.md`); a club never edits files outside `clubs/<slug>/`.
 
 ## Not included / deferred
 
-- No club-selection at runtime, no multi-tenancy, no light/dark finish switch, no feature flags for clubs without PlayHQ, and no extraction into a separate template repository ([#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37)). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- No multi-tenancy: one deployment, database and Blob store per club, by design (`docs/template/deployment-model.md`). The only shared service is the sign-in broker.
+- Static artwork (`app/favicon.ico`, `public/apple-touch-icon.png`, `public/assets/...`) stays Lang Lang's in this repository; a new club replaces the files in its own copy (`pnpm check:template` finds the leftovers). The uploaded favicon is added alongside the static one.
+- The profile cannot override the home, page-heading and menu wording (they follow the club's name and place); only the fields in Club details are saved. Fees, volunteer jobs and other office settings are edited in the admin.
+- The template is not yet published as a GitHub template repository, and releases are not yet tagged `template-vX.Y`; both are the owner's call. The bootstrap needs a PlayHQ organisation, a Vercel project, a domain, an email provider and a broker entry, which the club must supply.
+- Tracking issues: [#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37), [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

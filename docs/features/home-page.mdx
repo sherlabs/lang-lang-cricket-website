@@ -33,7 +33,7 @@ Sections, in order (`app/(frontend)/page.tsx`):
 9. Sponsor logo strip.
 10. Call to action to join or get in touch.
 
-Headings and page wording live in `payload/seed/club-defaults.ts` (the `club` global merges its saved values over those defaults). The Club details form in the admin edits identity, contact, socials, SEO and the history text only; home page copy and page copy are changed in code in this version. The menu's built-in links are too, but pages and the News link are added to it from the admin (see [Info pages](./pages.mdx)). The page is rendered per request, so changes made in the admin show on the next load; saving the relevant collection also revalidates `/`.
+Headings and page wording live in `payload/seed/club-defaults.ts` (the `club` global merges its saved values over those defaults; for a club other than Lang Lang the defaults are built from the saved club name and place). The Club details form in the admin edits identity, contact, socials, SEO and the history text only; home page copy and page copy are changed in code in this version. The menu's built-in links are too, but pages and the News link are added to it from the admin (see [Info pages](./pages.mdx)). The page is rendered per request, so changes made in the admin show on the next load; saving the relevant collection also revalidates `/`.
 
 ## How to use it
 

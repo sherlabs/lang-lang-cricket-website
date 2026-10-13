@@ -7,6 +7,7 @@ Public site and committee admin for a community cricket club. Branch `feat/paylo
 - Next 16 (App Router, React 19), Payload 3 with Postgres (`payload` schema), Tailwind, Vercel Blob for files, PlayHQ public API for fixtures and stats.
 - `app/(frontend)` public pages, `app/(payload)` admin, `payload/` collections, globals, hooks, admin views and scripts, `lib/` queries and pure logic (`lib/*-queries.ts` is the only data layer pages use), `tests/` (unit) and `tests/int/` (integration).
 - Club values (colours, crest, display font, names, copy, hosts) come from the `theme`/`club` globals or env (`config/site.ts`), never hex or club names in app, component or OG code; `tests/no-brand-hex.test.ts` enforces it. Use Tailwind `bg-brand-*` classes, `getTheme()` and `themedImageResponse()` (`lib/theme/og.tsx`).
+- Club words live in one place per kind: `payload/seed/presets/lang-lang.ts` (Lang Lang's copy; only seeds, scripts, tests and `club-defaults.ts` import it), `payload/seed/club-template.ts` (`buildClubDefaults`, neutral copy), `config/site.ts` (env defaults) and `clubs/<slug>/` (a club's profile and pictures). Lang Lang's deployments set `CLUB_PRESET=lang-lang`. New-club steps: `docs/template/`; `pnpm bootstrap:club` (dry run by default) and `pnpm check:template`. Environment variables are listed once in `config/env-manifest.ts`.
 - Individuals (committee, coaches) come only from `lib/people-queries.ts` and `components/person-card.tsx`; never type a person into a global.
 
 ## Commands
