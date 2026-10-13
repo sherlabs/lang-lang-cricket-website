@@ -58,7 +58,20 @@ export const notificationCopy = {
     signInUnreachable: (when: string) => `Facebook sign-in could not reach the broker (checked ${when}).`,
     signInUnlinked: (n: number) => `Facebook removed the link for ${n} ${n === 1 ? 'selector' : 'selectors'}.`,
     signInOpen: 'Open Facebook sign-in settings',
+    fantasyOpen: 'Open Fantasy cricket',
   },
+} as const
+
+/**
+ * Club fantasy cricket wording (wave F spec 4.4). These sentences are written to the season's committee log and shown to administrators on
+ * the Home page. They name a team and the person who acted, never a PIN.
+ */
+export const fantasyCopy = {
+  pinReset: (team: string, actor: string, date: string) => `PIN reset for ${team} by ${actor}, ${date}.`,
+  disabled: (team: string, actor: string, date: string) => `${team} was disabled by ${actor}, ${date}.`,
+  renamed: (from: string, to: string, actor: string, date: string) => `${from} was renamed to ${to} by ${actor}, ${date}.`,
+  removed: (team: string, actor: string, date: string) => `${team} was removed by ${actor}, ${date}.`,
+  roundScored: (round: string, actor: string, date: string, why: string) => `Round of ${round} was marked scored by ${actor}, ${date}: ${why}.`,
 } as const
 
 /**

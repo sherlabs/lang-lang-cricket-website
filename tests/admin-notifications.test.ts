@@ -103,3 +103,15 @@ describe('social queue lines', () => {
   })
 })
 
+
+describe('fantasy cricket committee lines (wave F)', () => {
+  const fantasy = { lines: [{ at: '2026-10-03T00:00:00Z', text: 'PIN reset for The Ducks by Sam, 2026-10-03.' }, { at: '2026-10-03T01:00:00Z', text: 'The Hawks was disabled by Sam, 2026-10-03.' }] }
+  it('administrators see each action as a plain line that links to the Fantasy cricket view', () => {
+    const lines = notificationLines(input({ fantasy }), opts(true)).filter((l) => l.key.startsWith('fantasy-'))
+    expect(lines.map((l) => l.text)).toEqual(fantasy.lines.map((l) => l.text))
+    expect(lines[0].href).toBe('/admin/fantasy')
+  })
+  it('the committee (editors) never see them', () => {
+    expect(notificationLines(input({ fantasy }), opts(false)).some((l) => l.key.startsWith('fantasy-'))).toBe(false)
+  })
+})

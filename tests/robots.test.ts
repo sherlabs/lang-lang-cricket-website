@@ -13,6 +13,9 @@ describe('robots', () => {
     expect(rule.disallow).toContain('/players/compare?')
     expect(rule.disallow).toContain('/statlab/export')
     expect(rule.disallow).toContain('/preview')
+    // The fantasy join link (a bearer token) and the per-person team page are never crawled.
+    expect(rule.disallow).toContain('/fantasy/play/')
+    expect(rule.disallow).toContain('/fantasy/team')
     expect(r.sitemap).toBe('https://club.test/sitemap.xml')
   })
 })

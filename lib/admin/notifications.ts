@@ -35,6 +35,8 @@ export type NotificationInput = {
   /** Committee-visible: overdue and blocked committee actions this person can see, with the sentences already worded. */
   /** Admin only: the last Facebook sign-in broker check, and people Facebook removed recently. */
   signIn?: { testFailedAt: string | null; unlinked: number } | null
+  /** Admin only: recent committee actions on the fantasy game (a PIN reset, a disabled team), already worded and without any PIN. */
+  fantasy?: { lines: { at: string; text: string }[] } | null
   meetings?: { overdue: number; blocked: number; overdueText: string; blockedText: string } | null
 }
 export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
@@ -95,6 +97,7 @@ export function notificationLines(
   if (o.isAdmin) {
     if (input.signIn?.testFailedAt) lines.push({ key: 'signin-unreachable', tone: 'warn', text: copy.admin.signInUnreachable(o.formatDate(new Date(input.signIn.testFailedAt))), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
     if (input.signIn && input.signIn.unlinked > 0) lines.push({ key: 'signin-unlinked', tone: 'info', text: copy.admin.signInUnlinked(input.signIn.unlinked), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
+    for (const [i, l] of (input.fantasy?.lines ?? []).entries()) lines.push({ key: `fantasy-${i}`, tone: 'info', text: l.text, href: `${r}/fantasy`, linkText: copy.admin.fantasyOpen })
     if (input.fees && input.fees.members > 0) lines.push({ key: 'fees-owing', tone: 'info', text: input.fees.text, href: `${r}/office/fees`, linkText: 'Open Fees' })
     if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })
     if (input.imports && input.imports.count > 0 && input.imports.latest) {

@@ -91,6 +91,23 @@ export default {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
         ],
       },
+      // The fantasy join link is a bearer token in the address, and the team page is per person: never cached, never leaked through Referer.
+      {
+        source: '/fantasy/play/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/fantasy/team',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
       // A volunteer's personal link is a bearer token in the address: same rules.
       {
         source: '/volunteer/:path*',

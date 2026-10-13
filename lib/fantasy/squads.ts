@@ -17,7 +17,7 @@ const asSquadPool = (pool: Map<number, PoolPlayer>): Map<number, SquadPool> => n
 
 /** The round managers are picking for now, with the lock re-read from the current fixtures. */
 export async function openRound(payload: Payload, season: FantasySeason, now: Date = new Date()): Promise<RoundView | null> {
-  const inputs = await loadRoundInputs(payload, season.id)
+  const inputs = await loadRoundInputs(payload, season)
   const rounds = buildRounds(inputs.fixtures, inputs.states, new Set(inputs.storedGameIds), now)
   return currentRound(rounds, now)
 }

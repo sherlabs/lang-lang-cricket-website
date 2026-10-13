@@ -45,6 +45,17 @@ async function signInFacts(payload: Payload) {
   }
 }
 
+/** Admin only: the committee actions of the last week on the fantasy game (a PIN reset, a disabled team). No PIN is ever in them. */
+async function fantasyFacts(payload: Payload) {
+  try {
+    const res = await payload.find({ collection: 'fantasy-seasons', sort: '-seasonStartYear', limit: 1, depth: 0, overrideAccess: true })
+    const log = ((res.docs[0] as unknown as { adminLog?: { at: string; text: string }[] | null } | undefined)?.adminLog ?? []).filter((l) => Date.now() - new Date(l.at).getTime() < 7 * 86_400_000)
+    return log.length ? { lines: log.slice(-3).reverse() } : null
+  } catch {
+    return null
+  }
+}
+
 async function latestRun(payload: Payload): Promise<RunFacts | null> {
   try {
     const { docs } = await payload.find({ collection: 'player-sync-runs', sort: '-startedAt', limit: 1, depth: 0, overrideAccess: true })
@@ -65,7 +76,7 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
  * only drops its line.
  */
 export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
-  const [pending, run, duplicateCount, imports, social, fees, game, meetings, diary, stock, signIn] = await Promise.all([
+  const [pending, run, duplicateCount, imports, social, fees, game, meetings, diary, stock, signIn, fantasy] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
     isAdmin ? getDuplicateSuggestions().then((s) => s.length).catch(() => null) : Promise.resolve(null),
@@ -79,8 +90,9 @@ export async function NotificationCentre({ payload, isAdmin, user }: { payload: 
     diaryFigures(user),
     stockFigures(user),
     isAdmin ? signInFacts(payload) : Promise.resolve(null),
+    isAdmin ? fantasyFacts(payload) : Promise.resolve(null),
   ])
-  const input: NotificationInput = { signIn, latestRun: run, pending, duplicateCount, imports, social, stock: stock && (stock.low > 0 || stock.overdue > 0) ? { low: stock.low, overdue: stock.overdue, lowText: officeCopy.stock.low(stock.low), overdueText: officeCopy.stock.overdue(stock.overdue) } : null, diary: diary && (diary.overdue > 0 || diary.blocked > 0 || diary.unowned > 0) ? { ...diary, overdueText: officeCopy.diary.overdue(diary.overdue), blockedText: officeCopy.diary.blocked(diary.blocked), unownedText: officeCopy.diary.unowned(diary.unowned) } : null, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
+  const input: NotificationInput = { signIn, fantasy, latestRun: run, pending, duplicateCount, imports, social, stock: stock && (stock.low > 0 || stock.overdue > 0) ? { low: stock.low, overdue: stock.overdue, lowText: officeCopy.stock.low(stock.low), overdueText: officeCopy.stock.overdue(stock.overdue) } : null, diary: diary && (diary.overdue > 0 || diary.blocked > 0 || diary.unowned > 0) ? { ...diary, overdueText: officeCopy.diary.overdue(diary.overdue), blockedText: officeCopy.diary.blocked(diary.blocked), unownedText: officeCopy.diary.unowned(diary.unowned) } : null, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

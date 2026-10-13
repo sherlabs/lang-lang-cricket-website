@@ -1,8 +1,8 @@
 import type { Payload, Where } from 'payload'
-import { FANTASY } from '@/config/site'
+import { FANTASY, SEASON_START_MONTH } from '@/config/site'
 import { fantasyTokenMatches } from './link'
 import { resolveRules, type FantasyRules, type SeasonStatus } from './rules'
-import type { RoundFixture, RoundStateRow } from './rounds'
+import { seasonWindow, type RoundFixture, type RoundStateRow } from './rounds'
 import { isInTheGame } from './eligibility'
 
 /**
@@ -86,9 +86,11 @@ export async function getPlayableCompetition(payload: Payload): Promise<{ settin
 
 export type RoundInputs = { fixtures: RoundFixture[]; states: (RoundStateRow & { id: number; scoredReason?: string | null })[]; storedGameIds: string[] }
 
-/** Live fixtures, the round-state rows of the season and the ids of fixtures that have a stored FINAL game. */
-export async function loadRoundInputs(payload: Payload, seasonId: number): Promise<RoundInputs> {
-  const fx = await payload.find({ collection: 'selection-fixtures', where: { status: { not_equals: 'removed' } }, limit: 3000, pagination: false, depth: 0, overrideAccess: true, select: { gameId: true, localDate: true, startsAt: true, status: true } })
+/** Live fixtures of the season's dates, the round-state rows of the season and the ids of fixtures that have a stored FINAL game. */
+export async function loadRoundInputs(payload: Payload, season: Pick<FantasySeason, 'id' | 'seasonStartYear'>): Promise<RoundInputs> {
+  const seasonId = season.id
+  const win = seasonWindow(season.seasonStartYear, SEASON_START_MONTH)
+  const fx = await payload.find({ collection: 'selection-fixtures', where: { and: [{ status: { not_equals: 'removed' } }, { localDate: { greater_than_equal: win.from } }, { localDate: { less_than: win.to } }] } as Where, limit: 3000, pagination: false, depth: 0, overrideAccess: true, select: { gameId: true, localDate: true, startsAt: true, status: true } })
   const fixtures: RoundFixture[] = fx.docs.map((d) => ({ gameId: String(d.gameId), localDate: String(d.localDate), startsAt: d.startsAt ? String(d.startsAt) : null, status: String(d.status) }))
   const st = await payload.find({ collection: 'fantasy-round-state', where: { season: { equals: seasonId } }, limit: 500, pagination: false, depth: 0, overrideAccess: true })
   const states = st.docs.map((d) => {

@@ -91,3 +91,12 @@ export const roundOfDate = (localDate: string): string => weekendKey(localDate)
 
 /** A stored game that scores no appearance (abandoned, or forfeited). */
 export const scoresNothing = (g: Pick<StoredGame, 'noResult'>): boolean => g.noResult
+
+/**
+ * The dates a fantasy season covers: from the first day of the club's season-start month in its start year to the day before the
+ * next season starts. Fixtures are kept forever, so without this window last season's weekends would show up as rounds.
+ */
+export function seasonWindow(seasonStartYear: number, startMonth: number): { from: string; to: string } {
+  const m = String(Math.min(12, Math.max(1, Math.trunc(startMonth) || 1))).padStart(2, '0')
+  return { from: `${seasonStartYear}-${m}-01`, to: `${seasonStartYear + 1}-${m}-01` }
+}

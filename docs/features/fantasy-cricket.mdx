@@ -1,0 +1,58 @@
+---
+title: Fantasy cricket
+status: shipped
+routes: ["/fantasy", "/fantasy/play/[token]", "/fantasy/team", "/fantasy/leaderboard", "/admin/fantasy", "/api/admin/fantasy/leaderboard"]
+collections: [fantasy-seasons, fantasy-round-state, fantasy-prices, fantasy-entries, fantasy-squads, selection-fixtures, matches, players, site-settings]
+admin: "Advanced > Fantasy cricket (admin and editor). The three switches are also fields on Site settings > Fantasy cricket (admin). The five collections are hidden for every role."
+owner: "The committee (day to day) and the admin (rules, prices, opening the season)"
+related: [match-data-store, availability-link, safety-guards, committee-admin, best-player-votes]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A club member or family member** who wants a friendly game around the club's real results: pick a squad of senior club players, follow the points, check the leaderboard. No account, no email.
+- **A committee member** who shares the join link, sees who has joined, fixes a forgotten PIN and decides whether the leaderboard is public.
+- **The admin**, who sets up each season (rules, prices), opens it, and can rotate the join link.
+
+## Why it was built
+
+A fantasy game keeps members looking at the club's results all season (issue [#36](https://github.com/sherlabs/lang-lang-cricket-website/issues/36), tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). This is the scoped first version: salary cap, a join link plus a PIN, points from the stored scorecards and leaderboards. It reuses the match data store, the selection fixtures and the availability link's throttling, and it needs no new login system. It is a **free game**: there are no entry fees or prizes in it, and nothing here is a betting product.
+
+## What it does
+
+**Off until switched on.** Every fantasy page is a plain 404 until the admin switches the game on and a season is open. The name of the game ("Fantasy cricket" by default) is a setting.
+
+**Joining.** Members open one shared link (`/fantasy/play/<token>`; the token is worked out from the site secret and the link version, never stored and never printed on a public page). They choose a **team name** (2 to 30 characters; letters, numbers, spaces and basic punctuation) and a **6 digit PIN** typed twice. PINs that are easy to guess (all one digit, runs like 123456, repeats like 121212, and a list of favourites) are refused. The form says "Do not use a surname or a child's name. The team name can appear on the leaderboard." A taken name and a blocked name give the **same** message and cost the same work, so neither the blocklist nor the list of names can be probed. To come back on a new phone they enter the team name and PIN, or a one-time code made on their other phone. After signing in, a signed cookie (90 days) holds only the team's id, the link version and when it was issued; a remembered phone is never throttled.
+
+**Squads.** Each manager picks a squad (11 players by default) of **senior** club players whose prices add up to no more than the **salary cap** (100.0 credits by default), and a **captain** whose points count double. The picker is one column with checkboxes and radio buttons, a running total and the room left in a bar that stays in view, and works at 360 pixels and by keyboard. Prices are a **percentile rank of points per game** over the last two stored seasons (smoothed toward the average, so someone with only a game or two is priced near the middle by design), rounded to half a credit; they are not a rating of how good a player is, and the picker says so, shows the games behind each price, and flags prices based on very few games. Players under 18 (the `isJunior` flag), hidden players and players the committee took out of the game are never priced, listed, scored or ranked.
+
+**Rounds and the lock.** A round is one club weekend (Monday to Sunday), worked out from the stored fixtures. It **locks at the first game's start**; squads can change until then, a limited number of players per round (3 by default; the first squad is free). The lock only ever moves earlier: if a game is moved earlier the round locks earlier, even before the nightly update; if a game is moved later the round does not reopen. Doing nothing keeps last round's team. If a player picked earlier leaves the game (hidden, flagged under 18, or taken out), the pick scores 0, the team page says "Replace ... before the lock", the squad cannot be saved until it is replaced, and the replacement does not count as a change. Every rule is checked again on the server when a squad is saved, and a database hook refuses a write to a locked round whatever path it takes.
+
+**Points** come from the stored scorecards (the same facts the stats pages use): playing 2; each run 1; fours 1 and sixes 2 (only when the scorer recorded them); a 50 adds 8 and a 100 adds 16 more; a duck costs 3; each wicket 20; each maiden 6; 3 wickets in an innings adds 6 and 5 adds 12 more; each catch 8 (a wicketkeeper's catches are already counted as catches); each stumping 12 and each run-out 10 (only when recorded). A statistic that is missing scores nothing and is never made up. A game that was forfeited or abandoned scores no appearance. The table is fixed on the season once it opens, and the leaderboard page shows it ("How points are scored").
+
+**Leaderboard.** Season and round views; the captain counts double (a duck too); ties go to the better single round, then to whoever joined first. Rounds that have not locked are not on it. A round shows as **provisional** until every game in it has its scorecard, or until an admin closes it with a reason (for example "washed out"); the page says when a round was closed by the committee. Scorecards are sometimes corrected after a game is first stored, so totals can move a little. By default the leaderboard is for members who have joined; the committee can make it public with one switch.
+
+**Committee view (Advanced > Fantasy cricket).** It leads with *This week*: the share link (copy, text message, WhatsApp), the next lock time, how many teams have picked a squad for this round (a count only; nobody can see another team's squad before the lock), the public-leaderboard switch and, for admins, the game's on/off switch and *Mark round scored*. Below are closed-by-default sections: *Rules and scoring* (editable while the season is a draft, fixed once it opens), *Prices* (admin; worked out for you, with Add missing players for later signings and a way to correct one price or take a player out of the game), *Rounds*, *Teams* (search by team name; Reset PIN, Hide, Rename, Remove) and *Name, words and the join link*. Admins can download the leaderboard as a CSV (spreadsheet formulas in team names are neutralised).
+
+**Forgotten PINs.** A signed-in phone can change the PIN (the current PIN is asked for and the change signs other phones out) or make a one-time code for another phone (6 digits, 10 minutes, once). The committee reset is the last resort: it makes a temporary PIN shown **once, only to the person who pressed the button**; the team must choose its own at the next sign-in. A reset, a hidden team, a rename, a removal or a round closed by hand adds a plain line to the administrators' Home page ("PIN reset for ... by ..., date"); no PIN is ever written to a log, a notification or the database in clear.
+
+**Privacy and honest limits.**
+- The game stores a team name and a scrambled PIN, nothing else: no email, phone number or real name. Teams are removed by asking the committee (Remove deletes the team and its squads).
+- Nobody, not even an admin, can read another team's squad over the API; squads are read only by the page of their owner and by the leaderboard once a round has locked.
+- A 6 digit PIN has about a million values. A team locks for 15 minutes after five wrong tries (doubling up to an hour), and the whole link allows 60 failed tries an hour, so guessing a given team takes years and the chance that any team falls to guessing in a day is under a fifth of one percent. The price of the low ceiling is that a determined person can pause new sign-ins for 15 minutes by spending it (remembered phones are not affected and the committee can make a new link). What is at risk is a fantasy team.
+- Anyone with the join link can join, so do not post it publicly. A new link ends the old one and signs everyone out.
+- Prizes, entry fees or any betting-style use are outside what this builds and would need the club to take its own advice first.
+
+## How to use it
+
+1. An administrator opens **Advanced > Fantasy cricket**, chooses **Set up a season** (the year and a name). The standard rules are copied and prices are worked out from past seasons. Check the rules and prices (nothing is public yet), then **Open season**.
+2. Switch **Fantasy cricket is on**. The share link appears under *This week*; copy it or send it by text or WhatsApp.
+3. Members open the link, choose a team name and PIN, pick a squad and a captain, and save. They come back before each weekend to make changes.
+4. After each weekend the nightly update brings in the scorecards and the leaderboard moves. If a round cannot finish (washed out), an admin uses **Mark round scored** with a reason.
+5. To show the leaderboard to everyone, tick **Show the leaderboard to everyone**. To fix a forgotten PIN, search the team under *Teams* and press **Reset PIN**, then read the temporary PIN to the manager.
+6. When a newcomer joins the club mid-season, press **Add missing players** under *Prices*.
+
+## Not included / deferred
+
+Tracked under [#36](https://github.com/sherlabs/lang-lang-cricket-website/issues/36) (issue stays open) and [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38): a draft format (snake or auction, with turn order, timers and ownership rules); a vice-captain and automatic substitutes; chips such as a wildcard or triple captain; head-to-head and mini-leagues; manager email or accounts and notifications; prizes, entry fees and anything payment-related; economy-rate and strike-rate bonuses (they need ball counts that are often missing); viewing another team's squad after the lock; and rescoring history when the scoring table changes after the season opens (the rules are fixed once it opens instead). Also not built: a QR code for the join link (the link is copied or shared instead), and automatic detection of games PlayHQ marks abandoned (they are not stored as fixtures that end, so such a round is closed with *Mark round scored*). See [Match data store](./match-data-store.mdx) for where points come from and [Availability link and PINs](./availability-link.mdx) for the pattern the join link follows.

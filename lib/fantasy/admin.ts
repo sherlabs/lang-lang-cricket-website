@@ -1,6 +1,7 @@
 import type { Payload, TypedUser } from 'payload'
 import { currentSquads, membersBySquad } from '@/lib/selection/store'
 import { isAdminUser, isStaffUser } from '@/payload/access'
+import { fantasyCopy } from '../../payload/admin/copy'
 import { revalidatePaths } from '../../payload/hooks/revalidate'
 import type { FactSet } from '../stats/match/types'
 import { canBePriced, isEligible } from './eligibility'
@@ -213,7 +214,7 @@ export async function markRoundScored(payload: Payload, user: unknown, season: F
   const data = { scoredManually: true, scoredReason: why, scoredBy: (user as TypedUser).id, scoredAt: now.toISOString() }
   if (st.docs[0]) await payload.update({ collection: 'fantasy-round-state', id: st.docs[0].id, data: data as never, overrideAccess: true, context: CTX })
   else await payload.create({ collection: 'fantasy-round-state', data: { season: season.id, weekendKey, locksAt: lock.toISOString(), ...data } as never, overrideAccess: true, context: CTX })
-  await addAdminLog(payload, season.id, `Round of ${weekendKey} was marked scored by ${actorName(user)}, ${fmtDate(now)}: ${why}.`, now)
+  await addAdminLog(payload, season.id, fantasyCopy.roundScored(weekendKey, actorName(user), fmtDate(now), why), now)
   await touch()
   return { ok: true }
 }
@@ -258,7 +259,7 @@ export async function resetPin(payload: Payload, user: unknown, season: FantasyS
   const pin = temporaryPin()
   const { hash, salt } = await hashPin(pin)
   await payload.update({ collection: 'fantasy-entries', id: e.id, data: { pinHash: hash, pinSalt: salt, pinSetAt: now.toISOString(), mustChangePin: true, deviceCodeHash: null, deviceCodeExpires: null }, overrideAccess: true, context: CTX })
-  await addAdminLog(payload, season.id, `PIN reset for ${e.teamName} by ${actorName(user)}, ${fmtDate(now)}.`, now)
+  await addAdminLog(payload, season.id, fantasyCopy.pinReset(e.teamName, actorName(user), fmtDate(now)), now)
   return { ok: true, teamName: e.teamName, tempPin: pin }
 }
 
@@ -267,7 +268,7 @@ export async function setDisabled(payload: Payload, user: unknown, season: Fanta
   const e = await entryOf(payload, season, entryId)
   if (!e) return { ok: false, message: 'That manager was not found.' }
   await payload.update({ collection: 'fantasy-entries', id: e.id, data: { disabled }, overrideAccess: true, context: CTX })
-  if (disabled) await addAdminLog(payload, season.id, `${e.teamName} was disabled by ${actorName(user)}, ${fmtDate(now)}.`, now)
+  if (disabled) await addAdminLog(payload, season.id, fantasyCopy.disabled(e.teamName, actorName(user), fmtDate(now)), now)
   await touch()
   return { ok: true }
 }
@@ -283,7 +284,7 @@ export async function renameEntry(payload: Payload, user: unknown, season: Fanta
   } catch {
     return { ok: false, message: NAME_UNAVAILABLE }
   }
-  await addAdminLog(payload, season.id, `${e.teamName} was renamed to ${shape.name} by ${actorName(user)}, ${fmtDate(now)}.`, now)
+  await addAdminLog(payload, season.id, fantasyCopy.renamed(e.teamName, shape.name, actorName(user), fmtDate(now)), now)
   await touch()
   return { ok: true }
 }
@@ -295,7 +296,7 @@ export async function removeEntry(payload: Payload, user: unknown, season: Fanta
   if (!e) return { ok: false, message: 'That manager was not found.' }
   await payload.delete({ collection: 'fantasy-squads', where: { entry: { equals: e.id } }, overrideAccess: true, context: { ...CTX, fantasyRescore: true } })
   await payload.delete({ collection: 'fantasy-entries', id: e.id, overrideAccess: true, context: CTX })
-  await addAdminLog(payload, season.id, `${e.teamName} was removed by ${actorName(user)}, ${fmtDate(now)}.`, now)
+  await addAdminLog(payload, season.id, fantasyCopy.removed(e.teamName, actorName(user), fmtDate(now)), now)
   await touch()
   return { ok: true }
 }

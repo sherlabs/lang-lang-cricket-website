@@ -12,7 +12,7 @@ import { FANTASY_TAG, getOpenSeason, loadRoundInputs } from './store'
 export async function syncFantasyRounds(payload: Payload): Promise<{ rounds: number }> {
   const season = await getOpenSeason(payload)
   if (!season) return { rounds: 0 }
-  const inputs = await loadRoundInputs(payload, season.id)
+  const inputs = await loadRoundInputs(payload, season)
   const keys = groupByWeekend(inputs.fixtures.filter((f) => f.status !== 'removed' && /^\d{4}-\d{2}-\d{2}$/.test(f.localDate))).map((g) => g.key)
   for (const key of keys) await currentLock(payload, season.id, key)
   await revalidatePaths([], undefined, [FANTASY_TAG])

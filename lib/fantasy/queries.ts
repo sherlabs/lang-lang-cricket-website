@@ -42,7 +42,7 @@ type SeasonRoundData = { inputs: RoundInputs; points: Record<string, [number, nu
 
 async function loadSeasonRoundData(seasonId: number, seasonStartYear: number, scoring: ScoringTable): Promise<SeasonRoundData> {
   const payload = await getPayloadClient()
-  const inputs = await loadRoundInputs(payload, seasonId)
+  const inputs = await loadRoundInputs(payload, { id: seasonId, seasonStartYear })
   const set = await getSeasonFacts(seasonStartYear)
   const juniors = await payload.find({ collection: 'players', where: { isJunior: { equals: true } }, limit: 5000, pagination: false, depth: 0, joins: false, overrideAccess: true, select: { slug: true } })
   const junior = new Set(juniors.docs.map((p) => p.id))
@@ -63,7 +63,7 @@ const summarise = (r: RoundView): RoundSummary => ({ key: r.key, label: roundLab
 export async function getSeasonRounds(payload: Payload, season: FantasySeason, now: Date = new Date()): Promise<{ rounds: RoundView[]; summaries: RoundSummary[]; points: Map<string, Map<number, number>>; reasons: Map<string, string> }> {
   const data = await fantasyCached(['fantasy-round-data', 'v1', String(season.id), JSON.stringify(season.rules.scoring)], () => loadSeasonRoundData(season.id, season.seasonStartYear, season.rules.scoring))
   // Round state is read fresh (a committee change must show at once); only the points come from the cache.
-  const fresh = await loadRoundInputs(payload, season.id)
+  const fresh = await loadRoundInputs(payload, season)
   const rounds = buildRounds(fresh.fixtures, fresh.states, new Set(fresh.storedGameIds), now)
   const points = new Map(Object.entries(data.points).map(([k, v]) => [k, new Map(v)]))
   const reasons = new Map(fresh.states.filter((s) => s.scoredManually && s.scoredReason).map((s) => [s.weekendKey, s.scoredReason as string]))

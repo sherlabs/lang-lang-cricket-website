@@ -56,6 +56,7 @@ import { DEMO_NEWS, DEMO_PAGES } from '../seed/demo-pages-news'
 import { seedDemoSelection, seedDemoTeams } from '../seed/demo-selection'
 import { seedDemoNets } from '../seed/demo-nets'
 import { seedDemoVotes } from '../seed/demo-votes'
+import { seedDemoFantasy } from '../seed/demo-fantasy'
 import { seedDemoSocial, seedDemoSocialQueue } from '../seed/demo-social'
 import { seedDemoMembers } from '../seed/demo-members'
 import { seedDemoFees } from '../seed/demo-fees'
@@ -526,6 +527,7 @@ async function main() {
     await seedDemoSelection(payload)
     await seedDemoTeams(payload)
     await seedDemoVotes(payload)
+    console.log(`[seed-demo] fantasy cricket: ${await seedDemoFantasy(payload)}`)
     await seedDemoNets(payload)
     await seedDemoSocial(payload)
     await seedDemoSocialQueue(payload)
