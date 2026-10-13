@@ -275,5 +275,9 @@ describe('override links', () => {
     expect(left(s, 3).keeperId).toBeNull()
     expect(keeper(s, 3).keeperId).toBeNull()
     expect(keeper(s, 1)).toEqual({ pins: [], leaves: [2], keeperId: 1 })
+    // an automatically chosen keeper is not in state: the link locks them in, a second tap clears it
+    const auto = { pins: [], leaves: [], keeperId: null }
+    expect(keeper(auto, 26).keeperId).toBe(26)
+    expect(keeper(keeper(auto, 26), 26).keeperId).toBeNull()
   })
 })

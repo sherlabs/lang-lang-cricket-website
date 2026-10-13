@@ -67,7 +67,7 @@ export function XiSuggestion({ view, gameId }: { view: SuggestionView; gameId: s
                   <p className="break-words text-base font-bold text-brand-black"><span className="sr-only">Batting position {p.order}: </span>{p.name}</p>
                   <p className="mt-1 flex flex-wrap items-center gap-1.5">
                     <span className={chip}>{ROLE_LABEL[p.role]}</span>
-                    {p.isKeeper && <span className={chip}>Keeper</span>}
+                    {p.isKeeper && p.role !== 'keeper' && <span className={chip}>Keeper</span>}
                     {p.pinned && <span className={chip}>Pinned by you</span>}
                     {p.medianPosition != null ? <span className="text-xs text-brand-grey">Usually bats {p.medianPosition}</span> : <span className="text-xs text-brand-grey">Order not suggested</span>}
                   </p>
@@ -75,7 +75,7 @@ export function XiSuggestion({ view, gameId }: { view: SuggestionView; gameId: s
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Link href={href(keeperState(s, p.id))} aria-label={`${p.isKeeper ? 'Clear' : 'Make'} ${p.name} the keeper`} className={p.isKeeper ? actOn : act}>Keeper</Link>
+                <Link href={href(keeperState(s, p.id))} aria-label={s.keeperId === p.id ? `Clear ${p.name} as your chosen keeper` : p.isKeeper ? `Lock in ${p.name} as the keeper` : `Make ${p.name} the keeper`} className={s.keeperId === p.id ? actOn : act}>{s.keeperId === p.id ? 'Keeper (yours)' : p.isKeeper ? 'Lock keeper' : 'Keeper'}</Link>
                 <Link href={href(pinned(s, p.id))} aria-label={`${p.pinned ? 'Stop pinning' : 'Pin'} ${p.name}`} className={p.pinned ? actOn : act}>{p.pinned ? 'Pinned' : 'Must play'}</Link>
                 <Link href={href(left(s, p.id))} aria-label={`Leave ${p.name} out`} className={`${act} ml-auto text-status-bad-ink`}>Leave out</Link>
               </div>
