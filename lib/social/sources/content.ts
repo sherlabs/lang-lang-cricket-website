@@ -3,16 +3,16 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { listUpcomingItems } from '@/lib/events-queries'
 import { toSponsor } from '@/lib/payload/mappers'
 import { TIER_ORDER } from '@/lib/sponsors'
-import { isDrawableImageType } from '@/lib/stats/card'
 import { loadImageDataUri } from '@/lib/theme/og'
 import type { EventPromoData, EventPromoParams } from '../specs/event-promo'
 import type { SponsorThanksData, SponsorThanksParams } from '../specs/sponsor-thanks'
 import type { SourceList } from '../types'
+import { logoReason, sponsorLogo } from './logos'
 import { dayLabel, timeLabel } from './shared'
 
 export async function eventChoices(): Promise<SourceList> {
   const items = await listUpcomingItems()
-  return { choices: items.slice(0, 12).map((i) => ({ id: String(i.event.id), label: `${i.event.title}, ${dayLabel(i.occurrenceDate.toISOString().slice(0, 10))}` })), empty: 'No upcoming events.' }
+  return { version: 2, choices: items.slice(0, 12).map((i) => ({ id: String(i.event.id), label: `${i.event.title}, ${dayLabel(i.occurrenceDate.toISOString().slice(0, 10))}`, row: { kind: 'event' as const, title: i.event.title, date: i.occurrenceDate.toISOString().slice(0, 10) } })), empty: 'No upcoming events.' }
 }
 
 export async function loadEvent(p: EventPromoParams): Promise<EventPromoData | null> {
@@ -29,34 +29,44 @@ export async function loadEvent(p: EventPromoParams): Promise<EventPromoData | n
   }
 }
 
-async function publicSponsors() {
+export async function publicSponsors() {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({ collection: 'sponsors', pagination: false, depth: 1, sort: 'sortOrder', overrideAccess: true })
   return docs.sort((a, b) => TIER_ORDER.indexOf(a.tier as (typeof TIER_ORDER)[number]) - TIER_ORDER.indexOf(b.tier as (typeof TIER_ORDER)[number]) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 }
 
 export async function sponsorChoices(): Promise<SourceList> {
+  const payload = await getPayloadClient()
   const docs = await publicSponsors()
-  // A logo that is missing, is not a PNG or JPG, or fails to load (the same cached fetch the picture uses) cannot be drawn;
-  // the picture then shows the name, and the composer says so.
-  const drawable = async (d: (typeof docs)[number]): Promise<boolean> =>
-    typeof d.logo === 'object' && d.logo !== null && isDrawableImageType(d.logo.mimeType) && (await loadImageDataUri(toSponsor(d).logoUrl, d.logo.updatedAt)) !== null
-  const ok = await Promise.all(docs.map(drawable))
+  // The logo is read from the stored upload and decoded by `loadLogoDataUri` (any of PNG, JPEG, WebP, GIF, AVIF or a safe SVG). A sponsor
+  // with no logo, or one that still cannot be drawn, is shown by name, and the row says which of the two it is.
+  const logos = await Promise.all(docs.map((d) => sponsorLogo(payload, d.logo)))
   return {
+    version: 2,
     multi: true,
-    choices: docs.map((d, i) => ({ id: String(d.id), label: `${d.name} (${d.tier})`, ...(ok[i] ? {} : { note: `${d.name} has no logo we can draw, so the name is shown.` }) })),
+    choices: docs.map((d, i) => {
+      const r = logos[i]
+      const logo: 'ok' | 'none' | 'failed' = 'dataUri' in r ? 'ok' : r.error === 'none' ? 'none' : 'failed'
+      return {
+        id: String(d.id),
+        label: `${d.name} (${d.tier})`,
+        ...(logo === 'failed' ? { note: `${d.name}: ${logoReason(r)}, so the name is shown.` } : {}),
+        row: { kind: 'sponsor' as const, name: d.name, tier: d.tier, logo, ...(logo === 'ok' ? { logoUrl: `/api/admin/social/logo/${d.id}` } : {}) },
+      }
+    }),
     empty: 'No sponsors have been added yet.',
   }
 }
 
 export async function loadSponsors(p: SponsorThanksParams): Promise<SponsorThanksData | null> {
+  const payload = await getPayloadClient()
   const docs = (await publicSponsors()).filter((d) => p.ids.includes(d.id))
   if (!docs.length) return null
   const sponsors = await Promise.all(
     docs.map(async (d) => {
       const s = toSponsor(d)
-      const logo = typeof d.logo === 'object' && d.logo ? await loadImageDataUri(s.logoUrl, d.logo.updatedAt) : null
-      return { name: s.name, tier: s.tier, logo }
+      const r = await sponsorLogo(payload, d.logo)
+      return { name: s.name, tier: s.tier, logo: 'dataUri' in r ? r.dataUri : null }
     }),
   )
   return { sponsors, line: p.text }

@@ -75,7 +75,7 @@ export const SocialSettings: GlobalConfig = {
               hasMany: true,
               options: [...TIER_ORDER],
               defaultValue: [...DEFAULT_STRIP_TIERS],
-              admin: { description: 'Logos must be PNG or JPG to appear on pictures.' },
+              admin: { description: 'Logos in PNG, JPG, WebP, GIF, AVIF or SVG format can appear on pictures.' },
             },
             { name: 'max', label: 'Most logos shown', type: 'number', min: SPONSOR_STRIP_MAX.min, max: SPONSOR_STRIP_MAX.max, defaultValue: SPONSOR_STRIP_MAX.default },
           ],

@@ -61,8 +61,13 @@ export type GraphicSpec<P = unknown, D = unknown> = {
 }
 
 /** A choice offered in the composer. Ids and labels only: no statistics. */
-export type SourceChoice = { id: string; label: string; /** A short plain-English caution shown beside the choice (for example a sponsor whose logo cannot be drawn). */ note?: string; /** Other ways to draw the same choice (for a result: with or without the top performers). `id` is the default. */ variants?: { id: string; label: string }[] }
-export type SourceList = { /** More than one may be picked (sponsors). */ multi?: boolean; choices: SourceChoice[]; /** Plain sentence shown when there is nothing to pick. */ empty: string }
+/** What the picker draws for a row (additive: an old client ignores it and shows `label`). */
+export type PickerRow =
+  | { kind: 'game'; /** ISO date, or empty. */ date: string; title: string; subtitle: string; result?: { label: string; tone: 'ok' | 'warn' | 'danger' | 'neutral' }; score?: string; /** Round or month heading the row sits under. */ group: string; upcoming?: boolean }
+  | { kind: 'sponsor'; name: string; tier: string; logo: 'ok' | 'none' | 'failed'; /** Same-origin staff-only image address, set when `logo` is `ok`. */ logoUrl?: string }
+  | { kind: 'event'; title: string; date: string }
+export type SourceChoice = { id: string; label: string; row?: PickerRow; /** A short plain-English caution shown beside the choice (for example a sponsor whose logo cannot be drawn). */ note?: string; /** Other ways to draw the same choice (for a result: with or without the top performers). `id` is the default. */ variants?: { id: string; label: string }[] }
+export type SourceList = { /** 2 when rows carry `row`. */ version?: number; /** More than one may be picked (sponsors). */ multi?: boolean; choices: SourceChoice[]; /** Plain sentence shown when there is nothing to pick. */ empty: string }
 
 export const FREE_TEXT_MAX = 80
 /** Trim, drop control characters, cut at 80. Applied at parse time and again when the text is used. */

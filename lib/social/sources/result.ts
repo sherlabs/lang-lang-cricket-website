@@ -3,14 +3,16 @@ import { getPayloadClient } from '@/lib/payload/client'
 import { getMatchByGameId, getMatchWithSquad } from '@/lib/match-store/queries'
 import { readStoredBundles } from '@/lib/match-store/read'
 import { RESULT_WORDS, resultLetter, resultLineOf, resultWord, sideScore, type InningsScore, type ResultLine } from '@/lib/stats/match/yearbook'
+import { CLUB_LOCALE } from '@/config/site'
+import { gameRow } from '../game-rows'
 import { topBatters, topBowlers } from '../filters'
 import { deriveMargin, playedInMatch, potmFigures } from '../results'
 import type { PotmData, PotmParams } from '../specs/potm'
 import type { ResultData, ResultGame, ResultParams } from '../specs/result'
 import type { SourceList } from '../types'
 import { getLabelMap } from '@/lib/stats/label-queries'
-import { canonicalGrade, canonicalTeam, type LabelMap } from '@/lib/stats/labels'
-import { clubToday, dayLabel, loadSocialPlayers } from './shared'
+import { canonicalTeam, type LabelMap } from '@/lib/stats/labels'
+import { clubNames, clubToday, dayLabel, gradeLabel, loadSocialPlayers, publicTeam } from './shared'
 
 const RECENT = 24
 
@@ -19,10 +21,10 @@ const shortSide = (innings: readonly InningsScore[]): string =>
 
 const wordOf = (l: ResultLine): string => (resultWord(l) === RESULT_WORDS.U ? '' : resultWord(l))
 
-function toGame(l: ResultLine, labels: LabelMap, venue = ''): ResultGame {
+function toGame(l: ResultLine, labels: LabelMap, club: string, venue = ''): ResultGame {
   const letter = resultLetter(l)
   return {
-    gameId: l.gameId, grade: canonicalGrade(l.grade, labels), team: canonicalTeam(l.team, labels), round: l.round, date: l.date ?? '', dateLabel: dayLabel(l.date), venue, opponent: l.opponent,
+    gameId: l.gameId, grade: gradeLabel(l.grade, labels), team: publicTeam(canonicalTeam(l.team, labels), l.grade, club), round: l.round, date: l.date ?? '', dateLabel: dayLabel(l.date), venue, opponent: l.opponent,
     letter: letter === 'U' ? '-' : letter, word: wordOf(l), clubScore: sideScore(l.club), oppScore: sideScore(l.opp),
     clubShort: shortSide(l.club), oppShort: shortSide(l.opp), margin: deriveMargin(l),
   }
@@ -42,35 +44,37 @@ async function recentLines(limit = RECENT): Promise<ResultLine[]> {
 }
 
 export async function resultChoices(): Promise<SourceList> {
-  const [lines, labels] = await Promise.all([recentLines(), getLabelMap()])
+  const [lines, labels, club] = await Promise.all([recentLines(), getLabelMap(), clubNames()])
   const choices: SourceList['choices'] = []
   const dates = [...new Set(lines.map((l) => l.date).filter((d): d is string => !!d))]
   for (const date of dates.slice(0, 3)) {
     const n = lines.filter((l) => l.date === date).length
     if (n > 1) choices.push({ id: `round|${date}`, label: `Whole round: ${dayLabel(date)} (${n} games)` })
   }
-  for (const l of lines.slice(0, 12)) {
+  for (const l of lines.slice(0, 24)) {
+    const g = toGame(l, labels, club.name)
     choices.push({
       id: `single|${l.gameId}`,
-      label: `${[canonicalGrade(l.grade, labels), l.round].filter(Boolean).join(' ')} v ${l.opponent}, ${dayLabel(l.date)}${wordOf(l) ? `, ${wordOf(l).toLowerCase()}` : ''}`,
+      label: `${[g.grade, l.round].filter(Boolean).join(' ')} v ${l.opponent}, ${dayLabel(l.date)}${wordOf(l) ? `, ${wordOf(l).toLowerCase()}` : ''}`,
+      row: gameRow({ date: l.date, grade: g.grade, round: l.round, opposition: l.opponent, letter: g.letter, clubName: club.name, clubScore: g.clubShort, oppScore: g.oppShort }, CLUB_LOCALE),
       variants: [{ id: `single|${l.gameId}`, label: 'Score only' }, { id: `scorecard|${l.gameId}`, label: 'With top performers' }],
     })
   }
-  return { choices, empty: 'No finished games yet.' }
+  return { version: 2, choices, empty: 'No finished games yet.' }
 }
 
 export async function loadResult(p: ResultParams): Promise<ResultData | null> {
   if (p.mode === 'round') {
-    const [recent, labels] = await Promise.all([recentLines(60), getLabelMap()])
+    const [recent, labels, club] = await Promise.all([recentLines(60), getLabelMap(), clubNames()])
     const games = recent.filter((l) => l.date === p.date)
     if (!games.length) return null
-    return { mode: 'round', dateLabel: dayLabel(p.date), round: games[0].round, games: games.map((l) => toGame(l, labels)).sort((a, b) => a.grade.localeCompare(b.grade, undefined, { numeric: true })) }
+    return { mode: 'round', dateLabel: dayLabel(p.date), round: games[0].round, games: games.map((l) => toGame(l, labels, club.name)).sort((a, b) => a.grade.localeCompare(b.grade, undefined, { numeric: true })) }
   }
   const match = await getMatchByGameId(p.gameId)
   if (!match) return null
   const line = resultLineOf(match)
   if (!line) return null
-  const game = toGame(line, await getLabelMap(), [match.match.venueName, match.match.venueSuburb].filter(Boolean).join(', '))
+  const game = toGame(line, await getLabelMap(), (await clubNames()).name, [match.match.venueName, match.match.venueSuburb].filter(Boolean).join(', '))
   if (p.mode === 'single') return { mode: 'single', game }
   // Names appear only for eligible players: a junior without the opt-in never reaches a picture.
   const players = await loadSocialPlayers(line.date ?? clubToday())
@@ -80,8 +84,19 @@ export async function loadResult(p: ResultParams): Promise<ResultData | null> {
 
 /** The finished games to choose a player of the match from, and the players of one chosen game. */
 export async function potmGames(): Promise<SourceList> {
-  const [lines, labels] = await Promise.all([recentLines(), getLabelMap()])
-  return { choices: lines.slice(0, 12).map((l) => ({ id: l.gameId, label: `${[canonicalGrade(l.grade, labels), l.round].filter(Boolean).join(' ')} v ${l.opponent}, ${dayLabel(l.date)}` })), empty: 'No finished games yet.' }
+  const [lines, labels, club] = await Promise.all([recentLines(), getLabelMap(), clubNames()])
+  return {
+    version: 2,
+    choices: lines.slice(0, 24).map((l) => {
+      const g = toGame(l, labels, club.name)
+      return {
+        id: l.gameId,
+        label: `${[g.grade, l.round].filter(Boolean).join(' ')} v ${l.opponent}, ${dayLabel(l.date)}`,
+        row: gameRow({ date: l.date, grade: g.grade, round: l.round, opposition: l.opponent, letter: g.letter, clubName: club.name, clubScore: g.clubShort, oppScore: g.oppShort }, CLUB_LOCALE),
+      }
+    }),
+    empty: 'No finished games yet.',
+  }
 }
 
 export async function potmPlayers(gameId: string): Promise<SourceList> {
@@ -109,7 +124,7 @@ export async function loadPotm(p: PotmParams): Promise<PotmData | null> {
   if (!info?.eligible) return null
   const figures = potmFigures(match, p.playerId)
   return {
-    player: info.name, opponent: match.match.opponentOrgName?.trim() || match.match.opponentName?.trim() || 'the opposition', grade: canonicalGrade(match.match.gradeName, await getLabelMap()), round: match.match.roundName,
+    player: info.name, opponent: match.match.opponentOrgName?.trim() || match.match.opponentName?.trim() || 'the opposition', grade: gradeLabel(match.match.gradeName, await getLabelMap()), round: match.match.roundName,
     dateLabel: dayLabel(date), statLine: p.text || figures.statLine, big: figures.big,
   }
 }

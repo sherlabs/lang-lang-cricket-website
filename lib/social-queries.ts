@@ -2,7 +2,7 @@ import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
 import { resolveSocialSettings, type SocialSettings } from '@/lib/social/settings'
 import { TIER_ORDER } from '@/lib/sponsors'
-import { loadImageDataUri } from '@/lib/theme/og'
+import { sponsorLogo } from '@/lib/social/sources/logos'
 
 /** The social-settings global with every gap filled (never throws: a graphic must still render if the read fails). */
 export async function getSocialSettings(): Promise<SocialSettings> {
@@ -18,7 +18,7 @@ export async function getSocialSettings(): Promise<SocialSettings> {
 
 /**
  * Sponsor logos for the footer strip: the tiers in the settings, in tier then sort order, up to `max`. A logo that is not a
- * PNG or JPG, or that cannot be fetched in time, is skipped; with none left the strip is simply absent.
+ * picture file we can decode (PNG, JPG, WebP, GIF, AVIF or a safe SVG) is skipped; with none left the strip is simply absent.
  */
 export async function sponsorsForStrip(settings: SocialSettings): Promise<{ src: string; name: string }[]> {
   if (!settings.sponsorStrip.show || settings.sponsorStrip.tiers.length === 0) return []
@@ -31,21 +31,20 @@ export async function sponsorsForStrip(settings: SocialSettings): Promise<{ src:
     overrideAccess: true,
   })
   const ordered = docs
-    .filter((d) => typeof d.logo === 'object' && d.logo !== null && Boolean(d.logo.url))
+    .filter((d) => typeof d.logo === 'object' && d.logo !== null)
     .sort((a, b) => TIER_ORDER.indexOf(a.tier as (typeof TIER_ORDER)[number]) - TIER_ORDER.indexOf(b.tier as (typeof TIER_ORDER)[number]) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.id - b.id)
     .slice(0, settings.sponsorStrip.max)
   const loaded = await Promise.all(
     ordered.map(async (d) => {
-      const logo = d.logo as { url?: string | null; updatedAt?: string }
-      const src = await loadImageDataUri(logo.url ?? '', logo.updatedAt ?? '')
-      return src ? { src, name: d.name } : null
+      const r = await sponsorLogo(payload, d.logo)
+      return 'dataUri' in r ? { src: r.dataUri, name: d.name } : null
     }),
   )
   return loaded.filter((x): x is { src: string; name: string } => x !== null)
 }
 
 /** True when the strip is switched on and has logos configured but none could be drawn (the composer hints at PNG or JPG). */
-export const stripHint = 'Sponsor logos need to be PNG or JPG to appear on pictures.'
+export const stripHint = 'Sponsor logos need to be a picture file (PNG, JPG, WebP, GIF, AVIF or SVG) to appear on pictures.'
 
 // ---- The posting queue (wave C spec 4.4, 4.8). Staff-only callers; nothing here is reachable without a staff check. ----
 

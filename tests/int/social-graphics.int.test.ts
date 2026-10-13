@@ -290,7 +290,7 @@ describe('social graphics', () => {
     await payload.delete({ collection: 'matches', where: { gameId: { equals: 'toss-upcoming' } }, overrideAccess: true, context: CTX })
   }, 90_000)
 
-  it('sponsor thank-you: a sponsor whose logo cannot be drawn is flagged in the chooser and drawn by name', async () => {
+  it('sponsor thank-you: a WebP-labelled logo is drawable, a sponsor with no logo is name only, and every mix draws', async () => {
     const mk = async (name: string, mimetype: string | null, file: string) => {
       const media = mimetype ? await payload.create({ collection: 'media', data: { alt: name }, file: { data: png, mimetype, name: file, size: png.length }, overrideAccess: true, context: CTX }) : null
       return payload.create({ collection: 'sponsors', data: { name, tier: 'Gold', ...(media ? { logo: media.id } : {}), linkUrl: '' } as never, overrideAccess: true, context: CTX })
@@ -303,15 +303,16 @@ describe('social graphics', () => {
     const list = (await (await sources('type=sponsor-thanks', editor)).json()) as { choices: { id: string; note?: string }[] }
     const noteOf = (id: number) => list.choices.find((c) => c.id === String(id))?.note
     expect(noteOf(ok.id)).toBeUndefined()
-    expect(noteOf(webp.id)).toBe('Webp Sponsor has no logo we can draw, so the name is shown.')
-    expect(noteOf(bare.id)).toBe('Bare Sponsor has no logo we can draw, so the name is shown.')
+    // The type is decided from the bytes, not the stored label, so the WebP-labelled file is drawable; no logo at all is simply name only.
+    expect(noteOf(webp.id)).toBeUndefined()
+    expect(noteOf(bare.id)).toBeUndefined()
     // Mixed, all name-only and a single name-only sponsor all draw in every size.
     for (const source of [`${ok.id},${webp.id},${bare.id}`, `${webp.id},${bare.id}`, `${bare.id}`]) {
       for (const size of ['square', 'story', 'landscape']) expect((await graphic(`type=sponsor-thanks&size=${size}&style=minimal&source=${enc(source)}`, editor)).status, `${source} ${size}`).toBe(200)
     }
   }, 120_000)
 
-  it('sponsor logos: only the configured host is fetched, a WebP is skipped without an error, and no logo at all just drops the strip', async () => {
+  it('sponsor logos: read from the stored file with no request to ourselves, a WebP now joins the strip, and no logo at all just drops the strip', async () => {
     const mk = async (name: string, mimetype: string, file: string, tier = 'Platinum') => {
       const media = await payload.create({ collection: 'media', data: { alt: name }, file: { data: png, mimetype, name: file, size: png.length }, overrideAccess: true, context: CTX })
       await payload.create({ collection: 'sponsors', data: { name, tier, logo: media.id, linkUrl: '' } as never, overrideAccess: true, context: CTX })
@@ -320,10 +321,9 @@ describe('social graphics', () => {
     await mk('Webp Sponsor', 'image/webp', 'logo-two.webp', 'Gold')
     const { getSocialSettings, sponsorsForStrip } = await import('@/lib/social-queries')
     const strip = await sponsorsForStrip(await getSocialSettings())
-    expect(strip.map((s) => s.name)).toEqual(['Png Sponsor'])
-    expect(calls.length).toBeGreaterThan(0)
-    for (const url of calls) expect(url.startsWith('http://localhost:3000/')).toBe(true)
-    // With only the WebP left, the strip is empty and the picture still draws.
+    expect(strip.map((s) => s.name)).toEqual(['Png Sponsor', 'Webp Sponsor'])
+    // The files are read from disk: no request at all, not even to the site itself.
+    expect(calls).toEqual([])
     await clearCollection(payload, 'sponsors')
     await mk('Webp Only', 'image/webp', 'logo-three.webp')
     const none = await graphic(`type=fixtures&size=square&source=2026-10-17`, editor)

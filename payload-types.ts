@@ -5269,7 +5269,7 @@ export interface SocialSetting {
   sponsorStrip?: {
     show?: boolean | null;
     /**
-     * Logos must be PNG or JPG to appear on pictures.
+     * Logos in PNG, JPG, WebP, GIF, AVIF or SVG format can appear on pictures.
      */
     tiers?: ('Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player')[] | null;
     max?: number | null;

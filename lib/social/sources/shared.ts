@@ -1,11 +1,13 @@
 import 'server-only'
-import { CLUB_LOCALE } from '@/config/site'
+import { CLUB_LOCALE, PLAYHQ_DEFAULTS } from '@/config/site'
 import { getClub } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import { categoryOf } from '@/lib/stats/leaderboard'
 import { getVisibleStatData } from '@/lib/stats/queries'
 import { getStatsSettings } from '@/lib/site-settings'
+import { publicTeamName, displayGrade } from '../names'
+import { canonicalGrade, type LabelMap } from '@/lib/stats/labels'
 import { isSocialEligible, juniorCategoryIds, type SocialPlayer } from '../eligibility'
 
 /** A calendar date as `Sat 11 Oct` in the club's language. */
@@ -49,3 +51,10 @@ export async function clubNames(): Promise<{ name: string; siteUrl: string }> {
   const club = await getClub()
   return { name: club.shortName || club.name, siteUrl: club.siteUrl }
 }
+
+/** A grade as the public sees it: the admin's label for it, without the competition numbering. */
+export const gradeLabel = (raw: string | null | undefined, labels: LabelMap): string => displayGrade(canonicalGrade(raw, labels))
+
+/** The club's own team on a picture: club short name and grade label, never PlayHQ's internal team name. */
+export const publicTeam = (team: string | null | undefined, grade: string | null | undefined, clubName: string): string =>
+  publicTeamName({ team, grade, clubName, teamPrefix: PLAYHQ_DEFAULTS.teamNamePrefix })

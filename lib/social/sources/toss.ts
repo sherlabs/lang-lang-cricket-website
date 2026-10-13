@@ -2,11 +2,13 @@ import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
 import type { Match } from '@/payload-types'
 import { getLabelMap } from '@/lib/stats/label-queries'
-import { canonicalGrade, type LabelMap } from '@/lib/stats/labels'
+import type { LabelMap } from '@/lib/stats/labels'
 import type { TossData, TossParams } from '../specs/toss'
 import { tossWinnerSide } from '../toss'
 import type { SourceList } from '../types'
-import { clubNames, dayLabel } from './shared'
+import { CLUB_LOCALE } from '@/config/site'
+import { gameRow } from '../game-rows'
+import { clubNames, dayLabel, gradeLabel } from './shared'
 
 const RECENT = 40
 const FIELDS = {
@@ -28,7 +30,7 @@ function toData(m: MatchDoc, club: string, labels: LabelMap): TossData | null {
     clubWon: side === 'club',
     choice: m.tossChoice === 'bat' || m.tossChoice === 'bowl' ? m.tossChoice : null,
     opponent,
-    grade: canonicalGrade(str(m.gradeName) || null, labels),
+    grade: gradeLabel(str(m.gradeName) || null, labels),
     round: str(m.roundName) || null,
     dateLabel: dayLabel(str(m.localDate)),
     venue: [str(m.venueName), str(m.venueSuburb)].filter(Boolean).join(', '),
@@ -51,9 +53,9 @@ export async function tossChoices(): Promise<SourceList> {
   const [docs, labels, club] = await Promise.all([recent(), getLabelMap(), clubNames()])
   const choices = docs.flatMap((m) => {
     const d = toData(m, club.name, labels)
-    return d ? [{ id: String(m.gameId), label: `${[d.grade, d.round].filter(Boolean).join(' ')} v ${d.opponent}, ${d.dateLabel}` }] : []
+    return d ? [{ id: String(m.gameId), label: `${[d.grade, d.round].filter(Boolean).join(' ')} v ${d.opponent}, ${d.dateLabel}`, row: gameRow({ date: str(m.localDate), grade: d.grade, round: d.round, opposition: d.opponent }, CLUB_LOCALE) }] : []
   })
-  return { choices: choices.slice(0, 12), empty: 'No game has toss details yet.' }
+  return { version: 2, choices: choices.slice(0, 12), empty: 'No game has toss details yet.' }
 }
 
 export async function loadToss(p: TossParams): Promise<TossData | null> {
