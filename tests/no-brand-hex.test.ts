@@ -50,6 +50,11 @@ describe('no brand hex in code', () => {
     expect(files.length).toBeGreaterThan(100)
   })
 
+  it('covers the Insights chart and the insight functions', () => {
+    expect(files).toContain('components/stats/trend-chart.tsx')
+    expect(files.some((f) => f.startsWith('lib/insights/'))).toBe(true)
+  })
+
   it('has none of the twelve seed hex values', () => {
     const bad = files.filter((f) => seed.some((h) => new RegExp(h, 'i').test(stripped(f))))
     expect(bad).toEqual([])

@@ -218,6 +218,43 @@ export const SCOUTING = {
 } as const
 
 /**
+ * Insights: trends and team analysis (wave E, WP-3). Every threshold is here so a club can tune it in one place. A figure
+ * needs its minimum sample before it shows; below it the raw counts show instead.
+ */
+export const INSIGHTS = {
+  /** Window of the rolling average: the last N batting innings (or bowling spells). */
+  rollingInnings: 5,
+  /** Dismissals inside the window before a rolling batting average is drawn (a window with fewer is a gap). */
+  minOuts: 3,
+  /** Spells inside the window before a rolling economy is drawn. */
+  minSpells: 3,
+  /** Stored games a player needs before a trends page shows anything. */
+  minGames: 3,
+  /** Games a team figure (margin bucket, typical winning total, a rate) needs before it shows. */
+  teamMinGames: 5,
+  /** Wickets a side has in hand at the start: a chase won with W lost wickets was won by (this minus W) wickets. */
+  wicketsInHand: 10,
+  /** Win margin buckets for games that went one innings each. Runs: upper bound of each bucket; wickets in hand likewise. */
+  marginBuckets: {
+    runs: [20, 60, 120],
+    wickets: [2, 5],
+  },
+  /** A season comparison says "higher" or "lower" only when the two figures differ by more than this share of the earlier one. */
+  compareShare: 0.15,
+  /** Seasons shown in the team trend charts (newest). */
+  trendSeasons: 8,
+  /** The results strip length. */
+  stripGames: 10,
+  /** Players listed on the trends page. */
+  listPlayers: 60,
+} as const
+export const insightsPaths = {
+  team: '/stats/insights',
+  trends: '/stats/insights/trends',
+  player: (slug: string) => `/stats/insights/players/${slug}`,
+} as const
+
+/**
  * Availability and squads (announce-teams spec section 4). Fixtures are kept from this many days back to this many days ahead;
  * a PIN is 4 to 6 digits; the public availability link lives under `/availability/<token>`.
  */

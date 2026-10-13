@@ -54,7 +54,7 @@ describe('sitemap', () => {
   it('lists the new stats routes and leaves the export out', async () => {
     const { default: sitemap } = await import('@/app/sitemap')
     const urls = (await sitemap()).map((e) => e.url)
-    for (const p of ['/stats', '/records', '/honours', '/yearbooks', '/matches', '/statlab']) expect(urls).toContain(`https://club.test${p}`)
+    for (const p of ['/stats', '/records', '/honours', '/yearbooks', '/matches', '/statlab', '/stats/insights', '/stats/insights/trends']) expect(urls).toContain(`https://club.test${p}`)
     expect(urls.some((u) => u.includes('/statlab/export'))).toBe(false)
   })
 

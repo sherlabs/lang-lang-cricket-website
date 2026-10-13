@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { VOTES, votePaths } from '@/config/site'
+import { VOTES, insightsPaths, votePaths } from '@/config/site'
 import { getCachedPublicLeaderboardOn } from '@/lib/votes-queries'
 import { cn } from '@/lib/utils'
 
@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/stats', label: 'Leaderboards' },
   { href: '/records', label: 'Records' },
   { href: '/stats/opposition', label: 'Opposition' },
+  { href: insightsPaths.team, label: 'Insights' },
   { href: '/honours', label: 'Honours' },
   { href: '/players/compare', label: 'Compare' },
   { href: '/statlab', label: 'StatLab' },

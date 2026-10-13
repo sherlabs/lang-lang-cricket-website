@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { getPlayerProfile as loadPlayerProfile } from '@/lib/players/queries'
 import { baseOpenGraph, canonicalFor, titleWithSuffix } from "@/lib/site-metadata"
+import { insightsPaths } from '@/config/site'
 import { getClub } from '@/lib/club'
 import { getClubWithCrest } from '@/lib/theme'
 import { battingView, bowlingView } from '@/lib/players/view'
@@ -257,6 +258,11 @@ export default async function PlayerPage(props: Props) {
         )}
 
         {matchView && <MatchAnalysis view={matchView} minimums={settings.matchMinimums} />}
+        {matchView && (
+          <p className="text-sm">
+            <Link href={insightsPaths.player(player.slug)} className="font-semibold text-brand-gold-deep underline underline-offset-2">Trends and season comparison</Link>
+          </p>
+        )}
 
         {career && (
           <div>

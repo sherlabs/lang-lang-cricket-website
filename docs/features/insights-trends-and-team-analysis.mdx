@@ -1,0 +1,56 @@
+---
+title: Insights, trends and team analysis
+status: shipped
+routes: ["/stats/insights", "/stats/insights/trends", "/stats/insights/players/[slug]"]
+collections: [matches, match-innings, match-batting, match-bowling, match-fielding, site-settings]
+admin: "Nothing to set up. The sample sizes come from Site settings, Stats tab, Match-data minimums (admin only); the Insights thresholds are in config/site.ts."
+owner: "Visitors, players and captains; no committee action needed"
+related: [match-stats, match-data-store, stats-leaderboards, players-directory-and-profiles, opposition-scouting]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A player or parent** who wants to see how a season is going innings by innings, and whether this season looks different from the last.
+- **A captain or selector** who wants to know how the team really wins: batting first or second, by how much, with what totals.
+- **The club historian** comparing seasons.
+
+## Why it was built
+
+The leaderboards answer "who has the most". These pages answer "how is it going", from the stored games, without inventing anything (issues [#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33) and [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34); tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). Nothing names a club: names, colours and grade labels come from the site settings and theme.
+
+## What it does
+
+One **Insights** entry in the Stats menu opens two views, switched by the tabs under the menu.
+
+**Team analysis** (`/stats/insights`, filters for season and grade): record with batting first against batting second and by the toss; winning margins (runs when the winner batted first, wickets in hand when the winner chased, in buckets); a batting profile (average, highest and lowest completed total, all-out rate, wickets lost, extras, fifties and hundreds, inferred opening stands); a bowling profile (average conceded, opposition all out, wides and no balls, how wickets came by type); typical winning totals per grade; fielding (catches, stumpings, run outs).
+
+**Trends** (`/stats/insights/trends`): the last ten results, average team total for and against per season, our total when batting first with a rolling average, and a list of players with at least 3 stored games linking to their page.
+
+**A player's trends** (`/stats/insights/players/[slug]`, linked from the profile): runs in each innings as bars (a not out is an outlined bar with a star, a duck is shown) with a rolling average of the last 5 innings; wickets in each spell with a rolling economy; a season-by-season table; and **Compare seasons**, where a "higher", "lower" or "about the same" label appears only when both seasons have enough innings (or overs) and differ by more than 15 percent of the figure compared with.
+
+**The honesty rules.**
+
+- Every figure shows its sample (games, innings or spells). A figure with too few behind it reads n/a and the count shows instead; a missing figure is never counted as zero.
+- An average is runs per dismissal. With no dismissal it reads "not out", never a number. The rolling average is drawn only where its window holds 3 dismissals; otherwise it is a gap.
+- Strike rate and economy count only innings or spells with balls recorded.
+- Who batted first comes from the stored innings order, not the toss. A game with no clear order, with more than one innings each, with no totals, a forfeit or a draw is not put in a margin bucket and is counted as "margin not comparable" with the reason.
+- A spread of margins or a typical winning total shows from 5 games.
+- Imported history games are used wherever they have the field (totals) and left out, with a count, where they do not (extras, fall of wickets, toss).
+- Everything is club side only: the pages never show an opposition player. A hidden player appears nowhere and their trends address is a 404. Per-innings dates and opposition are shown only for grades shown by default on the site; a player whose games are all in other categories (for example junior) sees season totals only.
+- Charts are inline SVG with a title and a description, and a "Show as table" with the same numbers.
+
+## How to use it
+
+1. Open **Stats**, then **Insights**. Use Season and Grade, then Apply.
+2. Open the **Trends** tab, then a player's name for their page; or use "Trends and season comparison" on a player profile.
+3. On a player's page pick two seasons under Compare seasons.
+
+## Not included / deferred
+
+- Forecasts of any kind (milestone projections, breakout or decline verdicts): a label compares two numbers only. The existing milestones page shows who is approaching a milestone ([#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)).
+- A post-match review ([#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34)).
+- Anything per delivery: phases, wagon wheels, strike rotation ([#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- Adjusting a result for the strength of the opposition.
+- Dropped catches (the scorer does not record them), and any export.
+- Junior games are not in the match data.
