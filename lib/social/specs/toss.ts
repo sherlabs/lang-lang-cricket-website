@@ -25,12 +25,12 @@ export const tossSpec: GraphicSpec<TossParams, TossData> = {
   parse(raw) {
     return isGameId(raw.source) ? { gameId: raw.source } : null
   },
-  layout(d, _style, size) {
+  layout(d) {
     if (!d.winner) return { blocks: [], empty: 'Toss details are not in yet for this game.' }
     const blocks: Block[] = [
       { kind: 'kicker', text: 'The toss' },
-      { kind: 'headline', text: sentence(d, rowName(d.winner, size)) },
-      { kind: 'text', text: `vs ${rowName(d.opponent, size)}  |  ${d.round || d.dateLabel}` },
+      { kind: 'headline', text: sentence(d, rowName(d.winner)) },
+      { kind: 'text', text: `vs ${rowName(d.opponent)}  |  ${d.round || d.dateLabel}` },
     ]
     if (d.venue) blocks.push({ kind: 'text', text: d.venue, muted: true })
     return { blocks }

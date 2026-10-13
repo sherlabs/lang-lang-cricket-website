@@ -107,11 +107,11 @@ describe('graphic specs: layout', () => {
     }
   })
 
-  it('long names are cut by character budget, not left to overflow', () => {
+  it('long names are kept whole in the layout (the renderer fits them; see social-layout.test.ts)', () => {
     const long = { ...(FIXTURE_DATA.lineup as { players: { order: number; name: string; captain: boolean; keeper: boolean }[] }), players: [{ order: 1, name: 'A'.repeat(80), captain: false, keeper: false }] }
     for (const size of SIZE_KEYS) {
       const rows = SPECS.lineup.layout(long, 'bold', size).blocks.find((b) => b.kind === 'rows')
-      expect(rows?.kind === 'rows' && rows.rows[0].text.length).toBeLessThanOrEqual(30)
+      expect(rows?.kind === 'rows' && rows.rows[0].text).toBe('A'.repeat(80))
     }
   })
 

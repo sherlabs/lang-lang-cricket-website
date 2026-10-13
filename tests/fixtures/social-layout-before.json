@@ -1,0 +1,407 @@
+{
+ "sponsor-thanks:1|square|bold": {
+  "unused": 0.5768072923245338,
+  "gapV": 0.3830049261083744,
+  "gapH": 0.27350427350427353
+ },
+ "sponsor-thanks:1|square|classic": {
+  "unused": 0.5350460564191134,
+  "gapV": 0.31994818652849744,
+  "gapH": 0.14316239316239315
+ },
+ "sponsor-thanks:1|square|minimal": {
+  "unused": 0.60161006363538,
+  "gapV": 0.3958573072497123,
+  "gapH": 0.3034188034188034
+ },
+ "sponsor-thanks:1|story|bold": {
+  "unused": 0.7115743621655258,
+  "gapV": 0.3453640323584319,
+  "gapH": 0.1
+ },
+ "sponsor-thanks:1|story|classic": {
+  "unused": 0.6911346629947982,
+  "gapV": 0.3333333333333333,
+  "gapH": 0.057608695652173914
+ },
+ "sponsor-thanks:1|story|minimal": {
+  "unused": 0.7422594142259414,
+  "gapV": 0.3442916915720263,
+  "gapH": 0.2
+ },
+ "sponsor-thanks:1|landscape|bold": {
+  "unused": 0.6959514428368614,
+  "gapV": 0.31929046563192903,
+  "gapH": 0.5287769784172662
+ },
+ "sponsor-thanks:1|landscape|classic": {
+  "unused": 0.6706123473314372,
+  "gapV": 0.2302325581395349,
+  "gapH": 0.2751798561151079
+ },
+ "sponsor-thanks:1|landscape|minimal": {
+  "unused": 0.7064049165525879,
+  "gapV": 0.3299595141700405,
+  "gapH": 0.539568345323741
+ },
+ "sponsor-thanks:2|square|bold": {
+  "unused": 0.4836059534335396,
+  "gapV": 0.43842364532019706,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:2|square|classic": {
+  "unused": 0.4395288074044551,
+  "gapV": 0.37823834196891193,
+  "gapH": 0.024572649572649572
+ },
+ "sponsor-thanks:2|square|minimal": {
+  "unused": 0.49042026890128154,
+  "gapV": 0.4476409666283084,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:2|story|bold": {
+  "unused": 0.6933416303671438,
+  "gapV": 0.3478531425015557,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:2|story|classic": {
+  "unused": 0.6782316615204873,
+  "gapV": 0.33589251439539347,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:2|story|minimal": {
+  "unused": 0.6914680734946335,
+  "gapV": 0.34668260609683205,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:2|landscape|bold": {
+  "unused": 0.5343082518464164,
+  "gapV": 0.36585365853658536,
+  "gapH": 0.2221223021582734
+ },
+ "sponsor-thanks:2|landscape|classic": {
+  "unused": 0.465074452066254,
+  "gapV": 0.27906976744186046,
+  "gapH": 0.11780575539568346
+ },
+ "sponsor-thanks:2|landscape|minimal": {
+  "unused": 0.5370525441994582,
+  "gapV": 0.3724696356275304,
+  "gapH": 0.2221223021582734
+ },
+ "sponsor-thanks:3|square|bold": {
+  "unused": 0.1361258473327439,
+  "gapV": 0.08374384236453201,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:3|square|classic": {
+  "unused": 0.1121739515521899,
+  "gapV": 0.046632124352331605,
+  "gapH": 0.024572649572649572
+ },
+ "sponsor-thanks:3|square|minimal": {
+  "unused": 0.1657322986436911,
+  "gapV": 0.11622554660529344,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:3|story|bold": {
+  "unused": 0.4933470414761505,
+  "gapV": 0.24517734909769756,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:3|story|classic": {
+  "unused": 0.4778853375615455,
+  "gapV": 0.23032629558541268,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:3|story|minimal": {
+  "unused": 0.49936328906676364,
+  "gapV": 0.24805738194859533,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:3|landscape|bold": {
+  "unused": 0.5224640686563831,
+  "gapV": 0.36585365853658536,
+  "gapH": 0.20233812949640287
+ },
+ "sponsor-thanks:3|landscape|classic": {
+  "unused": 0.40666304165969547,
+  "gapV": 0.27906976744186046,
+  "gapH": 0.1079136690647482
+ },
+ "sponsor-thanks:3|landscape|minimal": {
+  "unused": 0.5252781580403694,
+  "gapV": 0.3724696356275304,
+  "gapH": 0.20233812949640287
+ },
+ "sponsor-thanks:4|square|bold": {
+  "unused": 0.1361258473327439,
+  "gapV": 0.08374384236453201,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:4|square|classic": {
+  "unused": 0.1121739515521899,
+  "gapV": 0.046632124352331605,
+  "gapH": 0.024572649572649572
+ },
+ "sponsor-thanks:4|square|minimal": {
+  "unused": 0.1657322986436911,
+  "gapV": 0.11622554660529344,
+  "gapH": 0.0202991452991453
+ },
+ "sponsor-thanks:4|story|bold": {
+  "unused": 0.4933470414761505,
+  "gapV": 0.24517734909769756,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:4|story|classic": {
+  "unused": 0.4778853375615455,
+  "gapV": 0.23032629558541268,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:4|story|minimal": {
+  "unused": 0.49936328906676364,
+  "gapV": 0.24805738194859533,
+  "gapH": 0.02608695652173913
+ },
+ "sponsor-thanks:4|landscape|bold": {
+  "unused": 0.4137129320933497,
+  "gapV": 0.36585365853658536,
+  "gapH": 0.11241007194244604
+ },
+ "sponsor-thanks:4|landscape|classic": {
+  "unused": 0.34210306173665717,
+  "gapV": 0.27906976744186046,
+  "gapH": 0.06654676258992806
+ },
+ "sponsor-thanks:4|landscape|minimal": {
+  "unused": 0.4171678851250983,
+  "gapV": 0.3724696356275304,
+  "gapH": 0.11330935251798561
+ },
+ "result-round:2|square|bold": {
+  "unused": 0.584045584045584,
+  "gapV": 0.5441595441595442,
+  "gapH": 0
+ },
+ "result-round:2|square|classic": {
+  "unused": 0.5226586102719033,
+  "gapV": 0.48036253776435045,
+  "gapH": 0
+ },
+ "result-round:2|square|minimal": {
+  "unused": 0.5836627140974967,
+  "gapV": 0.546772068511199,
+  "gapH": 0
+ },
+ "result-round:2|story|bold": {
+  "unused": 0.7319378798109386,
+  "gapV": 0.3787981093855503,
+  "gapH": 0
+ },
+ "result-round:2|story|classic": {
+  "unused": 0.7070285316631872,
+  "gapV": 0.36673625608907445,
+  "gapH": 0
+ },
+ "result-round:2|story|minimal": {
+  "unused": 0.7278603749191985,
+  "gapV": 0.3762120232708468,
+  "gapH": 0
+ },
+ "result-round:2|landscape|bold": {
+  "unused": 0.5227882037533512,
+  "gapV": 0.47989276139410186,
+  "gapH": 0
+ },
+ "result-round:2|landscape|classic": {
+  "unused": 0.42613636363636365,
+  "gapV": 0.3806818181818182,
+  "gapH": 0
+ },
+ "result-round:2|landscape|minimal": {
+  "unused": 0.5144230769230769,
+  "gapV": 0.47596153846153844,
+  "gapH": 0
+ },
+ "result-round:3|square|bold": {
+  "unused": 0.49002849002849,
+  "gapV": 0.45014245014245013,
+  "gapH": 0
+ },
+ "result-round:3|square|classic": {
+  "unused": 0.42296072507552873,
+  "gapV": 0.3806646525679758,
+  "gapH": 0
+ },
+ "result-round:3|square|minimal": {
+  "unused": 0.4967061923583662,
+  "gapV": 0.4598155467720685,
+  "gapH": 0
+ },
+ "result-round:3|story|bold": {
+  "unused": 0.6644159351789332,
+  "gapV": 0.3450371370695476,
+  "gapH": 0
+ },
+ "result-round:3|story|classic": {
+  "unused": 0.6374391092553932,
+  "gapV": 0.33194154488517746,
+  "gapH": 0
+ },
+ "result-round:3|story|minimal": {
+  "unused": 0.6632191338073691,
+  "gapV": 0.3438914027149321,
+  "gapH": 0
+ },
+ "result-round:3|landscape|bold": {
+  "unused": 0.41554959785522794,
+  "gapV": 0.3726541554959786,
+  "gapH": 0
+ },
+ "result-round:3|landscape|classic": {
+  "unused": 0.3125,
+  "gapV": 0.26704545454545453,
+  "gapH": 0
+ },
+ "result-round:3|landscape|minimal": {
+  "unused": 0.4182692307692307,
+  "gapV": 0.3798076923076923,
+  "gapH": 0
+ },
+ "result-single|square|bold": {
+  "unused": 0.2592592592592593,
+  "gapV": 0.22792022792022792,
+  "gapH": 0
+ },
+ "result-single|square|classic": {
+  "unused": 0.17824773413897277,
+  "gapV": 0.14501510574018128,
+  "gapH": 0
+ },
+ "result-single|square|minimal": {
+  "unused": 0.2832674571805006,
+  "gapV": 0.25428194993412384,
+  "gapH": 0
+ },
+ "result-single|story|bold": {
+  "unused": 0.5617825793382849,
+  "gapV": 0.29169480081026333,
+  "gapH": 0
+ },
+ "result-single|story|classic": {
+  "unused": 0.5316631871955463,
+  "gapV": 0.27696590118302017,
+  "gapH": 0
+ },
+ "result-single|story|minimal": {
+  "unused": 0.5649644473173885,
+  "gapV": 0.29282482223658696,
+  "gapH": 0
+ },
+ "result-single|landscape|bold": {
+  "unused": 0.13136729222520105,
+  "gapV": 0.10187667560321716,
+  "gapH": 0
+ },
+ "result-single|landscape|classic": {
+  "unused": 0.03125,
+  "gapV": 0.08806818181818182,
+  "gapH": 0
+ },
+ "result-single|landscape|minimal": {
+  "unused": 0.16346153846153844,
+  "gapV": 0.13701923076923078,
+  "gapH": 0
+ },
+ "stats-leaders:3|square|bold": {
+  "unused": 0.4814814814814815,
+  "gapV": 0.45014245014245013,
+  "gapH": 0
+ },
+ "stats-leaders:3|square|classic": {
+  "unused": 0.41389728096676737,
+  "gapV": 0.3806646525679758,
+  "gapH": 0
+ },
+ "stats-leaders:3|square|minimal": {
+  "unused": 0.11330698287220031,
+  "gapV": 0.1080368906455863,
+  "gapH": 0
+ },
+ "stats-leaders:3|story|bold": {
+  "unused": 0.6596893990546928,
+  "gapV": 0.34031060094530724,
+  "gapH": 0
+ },
+ "stats-leaders:3|story|classic": {
+  "unused": 0.6325678496868476,
+  "gapV": 0.32707028531663185,
+  "gapH": 0
+ },
+ "stats-leaders:3|story|minimal": {
+  "unused": 0.10213316095669034,
+  "gapV": 0.1279896574014221,
+  "gapH": 0
+ },
+ "stats-leaders:3|landscape|bold": {
+  "unused": 0.4021447721179625,
+  "gapV": 0.3726541554959786,
+  "gapH": 0
+ },
+ "stats-leaders:3|landscape|classic": {
+  "unused": 0.2982954545454546,
+  "gapV": 0.26704545454545453,
+  "gapH": 0
+ },
+ "stats-leaders:3|landscape|minimal": {
+  "unused": 0.11057692307692313,
+  "gapV": 0.09375,
+  "gapH": 0
+ },
+ "stats-leaders:5|square|bold": {
+  "unused": 0.2934472934472935,
+  "gapV": 0.2621082621082621,
+  "gapH": 0
+ },
+ "stats-leaders:5|square|classic": {
+  "unused": 0.21450151057401812,
+  "gapV": 0.18126888217522658,
+  "gapH": 0
+ },
+ "stats-leaders:5|square|minimal": {
+  "unused": 0.11725955204216076,
+  "gapV": 0.08827404479578392,
+  "gapH": 0
+ },
+ "stats-leaders:5|story|bold": {
+  "unused": 0.5246455097906819,
+  "gapV": 0.27278865631330185,
+  "gapH": 0
+ },
+ "stats-leaders:5|story|classic": {
+  "unused": 0.4933890048712596,
+  "gapV": 0.25748086290883787,
+  "gapH": 0
+ },
+ "stats-leaders:5|story|minimal": {
+  "unused": 0.10277957336780863,
+  "gapV": 0.07756948933419522,
+  "gapH": 0
+ },
+ "stats-leaders:5|landscape|bold": {
+  "unused": 0.18766756032171583,
+  "gapV": 0.1581769436997319,
+  "gapH": 0
+ },
+ "stats-leaders:5|landscape|classic": {
+  "unused": 0.07102272727272729,
+  "gapV": 0.0625,
+  "gapH": 0
+ },
+ "stats-leaders:5|landscape|minimal": {
+  "unused": 0.11778846153846156,
+  "gapV": 0.09134615384615384,
+  "gapH": 0
+ }
+}

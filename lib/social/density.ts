@@ -28,7 +28,7 @@ export type Metrics = {
 
 export const METRICS: Record<SizeKey, Metrics> = {
   square: { pad: 72, crest: 84, club: 28, kicker: 30, headline: 92, subhead: 38, body: 36, row: 66, rowText: 38, bigNumber: 260, score: 120, logo: 84, footer: 24, maxRows: 7, nameMax: 26, gap: 22 },
-  story: { pad: 80, crest: 100, club: 32, kicker: 34, headline: 112, subhead: 44, body: 42, row: 100, rowText: 50, bigNumber: 340, score: 150, logo: 100, footer: 28, maxRows: 11, nameMax: 26, gap: 30 },
+  story: { pad: 80, crest: 100, club: 32, kicker: 34, headline: 112, subhead: 44, body: 42, row: 100, rowText: 50, bigNumber: 340, score: 190, logo: 100, footer: 28, maxRows: 11, nameMax: 26, gap: 30 },
   landscape: { pad: 44, crest: 56, club: 22, kicker: 22, headline: 54, subhead: 26, body: 24, row: 40, rowText: 26, bigNumber: 120, score: 76, logo: 52, footer: 18, maxRows: 5, nameMax: 30, gap: 12 },
 }
 
@@ -59,5 +59,8 @@ export function cutRows(rows: readonly Row[], size: SizeKey, reserve = 0, column
   return { rows: rows.slice(0, keep), more: rows.length - keep }
 }
 
-/** Row names are cut by character budget (satori cannot measure text), per size. */
-export const rowName = (name: string, size: SizeKey): string => clip(name, METRICS[size].nameMax)
+/**
+ * Row names are no longer cut here: the renderer fits them to their box (`fitText`: a smaller size, then two lines, and a cut with an
+ * ellipsis only as the very last resort), so a long opposition name stays whole.
+ */
+export const rowName = (name: string): string => name.replace(/\s+/g, ' ').trim()

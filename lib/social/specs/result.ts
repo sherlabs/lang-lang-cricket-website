@@ -1,4 +1,5 @@
 import { cutRows, rowName } from '../density'
+import { fillRows } from '../fit'
 import type { Block, GraphicLayout, GraphicSpec, Row, SizeKey, StyleKey } from '../types'
 import { freeText, isGameId, isIsoDate, sourceParts } from './helpers'
 
@@ -45,12 +46,11 @@ export const resultSpec: GraphicSpec<ResultParams, ResultData> = {
     return null
   },
   layout(d, style: StyleKey, size: SizeKey): GraphicLayout {
-    void style
     if (d.mode === 'round') {
       if (!d.games.length) return { blocks: [], empty: 'No finished games on this round yet.' }
-      const rows: Row[] = d.games.map((g) => ({ lead: g.letter, text: `${g.grade} v ${rowName(g.opponent, size)}`, value: g.clubShort && g.oppShort ? `${g.clubShort} v ${g.oppShort}` : g.word }))
+      const rows: Row[] = d.games.map((g) => ({ lead: g.letter, text: `${g.grade} v ${rowName(g.opponent)}`, value: g.clubShort && g.oppShort ? `${g.clubShort} v ${g.oppShort}` : g.word }))
       const cut = cutRows(rows, size, 0)
-      return { blocks: [{ kind: 'kicker', text: d.dateLabel }, { kind: 'headline', text: d.round ? `${d.round} results` : 'Round results' }, { kind: 'rows', rows: cut.rows, more: cut.more }] }
+      return { blocks: fillRows([{ kind: 'kicker', text: d.dateLabel }, { kind: 'headline', text: d.round ? `${d.round} results` : 'Round results' }, { kind: 'rows', rows: cut.rows, more: cut.more }], size, style) }
     }
     const g = d.game
     const head = [g.grade, g.round].filter(Boolean).join('  |  ')
@@ -58,12 +58,12 @@ export const resultSpec: GraphicSpec<ResultParams, ResultData> = {
     const base: Block[] = [
       { kind: 'kicker', text: head },
       { kind: 'headline', text: resultLine || 'Full time' },
-      { kind: 'versus', club: { name: g.team, score: g.clubShort || g.clubScore || '–' }, opp: { name: rowName(g.opponent, size), score: g.oppShort || g.oppScore || '–' } },
+      { kind: 'versus', club: { name: g.team, score: g.clubShort || g.clubScore || '–' }, opp: { name: rowName(g.opponent), score: g.oppShort || g.oppScore || '–' } },
     ]
     if (d.mode === 'single') return { blocks: [...base, { kind: 'text', text: [g.dateLabel, g.venue].filter(Boolean).join('  |  '), muted: true }] }
     const n = HOW_MANY[size]
-    const batters: Row[] = d.batters.slice(0, n).map((b) => ({ text: rowName(b.name, size), value: b.figures }))
-    const bowlers: Row[] = d.bowlers.slice(0, n).map((b) => ({ text: rowName(b.name, size), value: b.figures }))
+    const batters: Row[] = d.batters.slice(0, n).map((b) => ({ text: rowName(b.name), value: b.figures }))
+    const bowlers: Row[] = d.bowlers.slice(0, n).map((b) => ({ text: rowName(b.name), value: b.figures }))
     const blocks = [...base]
     if (batters.length) blocks.push({ kind: 'rows', rows: batters, more: 0, title: 'Batting' })
     if (bowlers.length) blocks.push({ kind: 'rows', rows: bowlers, more: 0, title: 'Bowling' })

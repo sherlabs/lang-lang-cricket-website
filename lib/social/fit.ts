@@ -1,5 +1,6 @@
-import { headlineSize, METRICS, type Metrics } from './density'
+import { METRICS, type Metrics } from './density'
 import { STYLE_KITS } from './kits'
+import { BODY_FACE, BODY_REGULAR, DEFAULT_FACE, fitText, textWidth, type FaceKey, type FitResult } from './text-fit'
 import { SIZES, type Block, type GraphicLayout, type Row, type SizeKey, type StyleKey } from './types'
 
 /**
@@ -11,8 +12,6 @@ import { SIZES, type Block, type GraphicLayout, type Row, type SizeKey, type Sty
 
 /** Line height used for text the renderer does not give an explicit one. */
 const LINE = 1.25
-/** Average glyph width as a share of the font size, for deciding how many lines a text wraps to. Generous on purpose. */
-const GLYPH = 0.58
 
 /** A cover photo's height. One that is the whole story gets the room; one that shares the page with a list stays shorter. */
 export function photoHeight(size: SizeKey, last: boolean): number {
@@ -21,43 +20,74 @@ export function photoHeight(size: SizeKey, last: boolean): number {
 
 /** The metrics with row height and row text scaled (a rows block with room to spare, see `fillRowsScale`). */
 /** Row text grows no more than this, however tall the row gets, so a long name still fits across the page. */
-const TEXT_SCALE_CAP = 1.35
+const TEXT_SCALE_CAP = 1.6
 export const scaleMetrics = (m: Metrics, scale: number | undefined): Metrics => (scale && scale !== 1 ? { ...m, row: Math.round(m.row * scale), rowText: Math.round(m.rowText * Math.min(scale, TEXT_SCALE_CAP)) } : m)
 
 /** A list row that carries a second line (`detail`) under its main text. */
 export const detailRowHeight = (m: Metrics): number => m.row + Math.round(m.rowText * 0.72 * LINE)
 export const rowHeight = (r: Row, m: Metrics): number => (r.detail ? detailRowHeight(m) : m.row)
 
-/** How a row of sponsor logos is laid out for a given count: columns, logo height, and the text sizes under each logo. */
-export type LogoGrid = { columns: number; logo: number; name: number; tier: number; cell: number }
+/** The width the content may use on a page. */
+export const contentWidth = (size: SizeKey): number => SIZES[size].width - 2 * METRICS[size].pad
 
-const LOGO_TILE_PAD = 12
-const LOGO_CELL_GAP = 14
+/**
+ * How a group of sponsor logos is laid out (wave G spec WP-2b). The pattern is a table keyed by count and size: one logo is a hero,
+ * two share a row (stacked on the tall page), three are one over two (square), across (wide) or stacked (tall), four are two by two
+ * (across on the wide page).
+ * Every logo sits `contain`ed in a paper tile; the whole group is centred in the space under the headline.
+ */
+export type LogoGrid = {
+  /** Cells per row, top to bottom. */
+  rows: number[]
+  /** The widest row's cell count. */
+  columns: number
+  cellW: number
+  tileW: number
+  tileH: number
+  name: number
+  tier: number
+  /** Name lines reserved under each tile (1 or 2). */
+  nameLines: number
+  gap: number
+  /** Total height of the group. */
+  height: number
+}
 
-/** One logo cell: tile (logo plus its padding), name line, tier line, gap. */
-function cellHeight(logo: number, name: number, tier: number, hasName: boolean, hasTier: boolean): number {
-  return logo + 2 * LOGO_TILE_PAD + (hasName ? Math.round(name * LINE) + 6 : 0) + (hasTier ? Math.round(tier * LINE) : 0) + LOGO_CELL_GAP
+const LOGO_TILE_PAD = 16
+export const LOGO_TILE_INSET = LOGO_TILE_PAD
+const LOGO_GAP = 24
+
+export function logoPattern(count: number, size: SizeKey): number[] {
+  if (count <= 1) return [1]
+  if (count === 2) return size === 'story' ? [1, 1] : [2]
+  if (count === 3) return size === 'square' ? [1, 2] : size === 'landscape' ? [3] : [1, 1, 1]
+  // Four across on the wide page: two by two there leaves a quarter of the width empty (measured); square and tall use two by two.
+  if (count === 4 && size === 'landscape') return [4]
+  return [2, 2].concat(count > 4 ? [Math.min(2, count - 4)] : [])
 }
 
 /**
- * The logo grid for `count` sponsors. One sponsor is drawn large; two share a row; three or four wrap to two columns (square, story)
- * or a single row (wide, where height is the scarce thing). Logo height shrinks as the grid gets denser so the whole grid stays
- * inside `budget` (pixels of height it may use), down to a floor.
+ * The grid for these sponsors in `budget` pixels of height. The tile fills what its cell offers (so a group never leaves a big empty
+ * area), its height capped relative to its width so a tall cell does not make a tall, thin tile, and names are fitted under it.
  */
-export function logoGrid(count: number, size: SizeKey, budget: number, opts: { names: boolean; tiers: boolean }): LogoGrid {
+export function logoLayout(items: readonly { name: string; tier?: string }[], size: SizeKey, budget: number): LogoGrid {
   const m = METRICS[size]
-  const columns = count <= 1 ? 1 : size === 'landscape' ? Math.min(count, 4) : 2
-  const rows = Math.ceil(Math.max(1, count) / columns)
-  const name = count <= 1 ? m.subhead : Math.round(m.subhead * 0.85)
+  const count = Math.max(1, items.length)
+  const rows = logoPattern(count, size)
+  const columns = Math.max(...rows)
+  const width = contentWidth(size)
+  const cellW = Math.floor((width - LOGO_GAP * (columns - 1)) / columns)
+  const hero = count === 1
+  const name = hero ? m.subhead : Math.round(m.subhead * 0.85)
   const tier = Math.round(m.body * 0.8)
-  const top = count <= 1 ? (size === 'landscape' ? 150 : 260) : size === 'landscape' ? 96 : size === 'story' ? 200 : 170
-  let logo = top
-  while (logo > 36 && rows * cellHeight(logo, name, tier, opts.names, opts.tiers) > budget) logo -= 4
-  return { columns, logo, name, tier, cell: cellHeight(logo, name, tier, opts.names, opts.tiers) }
+  const withNames = items.some((i) => i.name)
+  const nameLines = withNames && items.some((i) => i.name && fitText(i.name, cellW, name, Math.round(name * 0.7), 2, BODY_FACE).lines.length > 1) ? 2 : 1
+  const textH = (withNames ? Math.round(name * LINE) * nameLines + 6 : 0) + (items.some((i) => i.tier) ? Math.round(tier * LINE) : 0)
+  const perRow = (budget - LOGO_GAP * (rows.length - 1)) / rows.length
+  const tileH = Math.max(60, Math.min(Math.floor(perRow - textH), Math.round(cellW * (hero ? (size === 'story' ? 0.95 : 0.62) : size === 'story' ? 1 : 0.8))))
+  const tileW = Math.min(cellW, Math.round(tileH * (hero ? (size === 'landscape' ? 3.8 : 3) : 2.8)))
+  return { rows, columns, cellW, tileW, tileH, name, tier, nameLines, gap: LOGO_GAP, height: rows.length * (tileH + textH) + (rows.length - 1) * LOGO_GAP }
 }
-
-/** Estimated lines of `text` at `fs` px in `width` px, never fewer than one. */
-const lines = (text: string, fs: number, width: number): number => Math.max(1, Math.ceil((text.length * fs * GLYPH) / width))
 
 /** The space (px of height) a layout's blocks may use on this page: the page less frame, masthead, paddings and footer. */
 export function availableHeight(size: SizeKey, style: StyleKey, footerHeight: number): number {
@@ -101,32 +131,47 @@ export function namesHeight(items: readonly { name: string; tier?: string }[], s
   let lineCount = 1
   let used = 0
   for (const i of items) {
-    const w = Math.min(width * NAME_CELL_MAX, (i.name.length * nameSize(size) + (i.tier && tierInline(size) ? (i.tier.length + 2) * nameTierSize(size) : 0)) * GLYPH) + NAME_GAP
+    const w = Math.min(width * NAME_CELL_MAX, textWidth(i.name, nameSize(size), DEFAULT_FACE) + (i.tier && tierInline(size) ? textWidth(`${i.tier}  `, nameTierSize(size), BODY_REGULAR) : 0)) + NAME_GAP
     if (used > 0 && used + w > width) { lineCount++; used = 0 }
     used += w
   }
   return lineCount * tall
 }
 
+/** Vertical padding of each side of a score line: roomier on the tall page, where a single result would otherwise float in empty space. */
+export const versusPad = (m: Metrics, size: SizeKey): number => (size === 'story' ? Math.round(m.gap * 1.3) : Math.round(m.gap / 2))
+
+/** A headline fitted to the page: the largest size down to 42 percent of the base, at most two lines, never clipped. */
+export function headlineFit(text: string, size: SizeKey, style: StyleKey, face: FaceKey = DEFAULT_FACE, base = METRICS[size].headline): FitResult {
+  const t = STYLE_KITS[style].headlineUpper ? text.toUpperCase() : text
+  return fitText(t, contentWidth(size), base, Math.round(base * 0.42), 2, face)
+}
+
+/** Running text (subhead, text blocks) fitted to the page width, down to 70 percent of its size, at most `max` lines. */
+export function textFit(text: string, size: SizeKey, base: number, max: number, face: FaceKey = BODY_FACE): FitResult {
+  return fitText(text, contentWidth(size), base, Math.round(base * 0.7), max, face)
+}
+
 function blockHeight(b: Block, size: SizeKey, style: StyleKey, last: boolean): number {
   const m = METRICS[size]
   const kit = STYLE_KITS[style]
-  const width = SIZES[size].width - 2 * m.pad
   switch (b.kind) {
     case 'kicker':
       return m.gap + Math.round(m.kicker * LINE)
     case 'headline': {
-      const text = kit.headlineUpper ? b.text.toUpperCase() : b.text
-      const fs = headlineSize(text, m.headline)
-      const n = Math.min(3, lines(text, fs, width))
-      return Math.round(m.gap / 2) + Math.round(fs * 1.05) * n + (kit.headlineRule ? 24 : 0)
+      const f = headlineFit(b.text, size, style)
+      return Math.round(m.gap / 2) + Math.round(f.size * 1.05) * f.lines.length + (kit.headlineRule ? 24 : 0)
     }
-    case 'subhead':
-      return Math.round(m.gap / 2) + Math.round(m.subhead * LINE) * Math.min(3, lines(b.text, m.subhead, width))
-    case 'text':
-      return m.gap + Math.round(m.body * LINE) * Math.min(5, lines(b.text, m.body, width))
+    case 'subhead': {
+      const f = textFit(b.text, size, m.subhead, 2)
+      return Math.round(m.gap / 2) + Math.round(f.size * LINE) * f.lines.length
+    }
+    case 'text': {
+      const f = textFit(b.text, size, m.body, 3)
+      return m.gap + Math.round(f.size * LINE) * f.lines.length
+    }
     case 'versus':
-      return m.gap + 2 * (m.gap + Math.max(m.score, m.subhead)) + (b.note ? Math.round(m.gap / 2) + Math.round(m.subhead * LINE) : 0)
+      return m.gap + 2 * (2 * versusPad(m, size) + Math.max(m.score, m.subhead)) + (b.note ? Math.round(m.gap / 2) + Math.round(m.subhead * LINE) : 0)
     case 'bigNumber':
       return m.gap + m.bigNumber + (b.label ? Math.round(m.subhead * LINE) : 0)
     case 'rows': {
@@ -154,7 +199,7 @@ export function logosFor(layout: GraphicLayout, size: SizeKey, style: StyleKey, 
   if (idx < 0) return null
   const logos = layout.blocks[idx] as Extract<Block, { kind: 'logos' }>
   const others = layout.blocks.reduce((sum, b, i, all) => (i === idx ? sum : sum + blockHeight(b, size, style, i === all.length - 1)), 0)
-  return logoGrid(logos.items.length, size, Math.max(0, available - others - LOGOS_GAP(METRICS[size])), { names: logos.items.some((i) => i.name), tiers: logos.items.some((i) => i.tier) })
+  return logoLayout(logos.items, size, Math.max(0, available - others - LOGOS_GAP(METRICS[size])))
 }
 
 /** Height the layout's blocks need on a page with `available` pixels for them. An empty layout is one line of text. */
@@ -163,7 +208,7 @@ export function layoutHeight(layout: GraphicLayout, size: SizeKey, style: StyleK
   if (layout.empty) return m.gap + Math.round(m.subhead * LINE)
   const grid = logosFor(layout, size, style, available)
   const others = layout.blocks.reduce((sum, b, i, all) => sum + blockHeight(b, size, style, i === all.length - 1), 0)
-  return others + (grid ? LOGOS_GAP(m) + grid.cell * Math.ceil(layout.blocks.filter((b): b is Extract<Block, { kind: 'logos' }> => b.kind === 'logos').reduce((n, b) => n + b.items.length, 0) / grid.columns) : 0)
+  return others + (grid ? LOGOS_GAP(m) + grid.height : 0)
 }
 
 /** The most a list's rows may be enlarged to use spare height, and the share of the page a filled list aims for. */
@@ -184,4 +229,26 @@ export function fillRowsScale(blocks: readonly Block[], size: SizeKey, style: St
   const target = availableHeight(size, style, footerHeight(size, { strip: true, text: true })) * FILL_TARGET
   const scale = (target - others - m.gap) / rowsPart
   return Math.max(1, Math.min(cap, Math.floor(scale * 100) / 100))
+}
+
+/** The blocks with the (single) rows block enlarged to use spare page height; unchanged when there is none. */
+export function fillRows(blocks: Block[], size: SizeKey, style: StyleKey): Block[] {
+  const scale = fillRowsScale(blocks, size, style)
+  return scale > 1 ? blocks.map((b) => (b.kind === 'rows' ? { ...b, scale } : b)) : blocks
+}
+
+/**
+ * A cheap estimate of the share of the content box a layout leaves empty, used at layout time to choose between candidate layouts
+ * (a larger scale, a different grid) without rendering. The renderer keeps the headline at the top and centres everything under it,
+ * so the picture's ink ends half the free height above the bottom of the box; that gap, over the box height, times the share of the
+ * width the widest logo row covers (the only block narrower than the page), is the estimate. `tests/social-layout.test.ts`
+ * calibrates it against the pixel metric of real renders and fails if it drifts by more than five percentage points.
+ */
+export function emptyShare(layout: GraphicLayout, size: SizeKey, style: StyleKey): number {
+  const avail = availableHeight(size, style, footerHeight(size, { strip: !layout.noStrip, text: true }))
+  const used = Math.min(avail, layoutHeight(layout, size, style, avail))
+  const grid = logosFor(layout, size, style, avail)
+  const widthShare = grid ? Math.min(1, (grid.columns * grid.tileW + (grid.columns - 1) * grid.gap) / contentWidth(size)) : 1
+  const heightShare = 1 - (avail - used) / 2 / avail
+  return Math.max(0, 1 - heightShare * widthShare)
 }

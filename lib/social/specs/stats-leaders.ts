@@ -1,5 +1,5 @@
 import { cutRows, rowName } from '../density'
-import { fillRowsScale } from '../fit'
+import { fillRows } from '../fit'
 import type { Block, GraphicSpec, Row } from '../types'
 import { isLabelToken, sourceParts } from './helpers'
 
@@ -23,14 +23,11 @@ export const leadersSpec: GraphicSpec<LeadersParams, LeadersData> = {
   },
   layout(d, style, size) {
     if (!d.rows.length) return { blocks: [], empty: 'No one has qualified for this table yet.' }
-    const rows: Row[] = d.rows.map((r) => ({ lead: String(r.rank), text: rowName(r.name, size), value: r.value, sub: size === 'landscape' ? undefined : r.context }))
+    const rows: Row[] = d.rows.map((r) => ({ lead: String(r.rank), text: rowName(r.name), value: r.value, sub: size === 'landscape' ? undefined : r.context }))
     const cut = cutRows(rows, size, 0)
     const blocks: Block[] = [{ kind: 'kicker', text: [d.seasonLabel, d.scopeLabel].filter(Boolean).join('  |  ') }, { kind: 'headline', text: d.metric }, { kind: 'rows', rows: cut.rows, more: cut.more }]
-    // Minimal has the most room (corner crest, plain frame) and the row count is fixed at 3 or 5, so its rows grow to use the space
-    // instead of leaving it blank. Bold and Classic are unchanged.
-    if (style !== 'minimal') return { blocks }
-    const scale = fillRowsScale(blocks, size, style)
-    return { blocks: scale > 1 ? blocks.map((b) => (b.kind === 'rows' ? { ...b, scale } : b)) : blocks }
+    // The row count is fixed at 3 or 5, so the rows grow to use the page instead of leaving it blank.
+    return { blocks: fillRows(blocks, size, style) }
   },
   captionVars: (d) => ({ metric: d.metric, season: d.seasonLabel, grade: d.scopeLabel, leader: d.rows[0] ? `${d.rows[0].name} (${d.rows[0].value})` : '' }),
   describe: (d) => `${d.metric} leaders, ${d.seasonLabel}`,

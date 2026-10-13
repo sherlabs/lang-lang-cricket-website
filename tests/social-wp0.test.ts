@@ -54,7 +54,7 @@ describe('toss: layout', () => {
   it('says so plainly when there is no winner', () => {
     for (const size of SIZE_KEYS) expect(SPECS.toss.layout({ ...base, winner: '' }, 'bold', size).empty).toMatch(/Toss details are not in yet/)
   })
-  it('fits every size and style, even with a 60-character opponent, cut with an ellipsis', () => {
+  it('fits every size and style, even with a 60-character opponent (kept whole here, fitted when drawn)', () => {
     const long = { ...base, clubWon: false, winner: 'O'.repeat(60), opponent: 'P'.repeat(60), venue: 'V'.repeat(80) }
     for (const d of [base, long]) {
       for (const size of SIZE_KEYS) {
@@ -66,8 +66,8 @@ describe('toss: layout', () => {
       }
     }
     const t = textOfBlocks(SPECS.toss.layout(long, 'bold', 'square').blocks).join(' ')
-    expect(t).toContain('…')
-    expect(t).not.toContain('O'.repeat(60))
+    expect(t).toContain('O'.repeat(60))
+    expect(t).not.toContain('…')
   })
   it('caption: the standard wording fills, and drops the choice line when it is unknown', () => {
     const vars = (d: TossData) => ({ club: 'Club', link: 'https://example.test/matches', ...SPECS.toss.captionVars(d) })
@@ -133,7 +133,7 @@ describe('sponsor thank-you: name-only fallback', () => {
   })
 })
 
-describe('season leaders: minimal fills its page', () => {
+describe('season leaders: every style fills its page', () => {
   const rowsOf = (n: number): LeadersData => ({ ...(FIXTURE_DATA['stats-leaders'] as LeadersData), rows: (FIXTURE_DATA['stats-leaders'] as LeadersData).rows.slice(0, n) })
   const density = (count: number, size: SizeKey, style: StyleKey) => {
     const { used, avail } = fits(SPECS['stats-leaders'].layout(rowsOf(count), style, size), size, style)
@@ -141,12 +141,14 @@ describe('season leaders: minimal fills its page', () => {
   }
   const MIN_DENSITY = 0.8
 
-  it('minimal uses at least 80% of the room on every page size (3 and 5 rows), and always fits', () => {
+  it('every style uses at least 80% of the room on every page size (3 and 5 rows), and always fits', () => {
     for (const count of [3, 5]) {
       for (const size of SIZE_KEYS) {
-        const d = density(count, size, 'minimal')
-        expect(d.ratio, `${count} rows ${size}: ${d.used}px of ${d.avail}px`).toBeGreaterThanOrEqual(MIN_DENSITY)
-        expect(d.used).toBeLessThanOrEqual(d.avail)
+        for (const style of STYLE_KEYS) {
+          const d = density(count, size, style)
+          expect(d.ratio, `${count} rows ${size} ${style}: ${d.used}px of ${d.avail}px`).toBeGreaterThanOrEqual(MIN_DENSITY)
+          expect(d.used).toBeLessThanOrEqual(d.avail)
+        }
       }
     }
   })
@@ -159,16 +161,14 @@ describe('season leaders: minimal fills its page', () => {
       expect(rows?.kind === 'rows' && rows.rows.length).toBe(count)
     }
   })
-  it('bold and classic are unchanged (no scale), minimal differs only by the row scale, capped at the fill cap', () => {
-    for (const count of [3, 5]) for (const size of SIZE_KEYS) {
-      const bold = SPECS['stats-leaders'].layout(rowsOf(count), 'bold', size)
-      const classic = SPECS['stats-leaders'].layout(rowsOf(count), 'classic', size)
-      const minimal = SPECS['stats-leaders'].layout(rowsOf(count), 'minimal', size)
-      expect(JSON.stringify(bold)).not.toContain('scale')
-      expect(JSON.stringify(classic)).toBe(JSON.stringify(bold))
-      const strip = (l: GraphicLayout) => JSON.stringify({ ...l, blocks: l.blocks.map((b) => (b.kind === 'rows' ? { ...b, scale: undefined } : b)) })
-      expect(strip(minimal)).toBe(strip(bold))
-      const rows = minimal.blocks.find((b) => b.kind === 'rows')
+  it('every style grows its rows by a scale between 1 and the fill cap, and changes nothing else', () => {
+    for (const count of [3, 5]) for (const size of SIZE_KEYS) for (const style of STYLE_KEYS) {
+      const layout = SPECS['stats-leaders'].layout(rowsOf(count), style, size)
+      const plain = JSON.stringify({ ...layout, blocks: layout.blocks.map((b) => (b.kind === 'rows' ? { ...b, scale: undefined } : b)) })
+      const other = SPECS['stats-leaders'].layout(rowsOf(count), 'bold', size)
+      expect(plain.length).toBeGreaterThan(0)
+      expect(JSON.stringify({ ...other, blocks: other.blocks.map((b) => (b.kind === 'rows' ? { ...b, scale: undefined } : b)) })).toBe(plain)
+      const rows = layout.blocks.find((b) => b.kind === 'rows')
       const scale = rows?.kind === 'rows' ? (rows.scale ?? 1) : 1
       expect(scale).toBeGreaterThanOrEqual(1)
       expect(scale).toBeLessThanOrEqual(FILL_SCALE_CAP)

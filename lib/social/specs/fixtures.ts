@@ -19,7 +19,7 @@ export const fixturesSpec: GraphicSpec<FixturesParams, FixturesData> = {
     const wide = size === 'landscape'
     const rows: Row[] = d.games.map((g) => ({
       lead: g.dayLabel.slice(0, 3),
-      text: `v ${rowName(g.opponent, size)}`,
+      text: `v ${rowName(g.opponent)}`,
       value: g.time,
       ...(wide ? { sub: g.grade } : { detail: [g.grade, g.venue].filter(Boolean).join(', ') }),
     }))

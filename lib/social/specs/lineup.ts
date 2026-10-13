@@ -1,4 +1,4 @@
-import { clip, cutRows, METRICS } from '../density'
+import { cutRows, rowName } from '../density'
 import type { GraphicSpec, Row, SizeKey } from '../types'
 import { isGameId } from './helpers'
 
@@ -24,17 +24,17 @@ export const lineupSpec: GraphicSpec<LineupParams, LineupData> = {
   parse(raw) {
     return isGameId(raw.source) ? { gameId: raw.source } : null
   },
-  layout(d, _style, size) {
+  layout(d, style, size) {
     if (!d.players.length) return { blocks: [], empty: 'No players are listed for this team.' }
     const cols = COLUMNS[size]
-    const nameMax = size === 'landscape' ? 18 : METRICS[size].nameMax
     const rows: Row[] = d.players.map((p) => ({
       lead: d.showOrder ? String(p.order) : undefined,
-      text: clip(p.name, nameMax),
+      text: rowName(p.name),
       badges: [p.captain ? 'C' : '', p.keeper ? 'WK' : ''].filter(Boolean),
     }))
     // A headline stands for the game; the kicker carries the grade and round, the subhead the date and place.
-    const cut = cutRows(rows, size, size === 'square' ? 1 : 0, cols)
+    // The classic page's band takes more height than the estimate allows for, so its square page keeps one more row of room.
+    const cut = cutRows(rows, size, size === 'square' ? (style === 'classic' ? 2 : 1) : 0, cols)
     return {
       blocks: [
         { kind: 'kicker', text: [d.updated ? 'Updated' : '', d.grade, d.round].filter(Boolean).join('  |  ') },
