@@ -25,7 +25,7 @@ describe('deriveFow', () => {
     expect(ok([10, 8, 30]).reject).toBe('fow_runs_decrease')
     expect(ok([10, 20, 30], { totalWickets: 4 }).reject).toBe('total_mismatch')
     expect(ok([10, 20, 300]).reject).toBe('total_mismatch')
-    expect(deriveFow({ hasFow: true, totalRuns: 90, totalWickets: 2, entries: [{ fowWicket: 1, fowRuns: 5 }, { fowWicket: 2, fowRuns: null }] }).reject).toBe('fow_runs_decrease')
+    expect(deriveFow({ hasFow: true, totalRuns: 90, totalWickets: 2, entries: [{ fowWicket: 1, fowRuns: 5 }, { fowWicket: 2, fowRuns: null }] }).reject).toBe('fow_missing_for_out')
     expect(deriveFow({ hasFow: true, totalRuns: 90, totalWickets: 2, entries: [{ fowWicket: 1, fowRuns: 5 }, { fowWicket: 1, fowRuns: 6 }] }).reject).toBe('fow_gap')
   })
   it('accepts an unknown team total (imported games) when the rest validates', () => {
@@ -59,6 +59,9 @@ describe('findCollapses', () => {
   })
   it('thresholds come from the arguments', () => {
     expect(findCollapses([10, 15, 20], 3, 20)).toHaveLength(1)
+    // Overlapping windows (1-4 and 2-5 share wickets) merge; windows that only touch (1-4 then 5-8) stay two.
+    expect(findCollapses([5, 10, 15, 20, 22, 60, 90, 120], 4, 20).map((c) => [c.from, c.to])).toEqual([[1, 5]])
+    expect(findCollapses([1, 2, 3, 20, 25, 30, 35, 40], 4, 20).map((c) => [c.from, c.to])).toEqual([[1, 4], [5, 8]])
     expect(findCollapses([10, 15, 40], 3, 20)).toHaveLength(0)
     expect(findCollapses([10, 15, 20], 0, 20)).toEqual([])
   })
@@ -140,6 +143,7 @@ describe('collapseSummary', () => {
     const innings = new Map([['1:1', meta(1, 'ok')], ['4:1', meta(4, 'no_fow')]])
     const s = collapseSummary(list, stands, innings, { wickets: 4, runs: 20 })
     expect(s.entries.map((e) => [e.header.id, e.side, e.collapse.from, e.collapse.to, e.recovery])).toEqual([[2, 'theirs', 1, 5, null], [1, 'ours', 1, 4, 70], [4, 'ours', 1, 4, null]])
+    expect(s.entries.map((e) => e.recoveryState)).toEqual(['unavailable', 'ok', 'unavailable'])
     expect(s.perSeason).toEqual([{ season: '2025/26', startYear: 2025, ours: 1, theirs: 1, innings: 3 }, { season: '2024/25', startYear: 2024, ours: 1, theirs: 0, innings: 1 }])
   })
 })

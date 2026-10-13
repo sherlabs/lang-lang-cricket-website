@@ -171,7 +171,7 @@ export default async function WicketsPage({ searchParams }: Props) {
                         </p>
                         {e.side === 'ours' && (
                           <p className="mt-1 text-xs text-brand-grey">
-                            {e.recovery === null ? 'Recovery stand: n/a (the partnerships could not be worked out for this innings).' : `Biggest stand after it: ${e.recovery} (inferred from the batting order and fall of wickets).`}
+                            {e.recoveryState === 'none' ? 'Recovery stand: no stand after it (the innings ended).' : e.recovery === null ? 'Recovery stand: n/a (the partnerships could not be worked out for this innings).' : `Biggest stand after it: ${e.recovery} (inferred from the batting order and fall of wickets).`}
                           </p>
                         )}
                       </li>

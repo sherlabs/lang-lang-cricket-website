@@ -487,7 +487,7 @@ describe('legacy ETL, two stores (preview rehearsal)', () => {
   const jpg = readFileSync(path.resolve('public/og-image.jpg'))
   const BY_EXT: Record<string, [Buffer, string]> = { pdf: [pdf, 'application/pdf'], png: [png, 'image/png'], jpg: [jpg, 'image/jpeg'] }
   const SPECIAL: Record<string, [Buffer, string]> = {
-    // A mis-named file is accepted and stored with its real type (head() is skipped on a two-store run).
+    // A mis-named file (PNG bytes, .jpg name) is accepted; it is registered in place, so only a re-upload would read its bytes.
     [`${PROD}gallery/photo-01.jpg`]: [png, 'image/png'],
     // Bytes Payload's upload restrictions reject: reported, not fatal.
     [`${PROD}players/headshot.jpg`]: [Buffer.from('not an image'), 'image/jpeg'],
@@ -518,7 +518,10 @@ describe('legacy ETL, two stores (preview rehearsal)', () => {
       expect(ctx.report.media['fallback-failed']).toBe(1)
       expect(ctx.report.counts('players').created).toBe(6)
       const { docs: [photo] } = await payload.find({ collection: 'gallery-photos', where: { legacyUrl: { equals: `${PROD}gallery/photo-01.jpg` } }, sort: 'id', limit: 1, overrideAccess: true })
-      expect(photo.mimeType).toBe('image/png')
+      // Registered in place (nothing downloaded, head() skipped on a two-store run): the type is the
+      // extension's guess. Production's head() would report the blob's real type.
+      expect(photo.filename).toBe('photo-01.jpg')
+      expect(photo.mimeType).toBe('image/jpeg')
 
       const result = await verify(undefined, { token: PREVIEW_TOKEN, headSample: 1000 })
       const failures = failuresOf(result)

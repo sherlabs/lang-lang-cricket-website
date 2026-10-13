@@ -157,7 +157,7 @@ async function seedCollection(payload: Payload, collection: CollectionSlug, fill
 /** Per-match store demo data (WP-M): idempotent, only when `matches` is empty. */
 async function seedDemoMatches(payload: Payload) {
   if (!(await isEmpty(payload, 'matches'))) {
-    console.log('[seed-demo] matches: not empty, skipped')
+    console.log('[seed-demo] matches: not empty, skipped (demo games added later, such as the Round 23 collapse game, only reach an empty store: reset the demo database to get them)')
     return
   }
   const r = await seedMatchStore(payload, { clubOrgId: PLAYHQ_ORG_ID })

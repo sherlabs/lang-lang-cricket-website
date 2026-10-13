@@ -26,7 +26,8 @@ export type Collapse = {
 
 /**
  * Windows of `wickets` consecutive wickets that added at most `runs` runs in total (the runs between the wicket before the
- * window and its last wicket). Overlapping or touching windows are one collapse, counted once, reported as the whole span.
+ * window and its last wicket). Overlapping windows (sharing at least one wicket) are one collapse, counted once, reported as the whole span. Windows that
+ * merely sit side by side (wickets 1 to 4, then 5 to 8) stay two collapses.
  */
 export function findCollapses(fow: readonly number[], wickets: number, runs: number): Collapse[] {
   const at = (k: number) => (k <= 0 ? 0 : fow[k - 1])
@@ -128,8 +129,10 @@ export type CollapseEntry = {
   seq: number
   group: FormatGroup | null
   collapse: Collapse
-  /** Biggest stand after the collapse (inferred), our batting only; null when the partnerships could not be derived. */
+  /** Biggest stand after the collapse (inferred), our batting only; null unless `recoveryState` is 'ok'. */
   recovery: number | null
+  /** 'ok' a stand followed; 'none' the collapse ended the innings; 'unavailable' partnerships not worked out (or not our batting). */
+  recoveryState: 'ok' | 'none' | 'unavailable'
 }
 
 export type CollapseSummary = {
@@ -164,7 +167,8 @@ export function collapseSummary(list: readonly FowInnings[], partnerships: reado
     const derivable = x.side === 'ours' && meta?.partnerships === 'ok'
     for (const collapse of found) {
       const after = derivable ? (stands.get(`${x.m}:${x.seq}`) ?? []).filter((p) => p.wicket > collapse.to) : []
-      entries.push({ side: x.side, header: x.header, seq: x.seq, group: x.group, collapse, recovery: derivable && after.length ? Math.max(...after.map((p) => p.runs)) : null })
+      const recoveryState = !derivable ? 'unavailable' : after.length ? 'ok' : 'none'
+      entries.push({ side: x.side, header: x.header, seq: x.seq, group: x.group, collapse, recovery: after.length ? Math.max(...after.map((p) => p.runs)) : null, recoveryState })
     }
   }
   entries.sort((a, b) => (b.header.date ?? '').localeCompare(a.header.date ?? '') || b.header.id - a.header.id || a.seq - b.seq || a.collapse.from - b.collapse.from)

@@ -25,7 +25,8 @@ export function deriveFow(input: FowInput): FowResult {
   if (sorted.length !== input.totalWickets) return { fow: null, reject: 'total_mismatch' }
   let prev = 0
   for (const e of sorted) {
-    if (e.fowRuns === null || !Number.isFinite(e.fowRuns) || e.fowRuns < prev) return { fow: null, reject: 'fow_runs_decrease' }
+    if (e.fowRuns === null || !Number.isFinite(e.fowRuns)) return { fow: null, reject: 'fow_missing_for_out' }
+    if (e.fowRuns < prev) return { fow: null, reject: 'fow_runs_decrease' }
     prev = e.fowRuns
   }
   if (input.totalRuns !== null && prev > input.totalRuns) return { fow: null, reject: 'total_mismatch' }
