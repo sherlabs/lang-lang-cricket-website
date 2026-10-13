@@ -10,11 +10,15 @@ import { loadHomeFacts } from './homeFacts'
 import { MilestonesWidget } from './MilestonesWidget'
 import { SeasonGlanceCard } from './SeasonGlanceCard'
 import { SystemHealth } from './SystemHealth'
+import { SYSTEM_HEALTH_ANCHOR } from '@/lib/admin/attention'
 import { Disclosure } from './ui/Disclosure'
+import { OpenOnHash } from './ui/OpenOnHash'
 import { Icon } from './ui/Icon'
 import { PageHeader } from './ui/PageHeader'
 import { Section } from './ui/Card'
 import { Skeleton, SkeletonRows } from './ui/Skeleton'
+
+const SYSTEM_HEALTH_ID = SYSTEM_HEALTH_ANCHOR.slice(1)
 
 type User = { role?: string | null; name?: string | null; email?: string | null } | null | undefined
 
@@ -85,11 +89,11 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
       </div>
 
       {admin && (
-        <Disclosure summary="Advanced (site administrators)" className="club-advanced">
+        <OpenOnHash summary="Advanced (site administrators)" anchors={[SYSTEM_HEALTH_ID]} className="club-advanced">
           <Suspense fallback={<SkeletonRows rows={3} label="Loading System health" />}>
             <SystemHealth payload={payload} facts={facts} />
           </Suspense>
-        </Disclosure>
+        </OpenOnHash>
       )}
     </main></Gutter>
   )

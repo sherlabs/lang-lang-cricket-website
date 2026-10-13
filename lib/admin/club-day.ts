@@ -12,7 +12,8 @@ export function formatClubDay(value: string | Date, clock: ClubClock): string {
   if (Number.isNaN(at.getTime())) return ''
   // A date-only value is already a calendar day, so it is read in UTC; an instant is read in the club's zone.
   const timeZone = typeof value === 'string' && DAY_ONLY.test(value) ? 'UTC' : clock.timeZone
-  return new Intl.DateTimeFormat(clock.locale, { timeZone, weekday: 'short', day: 'numeric', month: 'short' }).format(at)
+  // Some locales put a comma after the weekday ('Thu, 15 Oct'); the house style has none.
+  return new Intl.DateTimeFormat(clock.locale, { timeZone, weekday: 'short', day: 'numeric', month: 'short' }).format(at).replace(/^([^\s,]+),\s/, '$1 ')
 }
 
 /** "15 Oct 2026", for "as of" lines. */

@@ -15,7 +15,7 @@ const str = (v: unknown): string | null => (typeof v === 'string' && v !== '' ? 
  */
 export async function loadSeasonGlance(payload: Payload): Promise<SeasonGlance | null> {
   try {
-    const top = await payload.find({ collection: 'matches', where: { status: { equals: 'FINAL' } }, sort: '-seasonStartYear', limit: 1, depth: 0, select: { seasonStartYear: true }, overrideAccess: true })
+    const top = await payload.find({ collection: 'matches', where: { and: [{ status: { equals: 'FINAL' } }, { seasonStartYear: { exists: true } }] }, sort: '-seasonStartYear', limit: 1, depth: 0, select: { seasonStartYear: true }, overrideAccess: true })
     const year = (top.docs[0] as MatchDoc | undefined)?.seasonStartYear
     if (typeof year !== 'number') return null
     const today = currentClubDate()

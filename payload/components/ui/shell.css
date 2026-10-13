@@ -736,3 +736,15 @@ body:not(:has([data-login-reset='on'])) a[href$='/forgot'] {
 .ui-stack {
   margin-bottom: 1rem;
 }
+
+/* Small inline links on Home need a full-size touch target. */
+.club-home__milestones .club-link,
+.club-milestones__who a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--admin-target);
+  padding-inline: 0.25rem;
+}
+.club-attention__more {
+  margin-top: 0.75rem;
+}
