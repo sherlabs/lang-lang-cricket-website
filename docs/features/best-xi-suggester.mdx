@@ -1,0 +1,53 @@
+---
+title: Best XI suggester
+status: shipped
+routes: ["/selector/teams/[gameId]/suggest"]
+collections: [selection-settings, team-sheets, squads, squad-members, availability, matches, match-appearances, match-batting, match-bowling, match-fielding]
+admin: "Advanced > Selection settings > Best XI suggestion (admin only); the suggestion itself is in the selector area, from Teams > a game > Suggest an XI"
+owner: "Selectors"
+related: [team-selection-and-announce, availability-link, opposition-scouting, match-data-store, selector-accounts, squad-boards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector** on a Wednesday night who has the availability answers in and wants a sensible first XI to start from, with the reasons written down, instead of building it from nothing.
+- **The site admin**, who decides how many bowlers and batters a balanced team needs, and whether a player who has not answered counts.
+
+## Why it was built
+
+Picking a team from forty replies is slow, and the last five scores were already on the builder but not used. Issue [#32](https://github.com/sherlabs/lang-lang-cricket-website/issues/32) asked for a best XI from current availability and form, with balance warnings, compared against the saved team. This does that with ordered rules a selector can read and overrule. It is part of the analytics block in the tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## What it does
+
+**One proposal per game, selector area only.** Open a game in Teams, press **Suggest an XI**, read the list. Nothing is scored and nothing is written by a model: the proposal comes from fixed rules and every sentence on the page cites the numbers it used.
+
+- **The pool.** The grade's squad for the season, without hidden players. Players who said **out**, who are already picked in another grade that day, or whom you left out are not picked, and appear under **Left out** with the reason ("Out. They said they are out for this game.", "Already in A Grade.", "Left out by you."). Anyone who has not answered counts as maybe (an admin can switch that off, and they are then left out until you pin them). The answer is visible to selectors only, which is the existing availability rule; selectors see the whole club, so another grade's draft pick leaks nothing to them.
+- **Fill order.** A keeper first (when the keeper rule is on), then bowling options up to the bowler rule, then batters up to the batter rule, then the best of those left until the team is full. An all-rounder counts as a batter and a bowler, a keeper counts as a batter, as the builder's warnings do.
+- **Ranking inside a step**, in this order and nothing else: in before maybe before no answer yet; players with at least 3 innings or spells in their last five before those with fewer; the last-five line (runs for batting; wickets, then fewer runs conceded, for bowling); games played this season; name. The last step, the best of those left, has no single line to compare (runs and wickets are different things) so it uses availability, enough data, games this season and name. A player with no stored games ranks below players with data and reads "No batting data"; it is never shown as zero.
+- **A reason under every name**, for example "Keeper (keeper, role set by selectors). In. Last five bats: 34, 12*, 0, 51, 8." Reserves say why they were not picked, and the next bowler, batter and keeper in line are named with their numbers ("Next bowler in line: 2 wickets in last 3 spells"). The page never uses words like "best form"; there is no rating.
+- **Batting order** comes from each player's stored batting position over their last five innings (the median), only for players with at least 3 such innings. Everyone else is placed last, marked "Order not suggested". The rule is written on the page under *How this team is chosen*. The captain is never suggested; set C and WK in the builder. A captain already saved is kept when that player is still in. The keeper pick sets the keeper tag.
+- **Warnings and comparison.** The same warnings the builder and the publish step use run on the proposal, and **Compared with the saved team** lists who is in, who is out and who moves.
+- **Your changes.** **Must play** pins a player (even one who is out, with the usual warning: selectors have the last word), **Leave out** removes one, **Keeper** makes a player the keeper in one tap. These live in the address of the page, so they are not stored anywhere, can be bookmarked or sent to another selector, and **Clear my changes** resets them. The server checks every number in the address against the grade's squad: a player who is not in the squad, or who is hidden, is ignored and never shown or echoed.
+- **Use this XI** saves the proposal as the working team through the same save the builder uses: a **draft**, not marked ready, never published, no announcement, no notification. If another selector saved in the meantime the save is refused ("Someone else changed this team") and you reload. If a team is already published, it stays on the public site exactly as it was until a selector publishes again from the builder. If a team is already saved, the button asks once before it replaces the draft.
+
+**Settings** (admin only, Advanced > Selection settings > Best XI suggestion; selectors can read but not change them): *Bowling options wanted* (default 5), *Batters wanted* (default 5), *A team needs a wicketkeeper* (default on), *Treat "no answer yet" as maybe* (default on). The builder's warnings read the same numbers, so the builder, the suggestion and the publish step never disagree. The window is fixed at the last five innings or spells.
+
+**Privacy.** The suggestion page is `noindex`, never cached and never in the sitemap. It uses availability, roles, stored scores and positions, never phone numbers or notes. It makes no network call.
+
+## How to use it
+
+1. In the selector area open **Teams**, choose a game, and tap **Suggest an XI**.
+2. Read the warnings and the reason under each name. Tap **Must play**, **Leave out** or **Keeper** to change the team; the list updates.
+3. Open **Reserves** and **Left out** to see who missed out and why.
+4. Tap **Use this XI**. You land on the builder with a draft: set captain and keeper, adjust the order, mark ready and publish as usual.
+5. An **admin** changes the numbers in Advanced > Selection settings > Best XI suggestion.
+
+## Not included / deferred
+
+- A numeric rating or a "predicted performance": there is none, on purpose. The proposal is rules plus recorded numbers.
+- Opposition-specific selection (picking against the opponent's batting or bowling), pitch or weather. Scouting is a separate [report](./opposition-scouting.mdx) the selector reads alongside.
+- Suggesting a captain, a 12th man, or splitting players between grades on the same day.
+- A form window other than the last five, or batting order from bowling roles. Positions come only from stored scorecards; players with fewer than 3 stored innings are not ordered.
+- Saving a suggestion without pressing **Use this XI**, or a history of earlier suggestions.
+- Stored games start at the PlayHQ backfill window; before that a player reads "No data" (see [Match data store](./match-data-store.mdx)).

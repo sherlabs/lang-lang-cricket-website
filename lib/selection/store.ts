@@ -1,4 +1,5 @@
 import type { Payload, Where } from 'payload'
+import { SELECTION } from '../../config/site'
 import { currentSeasonStartYear } from './season'
 
 /**
@@ -6,7 +7,23 @@ import { currentSeasonStartYear } from './season'
  * override (`overrideAccess: true`, the default), so every caller has already checked who is asking: the availability link by its
  * signed cookie, the selector area by `requireSelection()` plus the role check in the `lib/selector-*` files.
  */
-export type SelectionSettingsValues = { linkEnabled: boolean; linkVersion: number; availabilityLockHours: number; defaultXiSize: 0 | 11 | 12 | 13; publishBattingOrder: boolean; announceOnPublish: boolean }
+export type XiRules = { minBowlers: number; minBatters: number; requireKeeper: boolean; treatNoAnswerAsMaybe: boolean }
+export type SelectionSettingsValues = { linkEnabled: boolean; linkVersion: number; availabilityLockHours: number; defaultXiSize: 0 | 11 | 12 | 13; publishBattingOrder: boolean; announceOnPublish: boolean; xi: XiRules }
+
+/** A stored count of players, 0 to 11; anything else (never saved, null, text) falls back to the default. */
+const count = (v: unknown, fallback: number): number => {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN
+  return Number.isInteger(n) && n >= 0 && n <= 11 ? n : fallback
+}
+export function resolveXiRules(raw: unknown): XiRules {
+  const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  return {
+    minBowlers: count(o.minBowlers, SELECTION.xi.minBowlers),
+    minBatters: count(o.minBatters, SELECTION.xi.minBatters),
+    requireKeeper: o.requireKeeper == null ? SELECTION.xi.requireKeeper : o.requireKeeper !== false,
+    treatNoAnswerAsMaybe: o.treatNoAnswerAsMaybe == null ? SELECTION.xi.treatNoAnswerAsMaybe : o.treatNoAnswerAsMaybe !== false,
+  }
+}
 
 export async function getSelectionSettings(payload: Payload): Promise<SelectionSettingsValues> {
   const g = await payload.findGlobal({ slug: 'selection-settings', depth: 0 })
@@ -22,6 +39,7 @@ export async function getSelectionSettings(payload: Payload): Promise<SelectionS
     defaultXiSize: [0, 11, 12, 13].includes(xi) ? (xi as 0 | 11 | 12 | 13) : 11,
     publishBattingOrder: (g as { publishBattingOrder?: boolean | null }).publishBattingOrder !== false,
     announceOnPublish: (g as { announceOnPublish?: boolean | null }).announceOnPublish !== false,
+    xi: resolveXiRules((g as { xi?: unknown }).xi),
   }
 }
 

@@ -176,6 +176,26 @@ export const selectorPaths = {
   teamPreviewImage: (gameId: string) => `/selector/teams/${gameId}/preview-image`,
   scouting: '/selector/scouting',
   scoutingFor: (key: string) => `/selector/scouting/${encodeURIComponent(key)}`,
+  suggestFor: (gameId: string) => `/selector/teams/${gameId}/suggest`,
+} as const
+
+/**
+ * Best XI suggester (wave E, WP-2). The four `xi` numbers are the defaults of the Selection settings group of the same name
+ * (an admin changes them there); the form window is fixed so the "last five" lines mean the same everywhere.
+ */
+export const SELECTION = {
+  xi: {
+    minBowlers: 5,
+    minBatters: 5,
+    requireKeeper: true,
+    treatNoAnswerAsMaybe: true,
+    /** A team of "no limit" is suggested at this size. */
+    openTeamSize: 11,
+    /** Innings or spells in the last five before a player counts as having enough recent data. */
+    minFormEntries: 3,
+    /** Stored batting positions needed before a batting slot is suggested for a player. */
+    orderMinInnings: 3,
+  },
 } as const
 
 /**

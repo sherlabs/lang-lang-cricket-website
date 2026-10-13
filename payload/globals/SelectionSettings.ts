@@ -2,7 +2,7 @@ import type { GlobalConfig } from 'payload'
 import { isAdmin, isSelection } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
 import { DEFAULT_VOTE_SETTINGS, validateBallotValues } from '../../lib/votes/settings'
-import { VOTES } from '../../config/site'
+import { SELECTION, VOTES } from '../../config/site'
 import { VOTES_TAG } from '../../lib/votes/tags'
 import { revalidatePaths } from '../hooks/revalidate'
 
@@ -35,6 +35,18 @@ export const SelectionSettings: GlobalConfig = {
     },
     { name: 'publishBattingOrder', type: 'checkbox', defaultValue: true, label: 'Show the batting order on the public teams page', admin: { description: 'Untick to list the team alphabetically without numbers (captain and keeper stay marked).' } },
     { name: 'announceOnPublish', type: 'checkbox', defaultValue: true, label: 'Post a site announcement when teams are published', admin: { description: 'Adds one announcement per weekend (updated if the teams change) that links to the teams page.' } },
+    {
+      name: 'xi',
+      type: 'group',
+      label: 'Best XI suggestion',
+      admin: { description: 'The balance rules the "Suggest an XI" page fills first, and the warnings on the team builder check. They apply to every selector.' },
+      fields: [
+        { name: 'minBowlers', type: 'number', defaultValue: SELECTION.xi.minBowlers, min: 0, max: 11, label: 'Bowling options wanted', admin: { description: 'Bowlers and all-rounders. The suggestion fills this many first, and the builder warns below it.' } },
+        { name: 'minBatters', type: 'number', defaultValue: SELECTION.xi.minBatters, min: 0, max: 11, label: 'Batters wanted', admin: { description: 'Batters, all-rounders and keepers. The suggestion fills this many next, and the builder warns below it.' } },
+        { name: 'requireKeeper', type: 'checkbox', defaultValue: SELECTION.xi.requireKeeper, label: 'A team needs a wicketkeeper', admin: { description: 'The suggestion picks a keeper first, and the builder warns when none is tagged.' } },
+        { name: 'treatNoAnswerAsMaybe', type: 'checkbox', defaultValue: SELECTION.xi.treatNoAnswerAsMaybe, label: 'Treat “no answer yet” as maybe', admin: { description: 'Untick to leave players who have not answered out of the suggestion. A selector can still pin them.' } },
+      ],
+    },
     {
       name: 'scouting',
       type: 'group',

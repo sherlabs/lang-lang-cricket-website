@@ -44,6 +44,7 @@ import * as migration_20261012_093637_d6_email from './20261012_093637_d6_email'
 import * as migration_20261012_101638_d7_stock from './20261012_101638_d7_stock';
 import * as migration_20261012_114400_d8_form_keys from './20261012_114400_d8_form_keys';
 import * as migration_20261012_234856_e1_scouting_settings from './20261012_234856_e1_scouting_settings';
+import * as migration_20261013_001154_e1_selection_rules from './20261013_001154_e1_selection_rules';
 
 export const migrations = [
   {
@@ -274,6 +275,11 @@ export const migrations = [
   {
     up: migration_20261012_234856_e1_scouting_settings.up,
     down: migration_20261012_234856_e1_scouting_settings.down,
-    name: '20261012_234856_e1_scouting_settings'
+    name: '20261012_234856_e1_scouting_settings',
+  },
+  {
+    up: migration_20261013_001154_e1_selection_rules.up,
+    down: migration_20261013_001154_e1_selection_rules.down,
+    name: '20261013_001154_e1_selection_rules'
   },
 ];

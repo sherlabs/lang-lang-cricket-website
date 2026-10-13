@@ -33,9 +33,13 @@ export const MIN_BOWLERS = 5
 export const MIN_BATTERS = 5
 export const MAX_UNKNOWN_ROLES = 3
 
+/** The balance rules (Selection settings > Best XI suggestion). The defaults are the old fixed numbers. */
+export type BalanceRules = { minBowlers: number; minBatters: number; requireKeeper?: boolean }
+export const DEFAULT_RULES: BalanceRules = { minBowlers: MIN_BOWLERS, minBatters: MIN_BATTERS, requireKeeper: true }
+
 const w = (code: WarningCode, text: string, o: { blocking?: boolean; strong?: boolean } = {}): Warning => ({ code, text, blocking: Boolean(o.blocking), strong: Boolean(o.strong) })
 
-export function teamWarnings(input: WarnInput): Warning[] {
+export function teamWarnings(input: WarnInput, rules: BalanceRules = DEFAULT_RULES): Warning[] {
   const { slots, size } = input
   const out: Warning[] = []
   if (slots.length === 0) out.push(w('empty', 'Nobody is picked yet.', { blocking: true }))
@@ -49,10 +53,10 @@ export function teamWarnings(input: WarnInput): Warning[] {
   }
   if (slots.length > 0) {
     const counts = balanceCounts(slots)
-    if (counts.keepers === 0) out.push(w('no-keeper', 'No wicketkeeper (tag one with WK).'))
+    if (counts.keepers === 0 && rules.requireKeeper !== false) out.push(w('no-keeper', 'No wicketkeeper (tag one with WK).'))
     if (!slots.some((s) => s.isCaptain)) out.push(w('no-captain', 'No captain (tag one with C).'))
-    if (counts.bowlers < MIN_BOWLERS) out.push(w('few-bowlers', `Only ${counts.bowlers} bowling options (aim for ${MIN_BOWLERS} or more).`))
-    if (counts.batters < MIN_BATTERS) out.push(w('few-batters', `Only ${counts.batters} batters (aim for ${MIN_BATTERS} or more).`))
+    if (counts.bowlers < rules.minBowlers) out.push(w('few-bowlers', `Only ${counts.bowlers} bowling options (aim for ${rules.minBowlers} or more).`))
+    if (counts.batters < rules.minBatters) out.push(w('few-batters', `Only ${counts.batters} batters (aim for ${rules.minBatters} or more).`))
     if (counts.unknown > MAX_UNKNOWN_ROLES) out.push(w('unknown-roles', `${counts.unknown} players have no role set, so the balance is a guess.`))
     if (size > 0 && slots.length < size) out.push(w('short-of-size', `${slots.length} picked, ${size} needed.`))
   }

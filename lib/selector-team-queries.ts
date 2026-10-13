@@ -11,7 +11,7 @@ import { loadInsights, type PlayerInsight } from '@/lib/selection/insights'
 import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import { effectiveRole, type Role, type RoleOrUnknown } from '@/lib/selection/roles'
 import { reminderText } from '@/lib/selection/reminder'
-import { currentSquads, getSelectionSettings, idOf, loadPlayers, membersBySquad, type FixtureRow, type PlayerLite } from '@/lib/selection/store'
+import { currentSquads, getSelectionSettings, idOf, loadPlayers, membersBySquad, type FixtureRow, type PlayerLite, type XiRules } from '@/lib/selection/store'
 import { TEAMS_TAG } from '@/lib/selection/tags'
 import { buildSnapshot, describeDiff, diffSnapshots, isXiSize, normaliseSlots, parseSnapshot, validateGuestName, validateSlots, type Slot, type XiSize } from '@/lib/selection/team-sheet'
 import { blockingWarnings, teamWarnings, type Warning, type WarnSlot } from '@/lib/selection/warnings'
@@ -151,7 +151,7 @@ async function buildViews(payload: Payload, user: TypedUser, fixtures: readonly 
       views[i].alsoPickedIn = w.alsoPickedIn ?? null
     })
     const moved = Boolean(doc && slots.length && (fx as FixtureStamped).movedAt && doc.updatedAt && new Date((fx as FixtureStamped).movedAt!).getTime() > new Date(doc.updatedAt).getTime())
-    const warnings = teamWarnings({ slots: warnSlots, size, fixtureStatus: fx.status, fixtureMovedSinceSave: moved })
+    const warnings = teamWarnings({ slots: warnSlots, size, fixtureStatus: fx.status, fixtureMovedSinceSave: moved }, settings.xi)
     const markedReady = Boolean(doc?.markedReady)
     const chip = publishChip({ slots, size }, snapshot)
     const nameOf = (s: { playerId?: number; guestName?: string }) => (s.playerId != null ? players.get(s.playerId)?.name ?? 'A player' : s.guestName ?? '')
@@ -273,9 +273,9 @@ async function noticesFor(payload: Payload): Promise<string[]> {
 // The builder
 
 export type Candidate = { id: number; slug: string; name: string; hidden: boolean; role: RoleOrUnknown; batting: string; bowling: string; answer: Answer; note: string; inTeam: boolean }
-export type Builder = { view: SheetView; candidates: Candidate[]; published: PublicTeam | null; weekendKey: string; showOrder: boolean }
+export type Builder = { view: SheetView; candidates: Candidate[]; published: PublicTeam | null; weekendKey: string; showOrder: boolean; rules: XiRules }
 
-async function fixtureByGameId(payload: Payload, gameId: string): Promise<FixtureStamped | null> {
+export async function fixtureByGameId(payload: Payload, gameId: string): Promise<FixtureStamped | null> {
   if (!/^[A-Za-z0-9_-]{1,80}$/.test(gameId)) return null
   const res = await payload.find({ collection: 'selection-fixtures', where: { gameId: { equals: gameId } }, limit: 1, depth: 0, overrideAccess: true })
   return (res.docs[0] as unknown as FixtureStamped | undefined) ?? null
@@ -319,7 +319,7 @@ export async function loadBuilder(user: TypedUser, gameId: string): Promise<Buil
     })
     .sort((a, b) => a.name.localeCompare(b.name))
   const published = view.chip ? (await readPublishedTeams(payload, { gameId: { equals: gameId } }))[0] ?? null : null
-  return { view, candidates, published, weekendKey: weekendKey(fx.localDate), showOrder: settings.publishBattingOrder }
+  return { view, candidates, published, weekendKey: weekendKey(fx.localDate), showOrder: settings.publishBattingOrder, rules: settings.xi }
 }
 
 /** The working team as the image and text would show it (names unredacted: only a signed-in selector ever sees this). */

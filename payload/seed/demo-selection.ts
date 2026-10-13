@@ -36,6 +36,14 @@ const nextSaturdays = (count: number, from: Date = new Date()): string[] => {
   return Array.from({ length: count }, (_, i) => new Date(d.getTime() + i * 7 * 86_400_000).toISOString().slice(0, 10))
 }
 
+/** Selectors' own view of a few players, so the best XI suggester has keepers, bowlers and an all-rounder to place in each grade. */
+const roleFor = (i: number): Record<string, unknown> =>
+  i === 0 || i === 13 ? { role: 'keeper', canKeep: true }
+  : [5, 6, 7, 8, 9, 18, 19, 20, 21, 22].includes(i) ? { role: 'bowler' }
+  : i === 10 || i === 23 ? { role: 'all-rounder' }
+  : i < 25 ? { role: 'batter' }
+  : {}
+
 export async function seedDemoSelection(payload: Payload, selectorEmail = 'sam.selector@example.com'): Promise<void> {
   const existing = await payload.count({ collection: 'selection-fixtures', overrideAccess: true })
   if (existing.totalDocs > 0) {
@@ -84,13 +92,14 @@ export async function seedDemoSelection(payload: Payload, selectorEmail = 'sam.s
   }
   const fixtures = (await payload.find({ collection: 'selection-fixtures', overrideAccess: true, pagination: false, depth: 0, sort: 'localDate' })).docs
 
-  // Squads: A Grade the first 13 players, B Grade the next 12, two players in both (fill-ins). The last three players are in no squad.
+  // Squads: A Grade the first 13 players plus a new signing with no games yet (so the best XI suggester shows "No data"), B Grade the
+  // next 12, two players in both (fill-ins). The last two players are in no squad.
   const squadIds: Record<string, number> = {}
   for (const g of GRADES) {
     const s = await payload.create({ collection: 'squads', data: { seasonStartYear: year, gradeId: g.id, gradeName: g.name }, overrideAccess: true, context: CTX })
     squadIds[g.id] = s.id
   }
-  const inA = players.slice(0, 13)
+  const inA = [...players.slice(0, 13), players[25]]
   const inB = [...players.slice(13, 25), players[11], players[12]]
   for (const [gradeId, list] of [['demo-grade-a', inA], ['demo-grade-b', inB]] as const) {
     for (const p of list) await payload.create({ collection: 'squad-members', data: { squad: squadIds[gradeId], player: p.id }, overrideAccess: true, context: CTX })
@@ -128,10 +137,10 @@ export async function seedDemoSelection(payload: Payload, selectorEmail = 'sam.s
     const phone = normalisePhone(demoPhone(i + 1))
     if (!phone) continue
     const { hash, salt } = await hashPin(lastFour(phone)!)
-    await profile(p.id, { phone, pinHash: hash, pinSalt: salt, pinSource: 'phone', pinSetAt: new Date().toISOString(), ...(i === 0 || i === 13 ? { role: 'keeper', canKeep: true } : {}) })
+    await profile(p.id, { phone, pinHash: hash, pinSalt: salt, pinSource: 'phone', pinSetAt: new Date().toISOString(), ...roleFor(i) })
   }
   const manual = await hashPin('123456')
-  await profile(noPhone.id, { pinHash: manual.hash, pinSalt: manual.salt, pinSource: 'manual', pinSetAt: new Date().toISOString() })
+  await profile(noPhone.id, { role: 'batter', pinHash: manual.hash, pinSalt: manual.salt, pinSource: 'manual', pinSetAt: new Date().toISOString() })
 
   // A few answers: the first fixture of each grade is mostly answered, the others less so; some players have not replied.
   const answers = ['in', 'in', 'maybe', 'out', 'in'] as const
@@ -176,21 +185,27 @@ export async function seedDemoTeams(payload: Payload): Promise<void> {
   const inB = await membersOf(squadB.id)
   const fixtureOf = (gradeId: string, n: number) => fixtures.filter((f) => f.gradeId === gradeId)[n]!
 
-  // Finished games: five weeks of A Grade scores for the first eleven players.
-  const eleven = inA.slice(0, 11)
+  // Finished games: five weeks of scores for the first eleven players of each grade (A Grade, then B Grade with the scores rotated), so
+  // the builder and the best XI suggester have last-five lines. The new A Grade signing has no games on purpose.
   const SCORES = [[34, 12, 0, 51, 8, 23, 4, 17, 2, 9, 1], [8, 41, 22, 0, 63, 5, 19, 3, 11, 0, 7], [15, 6, 77, 14, 2, 30, 9, 1, 26, 4, 12], [52, 0, 18, 33, 10, 7, 2, 21, 0, 14, 5], [11, 25, 4, 9, 40, 16, 0, 8, 3, 22, 6]]
-  for (const [w, scores] of SCORES.entries()) {
-    const date = new Date(Date.now() - (w + 1) * 7 * 86_400_000).toISOString().slice(0, 10)
-    const match = await payload.create({ collection: 'matches', data: { gameId: `demo-match-${w + 1}`, status: 'FINAL', gradeId: 'demo-grade-a', gradeName: 'A Grade', localDate: date, opponentName: `${OPPONENTS[w % OPPONENTS.length]} CC`, clubTeamName: 'A Grade', isHome: w % 2 === 0, source: 'import', importBatch: 'demo-selection' } as never, overrideAccess: true, context: CTX })
-    const innings = await payload.create({ collection: 'match-innings', data: { match: match.id, sequenceNo: 1, isClubBatting: true, played: true } as never, overrideAccess: true, context: CTX })
-    for (const [i, playerId] of eleven.entries()) {
-      const key = `a${i + 1}`
-      await payload.create({ collection: 'match-appearances', data: { match: match.id, appearanceId: key, isClubSide: true, player: playerId, isFillIn: false, isRegisteredPlayer: true } as never, overrideAccess: true, context: CTX })
-      await payload.create({ collection: 'match-batting', data: { match: match.id, innings: innings.id, appearanceId: key, position: i + 1, battingStatus: (i + w) % 5 === 0 ? 'not_out' : 'out', runs: scores[i] } as never, overrideAccess: true, context: CTX })
-      if (i >= 4) await payload.create({ collection: 'match-bowling', data: { match: match.id, innings: innings.id, appearanceId: key, order: i - 3, balls: 36, runs: 18 + ((i * 7 + w * 3) % 24), wickets: (i + w) % 4 } as never, overrideAccess: true, context: CTX })
-      if (i === 0) await payload.create({ collection: 'match-fielding', data: { match: match.id, innings: innings.id, appearanceId: key, keeperCatches: 2, stumpings: 1 } as never, overrideAccess: true, context: CTX })
+  const eleven = inA.slice(0, 11)
+  const seedGames = async (grade: { id: string; name: string; prefix: string; team: number[]; rotate: number }) => {
+    for (const [w, scores] of SCORES.entries()) {
+      const date = new Date(Date.now() - (w + 1) * 7 * 86_400_000).toISOString().slice(0, 10)
+      const match = await payload.create({ collection: 'matches', data: { gameId: `${grade.prefix}${w + 1}`, status: 'FINAL', gradeId: grade.id, gradeName: grade.name, localDate: date, opponentName: `${OPPONENTS[(w + grade.rotate) % OPPONENTS.length]} CC`, clubTeamName: grade.name, isHome: w % 2 === 0, source: 'import', importBatch: 'demo-selection' } as never, overrideAccess: true, context: CTX })
+      const innings = await payload.create({ collection: 'match-innings', data: { match: match.id, sequenceNo: 1, isClubBatting: true, played: true } as never, overrideAccess: true, context: CTX })
+      for (const [i, playerId] of grade.team.entries()) {
+        const key = `a${i + 1}`
+        const runs = scores[(i + grade.rotate) % scores.length]
+        await payload.create({ collection: 'match-appearances', data: { match: match.id, appearanceId: key, isClubSide: true, player: playerId, isFillIn: false, isRegisteredPlayer: true } as never, overrideAccess: true, context: CTX })
+        await payload.create({ collection: 'match-batting', data: { match: match.id, innings: innings.id, appearanceId: key, position: i + 1, battingStatus: (i + w) % 5 === 0 ? 'not_out' : 'out', runs } as never, overrideAccess: true, context: CTX })
+        if (i >= 4) await payload.create({ collection: 'match-bowling', data: { match: match.id, innings: innings.id, appearanceId: key, order: i - 3, balls: 36, runs: 18 + ((i * 7 + w * 3) % 24), wickets: (i + w) % 4 } as never, overrideAccess: true, context: CTX })
+        if (i === 0) await payload.create({ collection: 'match-fielding', data: { match: match.id, innings: innings.id, appearanceId: key, keeperCatches: 2, stumpings: 1 } as never, overrideAccess: true, context: CTX })
+      }
     }
   }
+  await seedGames({ id: 'demo-grade-a', name: 'A Grade', prefix: 'demo-match-', team: eleven, rotate: 0 })
+  await seedGames({ id: 'demo-grade-b', name: 'B Grade', prefix: 'demo-match-b-', team: inB.slice(0, 11), rotate: 3 })
 
   const slotsOf = (ids: number[], over: { captain?: number; keeper?: number } = {}) => ids.map((player, i) => ({ player, order: i + 1, isCaptain: player === over.captain, isKeeper: player === over.keeper }))
   const publishedAt = new Date().toISOString()
@@ -230,6 +245,6 @@ export async function seedDemoTeams(payload: Payload): Promise<void> {
     overrideAccess: true,
     context: CTX,
   })
-  console.log('[seed-demo] teams: 5 finished games, 1 published team (A Grade, with its announcement), 1 draft (B Grade), 1 needs-attention team (A Grade next week), 1 not started')
+  console.log('[seed-demo] teams: 5 finished games per grade, 1 published team (A Grade, with its announcement), 1 draft (B Grade), 1 needs-attention team (A Grade next week), 1 not started')
   console.log(`[seed-demo]   public team: /teams/${fixA1.gameId}`)
 }

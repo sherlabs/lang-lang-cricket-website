@@ -64,8 +64,8 @@ export function TeamBuilder({ builder, gameId, announceDefault }: { builder: Bui
   const [serverWarnings, setServerWarnings] = useState<{ gradeName: string; text: string }[] | null>(null)
 
   const warnings: Warning[] = useMemo(
-    () => teamWarnings({ slots: rows.map((r) => ({ name: r.name, kind: r.playerId == null ? 'guest' : 'player', role: r.role, isCaptain: r.isCaptain, isKeeper: r.isKeeper, hidden: r.hidden, missing: r.missing, badGuest: r.playerId == null && !validateGuestName(r.guestName).ok, answer: r.answer, alsoPickedIn: r.alsoPickedIn })), size, fixtureStatus: fixture.status, fixtureMovedSinceSave: view.warnings.some((w) => w.code === 'fixture-moved') }),
-    [rows, size, fixture.status, view.warnings],
+    () => teamWarnings({ slots: rows.map((r) => ({ name: r.name, kind: r.playerId == null ? 'guest' : 'player', role: r.role, isCaptain: r.isCaptain, isKeeper: r.isKeeper, hidden: r.hidden, missing: r.missing, badGuest: r.playerId == null && !validateGuestName(r.guestName).ok, answer: r.answer, alsoPickedIn: r.alsoPickedIn })), size, fixtureStatus: fixture.status, fixtureMovedSinceSave: view.warnings.some((w) => w.code === 'fixture-moved') }, builder.rules),
+    [rows, size, fixture.status, view.warnings, builder.rules],
   )
   const status = deriveTeamStatus({ slotCount: rows.length, size, markedReady: ready, warnings, slots: rows.map((r) => ({ role: r.role, isCaptain: r.isCaptain, isKeeper: r.isKeeper })) })
   const chip: PublishChip = view.chip

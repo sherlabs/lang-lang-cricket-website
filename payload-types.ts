@@ -4818,6 +4818,27 @@ export interface SelectionSetting {
    */
   announceOnPublish?: boolean | null;
   /**
+   * The balance rules the "Suggest an XI" page fills first, and the warnings on the team builder check. They apply to every selector.
+   */
+  xi?: {
+    /**
+     * Bowlers and all-rounders. The suggestion fills this many first, and the builder warns below it.
+     */
+    minBowlers?: number | null;
+    /**
+     * Batters, all-rounders and keepers. The suggestion fills this many next, and the builder warns below it.
+     */
+    minBatters?: number | null;
+    /**
+     * The suggestion picks a keeper first, and the builder warns when none is tagged.
+     */
+    requireKeeper?: boolean | null;
+    /**
+     * Untick to leave players who have not answered out of the suggestion. A selector can still pin them.
+     */
+    treatNoAnswerAsMaybe?: boolean | null;
+  };
+  /**
    * Controls the opposition scouting report in the selector area. These settings apply to every selector.
    */
   scouting?: {
@@ -5372,6 +5393,14 @@ export interface SelectionSettingsSelect<T extends boolean = true> {
   defaultXiSize?: T;
   publishBattingOrder?: T;
   announceOnPublish?: T;
+  xi?:
+    | T
+    | {
+        minBowlers?: T;
+        minBatters?: T;
+        requireKeeper?: T;
+        treatNoAnswerAsMaybe?: T;
+      };
   scouting?:
     | T
     | {

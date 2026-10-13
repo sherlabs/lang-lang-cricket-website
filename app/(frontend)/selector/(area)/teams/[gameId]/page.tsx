@@ -35,7 +35,10 @@ export default async function BuilderPage({ params }: Props) {
       <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-brand-grey">{f.gradeName}{f.roundName ? ` · ${f.roundName}` : ''}</p>
       <h1 className="display text-3xl text-brand-black">v {f.opponentName}</h1>
       <p className="mt-1 text-brand-grey">{[formatMatchDay(f.localDate, locale), formatMatchTime(f.localTime), [f.venueName, f.venueSuburb].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</p>
-      <div className="mt-1"><ScoutLink resolved={scout} name={f.opponentName} showNone /></div>
+      <div className="mt-1 flex flex-wrap items-center gap-x-4">
+        <Link href={selectorPaths.suggestFor(gameId)} className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-black underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Suggest an XI</Link>
+        <ScoutLink resolved={scout} name={f.opponentName} showNone />
+      </div>
       <div className="mt-4">
         <TeamBuilder builder={builder} gameId={gameId} announceDefault={settings.announceOnPublish} />
       </div>
