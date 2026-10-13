@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { STOCK_CATEGORIES, CATEGORY_LABEL } from '@/lib/office/stock'
 import { getStockPage } from '@/lib/stock-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { LowBadge, Nonce, StatusBadge, StockFlash, first } from './OfficeStockBits'
 
 /**
@@ -12,7 +12,8 @@ import { LowBadge, Nonce, StatusBadge, StockFlash, first } from './OfficeStockBi
  * without scripts. The owed list has names, so its download is for admins only.
  */
 export async function OfficeStockView(view: AdminViewServerProps) {
-  requireUser(view, '/office/stock')
+  const denied = await requireStaff(view, '/office/stock')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const apiRoot = `${req.payload.config.routes.api}/admin/office`

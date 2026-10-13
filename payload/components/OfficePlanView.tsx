@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { DIARY_ERROR_TEXT, DIARY_NOTICE_TEXT, isDiaryError, isDiaryNotice, OBJECTIVE_STATUSES } from '@/lib/office/diary'
 import { getPlanPage } from '@/lib/diary-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS_TEXT: Record<(typeof OBJECTIVE_STATUSES)[number], string> = { 'not-started': 'Not started', 'on-track': 'On track', 'at-risk': 'At risk', done: 'Done', dropped: 'Dropped' }
@@ -14,7 +14,8 @@ const JOB_TEXT = { todo: 'To do', 'in-progress': 'In progress', blocked: 'Blocke
  * progress written in words and shown as a bar. Prints cleanly (browser print to PDF).
  */
 export async function OfficePlanView(view: AdminViewServerProps) {
-  requireUser(view, '/office/plan')
+  const denied = await requireStaff(view, '/office/plan')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/diary`

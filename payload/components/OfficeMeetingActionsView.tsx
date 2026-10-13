@@ -3,14 +3,15 @@ import type { AdminViewServerProps } from 'payload'
 import { parseId, isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT } from '@/lib/office/meetings'
 import { getActionsPage } from '@/lib/meetings-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STANDING = { overdue: 'Overdue', blocked: 'Blocked', 'due-soon': 'Due soon', open: 'Open', done: 'Done', dropped: 'Dropped' } as const
 
 /** `/admin/office/meetings/actions` (committee): every open committee action, overdue first, filterable by seat. */
 export async function OfficeMeetingActionsView(view: AdminViewServerProps) {
-  requireUser(view, '/office/meetings')
+  const denied = await requireStaff(view, '/office/meetings')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/meetings`

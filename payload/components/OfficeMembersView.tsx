@@ -6,7 +6,7 @@ import { MISSING_KEYS, parseMemberQuery, queryString, type MemberQuery } from '@
 import { MEMBER_ROLES, ROLE_LABELS } from '@/lib/office/members'
 import { isAdminUser } from '../access'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const MISSING_LABELS: Record<(typeof MISSING_KEYS)[number], string> = { email: 'No email', phone: 'No phone', both: 'No email or phone', guardian: 'Junior with no guardian' }
@@ -17,7 +17,8 @@ const MISSING_LABELS: Record<(typeof MISSING_KEYS)[number], string> = { email: '
  * office routes, so everything works without scripts. An editor who opens this address sees a short refusal and no data.
  */
 export async function OfficeMembersView(view: AdminViewServerProps) {
-  requireUser(view, '/office/members')
+  const denied = await requireStaff(view, '/office/members')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office`

@@ -13,7 +13,7 @@ import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: <T,>(fn: T) => fn }))
 // The real AdminPage wraps the view in Payload's template (needs a full request); the view's own output is what is under test.
-vi.mock('@/payload/components/AdminPage', () => ({ AdminPage: ({ children }: { children: unknown }) => children, requireUser: () => undefined }))
+vi.mock('@/payload/components/AdminPage', () => ({ AdminPage: ({ children }: { children: unknown }) => children, requireStaff: async () => null }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => undefined }) }))
 vi.mock('@payloadcms/ui', () => ({ SetStepNav: () => null, Button: () => null, toast: {} }))
 

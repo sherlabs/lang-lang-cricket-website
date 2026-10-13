@@ -5,7 +5,7 @@ import type { KindSummary, SmallCountTable } from '@/lib/office/volunteers'
 import { getHoursReport } from '@/lib/volunteers-office-queries'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const KIND_TITLE = { volunteer: 'Volunteer hours', paid: 'Paid hours' } as const
@@ -62,7 +62,8 @@ function KindBlock({ k, labels }: { k: KindSummary; labels: Record<string, strin
  * hours or whether they are paid.
  */
 export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
-  requireUser(view, '/office/volunteers')
+  const denied = await requireStaff(view, '/office/volunteers')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office`

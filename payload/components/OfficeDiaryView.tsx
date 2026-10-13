@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { DIARY_ERROR_TEXT, DIARY_NOTICE_TEXT, isDiaryError, isDiaryNotice, type JobFilter, type JobStanding } from '@/lib/office/diary'
 import { getDiaryPage, type JobView } from '@/lib/diary-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STANDING: Record<JobStanding, string> = { done: 'Done', overdue: 'Overdue', blocked: 'Blocked', 'due-soon': 'Due soon', open: '' }
@@ -21,7 +21,8 @@ function statusText(j: JobView): string {
  * without scripts.
  */
 export async function OfficeDiaryView(view: AdminViewServerProps) {
-  requireUser(view, '/office/diary')
+  const denied = await requireStaff(view, '/office/diary')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/diary`

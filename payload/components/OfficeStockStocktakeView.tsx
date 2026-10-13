@@ -2,7 +2,7 @@ import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { parseWholeQty } from '@/lib/office/stock'
 import { getStocktakePage } from '@/lib/stock-office-queries'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { Nonce, StockFlash, first } from './OfficeStockBits'
 
 /**
@@ -11,7 +11,8 @@ import { Nonce, StockFlash, first } from './OfficeStockBits'
  * expected for each item; if stock moved in the meantime the server refuses and asks for a fresh count.
  */
 export async function OfficeStockStocktakeView(view: AdminViewServerProps) {
-  requireUser(view, '/office/stock/stocktake')
+  const denied = await requireStaff(view, '/office/stock/stocktake')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/stock`

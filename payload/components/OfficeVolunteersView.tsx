@@ -4,7 +4,7 @@ import { gameDayLabel } from '@/lib/office/game-day'
 import { isVolunteerError, isVolunteerNotice, VOLUNTEER_ERROR_TEXT, VOLUNTEER_NOTICE_TEXT } from '@/lib/office/volunteer-input'
 import { getVolunteersPage } from '@/lib/volunteers-office-queries'
 import { currentClubDate } from '@/lib/selection/club-date'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS = { draft: 'Draft', open: 'Open for answers', confirmed: 'Confirmed' } as const
@@ -15,7 +15,8 @@ const STATUS = { draft: 'Draft', open: 'Open for answers', confirmed: 'Confirmed
  * volunteers route, so it works without scripts.
  */
 export async function OfficeVolunteersView(view: AdminViewServerProps) {
-  requireUser(view, '/office/volunteers')
+  const denied = await requireStaff(view, '/office/volunteers')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office`

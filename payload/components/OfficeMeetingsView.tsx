@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT, type MeetingKind } from '@/lib/office/meetings'
 import { getMeetingsPage, type MeetingRow } from '@/lib/meetings-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS = { planned: 'Planned', 'in-progress': 'Under way', closed: 'Closed', cancelled: 'Cancelled' } as const
@@ -14,7 +14,8 @@ const STATUS = { planned: 'Planned', 'in-progress': 'Under way', closed: 'Closed
  * office-bearers; everyone else sees a count.
  */
 export async function OfficeMeetingsView(view: AdminViewServerProps) {
-  requireUser(view, '/office/meetings')
+  const denied = await requireStaff(view, '/office/meetings')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/meetings`

@@ -8,7 +8,7 @@ import { emailEnabled } from '@/lib/email/env'
 import { EMAIL_ERROR_TEXT, EMAIL_NOTICE_TEXT, isEmailError, isEmailNotice } from '@/lib/email/flash'
 import { MEMBER_ROLES, ROLE_LABELS } from '@/lib/office/members'
 import { isAdminUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 export const STATUS_WORDS = { draft: 'Draft', sending: 'Sending', sent: 'Sent', cancelled: 'Stopped' } as const
@@ -73,7 +73,8 @@ export function ComposeFields({ subject = '', body = '', status = 'active', role
  */
 export async function OfficeEmailView(view: AdminViewServerProps) {
   if (!emailEnabled()) notFound()
-  requireUser(view, '/office/email')
+  const denied = await requireStaff(view, '/office/email')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/email`

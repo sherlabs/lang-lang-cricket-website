@@ -2,7 +2,7 @@ import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { parseStockId } from '@/lib/office/stock'
 import { getPersonPage } from '@/lib/stock-office-queries'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { Nonce, StatusBadge, StockFlash, first } from './OfficeStockBits'
 
 /**
@@ -13,7 +13,8 @@ export async function OfficeStockPersonView(view: AdminViewServerProps) {
   const { req } = view.initPageResult
   const segments = (view.params?.segments as string[] | undefined) ?? []
   const id = parseStockId(segments[segments.length - 1])
-  requireUser(view, `/office/stock${id ? `/people/${id}` : ''}`)
+  const denied = await requireStaff(view, `/office/stock${id ? `/people/${id}` : ''}`)
+  if (denied !== null) return denied
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/stock`
   const sp = view.searchParams ?? {}

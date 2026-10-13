@@ -6,7 +6,7 @@ import { FEE_ERROR_TEXT, FEE_NOTICE_TEXT, isFeeError, isFeeNotice } from '@/lib/
 import { formatMoney } from '@/lib/office/money'
 import { isAdminUser } from '../access'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const KINDS = { upfront: 'Fixed fee for the season', 'per-match': 'Per game played', free: 'Free' } as const
@@ -17,7 +17,8 @@ const KINDS = { upfront: 'Fixed fee for the season', 'per-match': 'Per game play
  * Every change is a plain form posted to the Fees route, so it works without scripts. Editors see a short refusal and no data.
  */
 export async function OfficeFeesView(view: AdminViewServerProps) {
-  requireUser(view, '/office/fees')
+  const denied = await requireStaff(view, '/office/fees')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office`

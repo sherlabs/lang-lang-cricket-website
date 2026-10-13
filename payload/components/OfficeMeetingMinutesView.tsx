@@ -2,14 +2,15 @@ import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { restrictedLine } from '@/lib/office/meetings'
 import { getMinutesPage } from '@/lib/meetings-office-queries'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 /**
  * `/admin/office/meetings/:id/minutes` (committee): the minutes as a plain page with print styles (use the browser's Print or
  * Save as PDF). Restricted items appear only for an office-bearer, in a separate part at the end.
  */
 export async function OfficeMeetingMinutesView(view: AdminViewServerProps) {
-  requireUser(view, '/office/meetings')
+  const denied = await requireStaff(view, '/office/meetings')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const segments = (view.params?.segments as string[] | undefined) ?? []

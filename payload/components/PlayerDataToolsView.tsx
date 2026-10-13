@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions, getRecentMerges } from '@/lib/players/duplicate-queries'
 import { isAdminUser } from '../admin/visibility'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { DuplicatePlayersPanel, type PairView } from './DuplicatePlayersPanel'
 import { HistoryImportPanel } from './HistoryImportPanel'
 
@@ -12,7 +12,8 @@ import { HistoryImportPanel } from './HistoryImportPanel'
  * and the ranked list of players who may be the same person, with merge, "not the same person" and undo.
  */
 export async function PlayerDataToolsView(view: AdminViewServerProps) {
-  requireUser(view, '/player-data-tools')
+  const denied = await requireStaff(view, '/player-data-tools')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const api = req.payload.config.routes.api
   if (!isAdminUser(req.user)) {

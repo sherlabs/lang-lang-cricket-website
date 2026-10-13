@@ -3,7 +3,7 @@ import type { AdminViewServerProps } from 'payload'
 import { ATTENDANCE_STATES, isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT, MOTION_RESULTS, type AttendanceState } from '@/lib/office/meetings'
 import { currentOfficeBearers, getMeetingPage, type ActionView, type MeetingPage } from '@/lib/meetings-office-queries'
 import { officeCopy } from '../admin/copy'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS = { planned: 'Planned', 'in-progress': 'Under way', closed: 'Closed', cancelled: 'Cancelled' } as const
@@ -17,7 +17,8 @@ const STANDING = { overdue: 'Overdue', blocked: 'Blocked', 'due-soon': 'Due soon
  * draft minutes. On a yearly general meeting an admin also sees "Hand over seats". Every control is a plain form.
  */
 export async function OfficeMeetingView(view: AdminViewServerProps) {
-  requireUser(view, '/office/meetings')
+  const denied = await requireStaff(view, '/office/meetings')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/meetings`

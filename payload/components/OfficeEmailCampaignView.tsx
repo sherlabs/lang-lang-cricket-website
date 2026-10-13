@@ -5,7 +5,7 @@ import { getCampaignPage, parseCampaignId } from '@/lib/email-office-queries'
 import { emailEnabled, emailLimits, sendEstimate } from '@/lib/email/env'
 import { EMAIL_ERROR_TEXT, EMAIL_NOTICE_TEXT, isEmailError, isEmailNotice } from '@/lib/email/flash'
 import { isAdminUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { ComposeFields, STATUS_WORDS } from './OfficeEmailView'
 import { EmailSendProgress } from './EmailSendProgress'
 
@@ -17,7 +17,8 @@ const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? 
  */
 export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
   if (!emailEnabled()) notFound()
-  requireUser(view, '/office/email')
+  const denied = await requireStaff(view, '/office/email')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const apiRoot = req.payload.config.routes.api

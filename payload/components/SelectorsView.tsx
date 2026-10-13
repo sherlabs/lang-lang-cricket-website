@@ -4,7 +4,7 @@ import { CLUB_LOCALE, SELECTOR_INVITE_DAYS, VOTES, votePaths } from '@/config/si
 import { facebookConfig } from '@/lib/facebook-login'
 import { selectorStatus, STATUS_LABEL } from '@/lib/selector-status'
 import { isStaffUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { SelectorsPanel, type SelectorRow } from './SelectorsPanel'
 
 const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
@@ -14,7 +14,8 @@ const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'shor
  * link, and manage the logins. Reads with the Local API after the staff check; the invite token and the Facebook id are never read.
  */
 export async function SelectorsView(view: AdminViewServerProps) {
-  requireUser(view, '/selectors')
+  const denied = await requireStaff(view, '/selectors')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const api = req.payload.config.routes.api
   if (!isStaffUser(req.user)) {

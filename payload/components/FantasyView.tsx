@@ -2,7 +2,7 @@ import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { getAdminData } from '@/lib/fantasy/admin-view'
 import { isAdminUser, isStaffUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { FantasyPanel } from './FantasyPanel'
 
 /**
@@ -11,7 +11,8 @@ import { FantasyPanel } from './FantasyPanel'
  * in every action; a selector never reaches it. No PIN or hash is ever read for this page.
  */
 export async function FantasyView(view: AdminViewServerProps) {
-  requireUser(view, '/fantasy')
+  const denied = await requireStaff(view, '/fantasy')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   if (!isStaffUser(req.user)) {
     return (

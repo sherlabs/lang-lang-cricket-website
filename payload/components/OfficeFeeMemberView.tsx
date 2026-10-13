@@ -7,7 +7,7 @@ import { STATUS_LABEL, STATUS_MARK, type PaymentTarget } from '@/lib/office/fees
 import { formatMoney, parseMoney } from '@/lib/office/money'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { isAdminUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const targetText = (t: PaymentTarget | null | undefined): string => (!t ? 'General (oldest debt first)' : t.kind === 'season' ? `Season ${t.season}` : 'One game or charge')
@@ -18,7 +18,8 @@ const targetText = (t: PaymentTarget | null | undefined): string => (!t ? 'Gener
  * or waive a fee. "Show what this will settle" re-draws the page with the same arithmetic the report uses before anything is saved.
  */
 export async function OfficeFeeMemberView(view: AdminViewServerProps) {
-  requireUser(view, '/office/fees')
+  const denied = await requireStaff(view, '/office/fees')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office`

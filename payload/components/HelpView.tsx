@@ -1,11 +1,12 @@
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 import { helpContacts, helpIntro, helpSections } from '../admin/helpContent'
 
 /** `/admin/help` (custom view): a one-page guide. The words live in `payload/admin/helpContent.ts`. */
-export function HelpView(view: AdminViewServerProps) {
-  requireUser(view, '/help')
+export async function HelpView(view: AdminViewServerProps) {
+  const denied = await requireStaff(view, '/help')
+  if (denied !== null) return denied
   return (
     <AdminPage view={view} className="club-help">
       <SetStepNav nav={[{ label: 'Help' }]} />

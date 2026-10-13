@@ -4,7 +4,7 @@ import { landingStats } from '@/lib/office/landing'
 import { modulesFor } from '@/lib/office/modules'
 import { officeCopy } from '../admin/copy'
 import { isStaffUser } from '../access'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 /**
  * `/admin/office` (custom view, admin and editor): the landing page of the club back office. One tile per module the signed-in
@@ -12,7 +12,8 @@ import { AdminPage, requireUser } from './AdminPage'
  * and the office settings are for admins.
  */
 export async function OfficeView(view: AdminViewServerProps) {
-  requireUser(view, '/office')
+  const denied = await requireStaff(view, '/office')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const role = isStaffUser(req.user) ? (req.user as { role?: string }).role : null

@@ -2,7 +2,7 @@ import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { DOCUMENT_CATEGORIES, isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT, OFFICE_FILE_TOO_BIG } from '@/lib/office/meetings'
 import { getDocumentsPage } from '@/lib/meetings-office-queries'
-import { AdminPage, requireUser } from './AdminPage'
+import { AdminPage, requireStaff } from './AdminPage'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const CATEGORY: Record<(typeof DOCUMENT_CATEGORIES)[number], string> = { governance: 'Governance', finance: 'Finance', insurance: 'Insurance', legal: 'Legal', policy: 'Policy', other: 'Other' }
@@ -12,7 +12,8 @@ const CATEGORY: Record<(typeof DOCUMENT_CATEGORIES)[number], string> = { governa
  * access-controlled file route, so a signed-out or non-office-bearer visitor gets nothing even with the address.
  */
 export async function OfficeMeetingDocumentsView(view: AdminViewServerProps) {
-  requireUser(view, '/office/meetings')
+  const denied = await requireStaff(view, '/office/meetings')
+  if (denied !== null) return denied
   const { req } = view.initPageResult
   const admin = req.payload.config.routes.admin
   const api = `${req.payload.config.routes.api}/admin/office/meetings`
