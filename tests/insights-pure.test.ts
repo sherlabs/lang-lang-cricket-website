@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { INSIGHTS, NO_SEASON_LABEL } from '../config/site'
-import { buildTrend } from '../lib/insights/chart'
+import { boxesIntersect, buildTrend, labelBox, labelOnFillOk, type TrendInput } from '../lib/insights/chart'
 import { shortDates } from '../lib/insights/format'
 import { byDate, gameViews } from '../lib/insights/games'
 import { bucketLabels, bucketize, marginOf, marginSummary } from '../lib/insights/margin'
@@ -298,5 +298,57 @@ describe('config', () => {
   it('has sane thresholds', () => {
     expect(INSIGHTS.rollingInnings).toBeGreaterThanOrEqual(INSIGHTS.minOuts)
     expect(INSIGHTS.marginBuckets.runs).toEqual([...INSIGHTS.marginBuckets.runs].sort((a, b) => a - b))
+  })
+})
+
+describe('trend chart value labels', () => {
+  function mulberry32(a: number) {
+    return () => {
+      a |= 0; a = (a + 0x6d2b79f5) | 0
+      let t = Math.imul(a ^ (a >>> 15), 1 | a)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+  }
+  const noOverlap = (g: ReturnType<typeof buildTrend>, ctx: string) => {
+    const boxes = g.labels.map(labelBox)
+    boxes.forEach((b, i) => {
+      expect([b.l, b.r, b.t, b.b].every(Number.isFinite), `${ctx}: NaN`).toBe(true)
+      expect(b.l >= 0 && b.r <= g.width && b.t >= 0 && b.b <= g.height, `${ctx}: outside viewBox`).toBe(true)
+      for (let j = i + 1; j < boxes.length; j++) expect(boxesIntersect(b, boxes[j]), `${ctx}: ${i} overlaps ${j}`).toBe(false)
+    })
+  }
+  it('149 bar and 150 line do not stack their labels', () => {
+    const g = buildTrend({ labels: ['2025/26'], bars: [{ value: 149, text: '149' }], line: [150] })
+    expect(g.labels.map((l) => l.text).sort()).toEqual(['149', '150'])
+    expect(new Set(g.labels.map((l) => l.y)).size).toBe(2)
+    noOverlap(g, '149/150')
+  })
+  it('200 seeded random series: no overlap, inside the viewBox, no NaN, marks never dropped', () => {
+    const rnd = mulberry32(20261013)
+    for (let k = 0; k < 200; k++) {
+      const n = 1 + Math.floor(rnd() * 12)
+      const labels = Array.from({ length: n }, (_, i) => `s${i}`)
+      const val = () => (rnd() < 0.2 ? null : Math.round(rnd() * 200))
+      const bars = labels.map(() => { const v = val(); return v === null ? null : { value: v, text: String(v) } })
+      const line = labels.map(() => val())
+      const input: TrendInput = { labels, bars, line, insideOk: rnd() < 0.5 }
+      const g = buildTrend(input)
+      noOverlap(g, `series ${k}`)
+      expect(g.bars).toHaveLength(bars.filter(Boolean).length)
+      expect(g.dots).toHaveLength(line.filter((v) => v !== null).length)
+    }
+  })
+  it('never places a label inside a bar unless told the accent fill passes', () => {
+    const labels = ['a', 'b', 'c', 'd']
+    const bars = [90, 150, 149, 60].map((v) => ({ value: v, text: String(v) }))
+    const line = [91, 149, 150, 61]
+    expect(buildTrend({ labels, bars, line, insideOk: false }).labels.some((l) => l.inside)).toBe(false)
+    expect(buildTrend({ labels, bars, line }).labels.some((l) => l.inside)).toBe(false)
+    expect(labelOnFillOk('#111111', '#2a2a2a')).toBe(false)
+    expect(labelOnFillOk('#111111', '#f2c200')).toBe(true)
+    // With a passing fill a bar label may sit inside (a tall bar whose top spot is taken).
+    const ok = buildTrend({ labels: ['a'], bars: [{ value: 100, text: '100' }], line: [100], insideOk: true })
+    expect(ok.labels.some((l) => l.inside)).toBe(true)
   })
 })

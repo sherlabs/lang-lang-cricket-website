@@ -3,7 +3,7 @@ import { buildTrend, type TrendInput } from '@/lib/insights/chart'
 /**
  * A bars-and-line trend as server-rendered inline SVG (wave E, WP-3). Colours are Tailwind brand utilities written out in
  * full, axes use the text colour, and nothing is a hex value. The SVG carries a title and a description that states the
- * takeaway; the same numbers sit in a table inside `details`, so the chart is never the only way to read them. A hollow bar
+ * takeaway; the same numbers sit in a table inside `details`, so the chart is never the only way to read them. Value labels are placed by the geometry so none overlap; one with no free place is left out and stays in the table. A hollow bar
  * (for example a not-out innings) also carries a star in its label: colour never carries meaning alone.
  */
 export function TrendChart({
@@ -34,7 +34,6 @@ export function TrendChart({
           {g.bars.map((b) => (
             <g key={`${b.x}`}>
               <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={2} strokeWidth={b.hollow ? 2 : 0} className={b.hollow ? 'fill-transparent stroke-brand-gold-deep' : 'fill-brand-gold'} />
-              <text x={b.tx} y={b.ty} textAnchor="middle" className="fill-brand-black text-[10px] font-semibold">{b.text}</text>
             </g>
           ))}
           {g.segments.map((pts) => (
@@ -43,9 +42,9 @@ export function TrendChart({
           {g.dots.map((d) => (
             <circle key={`${d.x}`} cx={d.x} cy={d.y} r={3} className="fill-brand-black" />
           ))}
-          {g.dots.length > 0 && (
-            <text x={g.dots[g.dots.length - 1].x} y={g.dots[g.dots.length - 1].y - 8} textAnchor="middle" className="fill-brand-black text-[10px] font-semibold">{g.dots[g.dots.length - 1].text}</text>
-          )}
+          {g.labels.map((l) => (
+            <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} className="fill-brand-black text-[10px] font-semibold">{l.text}</text>
+          ))}
           {g.xLabels.map((l) => (
             <text key={`${l.x}`} x={l.x} y={g.height - 10} textAnchor="middle" className="fill-brand-grey text-[10px]">{l.text}</text>
           ))}
