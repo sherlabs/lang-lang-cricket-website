@@ -11,6 +11,10 @@ export const TABS: { key: Tab; label: string }[] = [
   { key: 'posted', label: 'Posted' },
   { key: 'drafts', label: 'Drafts' },
 ]
+/** The words under an empty sub-tab of the Posts tab. */
+export const queueEmptyText = (tab: Tab): string =>
+  ({ attention: 'Nothing needs your attention.', scheduled: 'No posts are scheduled.', posted: 'Nothing has been posted yet.', drafts: 'No drafts.' })[tab]
+
 export const isTab = (v: unknown): v is Tab => TABS.some((t) => t.key === v)
 
 export type Chip = { icon: string; label: string; tone: 'ok' | 'warn' | 'info' | 'idle' }

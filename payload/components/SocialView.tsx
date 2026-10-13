@@ -8,7 +8,7 @@ import { configuredNetworks, unavailableNetworks } from '@/lib/social/adapters'
 import { readHeartbeat } from '@/lib/social/heartbeat'
 import { heartbeatView, overdueAfterMinutes } from '@/lib/social/heartbeat-math'
 import { toRow } from '@/lib/social/queue-rows'
-import { isTab, type Tab } from '@/lib/social/queue-view'
+import { isTab, tabOf, type Tab } from '@/lib/social/queue-view'
 import { GRAPHICS } from '@/lib/social/registry'
 import { utcToClubParts } from '@/lib/social/schedule-time'
 import { isPublicHttpsUrl } from '@/lib/social/site-url'
@@ -16,6 +16,7 @@ import { slugify } from '@/lib/slugify'
 import { TEXT_FIELDS } from '@/lib/social/text-fields'
 import { isGraphicType, isSizeKey, isStyleKey, TYPE_KEYS, type SizeKey } from '@/lib/social/types'
 import { AdminPage, requireStaff } from './AdminPage'
+import { PageHeader, SkeletonRows, StatusPill } from './ui'
 import { SocialComposer } from './SocialComposer'
 import { SocialQueue } from './SocialQueue'
 
@@ -29,43 +30,77 @@ const NOW_FORMATS = () => ({
   when: new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }),
 })
 
+const adminBase = (view: AdminViewServerProps): string => view.initPageResult.req.payload.config.routes.admin
+
+/** The address of a tab: the composer's own choices ride along on "Make a post", so going back from Posts finds the picture again. */
+function tabHrefs(view: AdminViewServerProps): { make: string; posts: string } {
+  const base = `${adminBase(view)}/social`
+  const q = new URLSearchParams()
+  for (const [k, v] of Object.entries(view.searchParams ?? {})) if (k !== 'tab' && k !== 'status' && typeof v === 'string') q.set(k, v)
+  return { make: q.size ? `${base}?${q}` : base, posts: `${base}?tab=posts` }
+}
+
 /**
- * `/admin/social` (custom view, admin and editor): make a picture and a caption for Facebook, Instagram or X, then post it by hand
- * or schedule it. Four steps on one page: pick a graphic, preview it (one size at a time), use it, schedule it; the queue sits
- * below. The choice lives in the address (`?type=&source=&style=&size=`), so a refresh keeps it; `?post=<id>` edits a saved post.
+ * `/admin/social` (custom view, admin and editor), two tabs: **Make a post** (the composer: pick a kind, pick what it is about, check the
+ * live preview, then download, share, schedule or save a draft) and **Posts** (the queue). The choice lives in the address
+ * (`?type=&source=&style=&size=`), so a refresh keeps it; `?post=<id>` edits a saved post; `?tab=posts&status=` opens the queue.
  *
- * The page awaits only the sign-in check before it paints: the heading is immediate, and the composer and the queue stream in
- * as their own regions (each with a skeleton), so a slow query never leaves the page blank.
+ * The page awaits only the sign-in check before it paints: the heading and the tab bar are immediate, and the composer or the queue
+ * streams in as its own region (with a skeleton), so a slow query never leaves the page blank.
  */
 export async function SocialView(view: AdminViewServerProps) {
   const denied = await requireStaff(view, '/social')
   if (denied !== null) return denied
+  const tab = first(view.searchParams?.tab) === 'posts' ? 'posts' : 'make'
+  const hrefs = tabHrefs(view)
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Social posts' }]} />
-      <h1 className="club-page__title">Social posts</h1>
-      <p className="club-page__lead">Make a picture and a caption for Facebook, Instagram or X. Pick what to post, check the preview, then save the picture, share it straight from your phone, or schedule it.</p>
-      <Suspense fallback={<RegionSkeleton name="composer" label="Getting the composer ready" />}>
-        <ComposerRegion view={view} />
+      <PageHeader title="Social posts" lead="Make a picture and a caption for Facebook, Instagram or X. Pick what to post, check the preview, then download it, share it from your phone, or schedule it." />
+      <Suspense fallback={<SocialTabs active={tab} hrefs={hrefs} attention={null} />}>
+        <TabsRegion active={tab} hrefs={hrefs} />
       </Suspense>
-      <Suspense fallback={<RegionSkeleton name="queue" label="Loading your posts" />}>
-        <QueueRegion view={view} />
-      </Suspense>
+      {tab === 'make' ? (
+        <Suspense fallback={<RegionSkeleton name="composer" label="Getting the composer ready" />}>
+          <ComposerRegion view={view} postsHref={hrefs.posts} />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<RegionSkeleton name="queue" label="Loading your posts" />}>
+          <QueueRegion view={view} makeHref={hrefs.make} />
+        </Suspense>
+      )}
     </AdminPage>
   )
 }
 
+function SocialTabs({ active, hrefs, attention }: { active: 'make' | 'posts'; hrefs: { make: string; posts: string }; attention: number | null }) {
+  return (
+    <nav aria-label="Social posts" className="social-tabs">
+      <a href={hrefs.make} className="social-tabs__item" aria-current={active === 'make' ? 'page' : undefined}>Make a post</a>
+      <a href={hrefs.posts} className="social-tabs__item" aria-current={active === 'posts' ? 'page' : undefined}>
+        Posts
+        {attention ? <StatusPill tone="warn" label={`${attention} need attention`}>{attention}</StatusPill> : null}
+      </a>
+    </nav>
+  )
+}
+
+/** The tab bar with the "needs attention" count: it waits for the queue, so the bar paints first without the badge. */
+async function TabsRegion({ active, hrefs }: { active: 'make' | 'posts'; hrefs: { make: string; posts: string } }) {
+  const queue = await queueOf().catch(() => [])
+  const attention = queue.filter((p) => tabOf({ status: p.status, targets: p.targets }) === 'attention').length
+  return <SocialTabs active={active} hrefs={hrefs} attention={attention} />
+}
+
 function RegionSkeleton({ name, label }: { name: string; label: string }) {
   return (
-    <section className="club-panel admin-region-skeleton" data-admin-skeleton={name} aria-busy="true">
-      <p className="club-muted" role="status">{label}...</p>
-      <span className="admin-skel__bar admin-skel__bar--wide" aria-hidden="true" />
-      <span className="admin-skel__bar" aria-hidden="true" />
+    <section className="admin-region-skeleton" data-admin-skeleton={name} aria-busy="true">
+      <SkeletonRows rows={4} label={label} />
     </section>
   )
 }
 
-async function ComposerRegion({ view }: { view: AdminViewServerProps }) {
+async function ComposerRegion({ view, postsHref }: { view: AdminViewServerProps; postsHref: string }) {
   const { req } = view.initPageResult
   const sp = view.searchParams ?? {}
   const editId = Number(first(sp.post))
@@ -84,6 +119,7 @@ async function ComposerRegion({ view }: { view: AdminViewServerProps }) {
   return (
     <SocialComposer
       api={`${req.payload.config.routes.api}/admin/social`}
+      postsHref={postsHref}
       types={TYPE_KEYS.map((key) => ({ key, label: GRAPHICS[key].spec.label, hint: GRAPHICS[key].spec.hint, textField: TEXT_FIELDS[key] ?? null }))}
       defaultStyle={settings.defaultStyle}
       settings={{ hashtags: settings.hashtags, signOff: settings.signOff, templates: settings.captionTemplates }}
@@ -110,7 +146,7 @@ async function ComposerRegion({ view }: { view: AdminViewServerProps }) {
   )
 }
 
-async function QueueRegion({ view }: { view: AdminViewServerProps }) {
+async function QueueRegion({ view, makeHref }: { view: AdminViewServerProps; makeHref: string }) {
   const { req } = view.initPageResult
   const sp = view.searchParams ?? {}
   const [queue, beat] = await Promise.all([queueOf(), heartbeatOf(req.payload)])
@@ -118,7 +154,7 @@ async function QueueRegion({ view }: { view: AdminViewServerProps }) {
   const fmt = NOW_FORMATS()
   const available = new Set(configuredNetworks(process.env).map((n) => n.id))
   const rows = queue.map((p) => toRow(p, { labels: NETWORK_LABELS, available, clock: (iso) => fmt.clock.format(new Date(iso)), when: (iso) => fmt.when.format(new Date(iso)) }))
-  const tab = first(sp.tab)
+  const tab = first(sp.status)
   const initialTab: Tab = isTab(tab) ? tab : rows.some((r) => r.tab === 'attention') ? 'attention' : 'scheduled'
-  return <div data-admin-region="queue"><SocialQueue api={`${req.payload.config.routes.api}/admin/social`} rows={rows} initialTab={initialTab} heartbeat={heartbeatView({ ...beat, now })} editBase={`${req.payload.config.routes.admin}/social?post=`} /></div>
+  return <div data-admin-region="queue"><SocialQueue api={`${req.payload.config.routes.api}/admin/social`} rows={rows} initialTab={initialTab} heartbeat={heartbeatView({ ...beat, now })} editBase={`${req.payload.config.routes.admin}/social?post=`} makeHref={makeHref} /></div>
 }

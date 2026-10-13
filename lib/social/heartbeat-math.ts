@@ -28,7 +28,13 @@ export function ago(from: Date, now: Date): string {
   return `${days} days ago`
 }
 
-export type HeartbeatView = { lastChecked: string; warning: string | null; cadence: string | null }
+export type HeartbeatView = {
+  lastChecked: string
+  warning: string | null
+  cadence: string | null
+  /** One plain sentence for the Posts tab: what sends the posts and when it last ran. */
+  plain: string
+}
 
 export function heartbeatView(o: { lastRunAt: Date | null; observedMinutes: number | null; scheduledCount: number; overdueCount: number; now: Date }): HeartbeatView {
   const lastChecked = o.lastRunAt ? `Last checked ${ago(o.lastRunAt, o.now)}` : 'Not checked yet'
@@ -42,5 +48,8 @@ export function heartbeatView(o: { lastRunAt: Date | null; observedMinutes: numb
   const cadence = o.observedMinutes
     ? `Posts go out when the scheduler next checks, about every ${o.observedMinutes >= 120 ? `${Math.round(o.observedMinutes / 60)} hours` : `${o.observedMinutes} ${o.observedMinutes === 1 ? 'minute' : 'minutes'}`}.`
     : null
-  return { lastChecked, warning, cadence }
+  const plain = o.lastRunAt
+    ? `Posts are sent by a scheduled job on the server. The last run was ${ago(o.lastRunAt, o.now)}.`
+    : 'Posts are sent by a scheduled job on the server. It has not run yet, so a scheduled post waits until it does.'
+  return { lastChecked, warning, cadence, plain }
 }

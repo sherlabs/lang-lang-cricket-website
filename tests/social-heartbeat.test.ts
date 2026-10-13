@@ -29,6 +29,10 @@ describe('heartbeat', () => {
     expect(heartbeatView({ lastRunAt: null, observedMinutes: null, scheduledCount: 0, overdueCount: 0, now }).lastChecked).toBe('Not checked yet')
     expect(heartbeatView({ lastRunAt: minsAgo(4), observedMinutes: 5, scheduledCount: 0, overdueCount: 0, now }).lastChecked).toBe('Last checked 4 minutes ago')
   })
+  it('explains the scheduler in plain English for the Posts tab, without claiming a frequency', () => {
+    expect(heartbeatView({ lastRunAt: minsAgo(180), observedMinutes: null, scheduledCount: 0, overdueCount: 0, now }).plain).toBe('Posts are sent by a scheduled job on the server. The last run was 3 hours ago.')
+    expect(heartbeatView({ lastRunAt: null, observedMinutes: null, scheduledCount: 0, overdueCount: 0, now }).plain).toMatch(/has not run yet/)
+  })
   it('warns when a scheduled post is overdue, or the last check is stale while posts wait', () => {
     expect(heartbeatView({ lastRunAt: minsAgo(4), observedMinutes: 5, scheduledCount: 1, overdueCount: 0, now }).warning).toBeNull()
     expect(heartbeatView({ lastRunAt: minsAgo(4), observedMinutes: 5, scheduledCount: 1, overdueCount: 1, now }).warning).toMatch(/not going out/)

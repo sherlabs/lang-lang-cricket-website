@@ -25,6 +25,8 @@ export type QueueRowView = {
   chip: Chip
   when: string
   caption: string
+  /** The size of the first network's picture, or square, for the row's thumbnail. */
+  thumbSize: string
   targets: QueueTargetView[]
   canEdit: boolean
   canPause: boolean
@@ -49,7 +51,7 @@ export function toRow(post: QueuePost, o: { labels: Record<string, string>; avai
   const at = post.status === 'published' || post.status === 'failed' ? post.finishedAt : post.scheduledFor
   return {
     id: post.id, title: post.title, tab: tabOf({ status: post.status, targets: post.targets }), status: post.status, chip: postChip(post.status),
-    when: at ? o.when(at) : 'No time chosen', caption: post.caption, targets,
+    when: at ? o.when(at) : 'No time chosen', caption: post.caption, thumbSize: post.targets.find((t) => isSizeKey(t.size))?.size ?? 'square', targets,
     canEdit: post.status === 'draft' || (post.status === 'scheduled' && post.targets.every((t) => t.status === 'pending')),
     canPause: post.status === 'scheduled' && post.targets.every((t) => t.status === 'pending'),
     canPostNow: post.status === 'scheduled',
