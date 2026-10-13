@@ -25,6 +25,8 @@
     "etl": "PAYLOAD_ETL=true payload run payload/scripts/etl-legacy.ts --",
     "dedupe:people": "payload run payload/scripts/dedupe-people.ts --",
     "verify:cutover": "payload run payload/scripts/verify-cutover.ts --",
+    "bootstrap:club": "payload run payload/scripts/bootstrap-club.ts --",
+    "check:template": "tsx scripts/check-template.ts",
     "seed:demo": "payload run payload/scripts/seed-demo.ts --",
     "backfill:matches": "payload run payload/scripts/backfill-matches.ts --",
     "export:since": "payload run payload/scripts/export-since.ts --",
