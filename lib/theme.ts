@@ -2,6 +2,8 @@ import 'server-only'
 import { cache } from 'react'
 import { getClub, type Club } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
+import { requestTimings } from '@/lib/admin/timing'
+import { adminThemeCache } from '@/lib/theme/admin-cache'
 import { themeReadFailureIsFatal } from '@/lib/theme/read-failure'
 import { resolveTheme, type ResolvedTheme } from '@/lib/theme/resolve'
 
@@ -17,11 +19,15 @@ let warned = false
  * than caching one in the wrong club's colours. A missing row is not a failure: it resolves to the seed. The crest chain is
  * theme.crest, then the legacy Club details logo, then the bundled crest (resolved in `resolveTheme`).
  */
+async function readTheme(): Promise<ResolvedTheme> {
+  const [payload, club] = await Promise.all([getPayloadClient(), getClub()])
+  const doc = await payload.findGlobal({ slug: 'theme', depth: 1 })
+  return resolveTheme(doc, { clubLogoUrl: club.logoUrl })
+}
+
 export const getTheme = cache(async (): Promise<ResolvedTheme> => {
   try {
-    const [payload, club] = await Promise.all([getPayloadClient(), getClub()])
-    const doc = await payload.findGlobal({ slug: 'theme', depth: 1 })
-    return resolveTheme(doc, { clubLogoUrl: club.logoUrl })
+    return await readTheme()
   } catch (err) {
     if (themeReadFailureIsFatal()) throw err
     if (!warned) {
@@ -40,4 +46,18 @@ export const getTheme = cache(async (): Promise<ResolvedTheme> => {
 export const getClubWithCrest = cache(async (): Promise<Club> => {
   const [club, theme] = await Promise.all([getClub(), getTheme()])
   return { ...club, logoUrl: theme.crest.url }
+})
+
+/**
+ * The theme for the admin layout, which must never hold up the first byte (wave G WP-0). Served from a per-instance
+ * stale-while-revalidate cache (`lib/theme/admin-cache.ts`): a stale value (older than 60 seconds) is served while one refresh
+ * runs, the `theme` and `club` globals' afterChange hooks clear it on the instance that saved, and other instances lag by up to a
+ * minute. A cold cache waits at most half a second for the read; if it is slower or fails, this render uses the seed theme and the
+ * real one appears on the next. It never throws, unlike `getTheme()`, whose fatal rule for the public site is untouched.
+ */
+export const getAdminTheme = cache(async (): Promise<ResolvedTheme> => {
+  const started = performance.now()
+  const { value } = await adminThemeCache<ResolvedTheme>().get(readTheme, () => resolveTheme(null))
+  requestTimings().themeMs = Math.round(performance.now() - started) // for the per-render log line (lib/admin/timing.ts)
+  return value
 })

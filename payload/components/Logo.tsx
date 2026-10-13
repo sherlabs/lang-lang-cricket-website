@@ -1,5 +1,5 @@
 import { getClub } from '@/lib/club'
-import { getTheme } from '@/lib/theme'
+import { getAdminTheme } from '@/lib/theme'
 
 /**
  * Login/branding graphic (spec §9): the crest in a white rounded tile plus the short-name
@@ -7,7 +7,7 @@ import { getTheme } from '@/lib/theme'
  * bundled crest); the name is the club's name from Club details (`getClub()` falls back to the seed when the row or database is unavailable).
  */
 export async function Logo() {
-  const [theme, club] = await Promise.all([getTheme(), getClub()])
+  const [theme, club] = await Promise.all([getAdminTheme(), getClub()])
   return (
     <span className="club-logo">
       <span className="club-logo__tile">

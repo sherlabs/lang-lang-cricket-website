@@ -104,6 +104,7 @@ export default buildConfig({
       graphics: { Logo: '/payload/components/Logo#Logo', Icon: '/payload/components/Icon#Icon' },
       // The sidebar is drawn by AdminNav (flat, role-aware); see payload/admin/navigation.ts.
       beforeNavLinks: ['/payload/components/AdminNav#AdminNav'],
+      beforeLogin: ['/payload/components/LoginIntro#LoginIntro'],
       views: {
         dashboard: { Component: '/payload/components/Dashboard#Dashboard' },
         approvals: { Component: '/payload/components/ApprovalsView#ApprovalsView', path: '/approvals', meta: { title: 'Waiting for approval' } },

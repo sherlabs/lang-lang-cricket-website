@@ -7,7 +7,7 @@ import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
 import { themeCssVars } from '@/lib/theme/css'
-import { getTheme } from '@/lib/theme'
+import { getAdminTheme } from '@/lib/theme'
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
 
@@ -25,7 +25,8 @@ const serverFunction: ServerFunctionClient = async function (args) {
 }
 
 const Layout = async ({ children }: Args) => {
-  const theme = await getTheme()
+  // Never waits on the database for more than a moment and never throws: the skeleton and the page body can stream (lib/theme.ts).
+  const theme = await getAdminTheme()
   return (
     <RootLayout
       config={config}
