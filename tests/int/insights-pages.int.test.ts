@@ -159,6 +159,28 @@ describe('/stats/insights/players/[slug]', () => {
   })
 })
 
+describe('a stored game with no season name', () => {
+  it('reads as "No season recorded" in the picker and tables, never as the text null, and is not a season in the chart', async () => {
+    const t = matchTables(payload)
+    const [m] = await payload.db.drizzle.select({ id: t.matches.id, seasonName: t.matches.seasonName, seasonStartYear: t.matches.seasonStartYear }).from(t.matches).where(eq(t.matches.seasonName, 'Summer 2024/25')).limit(1)
+    expect(m).toBeTruthy()
+    try {
+      await payload.db.drizzle.update(t.matches).set({ seasonName: null, seasonStartYear: null }).where(eq(t.matches.id, m.id))
+      for (const html of [await trends(), await team()]) {
+        expect(html).toContain('No season recorded')
+        expect(html).not.toMatch(/\bnull\b/)
+      }
+      const raw = renderToStaticMarkup(await (await import('@/app/(frontend)/stats/insights/trends/page')).default({ searchParams: Promise.resolve({}) }))
+      expect(raw).not.toContain('value="null"')
+      expect(raw).toContain('value="No season recorded"')
+      // Chosen in the picker, the filter narrows to that game.
+      expect(await team({ season: 'No season recorded' })).toMatch(/\b1 game stored|From .*, 1 games? stored/)
+    } finally {
+      await payload.db.drizzle.update(t.matches).set({ seasonName: m.seasonName, seasonStartYear: m.seasonStartYear }).where(eq(t.matches.id, m.id))
+    }
+  })
+})
+
 describe('junior grade', () => {
   it('a player whose games are all in a junior grade gets season totals only, with no dates or opposition, and is absent from the default aggregates', async () => {
     const slug = slugOf.get('nathan|orchard')!

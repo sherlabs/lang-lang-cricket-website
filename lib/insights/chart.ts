@@ -20,14 +20,21 @@ export type TrendGeometry = {
 const HEIGHT = 170, TOP = 24, BOTTOM = 30, PAD = 10
 export const SLOT = 34
 
+/** Every bar is labelled when there are this many or fewer (seasons, a short run of innings). */
+export const LABEL_ALL_MAX = 8
+const CHAR_W = 5.8
+
 export function buildTrend(input: TrendInput): TrendGeometry {
   const n = input.labels.length
-  const width = Math.max(320, n * SLOT + PAD * 2)
+  // A slot is wide enough for the longest label when every bar is labelled; with more bars labels are thinned instead.
+  const labelW = Math.ceil(Math.max(0, ...input.labels.map((l) => l.length)) * CHAR_W) + 6
+  const slot = n <= LABEL_ALL_MAX ? Math.max(SLOT, labelW) : SLOT
+  const width = Math.max(320, n * slot + PAD * 2)
   const plotH = HEIGHT - TOP - BOTTOM
   const values = [...(input.bars ?? []).flatMap((b) => (b ? [b.value] : [])), ...(input.line ?? []).flatMap((v) => (v === null ? [] : [v]))].filter(Number.isFinite)
   const max = Math.max(1, ...values)
   const baseline = TOP + plotH
-  const x = (i: number) => PAD + SLOT / 2 + i * SLOT
+  const x = (i: number) => PAD + slot / 2 + i * slot
   const y = (v: number) => baseline - (Math.max(0, v) / max) * plotH
   const r = (v: number) => Math.round(v * 100) / 100
 
@@ -47,8 +54,8 @@ export function buildTrend(input: TrendInput): TrendGeometry {
   })
   if (run.length) segments.push(run.join(' '))
 
-  // Show a label about every 40px so neighbours never overlap; always label the first and the last point.
-  const step = Math.max(1, Math.ceil(40 / SLOT))
+  // Label every bar when there are few; otherwise about every labelW px so neighbours never overlap (first and last always).
+  const step = n <= LABEL_ALL_MAX ? 1 : Math.max(1, Math.ceil(labelW / slot))
   const xLabels = input.labels.flatMap((text, i) => (i % step === 0 || i === n - 1 ? [{ x: r(x(i)), text }] : []))
   return { width, height: HEIGHT, baseline, max, bars, segments, dots, xLabels }
 }

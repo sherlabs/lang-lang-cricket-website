@@ -1,4 +1,4 @@
-import { INSIGHTS } from '@/config/site'
+import { INSIGHTS, NO_SEASON_LABEL } from '@/config/site'
 import { byDate, type GameView } from './games'
 import { mean } from './num'
 
@@ -19,10 +19,11 @@ export function lastResults(games: readonly GameView[], n: number = INSIGHTS.str
 
 export type SeasonAverage = { season: string; startYear: number | null; games: number; forAvg: number | null; forN: number; againstAvg: number | null; againstN: number }
 
-/** Mean team total for and against per season (innings with a stored total only), oldest first, newest `max` seasons. */
+/** Mean team total for and against per season (innings with a stored total only), oldest first, newest `max` seasons. A game with no season recorded is not a season, so it is left out of this chart. */
 export function seasonAverages(games: readonly GameView[], max: number = INSIGHTS.trendSeasons): { rows: SeasonAverage[]; cut: number } {
   const by = new Map<string, { startYear: number | null; games: number; f: number[]; a: number[] }>()
   for (const g of games) {
+    if (g.header.seasonName === NO_SEASON_LABEL) continue
     const e = by.get(g.header.seasonName) ?? { startYear: g.header.seasonStartYear, games: 0, f: [], a: [] }
     e.games++
     for (const i of g.innings) if (i.runs !== null) (i.clubBatting ? e.f : e.a).push(i.runs)

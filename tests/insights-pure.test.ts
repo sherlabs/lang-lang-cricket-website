@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { INSIGHTS } from '../config/site'
+import { INSIGHTS, NO_SEASON_LABEL } from '../config/site'
 import { buildTrend } from '../lib/insights/chart'
+import { shortDates } from '../lib/insights/format'
 import { byDate, gameViews } from '../lib/insights/games'
 import { bucketLabels, bucketize, marginOf, marginSummary } from '../lib/insights/margin'
 import { median } from '../lib/insights/num'
@@ -246,6 +247,50 @@ describe('trend chart geometry', () => {
     expect(Math.max(...g.bars.map((b) => b.h))).toBeLessThanOrEqual(g.baseline)
     expect(g.xLabels[g.xLabels.length - 1].text).toBe('d11')
     finite(g)
+  })
+})
+
+describe('a game with no season name', () => {
+  // The match reader turns a null season name into the text "null"; the facts must never carry it.
+  const noSeason = (seasonName: string) => {
+    const b = mkBundle({ id: 9, gameId: 'g9', result: 'won', date: '2025-01-11', season: 2024, innings: [{ seq: 1, clubBatting: true, runs: 150, wickets: 5, bat: [{ who: 'c1', pos: 1, runs: 30 }] }, { seq: 2, clubBatting: false, runs: 100, wickets: 10, bowl: [{ who: 'c2' }] }] })
+    b.match.seasonName = seasonName
+    b.match.seasonStartYear = null
+    return deriveFacts(b, everyone)!
+  }
+  it.each(['null', ''])('is labelled %j with the configured text, never "null"', (name) => {
+    expect(noSeason(name).header.seasonName).toBe(NO_SEASON_LABEL)
+  })
+  it('is left out of the season chart, and is a labelled season line sorted before the real seasons for a player', () => {
+    const real = deriveFacts(mkBundle({ id: 1, gameId: 'g1', result: 'won', date: '2025-10-11', season: 2025, innings: [{ seq: 1, clubBatting: true, runs: 120, wickets: 5, bat: [{ who: 'c1', pos: 1, runs: 20 }] }, { seq: 2, clubBatting: false, runs: 90, wickets: 10, bowl: [{ who: 'c2' }] }] }), everyone)!
+    const set = assembleFacts([real, noSeason('null')])
+    const games = gameViews(set)
+    expect(seasonAverages(games).rows.map((r) => r.season)).toEqual(['Summer 2025/26'])
+    const lines = seasonLines(set, 101)
+    expect(lines.map((l) => l.season)).toEqual([NO_SEASON_LABEL, 'Summer 2025/26'])
+    expect(JSON.stringify(lines)).not.toContain('"null"')
+  })
+})
+
+describe('chart labels', () => {
+  it('labels every bar when there are eight or fewer, and widens the slot for long labels', () => {
+    const labels = ['Summer 2023/24', '2024/25', '2025/26']
+    const g = buildTrend({ labels, bars: labels.map(() => ({ value: 5, text: '5' })) })
+    expect(g.xLabels.map((l) => l.text)).toEqual(labels)
+    const xs = g.xLabels.map((l) => l.x)
+    expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(Math.ceil('Summer 2023/24'.length * 5.8))
+    const eight = Array.from({ length: 8 }, (_, i) => `12 Oct ${i}`)
+    expect(buildTrend({ labels: eight }).xLabels).toHaveLength(8)
+  })
+  it('thins labels past eight bars and still shows the last', () => {
+    const labels = Array.from({ length: 16 }, (_, i) => `12 Oct ${i}`)
+    const g = buildTrend({ labels })
+    expect(g.xLabels.length).toBeLessThan(16)
+    expect(g.xLabels[g.xLabels.length - 1].text).toBe('12 Oct 15')
+  })
+  it('date labels carry the year once the dates span more than one year', () => {
+    expect(shortDates(['2024-10-12', '2024-11-02'])).toEqual(['12 Oct', '2 Nov'])
+    expect(shortDates(['2024-10-12', '2025-01-11', null])).toEqual(['12 Oct 24', '11 Jan 25', 'no date'])
   })
 })
 

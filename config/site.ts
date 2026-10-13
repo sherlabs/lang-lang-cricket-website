@@ -221,6 +221,8 @@ export const SCOUTING = {
  * Insights: trends and team analysis (wave E, WP-3). Every threshold is here so a club can tune it in one place. A figure
  * needs its minimum sample before it shows; below it the raw counts show instead.
  */
+/** Shown for a stored game with no season name (an imported game can lack one). Never a bare "null". */
+export const NO_SEASON_LABEL = 'No season recorded'
 export const INSIGHTS = {
   /** Window of the rolling average: the last N batting innings (or bowling spells). */
   rollingInnings: 5,
@@ -247,6 +249,10 @@ export const INSIGHTS = {
   stripGames: 10,
   /** Players listed on the trends page. */
   listPlayers: 60,
+  /** Batting innings a season needs before its average, strike rate or a season comparison shows (separate from the batting-position setting). */
+  minInnings: 5,
+  /** Balls bowled a season needs before its economy or a comparison shows (72 = twelve overs). */
+  minBalls: 72,
 } as const
 export const insightsPaths = {
   team: '/stats/insights',

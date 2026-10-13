@@ -6,7 +6,7 @@ import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { TrendChart } from '@/components/stats/trend-chart'
 import { INSIGHTS, insightsPaths } from '@/config/site'
-import { shortDate } from '@/lib/insights/format'
+import { shortDates } from '@/lib/insights/format'
 import { fmt } from '@/lib/insights/num'
 import { pickSeason } from '@/lib/insights/params'
 import { battingPoints, bowlingPoints, compareSeasons, seasonLines, type CompareCell, type SeasonLine } from '@/lib/insights/player-trends'
@@ -98,8 +98,7 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
   const vs = pickSeason(sp.vs, seasonNames.filter((s) => s !== season), vsDefault)
   const a = lines.find((l) => l.season === season) ?? null
   const b = lines.find((l) => l.season === vs) ?? null
-  const mins = settings.matchMinimums
-  const cmp = a && b ? compareSeasons(a, b, { innings: mins.positionInnings, balls: mins.oppositionBalls }) : null
+  const cmp = a && b ? compareSeasons(a, b, { innings: INSIGHTS.minInnings, balls: INSIGHTS.minBalls }) : null
 
   const bat = detail ? battingPoints(set, player.id, { gradeLabel }) : []
   const bowl = detail ? bowlingPoints(set, player.id, { gradeLabel }) : []
@@ -108,9 +107,9 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
   const lineLabel = (p: { date: string | null; opp: string; grade: string | null }) => `${p.date ? formatCoverageDate(p.date) : 'No date'} v ${p.opp}${p.grade ? ` (${p.grade})` : ''}`
 
   const avgCell = (l: SeasonLine) =>
-    l.usedInnings === 0 ? '–' : l.outs === 0 ? `not out (${l.runs} runs, ${l.usedInnings} inn)` : l.usedInnings < mins.positionInnings ? `n/a (${l.usedInnings} inn, needs ${mins.positionInnings})` : `${fmt(l.average)} (${l.usedInnings} inn)`
-  const srCell = (l: SeasonLine) => (l.strikeRate === null ? (l.innings ? 'not recorded' : '–') : l.ballInnings < mins.positionInnings ? `n/a (${l.ballInnings} inn, needs ${mins.positionInnings})` : `${fmt(l.strikeRate)} (${l.ballInnings} inn)`)
-  const ecoCell = (l: SeasonLine) => (l.economy === null ? (l.spells ? 'not recorded' : '–') : l.bowlBalls < mins.oppositionBalls ? `n/a (${l.economySpells} spells, needs ${Math.ceil(mins.oppositionBalls / 6)} overs)` : `${fmt(l.economy, 2)} (${l.economySpells} spells)`)
+    l.usedInnings === 0 ? '–' : l.outs === 0 ? `not out (${l.runs} runs, ${l.usedInnings} inn)` : l.usedInnings < INSIGHTS.minInnings ? `n/a (${l.usedInnings} inn, needs ${INSIGHTS.minInnings})` : `${fmt(l.average)} (${l.usedInnings} inn)`
+  const srCell = (l: SeasonLine) => (l.strikeRate === null ? (l.innings ? 'not recorded' : '–') : l.ballInnings < INSIGHTS.minInnings ? `n/a (${l.ballInnings} inn, needs ${INSIGHTS.minInnings})` : `${fmt(l.strikeRate)} (${l.ballInnings} inn)`)
+  const ecoCell = (l: SeasonLine) => (l.economy === null ? (l.spells ? 'not recorded' : '–') : l.bowlBalls < INSIGHTS.minBalls ? `n/a (${l.economySpells} spells, needs ${Math.ceil(INSIGHTS.minBalls / 6)} overs)` : `${fmt(l.economy, 2)} (${l.economySpells} spells)`)
 
   return (
     <main>
@@ -139,7 +138,7 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
                 takeaway={`${bat.length} innings. Latest: ${battingText(last)} against ${last.opp}${last.rolling === null ? '' : `. Rolling average of the last ${INSIGHTS.rollingInnings} innings: ${fmt(last.rolling)}`}.`}
                 legend={`Bars: runs in each innings, oldest on the left. An outlined bar with a star is a not out innings; a question mark means the status was not recorded. Line: runs per dismissal over the last ${INSIGHTS.rollingInnings} innings, drawn only when that window holds ${INSIGHTS.minOuts} or more dismissals.`}
                 input={{
-                  labels: bat.map((p) => shortDate(p.date)),
+                  labels: shortDates(bat.map((p) => p.date)),
                   bars: bat.map((p) => ({ value: p.runs, text: battingText(p), hollow: p.status === 'not_out' })),
                   line: bat.map((p) => p.rolling),
                   lineText: (v) => fmt(v),
@@ -162,7 +161,7 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
                 title="Wickets in each spell"
                 takeaway={`${bowl.length} spells. Latest: ${bowl[bowl.length - 1].wickets} for ${bowl[bowl.length - 1].runs} against ${bowl[bowl.length - 1].opp}.`}
                 legend={`Bars: wickets in each spell, oldest on the left. Line: runs per over over the last ${INSIGHTS.rollingInnings} spells, drawn from ${INSIGHTS.minSpells} spells.`}
-                input={{ labels: bowl.map((p) => shortDate(p.date)), bars: bowl.map((p) => ({ value: p.wickets, text: String(p.wickets) })), line: bowl.map((p) => p.rolling), lineText: (v) => fmt(v, 2) }}
+                input={{ labels: shortDates(bowl.map((p) => p.date)), bars: bowl.map((p) => ({ value: p.wickets, text: String(p.wickets) })), line: bowl.map((p) => p.rolling), lineText: (v) => fmt(v, 2) }}
                 tableHead={['Spell', 'Figures', 'Rolling economy']}
                 tableRows={bowl.map((p) => [lineLabel(p), `${p.wickets} for ${p.runs} (${Math.floor(p.balls / 6)}.${p.balls % 6} overs)`, p.rolling === null ? 'n/a' : fmt(p.rolling, 2)])}
               />
@@ -197,7 +196,7 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
             </table>
           </div>
           <p className="text-xs text-brand-grey">
-            An average is runs per dismissal and needs {mins.positionInnings} innings; with no dismissal it reads &ldquo;not out&rdquo;. Strike rate counts only innings with balls recorded; economy counts only spells with balls bowled and needs {Math.ceil(mins.oppositionBalls / 6)} overs.
+            An average is runs per dismissal and needs {INSIGHTS.minInnings} innings; with no dismissal it reads &ldquo;not out&rdquo;. An innings with no recorded status is left out of the average, so it can differ slightly from the average on the profile and the leaderboards, which count it as an out. Strike rate counts only innings with balls recorded; economy counts only spells with balls bowled and needs {Math.ceil(INSIGHTS.minBalls / 6)} overs.
           </p>
         </div>
 

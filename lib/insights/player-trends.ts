@@ -1,4 +1,4 @@
-import { INSIGHTS } from '@/config/site'
+import { INSIGHTS, NO_SEASON_LABEL } from '@/config/site'
 import type { BatFact, BatStatus, BowlFact, FactSet, MatchHeader } from '@/lib/stats/match/types'
 import { rollingBattingAverage, rollingEconomy } from './rolling'
 
@@ -140,7 +140,9 @@ export function seasonLines(set: FactSet, playerId: number): SeasonLine[] {
     l.economy = l.bowlBalls > 0 ? (ecoRuns.get(l.season) ?? 0) / (l.bowlBalls / 6) : null
     return l
   })
-  return out.sort((a, b) => (a.startYear ?? 9999) - (b.startYear ?? 9999) || a.season.localeCompare(b.season))
+  // Games with no season recorded sort first, so the newest real season stays the default pick.
+  const rank = (l: SeasonLine) => (l.season === NO_SEASON_LABEL ? -1 : (l.startYear ?? 9999))
+  return out.sort((a, b) => rank(a) - rank(b) || a.season.localeCompare(b.season))
 }
 
 export type Direction = 'higher' | 'lower' | 'about the same'

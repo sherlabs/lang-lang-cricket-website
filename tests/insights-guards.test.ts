@@ -101,8 +101,11 @@ describe('insights: menu, sitemap and club-neutral copy', () => {
   })
   it('the wording says "compare seasons", and a direction label needs both a sample and a threshold', () => {
     const src = read('app/(frontend)/stats/insights/players/[slug]/page.tsx')
-    // Visible text only (the <form> tag is markup): no sentence calls a number "form".
-    expect(strip(src).match(/>[^<>{}]*\bform\b[^<>{}]*</gi) ?? []).toEqual([])
+    // Visible text only (the <form> tag is markup): no sentence calls a number "form". Text with a {} expression in it counts too.
+    for (const f of ['app/(frontend)/stats/insights/players/[slug]/page.tsx', 'app/(frontend)/stats/insights/trends/page.tsx', 'app/(frontend)/stats/insights/page.tsx', 'components/stats/trend-chart.tsx', 'components/stats/insights-parts.tsx']) {
+      // Every use of the word outside a <form> tag, whatever surrounds it (text with {} expressions and `>=` included).
+      expect(strip(read(f)).match(/(?<!<\/?)\bform\b/gi) ?? [], f).toEqual([])
+    }
     expect(src).toMatch(/compared with/)
     const lib = read('lib/insights/player-trends.ts')
     expect(lib).toMatch(/not enough games to compare/)

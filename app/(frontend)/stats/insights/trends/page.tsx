@@ -6,7 +6,7 @@ import { StatsSubNav } from '@/components/stats/stats-sub-nav'
 import { EmptyState, SubHeading } from '@/components/stats/sub-heading'
 import { TrendChart } from '@/components/stats/trend-chart'
 import { INSIGHTS, insightsPaths } from '@/config/site'
-import { shortDate } from '@/lib/insights/format'
+import { shortDate, shortDates } from '@/lib/insights/format'
 import { byDate, gameViews } from '@/lib/insights/games'
 import { fmt } from '@/lib/insights/num'
 import { parseInsightsParams } from '@/lib/insights/params'
@@ -141,7 +141,7 @@ export default async function TrendsPage({ searchParams }: Props) {
                   title="Our total when batting first"
                   takeaway={`${first5.length} games batting first. Latest total ${first5[first5.length - 1].total}${first5[first5.length - 1].rolling === null ? '' : `, rolling average of the last ${INSIGHTS.rollingInnings} is ${fmt(first5[first5.length - 1].rolling, 0)}`}.`}
                   legend={`Bars: our total. Line: the average of the last ${INSIGHTS.rollingInnings} such games, drawn once ${INSIGHTS.rollingInnings} exist.`}
-                  input={{ labels: first5.map((p) => shortDate(p.date)), bars: first5.map((p) => ({ value: p.total, text: String(p.total) })), line: first5.map((p) => p.rolling), lineText: (v) => fmt(v, 0) }}
+                  input={{ labels: shortDates(first5.map((p) => p.date)), bars: first5.map((p) => ({ value: p.total, text: String(p.total) })), line: first5.map((p) => p.rolling), lineText: (v) => fmt(v, 0) }}
                   tableHead={['Game', 'Total', `Rolling (last ${INSIGHTS.rollingInnings})`]}
                   tableRows={first5.map((p) => [`${p.date ? formatCoverageDate(p.date) : 'No date'} v ${p.opp}`, String(p.total), p.rolling === null ? 'n/a' : fmt(p.rolling, 0)])}
                 />
@@ -154,7 +154,7 @@ export default async function TrendsPage({ searchParams }: Props) {
                 <EmptyState>No player has {INSIGHTS.minGames} or more stored games in this view yet.</EmptyState>
               ) : (
                 <>
-                  <p className="text-sm text-brand-grey">Form and season comparison for players with at least {INSIGHTS.minGames} stored games in this view{players.length >= INSIGHTS.listPlayers ? `, the ${INSIGHTS.listPlayers} with the most games` : ''}.</p>
+                  <p className="text-sm text-brand-grey">Trends and season comparison for players with at least {INSIGHTS.minGames} stored games in this view{players.length >= INSIGHTS.listPlayers ? `, the ${INSIGHTS.listPlayers} with the most games` : ''}.</p>
                   <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {players.map((p) => (
                       <li key={p.id}>

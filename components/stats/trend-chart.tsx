@@ -26,7 +26,7 @@ export function TrendChart({
       <figcaption className="display text-lg text-brand-black">{title}</figcaption>
       <p className="mt-1 text-sm text-brand-grey">{legend}</p>
       {/* Scrolls sideways inside its own box rather than shrinking the labels below legibility. */}
-      <div className="mt-2 overflow-x-auto">
+      <div className="mt-2 overflow-x-auto" role="group" tabIndex={0} aria-label={`${title}, scrolls sideways`}>
         <svg role="img" aria-labelledby={`${titleId} ${descId}`} viewBox={`0 0 ${g.width} ${g.height}`} width={g.width} height={g.height} style={{ minWidth: g.width, maxWidth: 'none' }} className="h-auto w-full text-brand-grey" preserveAspectRatio="xMidYMid meet">
           <title id={titleId}>{title}</title>
           <desc id={descId}>{takeaway}</desc>
@@ -43,6 +43,9 @@ export function TrendChart({
           {g.dots.map((d) => (
             <circle key={`${d.x}`} cx={d.x} cy={d.y} r={3} className="fill-brand-black" />
           ))}
+          {g.dots.length > 0 && (
+            <text x={g.dots[g.dots.length - 1].x} y={g.dots[g.dots.length - 1].y - 8} textAnchor="middle" className="fill-brand-black text-[10px] font-semibold">{g.dots[g.dots.length - 1].text}</text>
+          )}
           {g.xLabels.map((l) => (
             <text key={`${l.x}`} x={l.x} y={g.height - 10} textAnchor="middle" className="fill-brand-grey text-[10px]">{l.text}</text>
           ))}

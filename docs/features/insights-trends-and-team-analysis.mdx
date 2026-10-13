@@ -3,7 +3,7 @@ title: Insights, trends and team analysis
 status: shipped
 routes: ["/stats/insights", "/stats/insights/trends", "/stats/insights/players/[slug]"]
 collections: [matches, match-innings, match-batting, match-bowling, match-fielding, site-settings]
-admin: "Nothing to set up. The sample sizes come from Site settings, Stats tab, Match-data minimums (admin only); the Insights thresholds are in config/site.ts."
+admin: "Nothing to set up. The Insights thresholds, including the sample sizes, are in config/site.ts."
 owner: "Visitors, players and captains; no committee action needed"
 related: [match-stats, match-data-store, stats-leaderboards, players-directory-and-profiles, opposition-scouting]
 added: feat/payload-cms
@@ -36,7 +36,10 @@ One **Insights** entry in the Stats menu opens two views, switched by the tabs u
 - Strike rate and economy count only innings or spells with balls recorded.
 - Who batted first comes from the stored innings order, not the toss. A game with no clear order, with more than one innings each, with no totals, a forfeit or a draw is not put in a margin bucket and is counted as "margin not comparable" with the reason.
 - A spread of margins or a typical winning total shows from 5 games.
-- Imported history games are used wherever they have the field (totals) and left out, with a count, where they do not (extras, fall of wickets, toss).
+- Imported history games are used wherever they have the field (totals) and left out, with a count, where they do not (extras, fall of wickets, toss). This includes winning margins: an imported game with totals that fit its result is bucketed like any other, and one without usable totals is counted as "margin not comparable".
+- A stored game with no season name is shown as "No season recorded". It stays in the Season filter and in a player's season table, and is left out of the season chart because it is not a season.
+- A player's average here is runs per dismissal over innings with a recorded status. An innings with no recorded status is left out, so the figure can differ slightly from the average on the profile and the leaderboards, which count such an innings as an out.
+- The sample sizes for these pages (`minInnings`, `minBalls`) are their own settings in `config/site.ts`; changing the batting-position or opposition minimums in Site settings does not move them.
 - Everything is club side only: the pages never show an opposition player. A hidden player appears nowhere and their trends address is a 404. Per-innings dates and opposition are shown only for grades shown by default on the site; a player whose games are all in other categories (for example junior) sees season totals only.
 - Charts are inline SVG with a title and a description, and a "Show as table" with the same numbers.
 

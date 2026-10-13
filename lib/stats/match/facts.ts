@@ -1,3 +1,4 @@
+import { NO_SEASON_LABEL } from '@/config/site'
 import type { StoredBundle } from '@/lib/match-store/read'
 import type { BattingRow, FieldingRow } from '@/lib/playhq/match-rows'
 import { derivePartnerships, type PartnershipRow } from './partnerships'
@@ -25,6 +26,9 @@ export type BundleFacts = {
   partnerships: PartnershipFact[]
 }
 
+/** A stored game can lack a season name (the reader turns that into the text "null"): give it one readable label. */
+const seasonLabel = (name: string | null | undefined): string => (name && name !== 'null' ? name : NO_SEASON_LABEL)
+
 const BOWLER_CREDIT = new Set<string>(BOWLER_TYPES)
 const zeroByType = (): Record<BowlerType, number> => ({ bowled: 0, caught: 0, caught_and_bowled: 0, lbw: 0, stumped: 0, hit_wicket: 0 })
 
@@ -32,7 +36,7 @@ export function deriveFacts(bundle: StoredBundle, visibleIds: ReadonlySet<number
   const mt = bundle.match
   if (mt.status !== 'FINAL') return null
   const header: MatchHeader = {
-    id, gameId: mt.gameId, date: mt.localDate, seasonName: mt.seasonName, seasonStartYear: mt.seasonStartYear,
+    id, gameId: mt.gameId, date: mt.localDate, seasonName: seasonLabel(mt.seasonName), seasonStartYear: mt.seasonStartYear,
     grade: mt.gradeName, team: mt.clubTeamName, format: mt.type, result: mt.result, forfeit: mt.byForfeit, firstInnings: mt.onFirstInnings,
     oppKey: oppositionKey(mt), oppLabel: oppositionLabel(mt),
   }
