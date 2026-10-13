@@ -124,6 +124,7 @@ describe('single source for names and labels', () => {
         'lib/stats/statlab.ts', 'lib/stats/yearbook.ts', 'lib/stats/match/facts.ts', 'lib/stats/match/yearbook.ts',
         'lib/players/profile-extras.ts', 'lib/players/sync.ts', 'lib/players/plan.ts', 'lib/players/duplicate-queries.ts',
         'lib/match-store/read.ts',
+        'lib/match-store/scouting-read.ts',
         // PlayHQ fixtures and ladders (not the stored data).
         'lib/matches-queries.ts', 'lib/domain.ts', 'app/(frontend)/fixtures/page.tsx', 'app/(frontend)/fixtures/[gameId]/page.tsx',
         'components/playhq/game-rows.tsx', 'components/playhq/team-grid.tsx',
@@ -131,13 +132,13 @@ describe('single source for names and labels', () => {
         // season rows are matched to them, squad-seed.ts, goes through the label map (`canonical`).
         'app/(frontend)/selector/(area)/availability/page.tsx', 'app/(frontend)/selector/(area)/squads/page.tsx', 'components/availability/answer-list.tsx',
         'components/selector/publish-all.tsx', 'components/selector/squad-grade.tsx', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
-        'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts',
+        'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-xi-queries.ts',
         // Best-player votes: the PlayHQ grade name of the stored fixture, as for availability and team sheets.
         'app/(frontend)/selector/(area)/votes/[fixtureId]/page.tsx', 'app/(frontend)/selector/(area)/votes/page.tsx', 'app/(frontend)/votes/page.tsx', 'app/(frontend)/availability/[token]/vote/[fixtureId]/page.tsx', 'lib/selector-votes-queries.ts', 'lib/votes-queries.ts',
         // Social graphics (wave C): stored games go through the label map (`canonicalGrade`); fixtures and published teams show the PlayHQ grade name, as selection does.
         'lib/social/sources/result.ts', 'lib/social/sources/schedule.ts', 'lib/social/sources/toss.ts',
         // Team sheets and the public teams pages: the PlayHQ grade name of the game, as for availability and squads.
-        'app/(frontend)/selector/(area)/players/[slug]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/page.tsx', 'app/(frontend)/selector/(area)/teams/page.tsx',
+        'app/(frontend)/selector/(area)/players/[slug]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/page.tsx', 'app/(frontend)/selector/(area)/teams/[gameId]/suggest/page.tsx', 'app/(frontend)/selector/(area)/teams/page.tsx',
         'app/(frontend)/teams/[gameId]/lineup-image/route.tsx', 'app/(frontend)/teams/[gameId]/page.tsx', 'app/(frontend)/teams/page.tsx',
         'components/selector/team-builder.tsx', 'components/selector/weekend-cards.tsx', 'components/teams/team-card.tsx',
         'lib/selection/announce.ts', 'lib/selection/lineup-image.tsx', 'lib/selection/lineup-text.ts', 'lib/selection/reminder.ts', 'lib/selector-team-queries.ts', 'lib/teams-queries.ts',
