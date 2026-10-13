@@ -1,6 +1,6 @@
 import 'server-only'
 import type { Payload } from 'payload'
-import { SCOUTING } from '@/config/site'
+import { NO_SEASON_LABEL, SCOUTING } from '@/config/site'
 import { normaliseClubName, oppositionKey, oppositionLabel } from '@/lib/stats/match/opposition-key'
 import type { OpponentOption } from '@/lib/scouting/resolve-opponent'
 import { newestFirst, type ScoutBat, type ScoutBatStatus, type ScoutBowl, type ScoutInnings, type ScoutMatch, type ScoutPerson, type ScoutResult } from '@/lib/scouting/types'
@@ -17,6 +17,8 @@ export type OpponentSummary = OpponentOption & { played: number; lastDate: strin
 const RESULTS = new Set(['won', 'lost', 'draw', 'tie', 'no_result', 'abandoned'])
 const STATUSES = new Set(['out', 'not_out', 'did_not_bat', 'unknown'])
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null)
+/** A stored string "null" counts as missing, as in lib/stats/match/facts.ts. */
+const seasonOf = (v: unknown): string => { const n = str(v); return n && n !== 'null' ? n : NO_SEASON_LABEL }
 const numOrNull = (v: unknown): number | null => (v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))
 
 type OppRef = { id: number; localDate: string | null; opponentOrgId: string | null; opponentOrgName: string | null; opponentName: string | null }
@@ -128,7 +130,7 @@ export async function loadScoutingMatches(payload: Payload, key: string): Promis
   const matches = matchDocs.docs.map<ScoutMatch>((m) => {
     const result = str(m.result)
     return {
-      id: m.id, gameId: String(m.gameId), date: str(m.localDate), season: str(m.seasonName) ?? 'Unknown season', seasonYear: numOrNull(m.seasonStartYear),
+      id: m.id, gameId: String(m.gameId), date: str(m.localDate), season: seasonOf(m.seasonName), seasonYear: numOrNull(m.seasonStartYear),
       grade: str(m.gradeName), venue: str(m.venueName), isHome: m.isHome === true, result: result && RESULTS.has(result) ? (result as ScoutResult) : null,
       forfeit: m.byForfeit === true, source: m.source === 'import' ? 'import' : 'playhq', tossChoice: m.tossChoice === 'bat' || m.tossChoice === 'bowl' ? m.tossChoice : null,
       clubWonToss: typeof m.clubWonToss === 'boolean' ? m.clubWonToss : null,

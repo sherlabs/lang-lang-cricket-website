@@ -128,7 +128,7 @@ export function XiSuggestion({ view, gameId }: { view: SuggestionView; gameId: s
         </div>
       </details>
 
-      <UseXiBar gameId={gameId} revision={view.revision} playerIds={result.picks.map((p) => p.id)} keeperId={result.keeperId} captainId={view.captainId} hasSaved={view.savedCount > 0} published={view.published} blocked={blocking[0]?.text ? `Needs fixing before it can be published: ${blocking[0].text}` : ''} />
+      <UseXiBar gameId={gameId} revision={view.revision} playerIds={result.picks.map((p) => p.id)} size={result.size} keeperId={result.keeperId} captainId={view.captainId} hasSaved={view.savedCount > 0} published={view.published} blocked={blocking[0]?.text ? `Needs fixing before it can be published: ${blocking[0].text}` : ''} />
     </div>
   )
 }
