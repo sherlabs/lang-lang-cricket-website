@@ -52,7 +52,7 @@ describe('adminTokenVars', () => {
 })
 
 describe('the admin stylesheets', () => {
-  const css = ['payload/components/admin-theme.css', 'payload/components/admin.css'].map((f) => readFileSync(path.resolve(__dirname, '..', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''))
+  const css = ['payload/components/admin-theme.css', 'payload/components/admin.css', 'payload/components/ui/kit.css', 'payload/components/ui/shell.css'].map((f) => readFileSync(path.resolve(__dirname, '..', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''))
   it('name no colour literal (hex); the tokens are variables from the theme', () => {
     for (const text of css) expect(text).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })

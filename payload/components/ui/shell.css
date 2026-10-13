@@ -2,7 +2,12 @@
    Targets Payload's documented class names only (Payload is pinned at 3.90.2); nothing is patched. */
 
 /* Payload shrinks the root size to 12-13px, so rem would be 12px on a phone (inputs under 16px make iOS zoom, 44px targets become 33px).
-   The admin's own sizes are in rem and mean what they say, so the root is 16px; Payload's own parts are sized in px. */
+   The admin's own sizes are in rem and mean what they say, so the root is 16px. Payload derives its spacing unit from rem
+   (--base = --base-px / --base-body-size * 1rem), so a bigger root would inflate its layout and risk horizontal overflow on phones;
+   telling it the body size is 16 keeps --base at its intended 20px at every width. */
+:root {
+  --base-body-size: 16;
+}
 html {
   font-size: 16px;
 }
