@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { selectorPaths } from '@/config/site'
 import { getClub } from '@/lib/club'
-import { formatMatchDay } from '@/lib/selection/lineup-text'
+import { formatMatchDayYear } from '@/lib/selection/lineup-text'
 import { requireSelection } from '@/lib/selector-auth'
 import { loadOpponentList } from '@/lib/selector-scouting-queries'
+import { opponentDetail } from '@/lib/scouting/resolve-opponent'
 import { normaliseClubName } from '@/lib/stats/match/opposition-key'
 
 export const metadata: Metadata = { title: 'Opposition scouting', robots: { index: false, follow: false } }
@@ -22,6 +23,8 @@ export default async function ScoutingListPage({ searchParams }: Props) {
   const all = await loadOpponentList(user)
   const needle = normaliseClubName(q)
   const rows = needle ? all.filter((o) => normaliseClubName(o.label).includes(needle)) : all
+  const labelCount = new Map<string, number>()
+  for (const o of all) labelCount.set(o.label, (labelCount.get(o.label) ?? 0) + 1)
   return (
     <main className="container-site max-w-3xl py-6 sm:py-10">
       <h1 className="display text-3xl text-brand-black">Opposition scouting</h1>
@@ -40,8 +43,8 @@ export default async function ScoutingListPage({ searchParams }: Props) {
           {rows.map((o) => (
             <li key={o.key}>
               <Link href={selectorPaths.scoutingFor(o.key)} className="flex min-h-14 items-center justify-between gap-3 rounded-xl bg-white p-4 ring-1 ring-brand-black/10 hover:ring-brand-gold-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
-                <span className="text-lg font-bold text-brand-black">{o.label}</span>
-                <span className="shrink-0 text-right text-sm text-brand-grey">{o.played} {o.played === 1 ? 'game' : 'games'}{o.lastDate ? ` · last ${formatMatchDay(o.lastDate, locale)}` : ''}</span>
+                <span className="text-lg font-bold text-brand-black">{o.label}{(labelCount.get(o.label) ?? 0) > 1 && <span className="block text-sm font-normal text-brand-grey">{opponentDetail(o)}</span>}</span>
+                <span className="shrink-0 text-right text-sm text-brand-grey">{o.played} {o.played === 1 ? 'game' : 'games'}{o.lastDate ? ` · last ${formatMatchDayYear(o.lastDate, locale)}` : ''}</span>
               </Link>
             </li>
           ))}

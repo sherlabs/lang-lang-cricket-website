@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isSafeAnnouncementLink, validateAnnouncementLink } from '../lib/selection/announcement-link'
 import { announcementBody, announcementKey, announcementTitle } from '../lib/selection/announce'
 import { formatBatting, formatBowling, NO_DATA, recentEntries } from '../lib/selection/form'
-import { formatMatchDay, formatMatchTime, lineupText } from '../lib/selection/lineup-text'
+import { formatMatchDay, formatMatchDayYear, formatMatchTime, lineupText } from '../lib/selection/lineup-text'
 import { balanceCounts, suggestRole } from '../lib/selection/roles'
 import { buildSnapshot, describeDiff, diffSnapshots, normaliseSlots, parseSnapshot, sameAsSnapshot, validateGuestName, validateSlots, type Slot } from '../lib/selection/team-sheet'
 import { blockingWarnings, teamWarnings, type WarnSlot } from '../lib/selection/warnings'
@@ -165,6 +165,7 @@ describe('lineupText', () => {
     expect(formatMatchTime('12:05')).toBe('12:05pm')
     expect(formatMatchTime(null)).toBe('')
     expect(formatMatchDay('2026-10-10', 'en-AU')).toMatch(/Sat/)
+    expect(formatMatchDayYear('2024-10-12', 'en-AU')).toMatch(/Sat.*Oct.*2024/)
   })
 })
 

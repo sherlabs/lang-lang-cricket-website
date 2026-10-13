@@ -1,4 +1,5 @@
-import { formatMatchDay } from '@/lib/selection/lineup-text'
+import Link from 'next/link'
+import { formatMatchDayYear } from '@/lib/selection/lineup-text'
 import { ledgerText, NOT_RECORDED, one, outcomeWord, resultWord, scoreText, whole } from '@/lib/scouting/format'
 import type { TotalsStat } from '@/lib/scouting/totals'
 import type { ScoutingReport } from '@/lib/selector-scouting-queries'
@@ -6,6 +7,8 @@ import type { ScoutingReport } from '@/lib/selector-scouting-queries'
 const card = 'rounded-xl bg-white p-4 ring-1 ring-brand-black/10'
 const th = 'px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-brand-grey'
 const td = 'px-2 py-1.5 align-top'
+/** Only PlayHQ games have a public scorecard page; imported history ids are not UUIDs. */
+const SCORECARD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const NOTICE = 'Third-party names, for selection use only.'
 
 function Table({ caption, head, children }: { caption: string; head: string[]; children: React.ReactNode }) {
@@ -23,9 +26,12 @@ function Table({ caption, head, children }: { caption: string; head: string[]; c
 function Section({ title, summary, open, children }: { title: string; summary: string; open?: boolean; children: React.ReactNode }) {
   return (
     <details open={open} className={`${card} scout-section mt-4`}>
-      <summary className="flex min-h-11 cursor-pointer flex-col justify-center">
-        <span className="text-lg font-bold text-brand-black">{title}</span>
-        <span className="text-sm text-brand-grey">{summary}</span>
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
+        <span className="flex flex-col">
+          <h2 className="text-lg font-bold text-brand-black">{title}</h2>
+          <span className="text-sm text-brand-grey">{summary}</span>
+        </span>
+        <svg aria-hidden="true" viewBox="0 0 20 20" className="scout-chevron size-5 shrink-0 text-brand-grey transition-transform"><path d="m5 8 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </summary>
       <div className="mt-3">{children}</div>
     </details>
@@ -53,7 +59,7 @@ function totalsRow(label: string, s: TotalsStat) {
 /** The scouting report page body. Order for a phone: status, plan, danger players, then collapsed sections. Print opens them all. */
 export function ScoutingReportView({ report, locale }: { report: ScoutingReport; locale: string }) {
   const r = report
-  const day = (d: string | null) => (d ? formatMatchDay(d, locale) : 'Date not recorded')
+  const day = (d: string | null) => (d ? formatMatchDayYear(d, locale) : 'Date not recorded')
   const last = r.h2h.last
   const status = r.enough
     ? `${r.total} ${r.total === 1 ? 'game' : 'games'} stored against ${r.label}${r.capped ? `; this report uses the newest ${r.used}` : ''}.`
@@ -79,7 +85,7 @@ export function ScoutingReportView({ report, locale }: { report: ScoutingReport;
 
   return (
     <div className="scout-print">
-      <p className="rounded-xl bg-brand-gold-pale p-4 text-base font-semibold text-brand-black ring-1 ring-brand-gold/30" role="status">{status}</p>
+      <p className="rounded-xl bg-brand-gold-pale p-4 text-base font-semibold text-brand-black ring-1 ring-brand-gold/30">{status}</p>
 
       {!r.enough && ledger}
 
@@ -101,11 +107,12 @@ export function ScoutingReportView({ report, locale }: { report: ScoutingReport;
             {r.danger.batters.length ? (
               <>
                 <h3 className="mt-3 text-base font-bold text-brand-black">Batters</h3>
-                <Table caption={`Their top batters against us, listed from ${r.minInnings} innings`} head={['Batter', 'Inns', 'Runs', 'Average', 'High', '50s', 'Last innings']}>
+                <Table caption={`Their top batters against us, listed from ${r.minInnings} innings`} head={['Batter', 'Inns', 'Outs', 'Runs', 'Average', 'High', '50s', 'Last innings']}>
                   {r.danger.batters.map((b) => (
                     <tr key={b.key}>
                       <th scope="row" className={`${td} font-semibold`}>{b.name}{b.possiblyMerged && <span className="block text-xs font-normal text-brand-grey">Two players of this name in one game, so this may be two people.</span>}</th>
                       <td className={td}>{b.innings}</td>
+                      <td className={td}>{b.outs}</td>
                       <td className={td}>{b.runs}</td>
                       <td className={td}>{b.average === null ? `not out ${b.runs} runs` : one(b.average)}</td>
                       <td className={td}>{b.highScore}{b.highScoreNotOut ? '*' : ''}</td>
@@ -158,7 +165,7 @@ export function ScoutingReportView({ report, locale }: { report: ScoutingReport;
 
       <Section title="Head to head" summary={ledgerText(r.h2h.total)}>
         <p className="text-sm text-brand-charcoal">Home: {ledgerText(r.h2h.home)}. Away: {ledgerText(r.h2h.away)}.</p>
-        {last && <p className="mt-2 text-sm text-brand-charcoal">Last meeting: {day(last.date)}{last.grade ? `, ${last.grade}` : ''}. {resultWord(last.result, last.forfeit)}. Us {scoreText(last.ours)}, them {scoreText(last.theirs)}.</p>}
+        {last && <p className="mt-2 text-sm text-brand-charcoal">Last meeting: {SCORECARD_ID.test(last.gameId) ? <Link href={`/fixtures/${last.gameId}`} className="font-semibold underline underline-offset-4">{day(last.date)}</Link> : day(last.date)}{last.grade ? `, ${last.grade}` : ''}. {resultWord(last.result, last.forfeit)}. Us {scoreText(last.ours)}, them {scoreText(last.theirs)}.</p>}
         <Table caption="Results by season" head={['Season', 'Record']}>
           {r.h2h.bySeason.map((s) => <tr key={s.season}><th scope="row" className={`${td} font-semibold`}>{s.season}</th><td className={td}>{ledgerText(s.ledger)}</td></tr>)}
         </Table>

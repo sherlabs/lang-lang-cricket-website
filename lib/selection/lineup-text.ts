@@ -34,6 +34,13 @@ export function formatMatchDay(localDate: string, locale: string): string {
   return `${get('weekday')} ${get('day')} ${get('month')}`
 }
 
+/** `Sat 12 Oct 2024`: the same UTC-safe date with the year, for views that list games from several seasons. */
+export function formatMatchDayYear(localDate: string, locale: string): string {
+  const d = new Date(`${localDate}T00:00:00Z`)
+  if (Number.isNaN(d.getTime())) return localDate
+  return `${formatMatchDay(localDate, locale)} ${new Intl.DateTimeFormat(locale, { year: 'numeric', timeZone: 'UTC' }).format(d)}`
+}
+
 /** `1:00pm` from `13:00:00`. Empty when there is no time. */
 export function formatMatchTime(localTime: string | null | undefined): string {
   const m = /^(\d{1,2}):(\d{2})/.exec(localTime ?? '')

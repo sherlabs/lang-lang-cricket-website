@@ -324,6 +324,9 @@
   }
 }
 
+/* Scouting section chevron: points down when closed, up when open. */
+.scout-section[open] > summary .scout-chevron { transform: rotate(180deg); }
+
 /* Opposition scouting print (wave E, WP-1). A4 portrait cheat sheet: no site or selector chrome, every section open, sections kept whole.
    Scoped under `.scout-print` / the page that holds it, so no other page changes. Colours stay theme tokens (no literals). */
 @media print {
@@ -339,4 +342,5 @@
   .scout-print .scout-section { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
   .scout-print details > summary { list-style: none; }
   .scout-print details > summary::-webkit-details-marker { display: none; }
+  .scout-print .scout-chevron { display: none; }
 }

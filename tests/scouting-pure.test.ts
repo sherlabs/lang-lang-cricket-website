@@ -151,6 +151,7 @@ describe('game plan', () => {
     const plan = (ms: ScoutMatch[]) => gamePlan({ matches: ms, totals: totalsOf(ms), toss: tossOf(ms), minSample: 5, earlyWicketRuns: 10 })
     expect(plan(at).find((p) => p.id === 'toss-choice')?.text).toBe('They chose to bowl in 4 of the 5 tosses they won (n=5).')
     expect(plan(below).find((p) => p.id === 'toss-choice')).toBeUndefined()
+    expect(plan([...tossed(3, 'bowl'), ...tossed(3, 'bat')]).find((p) => p.id === 'toss-choice')?.text).toMatch(/equally often \(3 each\)/)
     expect(plan(at).find((p) => p.id === 'their-all-out')?.text).toBe('Their innings ended all out in 5 of 5 (n=5).')
   })
   it('says nothing when no rule has the sample', () => {
@@ -188,6 +189,13 @@ describe('resolve opponent', () => {
     const r = resolveOpponent('warragul cc', options)
     expect(r.kind).toBe('many')
     expect(r.kind === 'many' && r.candidates.map((c) => c.key)).toEqual(['org-1', 'org-2'])
+  })
+  it('gives same-named candidates different details (imported history vs PlayHQ, games played)', () => {
+    const r = resolveOpponent('warragul cc', [
+      { key: 'n:warragul-cc', label: 'Warragul CC', names: ['warragul cc'], played: 1 },
+      { key: 'org-1', label: 'Warragul CC', names: ['warragul cc'], played: 4 },
+    ])
+    expect(r.kind === 'many' && r.candidates.map((c) => c.detail)).toEqual(['1 game, imported history', '4 games, PlayHQ club'])
   })
   it('is none for no name or an unknown club', () => {
     expect(resolveOpponent('', options)).toEqual({ kind: 'none' })

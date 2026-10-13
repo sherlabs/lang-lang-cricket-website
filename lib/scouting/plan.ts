@@ -49,9 +49,13 @@ export function gamePlan(input: { matches: readonly ScoutMatch[]; totals: Totals
 
   const chosen = toss.chose.bat + toss.chose.bowl
   if (chosen >= minSample) {
-    const bowl = toss.chose.bowl >= toss.chose.bat
-    const k = bowl ? toss.chose.bowl : toss.chose.bat
-    lines.push({ id: 'toss-choice', n: chosen, text: `They chose to ${bowl ? 'bowl' : 'bat'} in ${k} of the ${chosen} tosses they won (n=${chosen}).` })
+    if (toss.chose.bowl === toss.chose.bat) {
+      lines.push({ id: 'toss-choice', n: chosen, text: `They chose to bat and to bowl equally often (${toss.chose.bat} each) in the ${chosen} tosses they won (n=${chosen}).` })
+    } else {
+      const bowl = toss.chose.bowl > toss.chose.bat
+      const k = bowl ? toss.chose.bowl : toss.chose.bat
+      lines.push({ id: 'toss-choice', n: chosen, text: `They chose to ${bowl ? 'bowl' : 'bat'} in ${k} of the ${chosen} tosses they won (n=${chosen}).` })
+    }
   }
 
   const theirs = totals.theirs.all

@@ -10,7 +10,7 @@ export function ScoutLink({ resolved, name, showNone = false }: { resolved: Reso
   return (
     <p className="flex flex-wrap items-center gap-x-3 text-sm text-brand-grey">
       <span>Several clubs match this name:</span>
-      {resolved.candidates.map((c) => <Link key={c.key} href={selectorPaths.scoutingFor(c.key)} className={cls}>Scout {c.label}</Link>)}
+      {resolved.candidates.map((c) => <Link key={c.key} href={selectorPaths.scoutingFor(c.key)} className={cls}>Scout {c.label} ({c.detail})</Link>)}
     </p>
   )
 }
