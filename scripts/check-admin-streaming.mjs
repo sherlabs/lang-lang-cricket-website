@@ -6,6 +6,16 @@
  */
 const base = process.env.BASE ?? 'http://localhost:4501'
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(base)) throw new Error('BASE must be a local server')
+// Signed-out visitors (no cookie, garbage cookie) must get a real 307 with a Location, not a 200 with an in-stream redirect.
+const deepLink = '/admin/social?type=sponsor-thanks&source=13%2C17&style=bold&size=landscape'
+for (const [label, headers] of [['no cookie', {}], ['garbage cookie', { cookie: 'payload-token=not-a-token' }]]) {
+  for (const method of ['GET', 'HEAD']) {
+    const r = await fetch(`${base}${deepLink}`, { method, headers, redirect: 'manual' })
+    const where = r.headers.get('location') ?? ''
+    if (r.status !== 307 || !where.includes('/admin/login?redirect=') || !where.includes('sponsor-thanks')) { console.error(`FAIL: ${method} with ${label} gave ${r.status} ${where}`); process.exit(1) }
+  }
+}
+console.log('anonymous: 307 to login with the return path')
 const login = await fetch(`${base}/api/users/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }) })
 if (!login.ok) throw new Error(`login failed: ${login.status}`)
 const cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ')
