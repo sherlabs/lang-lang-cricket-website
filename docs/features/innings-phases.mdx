@@ -1,0 +1,57 @@
+---
+title: Innings phases and wickets
+status: shipped
+routes: ["/stats/insights/wickets"]
+collections: [matches, match-innings, match-batting]
+admin: "Nothing to set up. The collapse rule and sample sizes are in config/site.ts (INSIGHTS.fow)."
+owner: "Visitors, captains and selectors; no committee action needed"
+related: [insights-trends-and-team-analysis, match-data-store, match-stats, partnership-records, playhq-player-sync]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A captain or selector** who asks "do we lose wickets in clumps, and how quickly do we take theirs?" and wants the answer from real scorecards.
+- **A player or parent** reading the Insights pages who sees phases, wagon wheels or radars on other sites and wonders why this one has none.
+- **The site developer**, who needs to know exactly what PlayHQ does and does not provide before building anything per delivery.
+
+## Why it was built
+
+Issue [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35) asked for powerplay/middle/death analysis, wagon wheels and radars, and said to find out first whether PlayHQ exposes the data and never to approximate. The answer is below: it does not, so those parts are not built. What PlayHQ does give is the team score when each wicket fell, and that supports an honest page on how wickets fall and on collapses. Tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## What it does
+
+**Not available from PlayHQ data (checked 2026-10-13).** Every captured PlayHQ game summary in this repository (one-day, two-day, forfeit, abandoned and the duplicate-period game, under `tests/fixtures/playhq/`) was read key by key.
+
+- Innings-level figures are only whole-innings totals: `TOTALS`, `TOTAL_SCORE`, `TOTAL_OVERS`, `TOTAL_OUTS`, `TOTAL_EXTRAS`, the extras types (`EXTRA_WIDES`, `EXTRA_NO_BALLS`, `EXTRA_BYES`, `EXTRA_LEG_BYES`, `EXTRA_PENALTY_RUNS`) and `OVER_LIMIT`.
+- Each batter and bowler has a list of totals (runs, balls faced, fours, sixes, overs, maidens, runs, wickets) and a `displayOrder`.
+- `fallOfWickets` has exactly `sequenceNo`, `appearanceId` and `runs`: the team score at each wicket, with no over, ball, minute or time.
+- There is no over number, ball number, delivery list, timestamp, fielding position or shot field anywhere. The stored flag "has ball data" only means a batter has a balls-faced total; it is not a delivery record.
+- A bowler's overs are a total per innings and bowling changes are not timed, so an over range per bowler cannot be worked out.
+
+So these are **not built**, because any number would be invented: powerplay, middle and death phases (a share of the final total is not a phase), wagon wheels and shot maps, strike rotation, dot-ball analysis, and radar charts (the axes would be made-up scaling; the Compare page already shows the real figures side by side). Nothing is approximated.
+
+A test (`tests/playhq-no-ball-data.test.ts`) reads the stored fixtures and fails if one ever gains an over, ball, delivery, time or shot key or a new innings-level statistic type. It guards the fixtures only: it cannot see a change in PlayHQ's live response, which would need a refreshed fixture.
+
+**What is built: the Wickets view** (`/stats/insights/wickets`, the third tab under Insights, with the same Season and Grade filters). Club-side aggregates only; no player is named.
+
+- **Score at each wicket.** For our batting, and for the opposition's batting against us (how quickly we take wickets), the average team score when wicket 1 to 10 fell, with the lowest to highest and the number of innings behind it, as a chart with a table. A wicket needs 3 innings before an average shows; below that it reads n/a with the count. Each wicket averages only the innings that lost that many wickets, so a later wicket can read lower than an earlier one.
+- **Formats are never mixed.** Limited-overs and two-day games get separate charts, taken from the stored game type, not the grade name. Two-day games get a table from 3 games; with fewer they are left out and the page says how many.
+- **Collapses.** A collapse is 4 wickets for 20 runs or fewer, measured from the score before the first of those wickets. It is a threshold set for this page and the page prints it. Overlapping spells count once as one longer collapse. The page lists innings with a collapse per season, and each collapse with its date, opponent (linking to the scorecard), the score before and after, and for our own batting the biggest stand after it, labelled inferred (from the batting order and fall of wickets, as on the partnership records).
+- **Honesty rules.** An innings counts only when its wicket numbers run 1 to n without a gap, the scores never decrease, the count equals the wickets recorded and no score is above the total. Innings with no fall of wickets (for example imported history) are excluded and counted; innings whose figures do not add up are rejected and counted with the reason. The page says it shows team scores, never overs.
+- The score at each wicket is one extra list per innings in the cached season data (about 20 bytes an innings; a seeded season of 53 innings added about 1.2 KB to 25.8 KB, well under the 2 MB cache entry limit).
+
+## How to use it
+
+1. Open **Stats**, then **Insights**, then the **Wickets** tab. Use Season and Grade, then Apply.
+2. Read the coverage lines first (how many innings are used, excluded and rejected), then the charts, then the collapses.
+3. Open the scorecard link on a collapse to see the batting order behind it.
+4. A club can change the collapse rule (`INSIGHTS.fow.collapseWickets` and `collapseRuns` in `config/site.ts`); the page prints whatever is set.
+
+## Not included / deferred
+
+- Powerplay, middle and death phases, wagon wheels, shot maps, strike rotation, dot-ball analysis and radar charts: blocked on data PlayHQ does not provide ([#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35) stays open as blocked on data).
+- External decision, nothing built or assumed: whether PlayHQ offers a ball-by-ball feed at the club's API tier, or the club wants live scoring in-house. If either appears it would enter through a new, env-gated adapter behind the same mapper, and this work would be reopened.
+- No over for any wicket and no "when in the innings": only the team score at the wicket.
+- No names: which batters were at the crease in a collapse is not shown.
+- Junior games are not in the match data.

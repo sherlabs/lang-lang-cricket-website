@@ -44,6 +44,10 @@ export type InningsMeta = {
   hasFow: boolean
   hasBowling: boolean
   hasBall: boolean
+  /** Team score when wicket 1, 2, ... fell, only for an innings whose fall of wickets validates (see `deriveFow`); else null. Either side batting. */
+  fow: number[] | null
+  /** Why a stored fall of wickets was rejected (same codes as partnerships); null when valid or when there is none. */
+  fowReject: PartnershipReason | null
   /** Club batting innings only: `ok` when partnerships were derived, else why not. Null for a club bowling innings. */
   partnerships: 'ok' | PartnershipReason | null
 }

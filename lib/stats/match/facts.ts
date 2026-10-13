@@ -1,6 +1,7 @@
 import { NO_SEASON_LABEL } from '@/config/site'
 import type { StoredBundle } from '@/lib/match-store/read'
 import type { BattingRow, FieldingRow } from '@/lib/playhq/match-rows'
+import { deriveFow } from './fow'
 import { derivePartnerships, type PartnershipRow } from './partnerships'
 import { oppositionKey, oppositionLabel } from './opposition-key'
 import {
@@ -60,8 +61,11 @@ export function deriveFacts(bundle: StoredBundle, visibleIds: ReadonlySet<number
     const rows = bundle.batting.filter((r) => r.inningsSeq === seq && r.battingStatus !== 'did_not_bat')
     const meta: InningsMeta = {
       m: id, seq, clubBatting: inn.isClubBatting, declared: inn.declared, allOut: inn.allOut, runs: inn.totalRuns, wickets: inn.totalWickets,
-      hasFow: inn.hasFallOfWickets, hasBowling: inn.hasBowlingData, hasBall: inn.hasBallData, partnerships: null,
+      hasFow: inn.hasFallOfWickets, hasBowling: inn.hasBowlingData, hasBall: inn.hasBallData, fow: null, fowReject: null, partnerships: null,
     }
+    const fow = deriveFow({ hasFow: inn.hasFallOfWickets, totalRuns: inn.totalRuns, totalWickets: inn.totalWickets, entries: rows })
+    meta.fow = fow.fow
+    meta.fowReject = fow.reject
     if (inn.isClubBatting) {
       const clubRows = rows.filter((r) => isClub(r.appearanceId))
       for (const r of clubRows) {

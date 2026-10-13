@@ -94,6 +94,8 @@ type InningsOpts = {
   force?: string[]; retiredHurt?: boolean; oneDay?: boolean; target?: number
   /** Skip a number in the fall-of-wickets sequence (1, 3, 4, ...), so partnerships reject the innings. Draws no randomness. */
   fowGap?: boolean
+  /** Reshape the fall-of-wickets runs (only the runs, no randomness): wickets 4 to 8 fall for 3 runs each, then the rest recover. Needs 8 or more wickets. */
+  fowCollapse?: boolean
   /** Force the batter at this card index to a duck off `balls` balls (1 = golden). Draws no randomness. */
   duckAt?: { idx: number; balls: number }
   /** Credit every wicket to this bowler (index into the bowling side's five bowlers). Draws no extra randomness. */
@@ -211,10 +213,19 @@ function playInnings(rng: () => number, o: InningsOpts): RawPeriod {
   const fow = o.fow === false ? null : (() => {
     let acc = 0
     const outs = rows.filter((r, i) => r.status === 'OUT' && events.some((e) => e.appearances.some((x) => x.id === o.bat.apps[i].id && x.role === 'BATTING')))
-    return outs.map((r, k) => {
+    const list = outs.map((r, k) => {
       acc = Math.min(total, acc + Math.max(1, Math.round(total / (outs.length + 1))))
       return { sequenceNo: k + 1 + (o.fowGap && k >= 1 ? 1 : 0), appearanceId: r.app.id, runs: acc }
     })
+    if (o.fowCollapse && list.length >= 8) {
+      const base = list[2].runs
+      for (let k = 3; k < 8; k++) list[k].runs = Math.min(total, base + (k - 2) * 3)
+      for (let k = 8; k < list.length; k++) {
+        const prev = list[k - 1].runs
+        list[k].runs = Math.min(total, prev + Math.round((total - prev) / (list.length - k + 1)))
+      }
+    }
+    return list
   })()
   const balls6 = ballsToOvers(ballsBowled)
   const batTeam: RawPeriodTeam = {
@@ -318,6 +329,8 @@ const SPECS: Spec[] = [
   { season: 1, date: '2026-04-11', kind: 'oneDay', opp: 1, round: 'Round 21', club: squad(4), outcome: ['LOST', 'WON'] },
   // Added for wave B (WP-0), appended so every game above is generated exactly as before.
   { season: 1, date: '2026-04-18', kind: 'twoDay', opp: 2, round: 'Round 22', club: squad(5), outcome: ['WON', 'LOST'], dupSequence: true, inn: [{ declared: true, wickets: 6 }, { wickets: 10 }, { wickets: 4 }], edge: 'duplicate PlayHQ period number: empty fourth period numbered 3' },
+  // Added for wave E (WP-4), appended so every game above is generated exactly as before.
+  { season: 1, date: '2026-04-25', kind: 'oneDay', opp: 3, round: 'Round 23', club: squad(6), outcome: ['WON', 'LOST'], inn: [{ wickets: 10, fowCollapse: true }, { wickets: 10, fowCollapse: true }], edge: 'a collapse in both innings: five wickets for 15 runs' },
 ]
 
 const GRADE = { id: uuid(5, 1), name: 'Seed A Grade' }

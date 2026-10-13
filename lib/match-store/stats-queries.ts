@@ -18,7 +18,7 @@ import { readStoredBundles } from './read'
  * a visible (non-hidden, resolved) player, and a hidden player appears nowhere, not even as a
  * partner (partnerships carry `null` for a hidden partner). The collections stay staff-read only.
  *
- * One cached slim blob per season (`['match-facts', 'v1', year]`, bumped with the codec layout, tags `ALL_STATS_TAGS`); a profile reads
+ * One cached slim blob per season (`['match-facts', 'v2', year]`, bumped with the codec layout, tags `ALL_STATS_TAGS`); a profile reads
  * the season blobs and filters rows in memory, so there is no per-player cache and no per-request scan.
  */
 
@@ -63,7 +63,7 @@ async function loadSeasonFacts(year: number): Promise<SlimFacts> {
 
 /** One season's facts (cached). Visible players only. */
 export async function getSeasonFacts(seasonStartYear: number): Promise<FactSet> {
-  const [blob, labels] = await Promise.all([cached(['match-facts', 'v1', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)), getLabelMap()])
+  const [blob, labels] = await Promise.all([cached(['match-facts', 'v2', String(seasonStartYear)], () => loadSeasonFacts(seasonStartYear)), getLabelMap()])
   return labelHeaders(decodeFacts(blob), labels)
 }
 

@@ -6,11 +6,12 @@ import { cn } from '@/lib/utils'
 
 const selectClass = 'min-h-11 w-full rounded-md border border-brand-black/15 bg-white px-3 text-sm text-brand-black'
 
-/** The two Insights views as links (not a tablist: there are no panels). A third view may be added beside them later. */
-export function InsightsTabs({ current, params }: { current: 'team' | 'trends'; params: InsightsParams }) {
+/** The Insights views as links (not a tablist: there are no panels). */
+export function InsightsTabs({ current, params }: { current: 'team' | 'trends' | 'wickets'; params: InsightsParams }) {
   const tabs = [
     { key: 'team', label: 'Team analysis', href: insightsHref(insightsPaths.team, params) },
     { key: 'trends', label: 'Trends', href: insightsHref(insightsPaths.trends, params) },
+    { key: 'wickets', label: 'Wickets', href: insightsHref(insightsPaths.wickets, params) },
   ] as const
   return (
     <nav aria-label="Insights views" className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">

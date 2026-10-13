@@ -253,10 +253,17 @@ export const INSIGHTS = {
   minInnings: 5,
   /** Balls bowled a season needs before its economy or a comparison shows (72 = twelve overs). */
   minBalls: 72,
+  /**
+   * Fall-of-wicket pages (wave E, WP-4). A collapse is a threshold, not a fact: `wickets` wickets falling while the side adds at
+   * most `runs` runs. `minInnings` is the sample a score-at-wicket mean needs; `minTimedGames` is the two-day games needed before
+   * they get a table of their own (they are never averaged with limited-overs games). `list` caps the collapse list.
+   */
+  fow: { collapseWickets: 4, collapseRuns: 20, minInnings: 3, minTimedGames: 3, list: 20 },
 } as const
 export const insightsPaths = {
   team: '/stats/insights',
   trends: '/stats/insights/trends',
+  wickets: '/stats/insights/wickets',
   player: (slug: string) => `/stats/insights/players/${slug}`,
 } as const
 

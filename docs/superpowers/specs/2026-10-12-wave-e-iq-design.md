@@ -345,6 +345,10 @@ Honesty rules: an innings counts only when FOW runs are non-decreasing and the w
 
 Data: a derived `fow: number[] | null` per played innings in the slim facts blob (runs at each wicket, no names), added **in this WP's FOW commit only**. The codec layout and the cache key version bump together (`['match-facts','v2',year]`), tags unchanged, one codec round-trip test updated. **Size:** at most 10 numbers per innings, about 40 to 60 bytes of JSON each innings before compression. With a few hundred innings a season that is tens of KB per season entry; the first FOW commit measures the encoded blob for the largest seeded season and for a synthetic `STATLAB_MAX_SEASONS` worst case and asserts it stays well under the Next data cache item limit (2 MB), recording the numbers in the commit. No collection, no migration.
 
+### 6.4 Outcome (2026-10-13)
+
+The investigation was re-run against every `game-summary-*` fixture and confirmed 6.1. One correction to the evidence list: innings-level statistics also include `TOTAL_SCORE` and `TOTAL_OVERS` (the totals the mapper already reads); neither is per over. The fixture guard is `tests/playhq-no-ball-data.test.ts`. The FOW pages were built after WP-0, WP-1, WP-2 and WP-3 were committed: `fow` and `fowReject` on the innings meta (`lib/stats/match/fow.ts`), cache key `['match-facts','v2',year]`, pure logic in `lib/insights/wickets.ts`, page `/stats/insights/wickets` (third Insights tab), thresholds in `INSIGHTS.fow`, demo game Round 23 with a collapse in both innings. Deviations from 6.2: the opposition "bowling view" uses the opposition's innings against the club (both sides' fall of wickets is derived from the batting rows of the innings); two-day games get their own table from `INSIGHTS.fow.minTimedGames` (3) games rather than `INSIGHTS.minGames`; a collapse is detected in every format and labelled with its format; the rejected-innings count shows the partnership reason text.
+
 ### 6.3 Access, tests, docs, seed
 
 - **Access:** public read of aggregates, no writes, no staff-only data; REST unchanged.

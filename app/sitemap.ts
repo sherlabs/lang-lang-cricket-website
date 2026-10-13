@@ -22,6 +22,7 @@ const STATIC: { path: string; changeFrequency: Entry['changeFrequency']; priorit
   { path: '/stats/opposition', changeFrequency: 'weekly', priority: 0.4 },
   { path: '/stats/insights', changeFrequency: 'weekly', priority: 0.4 },
   { path: '/stats/insights/trends', changeFrequency: 'weekly', priority: 0.4 },
+  { path: '/stats/insights/wickets', changeFrequency: 'weekly', priority: 0.4 },
   { path: '/honours', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/yearbooks', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/matches', changeFrequency: 'weekly', priority: 0.5 },

@@ -41,7 +41,7 @@ describe('insights: pure modules', () => {
 })
 
 describe('insights: pages', () => {
-  const pages = ['app/(frontend)/stats/insights/page.tsx', 'app/(frontend)/stats/insights/trends/page.tsx', 'app/(frontend)/stats/insights/players/[slug]/page.tsx']
+  const pages = ['app/(frontend)/stats/insights/page.tsx', 'app/(frontend)/stats/insights/trends/page.tsx', 'app/(frontend)/stats/insights/wickets/page.tsx', 'app/(frontend)/stats/insights/players/[slug]/page.tsx']
   it('exist and export no write handler or server action', () => {
     for (const p of pages) {
       const src = strip(read(p))
@@ -49,7 +49,7 @@ describe('insights: pages', () => {
       expect(src, p).not.toMatch(/'use server'/)
       expect(src, p).not.toMatch(/payload\.(create|update|delete)\b/)
     }
-    expect(fs.readdirSync(path.join(root, 'app/(frontend)/stats/insights')).sort()).toEqual(['page.tsx', 'players', 'trends'])
+    expect(fs.readdirSync(path.join(root, 'app/(frontend)/stats/insights')).sort()).toEqual(['page.tsx', 'players', 'trends', 'wickets'])
     expect(fs.readdirSync(path.join(root, 'app/(frontend)/stats/insights/players/[slug]'))).toEqual(['page.tsx'])
   })
   it('read only the public cached readers, never the scouting loader or the selector queries', () => {

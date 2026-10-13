@@ -5,7 +5,7 @@ routes: ["/stats/insights", "/stats/insights/trends", "/stats/insights/players/[
 collections: [matches, match-innings, match-batting, match-bowling, match-fielding, site-settings]
 admin: "Nothing to set up. The Insights thresholds, including the sample sizes, are in config/site.ts."
 owner: "Visitors, players and captains; no committee action needed"
-related: [match-stats, match-data-store, stats-leaderboards, players-directory-and-profiles, opposition-scouting]
+related: [innings-phases, match-stats, match-data-store, stats-leaderboards, players-directory-and-profiles, opposition-scouting]
 added: feat/payload-cms
 ---
 
@@ -21,7 +21,7 @@ The leaderboards answer "who has the most". These pages answer "how is it going"
 
 ## What it does
 
-One **Insights** entry in the Stats menu opens two views, switched by the tabs under the menu.
+One **Insights** entry in the Stats menu opens three views, switched by the tabs under the menu. The third, **Wickets** (score at each wicket and collapses), is described in [Innings phases and wickets](./innings-phases.mdx).
 
 **Team analysis** (`/stats/insights`, filters for season and grade): record with batting first against batting second and by the toss; winning margins (runs when the winner batted first, wickets in hand when the winner chased, in buckets); a batting profile (average, highest and lowest completed total, all-out rate, wickets lost, extras, fifties and hundreds, inferred opening stands); a bowling profile (average conceded, opposition all out, wides and no balls, how wickets came by type); typical winning totals per grade; fielding (catches, stumpings, run outs).
 
@@ -53,7 +53,7 @@ One **Insights** entry in the Stats menu opens two views, switched by the tabs u
 
 - Forecasts of any kind (milestone projections, breakout or decline verdicts): a label compares two numbers only. The existing milestones page shows who is approaching a milestone ([#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)).
 - A post-match review ([#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34)).
-- Anything per delivery: phases, wagon wheels, strike rotation ([#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- Anything per delivery: phases, wagon wheels, strike rotation ([#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)); the evidence is in [Innings phases and wickets](./innings-phases.mdx).
 - Adjusting a result for the strength of the opposition.
 - Dropped catches (the scorer does not record them), and any export.
 - Junior games are not in the match data.

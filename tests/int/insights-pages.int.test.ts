@@ -73,7 +73,7 @@ describe('seed supports the pages', () => {
 describe('/stats/insights (team analysis)', () => {
   it('renders every section with its sample and the stored game count', async () => {
     const html = await team()
-    expect(html).toMatch(/From 12 Oct 2024, 33 games stored/)
+    expect(html).toMatch(/From 12 Oct 2024, 34 games stored/)
     for (const s of ['Results', 'Winning margins', 'Batting', 'Bowling', 'Typical winning totals', 'Fielding']) expect(html).toContain(s)
     expect(html).toContain('Batting first')
     expect(html).toContain('Batting second')
@@ -85,8 +85,8 @@ describe('/stats/insights (team analysis)', () => {
     const one = await team({ season: 'Summer 2024/25' })
     const all = await team({ season: 'Nope' })
     expect(one).toMatch(/From 12 Oct 2024, \d+ games stored/)
-    expect(one).not.toMatch(/33 games stored/)
-    expect(all).toMatch(/33 games stored/)
+    expect(one).not.toMatch(/34 games stored/)
+    expect(all).toMatch(/34 games stored/)
   })
   it('names no opposition person and no hidden player', async () => {
     const html = await team()

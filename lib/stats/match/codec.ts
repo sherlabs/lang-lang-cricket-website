@@ -32,6 +32,9 @@ export function encodeFacts(set: FactSet): SlimFacts {
     innings: [...set.innings.values()].map((i) => [
       i.m, i.seq, b(i.clubBatting), b(i.declared), b(i.allOut), i.runs ?? -1, i.wickets ?? -1, b(i.hasFow), b(i.hasBowling), b(i.hasBall),
       i.partnerships === null ? -1 : i.partnerships === 'ok' ? 0 : PARTNERSHIP_REASONS.indexOf(i.partnerships) + 1,
+      // Index 11: -1 no usable fall of wickets and none rejected, k > 0 rejected with that reason, 0 valid and the scores follow.
+      i.fow ? 0 : i.fowReject === null ? -1 : PARTNERSHIP_REASONS.indexOf(i.fowReject) + 1,
+      ...(i.fow ?? []),
     ]),
     appearances: set.appearances.map((a) => [a.m, a.player]),
     bat: set.bat.map((r) => [r.m, r.seq, r.player, r.pos, STATUS.indexOf(r.status), r.runs, n(r.balls), n(r.fours), n(r.sixes), r.dismissal === null ? -1 : DISMISSALS.indexOf(r.dismissal)]),
@@ -47,6 +50,8 @@ export function decodeFacts(s: SlimFacts): FactSet {
     innings.set(inningsKey(r[0], r[1]), {
       m: r[0], seq: r[1], clubBatting: r[2] === 1, declared: r[3] === 1, allOut: r[4] === 1, runs: r[5] < 0 ? null : r[5], wickets: r[6] < 0 ? null : r[6], hasFow: r[7] === 1, hasBowling: r[8] === 1, hasBall: r[9] === 1,
       partnerships: r[10] < 0 ? null : r[10] === 0 ? 'ok' : PARTNERSHIP_REASONS[r[10] - 1],
+      fow: r[11] === 0 ? r.slice(12) : null,
+      fowReject: r[11] > 0 ? PARTNERSHIP_REASONS[r[11] - 1] : null,
     })
   }
   return {
