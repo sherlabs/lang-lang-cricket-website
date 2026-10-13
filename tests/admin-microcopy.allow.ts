@@ -6,11 +6,6 @@
 export type MicrocopyAllow = { where: string; text: string; reason: string }
 
 export const MICROCOPY_ALLOW: MicrocopyAllow[] = [
-  {
-    where: 'payload/components/Dashboard.tsx',
-    text: 'Documents, photos, sponsors and contacts are read from the database on every visit, so saves are visible immediately.',
-    reason: '"Documents" is the name of the menu entry and feature; the sentence sits in the admin-only Advanced area.',
-  },
 ]
 
 /** Where the standalone word "document" is a real committee concept (the Documents feature), so it is not flagged. */

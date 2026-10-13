@@ -110,7 +110,7 @@ describe('committee microcopy', () => {
   }, 30_000)
 
   it('files tagged // @committee-facing use plain words in their visible text and headings', () => {
-    const tagged = ['payload/components/AdminNotices.tsx', 'payload/components/LoginIntro.tsx', 'payload/components/AdminNavUser.tsx', 'payload/components/ApprovalsView.tsx', 'payload/components/HelpView.tsx', 'payload/components/Dashboard.tsx']
+    const tagged = ['payload/components/AdminNotices.tsx', 'payload/components/LoginIntro.tsx', 'payload/components/AdminNavUser.tsx', 'payload/components/ApprovalsView.tsx', 'payload/components/HelpView.tsx', 'payload/components/Dashboard.tsx', 'payload/components/AttentionPanel.tsx', 'payload/components/SeasonGlanceCard.tsx', 'payload/components/MilestonesWidget.tsx']
     const bad: string[] = []
     for (const f of tagged) {
       const src = readFileSync(path.join(root, f), 'utf8')

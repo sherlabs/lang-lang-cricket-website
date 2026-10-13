@@ -175,25 +175,34 @@ export function navFor(role: string | null | undefined): { everyday: NavEntry[];
   return { everyday: everydayNav, advanced }
 }
 
-export type JobTile = { key: string; title: string; hint: string; path: string; icon: IconKey }
+export type JobTile = { key: string; title: string; hint: string; path: string; icon: IconKey; /** One of the few big buttons on Home; the rest sit under "More". At most `MAX_PRIMARY_TILES`. */ primary?: true }
+
+export const MAX_PRIMARY_TILES = 6
 
 /** Big dashboard buttons: the jobs the committee does most. `path` is under the admin route. */
 export const jobTiles: JobTile[] = [
-  { key: 'event', title: 'Add an event', hint: 'Dinners, working bees, presentation days', path: '/collections/events/create', icon: 'events' },
-  { key: 'announcement', title: 'Post an announcement', hint: 'Shows as a banner on the home page', path: '/collections/announcements/create', icon: 'announcements' },
-  { key: 'photos', title: 'Add photos to the gallery', hint: 'Pick one or many pictures', path: '/collections/gallery-photos/create', icon: 'photos' },
-  { key: 'sponsor', title: 'Add a sponsor', hint: 'Name, level and logo', path: '/collections/sponsors/create', icon: 'sponsors' },
+  { key: 'event', title: 'Add an event', hint: 'Dinners, working bees, presentation days', path: '/collections/events/create', icon: 'events', primary: true },
+  { key: 'announcement', title: 'Post an announcement', hint: 'Shows as a banner on the home page', path: '/collections/announcements/create', icon: 'announcements', primary: true },
+  { key: 'photos', title: 'Add photos to the gallery', hint: 'Pick one or many pictures', path: '/collections/gallery-photos/create', icon: 'photos', primary: true },
+  { key: 'sponsor', title: 'Add a sponsor', hint: 'Name, level and logo', path: '/collections/sponsors/create', icon: 'sponsors', primary: true },
   { key: 'player-sponsor', title: 'Add a player sponsor', hint: 'Link a business to a player', path: '/collections/player-sponsors/create', icon: 'player-sponsors' },
   { key: 'apparel', title: 'Change the apparel link', hint: 'Where the Club apparel button goes', path: '/globals/club-apparel', icon: 'apparel' },
   { key: 'contact', title: 'Update a contact', hint: 'Change a phone number, email or role', path: '/collections/people', icon: 'people' },
   { key: 'document', title: 'Upload a document', hint: 'Forms, policies and newsletters (PDF)', path: '/collections/documents/create', icon: 'documents' },
   { key: 'page', title: 'Add a page', hint: 'An info page such as About or Join us', path: '/collections/pages/create', icon: 'pages' },
-  { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create', icon: 'news' },
+  { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create', icon: 'news', primary: true },
   { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create', icon: 'stories' },
   { key: 'selector', title: 'Add a selector', hint: 'A login for someone who picks the teams', path: '/selectors', icon: 'selectors' },
-  { key: 'social', title: 'Make a social post', hint: 'Results, line-ups, milestones and more', path: '/social', icon: 'social' },
+  { key: 'social', title: 'Make a social post', hint: 'Results, line-ups, milestones and more', path: '/social', icon: 'social', primary: true },
   { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help', icon: 'help' },
 ]
+
+/** The Home quick actions: the big buttons, then the rest for the "More" list. Pure. Every tile is open to the committee. */
+export function homeTiles(): { primary: JobTile[]; more: JobTile[] } {
+  const order = ['social', 'event', 'news', 'photos', 'announcement', 'sponsor']
+  const rank = (t: JobTile) => (order.includes(t.key) ? order.indexOf(t.key) : order.length)
+  return { primary: jobTiles.filter((t) => t.primary).sort((a, b) => rank(a) - rank(b)), more: jobTiles.filter((t) => !t.primary) }
+}
 
 /** Pure helper (unit-tested): is `pathname` inside `entry`? Home matches only the admin root. */
 export function isNavActive(entry: NavEntry, pathname: string, adminRoute: string): boolean {

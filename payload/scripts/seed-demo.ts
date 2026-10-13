@@ -64,6 +64,7 @@ import { seedDemoVolunteers } from '../seed/demo-volunteers'
 import { seedDemoMeetings } from '../seed/demo-meetings'
 import { seedDemoDiary } from '../seed/demo-diary'
 import { seedDemoStock } from '../seed/demo-stock'
+import { seedDemoHome } from '../seed/demo-home'
 import { seedDemoEmail } from '../seed/demo-email'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
@@ -550,6 +551,7 @@ async function main() {
     console.log(`[seed:demo] club office meetings: ${await seedDemoMeetings(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office diary and plan: ${await seedDemoDiary(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office stock: ${await seedDemoStock(payload, currentClubDate())}`)
+    console.log(`[seed:demo] admin Home: ${await seedDemoHome(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office email: ${await seedDemoEmail(payload)}`)
   } finally {
     await payload.destroy()

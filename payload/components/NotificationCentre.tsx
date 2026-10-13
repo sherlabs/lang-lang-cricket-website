@@ -70,12 +70,8 @@ async function latestRun(payload: Payload): Promise<RunFacts | null> {
   }
 }
 
-/**
- * The Home page's "Needs your attention" list (W2 spec 6.4): the latest PlayHQ update, what is waiting for approval, and, for
- * admins, the duplicate-player count and the import log. Server component; every source is existing data and a failure in one
- * only drops its line.
- */
-export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
+/** Everything the Home page's notices need, loaded once: the facts for the lines and the next volunteer game day. A failure in one source only drops its part. */
+export async function loadNotificationFacts(payload: Payload, isAdmin: boolean, user?: unknown): Promise<{ input: NotificationInput; game: Awaited<ReturnType<typeof nextGameDay>> }> {
   const [pending, run, duplicateCount, imports, social, fees, game, meetings, diary, stock, signIn, fantasy] = await Promise.all([
     getPendingCounts(payload),
     latestRun(payload),
@@ -93,6 +89,15 @@ export async function NotificationCentre({ payload, isAdmin, user }: { payload: 
     isAdmin ? fantasyFacts(payload) : Promise.resolve(null),
   ])
   const input: NotificationInput = { signIn, fantasy, latestRun: run, pending, duplicateCount, imports, social, stock: stock && (stock.low > 0 || stock.overdue > 0) ? { low: stock.low, overdue: stock.overdue, lowText: officeCopy.stock.low(stock.low), overdueText: officeCopy.stock.overdue(stock.overdue) } : null, diary: diary && (diary.overdue > 0 || diary.blocked > 0 || diary.unowned > 0) ? { ...diary, overdueText: officeCopy.diary.overdue(diary.overdue), blockedText: officeCopy.diary.blocked(diary.blocked), unownedText: officeCopy.diary.unowned(diary.unowned) } : null, meetings: meetings && (meetings.overdue > 0 || meetings.blocked > 0) ? { overdue: meetings.overdue, blocked: meetings.blocked, overdueText: officeCopy.meetings.overdue(meetings.overdue), blockedText: officeCopy.meetings.blocked(meetings.blocked) } : null, volunteers: game && game.daysAway <= 3 && game.empty > 0 ? { empty: game.empty, text: officeCopy.volunteers.notification(game.empty, gameDayLabel(game.date)) } : null, fees: fees ? { members: fees.members, text: officeCopy.fees.notification(fees.members, fees.money) } : null }
+  return { input, game }
+}
+
+/**
+ * The full list of notices (W2 spec 6.4) including the PlayHQ update lines. Home no longer draws this (it shows `AttentionPanel`);
+ * administrators get the technical lines under Advanced > System health (`SystemHealth`).
+ */
+export async function NotificationCentre({ payload, isAdmin, user }: { payload: Payload; isAdmin: boolean; user?: unknown }) {
+  const { input } = await loadNotificationFacts(payload, isAdmin, user)
   const lines = notificationLines(input, { isAdmin, adminRoute: payload.config.routes.admin, now: new Date(), formatDate: (d) => dateFormat.format(d) })
   return (
     <div className="club-attention" aria-label="Needs your attention">

@@ -2,18 +2,19 @@
 import { Gutter } from '@payloadcms/ui'
 import { Suspense } from 'react'
 import { getClub } from '@/lib/club'
-import type { BeforeListServerProps, Payload } from 'payload'
-import { jobTiles } from '../admin/navigation'
+import type { Payload } from 'payload'
+import { homeTiles } from '../admin/navigation'
 import { isAdminUser } from '../admin/visibility'
-import { dashboardCards } from './dashboardCards'
+import { AttentionPanel, HomeLead } from './AttentionPanel'
+import { loadHomeFacts } from './homeFacts'
 import { MilestonesWidget } from './MilestonesWidget'
-import { NotificationCentre } from './NotificationCentre'
-import { PlayerSyncPanel } from './PlayerSyncPanel'
-import { PlayHQRefreshButton } from './PlayHQRefreshButton'
+import { SeasonGlanceCard } from './SeasonGlanceCard'
+import { SystemHealth } from './SystemHealth'
 import { Disclosure } from './ui/Disclosure'
 import { Icon } from './ui/Icon'
 import { PageHeader } from './ui/PageHeader'
-import { SkeletonRows } from './ui/Skeleton'
+import { Section } from './ui/Card'
+import { Skeleton, SkeletonRows } from './ui/Skeleton'
 
 type User = { role?: string | null; name?: string | null; email?: string | null } | null | undefined
 
@@ -23,71 +24,71 @@ function firstName(user: User): string {
 }
 
 /**
- * `admin.components.views.dashboard.Component` (RSC): the Home page.
- * Everyone: big job tiles + "Needs your attention". Admins also get a closed "Advanced"
- * section with the old count cards, the PlayHQ refresh, the player sync and the full list.
+ * `admin.components.views.dashboard.Component` (RSC): the Home page, top to bottom.
+ * Greeting and one sentence for today, "Needs your attention" (only when there is something to do), the quick actions (a few big
+ * buttons and a "More" list), Season at a glance, Milestones, and for administrators a closed Advanced area with System health.
  */
 export async function Dashboard({ payload, user }: { payload: Payload; user?: User }) {
   const adminRoute = payload.config.routes.admin
   const club = await getClub()
   const name = firstName(user)
   const admin = isAdminUser(user)
+  const facts = loadHomeFacts(payload, admin, user)
+  facts.catch(() => undefined)
+  const { primary, more } = homeTiles()
 
   return (
     <Gutter><main id="admin-main" className="club-home" aria-label={`${club.name} website admin`}>
-      <PageHeader title={name ? `Hello, ${name}` : 'Hello'} lead="What would you like to do today?" />
-
-      <ul className="club-tiles">
-        {jobTiles.map((tile) => (
-          <li key={tile.key}>
-            <a className="club-tile" href={`${adminRoute}${tile.path}`}>
-              <span className="club-tile__title">
-                <Icon name={tile.icon} size={22} />
-                {tile.title}
-              </span>
-              <span className="club-tile__hint">{tile.hint}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-
-      <NotificationCentre payload={payload} isAdmin={admin} user={user} />
-
-      <Suspense fallback={<SkeletonRows rows={3} label="Loading milestones" />}>
-        <MilestonesWidget payload={payload} />
+      <PageHeader title={name ? `Hello, ${name}` : 'Hello'} />
+      <Suspense fallback={<p className="club-home__today"><Skeleton width="14rem" height="1.1rem" /></p>}>
+        <HomeLead facts={facts} />
       </Suspense>
+
+      <Suspense fallback={<SkeletonRows rows={2} label="Loading what needs your attention" />}>
+        <AttentionPanel facts={facts} />
+      </Suspense>
+
+      <Section title="Quick actions" id="actions">
+        <ul className="club-actions">
+          {primary.map((tile) => (
+            <li key={tile.key}>
+              <a className="club-action" href={`${adminRoute}${tile.path}`}>
+                <Icon name={tile.icon} size={22} />
+                <span className="club-action__title">{tile.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        {more.length > 0 && (
+          <Disclosure summary="More" className="club-more">
+            <ul className="club-more__list">
+              {more.map((tile) => (
+                <li key={tile.key}>
+                  <a className="club-more__link" href={`${adminRoute}${tile.path}`}>
+                    <Icon name={tile.icon} size={18} />
+                    <span>{tile.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+        )}
+      </Section>
+
+      <div className="club-home__cards">
+        <Suspense fallback={<SkeletonRows rows={3} label="Loading the season" />}>
+          <SeasonGlanceCard payload={payload} />
+        </Suspense>
+        <Suspense fallback={<SkeletonRows rows={3} label="Loading milestones" />}>
+          <MilestonesWidget payload={payload} />
+        </Suspense>
+      </div>
 
       {admin && (
         <Disclosure summary="Advanced (site administrators)" className="club-advanced">
-          <ul className="club-dashboard__cards">
-            {dashboardCards.map((card) => (
-              <li key={`${card.collection}-${card.label}`}>
-                <a
-                  className="club-dashboard__card"
-                  href={`${adminRoute}/collections/${card.collection}${card.listQuery ? `?${card.listQuery}` : ''}`}
-                >
-                  <span className="club-dashboard__label">{card.label}</span>
-                  <span className="club-dashboard__note">{card.note}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-          <div className="club-dashboard__panels">
-            <div className="club-dashboard__panel">
-              <h2>PlayHQ</h2>
-              <p>Fixtures, results and ladders refresh on their own every 30 minutes. Refresh now if results were just entered.</p>
-              <PlayHQRefreshButton />
-            </div>
-            <div className="club-dashboard__panel">
-              <h2>How this site works</h2>
-              <ul>
-                <li>Documents, photos, sponsors and contacts are read from the database on every visit, so saves are visible immediately.</li>
-                <li>Fixtures, results and scorecards come from PlayHQ and are cached for up to 30 minutes.</li>
-                <li>Files you upload are stored with the site host; deleting an item also removes its file.</li>
-              </ul>
-            </div>
-          </div>
-          <PlayerSyncPanel {...({ payload } as BeforeListServerProps)} />
+          <Suspense fallback={<SkeletonRows rows={3} label="Loading System health" />}>
+            <SystemHealth payload={payload} facts={facts} />
+          </Suspense>
         </Disclosure>
       )}
     </main></Gutter>

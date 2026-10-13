@@ -3,7 +3,7 @@ title: Admin notification centre
 status: shipped
 routes: ["/admin"]
 collections: [player-sync-runs, stories, event-photos, merge-log, matches, player-seasons]
-admin: "Home, Needs your attention (everyone; extra lines for admins)"
+admin: "Home, Needs your attention (everyone; a few extra rows for admins); Advanced > System health (admins)"
 owner: "Committee (everyday lines); the site admin (technical lines)"
 related: [membership-fees, volunteer-roster, committee-meetings, season-diary-and-plan, stock-and-merch, social-posting-queue, committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
 added: feat/payload-cms
@@ -40,6 +40,15 @@ Failures were only visible in the Sync runs list, which volunteers never open ([
 **Match fees (admins only).** When members owe match fees in the open season: "N members owe $X in match fees (open season, unmatched appearances not counted)" (information, links to Fees). Nothing is shown when no one owes, and editors never see it. See [Membership and match fees](./membership-fees.mdx).
 
 **Social posts.** When the committee uses the posting queue ([Social posting queue](./social-posting-queue.mdx)): "N social posts need your attention" (a warning, links to the queue), "N posts are scheduled for today" (information) and "N scheduled posts are overdue. The scheduler may not be running" (a warning). Counts only, from one grouped query; a failure drops these lines, never the page.
+
+## Home: plain-English attention rows (wave G)
+
+Home no longer prints every notice. `lib/admin/attention.ts` turns the same facts into **tasks**: one sentence, a count badge and one button per row, drawn only when at least one exists (no "nothing to do" box; the greeting says "You're all caught up." instead). Examples: "3 volunteer spots are still empty for Thu 15 Oct" (Open volunteers), "2 posts need a look", "1 story is waiting for approval", overdue or blocked club jobs and committee actions, low or overdue stock. Information (a good stats update, posts due today, the import log, fantasy and sign-in notes) is not a task and no longer appears.
+
+- **Volunteer spots** means required minus signed up, floored at zero for each job, added up for the next game day only (the roster's own `fillStatus` supplies the number), and only when that day is within seven days. The date is written in the club timezone and locale.
+- **A failed stats update** stays as a row. Administrators get an "Open System health" button; the committee see the sentence without a button and with a tooltip to ask the site administrator. Raw errors never reach editors.
+- **Admin-only rows** (possible duplicate players, members owing match fees, Facebook sign-in unreachable) are never given to editors.
+- **System health** (Advanced, admins only) holds what used to crowd the list: the latest update with matches saved, matches that did not save and totals that disagree, the sync controls and the count cards.
 
 ## How to use it
 
