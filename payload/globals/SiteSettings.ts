@@ -1,4 +1,4 @@
-import type { Field, GlobalConfig } from 'payload'
+import type { Field, FieldAccess, GlobalConfig } from 'payload'
 import { TIER_ORDER } from '../../lib/sponsors'
 import {
   DEFAULT_MATCHDAY_LABEL,
@@ -10,7 +10,8 @@ import {
 import { DEFAULT_MATCH_MINIMUMS, MATCH_MINIMUM_LABELS, type MatchMinimums } from '../../lib/stats/match/minimums'
 import { DEFAULT_QUALIFICATION } from '../../lib/stats/qualify'
 import { CATEGORY_LABELS, GRADE_CATEGORIES, validateRulePattern } from '../../lib/stats/categories'
-import { anyone, isAdminField, isStaff, nobodyField } from '../access'
+import { anyone, isAdminField, isStaff, isStaffField, nobodyField } from '../access'
+import { FANTASY } from '../../config/site'
 import { adminOnlyCondition, hiddenFromEditors } from '../admin/visibility'
 import { ALL_STATS_TAGS } from '../../lib/stats/tags'
 import { revalidatePaths } from '../hooks/revalidate'
@@ -213,6 +214,25 @@ const signInGroup: Field = {
   ],
 }
 
+/**
+ * Club fantasy cricket switches (wave F spec 4.2). The rules live on the season, not here. `enabled` and the name are read by the
+ * public site (this global reads `anyone`), so each field carries its own access; the join-link version never leaves the server
+ * for anyone but an administrator, because the link token is derived from it.
+ */
+const anyoneField: FieldAccess = () => true
+const fantasyGroup: Field = {
+  name: 'fantasy',
+  type: 'group',
+  label: 'Fantasy cricket',
+  admin: { description: 'The switches for the club fantasy game. Season rules, prices and managers are in the Fantasy cricket view.' },
+  fields: [
+    { name: 'enabled', label: 'Fantasy cricket is on', type: 'checkbox', defaultValue: false, access: { read: anyoneField, update: isAdminField }, admin: { description: 'Off hides every fantasy page.' } },
+    { name: 'publicLeaderboard', label: 'Show the leaderboard to everyone', type: 'checkbox', defaultValue: false, access: { read: anyoneField, update: isStaffField }, admin: { description: 'Off shows it only to people who have joined.' } },
+    { name: 'competitionName', label: 'Name of the competition', type: 'text', maxLength: 40, defaultValue: FANTASY.defaultName, access: { read: anyoneField, update: isStaffField } },
+    { name: 'linkVersion', label: 'Join link version', type: 'number', min: 1, defaultValue: 1, access: { read: isAdminField, update: isAdminField }, admin: { description: 'Change the link in the Fantasy cricket view. A new version ends the old link and signs everyone out.', readOnly: true } },
+  ],
+}
+
 /** Site behaviour (spec §4.2). Feature flags are deferred to the template work. */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -254,6 +274,7 @@ export const SiteSettings: GlobalConfig = {
         },
         { label: 'Stats', fields: [statsGroup] },
         { label: 'Sign-in', fields: [signInGroup] },
+        { label: 'Fantasy cricket', fields: [fantasyGroup] },
       ],
     },
   ],

@@ -49,6 +49,8 @@ export const advancedNav: NavEntry[] = [
   { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
   // Posting a result is a weekly job for editors, so Social posts is reachable by them here and from a Home tile (wave C spec 3.6).
   { key: 'social', label: 'Social posts', path: '/social', forEditors: true },
+  // The club fantasy game (wave F, issue #36): run a few times a year, so one Advanced entry for the whole view, no Home tile.
+  { key: 'fantasy', label: 'Fantasy cricket', path: '/fantasy', forEditors: true },
   // Occasional, editor-run content: kept out of the everyday list so it stays short on a phone, still reachable by the committee here and from Home tiles / approvals.
   { key: 'stories', label: 'Club history stories', path: '/collections/stories', forEditors: true },
   { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks', forEditors: true },
@@ -73,7 +75,7 @@ export const advancedNav: NavEntry[] = [
  * Collections written only by code (sync, scripts, seed), with no admin UI at all: hidden for every
  * role and never writable through REST. `tests/admin-visibility.test.ts` enforces both.
  */
-export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'auth-broker-jtis']
+export const internalCollections: string[] = ['matches', 'match-innings', 'match-appearances', 'match-batting', 'match-bowling', 'match-fielding', 'merge-log', 'ai-draft-counter', 'throttle-hits', 'auth-broker-jtis', 'fantasy-seasons', 'fantasy-round-state', 'fantasy-prices', 'fantasy-entries', 'fantasy-squads']
 
 /**
  * Selection collections (announce-teams spec section 1): data the selectors work with, managed in the selector area, never as raw

@@ -16,6 +16,7 @@ export function internalCollection(opts: {
   defaultColumns: string[]
   fields: Field[]
   indexes?: NonNullable<CollectionConfig['indexes']>
+  hooks?: CollectionConfig['hooks']
   /** Who may read over REST; staff by default. Use `isAdmin` for anything holding personal snapshots. */
   read?: Access
 }): CollectionConfig {
@@ -31,6 +32,7 @@ export function internalCollection(opts: {
     },
     access: { read: opts.read ?? isStaff, create: nobody, update: nobody, delete: nobody },
     indexes: opts.indexes,
+    hooks: opts.hooks,
     timestamps: true,
     fields: opts.fields,
   }

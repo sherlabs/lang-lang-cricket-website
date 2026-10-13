@@ -13,6 +13,8 @@ export const HKDF_LABELS = {
   socialImage: 'social-image',
   volLink: 'vol-link',
   emailUnsub: 'email-unsub',
+  fantasyLink: 'fantasy-link',
+  fantasyCookie: 'fantasy-cookie',
 } as const
 
 export type SecretLabel = (typeof HKDF_LABELS)[keyof typeof HKDF_LABELS]

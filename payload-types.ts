@@ -97,6 +97,11 @@ export interface Config {
     'ai-draft-counter': AiDraftCounter;
     'throttle-hits': ThrottleHit;
     'auth-broker-jtis': AuthBrokerJti;
+    'fantasy-seasons': FantasySeason;
+    'fantasy-round-state': FantasyRoundState;
+    'fantasy-prices': FantasyPrice;
+    'fantasy-entries': FantasyEntry;
+    'fantasy-squads': FantasySquad;
     'player-selection-profiles': PlayerSelectionProfile;
     'selection-fixtures': SelectionFixture;
     availability: Availability;
@@ -186,6 +191,11 @@ export interface Config {
     'ai-draft-counter': AiDraftCounterSelect<false> | AiDraftCounterSelect<true>;
     'throttle-hits': ThrottleHitsSelect<false> | ThrottleHitsSelect<true>;
     'auth-broker-jtis': AuthBrokerJtisSelect<false> | AuthBrokerJtisSelect<true>;
+    'fantasy-seasons': FantasySeasonsSelect<false> | FantasySeasonsSelect<true>;
+    'fantasy-round-state': FantasyRoundStateSelect<false> | FantasyRoundStateSelect<true>;
+    'fantasy-prices': FantasyPricesSelect<false> | FantasyPricesSelect<true>;
+    'fantasy-entries': FantasyEntriesSelect<false> | FantasyEntriesSelect<true>;
+    'fantasy-squads': FantasySquadsSelect<false> | FantasySquadsSelect<true>;
     'player-selection-profiles': PlayerSelectionProfilesSelect<false> | PlayerSelectionProfilesSelect<true>;
     'selection-fixtures': SelectionFixturesSelect<false> | SelectionFixturesSelect<true>;
     availability: AvailabilitySelect<false> | AvailabilitySelect<true>;
@@ -1426,6 +1436,152 @@ export interface AuthBrokerJti {
   id: number;
   jti: string;
   expiresAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One fantasy competition per season, with its rules. Managed in the Fantasy cricket view.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-seasons".
+ */
+export interface FantasySeason {
+  id: number;
+  seasonStartYear: number;
+  name: string;
+  status: 'draft' | 'open' | 'closed';
+  openedAt?: string | null;
+  maxEntries?: number | null;
+  squadSize?: number | null;
+  salaryCapTenths?: number | null;
+  captainMultiplier?: number | null;
+  transfersPerRound?: number | null;
+  minPriceTenths?: number | null;
+  maxPriceTenths?: number | null;
+  priceSeasonsBack?: number | null;
+  priorGames?: number | null;
+  minGamesForPrice?: number | null;
+  /**
+   * Team names containing one of these words are refused.
+   */
+  blockedWords?: string[] | null;
+  scoring?: {
+    appearance?: number | null;
+    run?: number | null;
+    four?: number | null;
+    six?: number | null;
+    fifty?: number | null;
+    hundred?: number | null;
+    duck?: number | null;
+    wicket?: number | null;
+    maiden?: number | null;
+    threeWickets?: number | null;
+    fiveWickets?: number | null;
+    catch?: number | null;
+    stumping?: number | null;
+    runOut?: number | null;
+  };
+  /**
+   * The last few committee actions (PIN resets, disabled teams). Shown to administrators on the Home page. Holds no PIN.
+   */
+  adminLog?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What cannot be worked out from the fixtures: the lowest lock time seen, a committee lock override and a manual scored mark.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-round-state".
+ */
+export interface FantasyRoundState {
+  id: number;
+  season: number | FantasySeason;
+  weekendKey: string;
+  locksAt?: string | null;
+  lockOverride?: string | null;
+  scoredManually?: boolean | null;
+  scoredReason?: string | null;
+  scoredBy?: (number | null) | User;
+  scoredAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The price of each senior player for the season, with the numbers behind it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-prices".
+ */
+export interface FantasyPrice {
+  id: number;
+  season: number | FantasySeason;
+  player: number | Player;
+  priceTenths: number;
+  autoPriceTenths: number;
+  overridden?: boolean | null;
+  available?: boolean | null;
+  basis?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A manager is a team name and a hashed PIN. No email, phone number or real name is stored.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-entries".
+ */
+export interface FantasyEntry {
+  id: number;
+  season: number | FantasySeason;
+  teamName: string;
+  nameKey: string;
+  pinHash?: string | null;
+  pinSalt?: string | null;
+  pinSetAt?: string | null;
+  mustChangePin?: boolean | null;
+  deviceCodeHash?: string | null;
+  deviceCodeExpires?: string | null;
+  disabled?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The squad a manager picked for a round. Nobody reads these over the API: only server code that has checked the round is locked.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-squads".
+ */
+export interface FantasySquad {
+  id: number;
+  entry: number | FantasyEntry;
+  round: string;
+  captain?: (number | null) | Player;
+  spentTenths: number;
+  transfersUsed: number;
+  picks?:
+    | {
+        player: number | Player;
+        id?: string | null;
+      }[]
+    | null;
+  savedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2772,6 +2928,26 @@ export interface PayloadLockedDocument {
         value: number | AuthBrokerJti;
       } | null)
     | ({
+        relationTo: 'fantasy-seasons';
+        value: number | FantasySeason;
+      } | null)
+    | ({
+        relationTo: 'fantasy-round-state';
+        value: number | FantasyRoundState;
+      } | null)
+    | ({
+        relationTo: 'fantasy-prices';
+        value: number | FantasyPrice;
+      } | null)
+    | ({
+        relationTo: 'fantasy-entries';
+        value: number | FantasyEntry;
+      } | null)
+    | ({
+        relationTo: 'fantasy-squads';
+        value: number | FantasySquad;
+      } | null)
+    | ({
         relationTo: 'player-selection-profiles';
         value: number | PlayerSelectionProfile;
       } | null)
@@ -3636,6 +3812,117 @@ export interface ThrottleHitsSelect<T extends boolean = true> {
 export interface AuthBrokerJtisSelect<T extends boolean = true> {
   jti?: T;
   expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-seasons_select".
+ */
+export interface FantasySeasonsSelect<T extends boolean = true> {
+  seasonStartYear?: T;
+  name?: T;
+  status?: T;
+  openedAt?: T;
+  maxEntries?: T;
+  squadSize?: T;
+  salaryCapTenths?: T;
+  captainMultiplier?: T;
+  transfersPerRound?: T;
+  minPriceTenths?: T;
+  maxPriceTenths?: T;
+  priceSeasonsBack?: T;
+  priorGames?: T;
+  minGamesForPrice?: T;
+  blockedWords?: T;
+  scoring?:
+    | T
+    | {
+        appearance?: T;
+        run?: T;
+        four?: T;
+        six?: T;
+        fifty?: T;
+        hundred?: T;
+        duck?: T;
+        wicket?: T;
+        maiden?: T;
+        threeWickets?: T;
+        fiveWickets?: T;
+        catch?: T;
+        stumping?: T;
+        runOut?: T;
+      };
+  adminLog?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-round-state_select".
+ */
+export interface FantasyRoundStateSelect<T extends boolean = true> {
+  season?: T;
+  weekendKey?: T;
+  locksAt?: T;
+  lockOverride?: T;
+  scoredManually?: T;
+  scoredReason?: T;
+  scoredBy?: T;
+  scoredAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-prices_select".
+ */
+export interface FantasyPricesSelect<T extends boolean = true> {
+  season?: T;
+  player?: T;
+  priceTenths?: T;
+  autoPriceTenths?: T;
+  overridden?: T;
+  available?: T;
+  basis?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-entries_select".
+ */
+export interface FantasyEntriesSelect<T extends boolean = true> {
+  season?: T;
+  teamName?: T;
+  nameKey?: T;
+  pinHash?: T;
+  pinSalt?: T;
+  pinSetAt?: T;
+  mustChangePin?: T;
+  deviceCodeHash?: T;
+  deviceCodeExpires?: T;
+  disabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fantasy-squads_select".
+ */
+export interface FantasySquadsSelect<T extends boolean = true> {
+  entry?: T;
+  round?: T;
+  captain?: T;
+  spentTenths?: T;
+  transfersUsed?: T;
+  picks?:
+    | T
+    | {
+        player?: T;
+        id?: T;
+      };
+  savedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4754,6 +5041,24 @@ export interface SiteSetting {
       unlinked?: number | null;
     };
   };
+  /**
+   * The switches for the club fantasy game. Season rules, prices and managers are in the Fantasy cricket view.
+   */
+  fantasy?: {
+    /**
+     * Off hides every fantasy page.
+     */
+    enabled?: boolean | null;
+    /**
+     * Off shows it only to people who have joined.
+     */
+    publicLeaderboard?: boolean | null;
+    competitionName?: string | null;
+    /**
+     * Change the link in the Fantasy cricket view. A new version ends the old link and signs everyone out.
+     */
+    linkVersion?: number | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -5413,6 +5718,14 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               at?: T;
               unlinked?: T;
             };
+      };
+  fantasy?:
+    | T
+    | {
+        enabled?: T;
+        publicLeaderboard?: T;
+        competitionName?: T;
+        linkVersion?: T;
       };
   updatedAt?: T;
   createdAt?: T;

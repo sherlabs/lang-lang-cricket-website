@@ -61,6 +61,7 @@ import { PlayerSyncRuns } from './payload/collections/PlayerSyncRuns'
 import { Sponsors } from './payload/collections/Sponsors'
 import { Stories } from './payload/collections/Stories'
 import { AuthBrokerJtis } from './payload/collections/AuthBrokerJtis'
+import { FantasyEntries, FantasyPrices, FantasyRoundState, FantasySeasons, FantasySquads } from './payload/collections/Fantasy'
 import { ThrottleHits } from './payload/collections/ThrottleHits'
 import { Users } from './payload/collections/Users'
 import { Yearbooks } from './payload/collections/Yearbooks'
@@ -108,6 +109,7 @@ export default buildConfig({
         approvals: { Component: '/payload/components/ApprovalsView#ApprovalsView', path: '/approvals', meta: { title: 'Waiting for approval' } },
         playerDataTools: { Component: '/payload/components/PlayerDataToolsView#PlayerDataToolsView', path: '/player-data-tools', meta: { title: 'Player data tools' } },
         selectors: { Component: '/payload/components/SelectorsView#SelectorsView', path: '/selectors', meta: { title: 'Selectors' } },
+        fantasy: { Component: '/payload/components/FantasyView#FantasyView', path: '/fantasy', meta: { title: 'Fantasy cricket' } },
         social: { Component: '/payload/components/SocialView#SocialView', path: '/social', meta: { title: 'Social posts' } },
         office: { Component: '/payload/components/OfficeView#OfficeView', path: '/office', exact: true, meta: { title: 'Club office' } },
         officeMembers: { Component: '/payload/components/OfficeMembersView#OfficeMembersView', path: '/office/members', meta: { title: 'Members' } },
@@ -137,7 +139,7 @@ export default buildConfig({
   graphQL: { disable: true },
   // Present only when outbound mail is configured (EMAIL_PROVIDER, key, from address); otherwise forgot-password stays refused.
   email: emailAdapterForPayload(),
-  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, AuthBrokerJtis, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions, StockItems, StockIssues, StockMovements],
+  collections: [Users, Media, Documents, GalleryPhotos, Sponsors, People, Announcements, Events, EventRsvps, EventPhotos, Stories, Players, PlayerAliases, PlayerSeasons, PlayerSyncRuns, PlayerSponsors, Yearbooks, Pages, News, Matches, MatchInnings, MatchAppearances, MatchBatting, MatchBowling, MatchFielding, SavedReports, MergeLog, AiDraftCounter, ThrottleHits, AuthBrokerJtis, FantasySeasons, FantasyRoundState, FantasyPrices, FantasyEntries, FantasySquads, PlayerSelectionProfiles, SelectionFixtures, Availability, Squads, SquadMembers, TeamSheets, BestPlayerBallots, NetSessions, NetAttendance, SocialPosts, SocialPostTargets, Members, OfficeAuditLog, MembershipTiers, Memberships, FeeSeasons, FeeCharges, FeePayments, FeeWaivers, VolunteerWeeks, VolunteerShifts, VolunteerAssignments, VolunteerAvailability, VolunteerHours, CommitteeSeats, MeetingTemplates, Meetings, MeetingItems, MeetingAttendance, MeetingMotions, MeetingActions, OfficeFiles, CommitteeDocuments, PlanPillars, PlanObjectives, DiaryJobs, EmailCampaigns, EmailRecipients, EmailSuppressions, StockItems, StockIssues, StockMovements],
   globals: [Club, ClubApparel, SiteSettings, Theme, SelectionSettings, SocialSettings, OfficeSettings],
   endpoints: [...historyImportEndpoints, ...selectorEndpoints],
   editor: lexicalEditor(),

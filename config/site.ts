@@ -317,3 +317,30 @@ export const votePaths = {
   publicBoard: '/votes',
   vote: (token: string, fixtureId: number | string) => `/availability/${token}/vote/${fixtureId}`,
 } as const
+
+/**
+ * Club fantasy cricket (wave F spec section 4, issue #36). The competition name is a site setting (`site-settings.fantasy`), the rules
+ * live on each season (`fantasy-seasons`), so only guard rails and routes are fixed here. A free game for members: no accounts.
+ */
+export const FANTASY = {
+  /** A manager picks a 6 digit PIN (about a million values); the throttles in `lib/fantasy/throttle.ts` are the real control. */
+  pinLength: 6,
+  teamNameMin: 2,
+  teamNameMax: 30,
+  rememberDays: 90,
+  /** A one-time "add this device" code lives this long and works once. */
+  deviceCodeMinutes: 10,
+  /** Unknown team names are hashed into this many throttle buckets so random names cannot grow the table. */
+  unknownNameBuckets: 64,
+  /** The neutral default for the site setting `competitionName`. */
+  defaultName: 'Fantasy cricket',
+  /** Hard ceiling on a squad, whatever the season rules say. */
+  maxSquadSize: 15,
+} as const
+export const fantasyPaths = {
+  home: '/fantasy',
+  play: (token: string) => `/fantasy/play/${token}`,
+  team: '/fantasy/team',
+  leaderboard: '/fantasy/leaderboard',
+  admin: '/fantasy',
+} as const

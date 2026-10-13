@@ -39,7 +39,7 @@ describe('navigation', () => {
     const nav = navFor('editor')
     // Selectors is an occasional task, so it is an Advanced entry (not a 17th everyday one) that editors can reach; also a Home tile.
     // Social posts (wave C) is the same kind of entry: an occasional task with a Home tile. The styling settings stay admin only.
-    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors', 'social', 'stories', 'yearbooks'])
+    expect(nav.advanced.map((e) => e.key)).toEqual(['selectors', 'social', 'fantasy', 'stories', 'yearbooks'])
     expect(navFor('admin').advanced.map((e) => e.key)).toContain('social-settings')
     expect(nav.advanced.map((e) => e.key)).not.toContain('social-settings')
     expect(navFor(null).advanced.map((e) => e.key)).not.toContain('social')
@@ -111,8 +111,11 @@ describe('every collection and global is classified (new ones fail here until th
           expect(access[op]({ req: { user: admin } }), `${e.slug} ${op} must be denied even to admins`).toBe(false)
         }
         // The merge log holds whole player snapshots and the throttle and sign-in replay tables hold hashed keys and token ids, so they are admin-only; the other internal collections are readable by staff.
-        expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(e.slug !== 'merge-log' && e.slug !== 'throttle-hits' && e.slug !== 'auth-broker-jtis')
-        expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(true)
+        // Fantasy (wave F): the manager list is admin only (no hashes ever leave, but it is the member list), and squads have no REST read for ANY role.
+        const adminOnlyRead = ['merge-log', 'throttle-hits', 'auth-broker-jtis', 'fantasy-entries']
+        const noRead = ['fantasy-squads']
+        expect(access.read({ req: { user: editor } }), `${e.slug} read by an editor`).toBe(!adminOnlyRead.includes(e.slug) && !noRead.includes(e.slug))
+        expect(access.read({ req: { user: admin } }), `${e.slug} read by an admin`).toBe(!noRead.includes(e.slug))
         expect(access.read({ req: { user: undefined } }), `${e.slug} read is staff only`).toBe(false)
       } else if (officeCollections.some((c) => c.slug === e.slug)) {
         // Club office data (wave D): never in a menu, reached through the Club office pages. Admin collections are hidden from editors
