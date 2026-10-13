@@ -77,7 +77,7 @@ const CASES = [
   { collection: 'media', prefix: 'stories', filename: 'cover-Zy8Xw6Vu4Ts2Rq0Po8Nm6Lk.jpg' },
   { collection: 'media', prefix: 'stories/pending', filename: 'IMG 1234 (1)-Wv9Ut7Sr5Qp3On1Ml9Kj7Ih.jpg' },
   { collection: 'media', prefix: 'events', filename: 'presentation-night-Gf5Ed3Cb1Az9Yx7Wv5Ut3Sr.jpg' },
-  { collection: 'documents', prefix: 'documents', filename: 'ccca-directory-25-26.pdf', extra: { title: 'Directory', category: 'CCCA Directory' } },
+  { collection: 'documents', prefix: 'documents', filename: 'ccca-directory-25-26.pdf', extra: { title: 'Directory', category: 'Association directory' } },
   { collection: 'gallery-photos', prefix: 'gallery', filename: 'team-photo-Ab3De5Fg7Hi9Jk1Lm3No5Pq.jpg', extra: { caption: '', sortOrder: 0 } },
 ] as const
 

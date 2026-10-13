@@ -2,7 +2,7 @@ import type { BeforeListServerProps } from 'payload'
 import { PlayerSyncButton } from './PlayerSyncButton'
 import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 
-const melbourne = new Intl.DateTimeFormat(CLUB_LOCALE, {
+const clubDate = new Intl.DateTimeFormat(CLUB_LOCALE, {
   timeZone: CLUB_TIMEZONE,
   day: 'numeric',
   month: 'short',
@@ -36,9 +36,9 @@ export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
           <p className="club-muted">
             <span className={`club-pill club-pill--${status || 'none'}`}>{STATUS_LABEL[status] ?? 'Unknown'}</span>{' '}
             {run.finishedAt ? (
-              <>Finished {melbourne.format(new Date(run.finishedAt))}</>
+              <>Finished {clubDate.format(new Date(run.finishedAt))}</>
             ) : run.startedAt ? (
-              <>Started {melbourne.format(new Date(run.startedAt))}</>
+              <>Started {clubDate.format(new Date(run.startedAt))}</>
             ) : null}
             {status === 'ok' && (
               <>

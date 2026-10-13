@@ -3,6 +3,9 @@ import { ETL_CONTEXT, fileConflict, importFile } from '../media'
 import { bumpSequence, existingById, restoreTimestamps } from '../rows'
 import type { EtlStep } from './types'
 
+/** Legacy category values renamed in the club-neutral template (the visible label comes from `club.associationLabel`). */
+const LEGACY_CATEGORY_MAP: Record<string, string> = { 'CCCA Directory': 'Association directory' }
+
 type Row = { id: number; category: string; title: string; url: string; created_at: Date }
 
 /** Step 3: `documents` (id kept), file per §12.4 (registered under `documents/`, or uploaded). */
@@ -14,7 +17,8 @@ export const documentsStep: EtlStep = {
     const rows = await source.rows<Row>('documents')
     counts.read = rows.length
     for (const r of rows) {
-      let category = r.category as DocumentCategory
+      // The legacy site stored the association section as "CCCA Directory"; the stored value is now club-neutral.
+      let category = (LEGACY_CATEGORY_MAP[r.category] ?? r.category) as DocumentCategory
       if (!(DOCUMENT_CATEGORIES as readonly string[]).includes(category)) {
         report.add({ step: 'documents', table: 'documents', id: r.id, field: 'category', kind: 'coerced', detail: `unknown category "${category}" → "Policies"` })
         category = 'Policies'

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Event } from '@/lib/domain'
 import { resolveClub } from '@/lib/club-merge'
-import { breadcrumbJsonLd, eventJsonLd, melbourneIso, organizationJsonLd, playerJsonLd, newsArticleJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd, webPageJsonLd, yearbookJsonLd } from '@/lib/structured-data'
+import { breadcrumbJsonLd, eventJsonLd, clubIso, organizationJsonLd, playerJsonLd, newsArticleJsonLd, playerListJsonLd, serializeJsonLd, storyJsonLd, webPageJsonLd, yearbookJsonLd } from '@/lib/structured-data'
 
 // The unseeded club (defaults module) — the values pages pass in before `seed:club`.
 const club = resolveClub(null)
@@ -13,16 +13,16 @@ const baseEvent = {
   eventDate: null, dayOfWeek: null, startDate: null, endDate: null, createdAt: new Date(), updatedAt: new Date(),
 } as Event
 
-describe('melbourneIso', () => {
+describe('clubIso', () => {
   it('uses +11:00 during daylight saving', () => {
-    expect(melbourneIso(new Date(Date.UTC(2026, 0, 15, 18, 30)))).toBe('2026-01-15T18:30:00+11:00')
+    expect(clubIso(new Date(Date.UTC(2026, 0, 15, 18, 30)))).toBe('2026-01-15T18:30:00+11:00')
   })
   it('uses +10:00 in winter', () => {
-    expect(melbourneIso(new Date(Date.UTC(2026, 6, 15, 9, 5)))).toBe('2026-07-15T09:05:00+10:00')
+    expect(clubIso(new Date(Date.UTC(2026, 6, 15, 9, 5)))).toBe('2026-07-15T09:05:00+10:00')
   })
   it('handles the DST changeover day (starts 2026-10-04 at 02:00)', () => {
-    expect(melbourneIso(new Date(Date.UTC(2026, 9, 4, 1, 0)))).toBe('2026-10-04T01:00:00+10:00')
-    expect(melbourneIso(new Date(Date.UTC(2026, 9, 4, 12, 0)))).toBe('2026-10-04T12:00:00+11:00')
+    expect(clubIso(new Date(Date.UTC(2026, 9, 4, 1, 0)))).toBe('2026-10-04T01:00:00+10:00')
+    expect(clubIso(new Date(Date.UTC(2026, 9, 4, 12, 0)))).toBe('2026-10-04T12:00:00+11:00')
   })
 })
 

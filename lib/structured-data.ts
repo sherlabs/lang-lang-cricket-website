@@ -2,7 +2,7 @@ import type { Event, Story } from '@/lib/domain'
 import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { absoluteUrl } from './site-metadata'
 
-const MELBOURNE = CLUB_TIMEZONE
+const CLUB_TZ = CLUB_TIMEZONE
 const CONTEXT = 'https://schema.org'
 
 type JsonLd = Record<string, unknown>
@@ -23,7 +23,7 @@ const clubRef = (club: JsonLdClub) => ({ '@type': 'SportsOrganization', name: cl
 
 function offsetMs(instant: Date): number {
   const p = new Intl.DateTimeFormat(CLUB_LOCALE, {
-    timeZone: MELBOURNE, year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: CLUB_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
   }).formatToParts(instant)
   const g = (t: Intl.DateTimeFormatPartTypes) => Number(p.find((x) => x.type === t)?.value)
@@ -35,7 +35,7 @@ function offsetMs(instant: Date): number {
  * Event dates are club-timezone wall-clock values stored as UTC (see lib/event-occurrences.ts).
  * Returns ISO 8601 with the correct club-timezone offset (CLUB_TIMEZONE) for that wall-clock moment (+10:00 / +11:00).
  */
-export function melbourneIso(wall: Date): string {
+export function clubIso(wall: Date): string {
   const first = new Date(wall.getTime() - offsetMs(wall))
   const off = offsetMs(first)
   const mins = Math.round(off / 60000)
@@ -77,7 +77,7 @@ export function eventJsonLd(event: Event, occurrence: Date | null, club: JsonLdC
     '@context': CONTEXT,
     '@type': 'Event',
     name: event.title,
-    startDate: melbourneIso(occurrence),
+    startDate: clubIso(occurrence),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     image: [absoluteUrl(event.coverImageUrl || club.ogImage.url, club.siteUrl)],

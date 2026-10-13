@@ -3,7 +3,8 @@
  * Payload/Next imports so it is unit-testable; `getClub()` (lib/club.ts) fetches and calls it.
  */
 import { isHttpUrlOrEmpty } from '@/payload/fields/validators'
-import { clubDefaults, DEFAULT_APPAREL_LABEL, type ClubDefaults } from '@/payload/seed/club-defaults'
+import { PLAYHQ_DEFAULTS } from '@/config/site'
+import { buildClubDefaults, clubDefaults, DEFAULT_APPAREL_LABEL, resolveClubPreset, type ClubDefaults } from '@/payload/seed/club-defaults'
 
 type MediaLike = { url?: string | null; width?: number | null; height?: number | null } | number | null | undefined
 
@@ -27,6 +28,10 @@ export type ResolvedClub = ClubDefaults & {
   apparel: Apparel | null
   /** `club.logo` URL, or the static crest. */
   logoUrl: string
+  /** `club.favicon` URL, or null (the static icon applies). */
+  faviconUrl: string | null
+  /** `club.heroImage` URL, or the static home picture. */
+  heroUrl: string
   /** `club.ogImage`, or the static 1200×630 image. */
   ogImage: { url: string; width?: number; height?: number }
   /** Non-empty social URLs (JSON-LD `sameAs`). */
@@ -71,17 +76,51 @@ export function siteUrlFor(canonicalHost: string | undefined, fromClub: string):
 }
 
 /**
+ * The defaults a saved club merges over. The Lang Lang preset is fixed copy. The neutral template is built from the club's SAVED
+ * identity (name, location, address, ...), so the home, page and menu copy that is not editable in the admin still names the right
+ * club instead of the placeholder one. Pure.
+ */
+export function defaultsForClub(doc: Record<string, unknown> | null | undefined, base: ClubDefaults = clubDefaults, preset = resolveClubPreset()): ClubDefaults {
+  if (preset !== 'template' || !doc || !doc.updatedAt) return base
+  const str = (v: unknown, fallback: string) => (typeof v === 'string' && v.trim() ? v.trim() : fallback)
+  const addr = (doc.address && typeof doc.address === 'object' ? doc.address : {}) as Record<string, unknown>
+  const shortName = str(doc.shortName, base.shortName)
+  return buildClubDefaults({
+    name: str(doc.name, base.name),
+    shortName,
+    location: str(doc.tagline, base.tagline),
+    sport: str(doc.sport, base.sport),
+    siteUrl: str(doc.siteUrl, base.siteUrl),
+    locale: str(doc.locale, base.locale),
+    ogLocale: str(doc.ogLocale, base.ogLocale),
+    email: str(doc.email, base.email),
+    address: {
+      locality: str(addr.locality, base.address.locality),
+      region: str(addr.region, base.address.region),
+      regionName: str(addr.regionName, base.address.regionName),
+      country: str(addr.country, base.address.country),
+      countryName: str(addr.countryName, base.address.countryName),
+    },
+    mapQuery: str(doc.mapQuery, base.mapQuery),
+    teamNamePrefix: PLAYHQ_DEFAULTS.teamNamePrefix,
+    associationLabel: str(doc.associationLabel, base.associationLabel),
+  })
+}
+
+/**
  * `doc` is the `findGlobal('club', depth 1)` result. A never-saved global (no `updatedAt`)
  * yields the defaults verbatim, so an unseeded site renders exactly as before.
  */
 export function resolveClub(
   doc: Record<string, unknown> | null | undefined,
-  defaults: ClubDefaults = clubDefaults,
+  defaults: ClubDefaults | undefined = undefined,
   apparelDoc: Record<string, unknown> | null | undefined = null,
   canonicalHost: string | undefined = process.env.CANONICAL_HOST,
 ): ResolvedClub {
   const saved = Boolean(doc && doc.updatedAt)
-  const merged = saved ? mergeOver(defaults, doc) : defaults
+  // An explicit `defaults` (tests, previews) is used as given; otherwise the active set, built from the saved identity for the template.
+  const base: ClubDefaults = defaults ?? defaultsForClub(doc)
+  const merged = saved ? mergeOver(base, doc) : base
   const logo = saved ? (doc!.logo as MediaLike) : null
   const og = saved ? (doc!.ogImage as MediaLike) : null
   const ogUrl = mediaUrl(og)
@@ -89,11 +128,13 @@ export function resolveClub(
     ...merged,
     apparel: resolveApparel(apparelDoc),
     siteUrl: siteUrlFor(canonicalHost, merged.siteUrl),
-    logoUrl: mediaUrl(logo) ?? defaults.assets.logo,
+    logoUrl: mediaUrl(logo) ?? base.assets.logo,
+    faviconUrl: saved ? mediaUrl(doc!.favicon as MediaLike) : null,
+    heroUrl: (saved ? mediaUrl(doc!.heroImage as MediaLike) : null) ?? base.assets.heroImage,
     ogImage:
       ogUrl && og && typeof og === 'object'
         ? { url: ogUrl, width: og.width ?? undefined, height: og.height ?? undefined }
-        : { ...defaults.assets.ogImage },
+        : { ...base.assets.ogImage },
     sameAs: merged.socials.map((s) => s.url?.trim()).filter((u): u is string => Boolean(u)),
   }
 }

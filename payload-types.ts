@@ -387,7 +387,7 @@ export interface Document {
   /**
    * Where on the Documents page this file is listed.
    */
-  category: 'Codes of Conduct' | 'Policies' | 'Child Safety' | 'Game Day' | 'CCCA Directory';
+  category: 'Codes of Conduct' | 'Policies' | 'Child Safety' | 'Game Day' | 'Association directory';
   legacyUrl?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
@@ -4766,6 +4766,14 @@ export interface Club {
    * Falls back to /assets/branding/logo.png.
    */
   logo?: (number | null) | Media;
+  /**
+   * The small icon in browser tabs (a square PNG, at least 64 pixels). Falls back to the built-in icon.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * The big picture at the top of the home page. Falls back to /assets/branding/hero.jpg.
+   */
+  heroImage?: (number | null) | Media;
   locale?: string | null;
   ogLocale?: string | null;
   email?: string | null;
@@ -4781,6 +4789,14 @@ export interface Club {
     country?: string | null;
     countryName?: string | null;
   };
+  /**
+   * What visitors see as the heading of the association section on the Documents page (the section itself is always called "Association directory" when you add a document).
+   */
+  associationLabel?: string | null;
+  /**
+   * Words that mark an honour as an association honour on player pages, for example the short name of your local association. Press Enter after each word. Empty is fine.
+   */
+  honourKeywords?: string[] | null;
   /**
    * Google Maps search for the contact page map.
    */
@@ -5435,6 +5451,8 @@ export interface ClubSelect<T extends boolean = true> {
   sport?: T;
   siteUrl?: T;
   logo?: T;
+  favicon?: T;
+  heroImage?: T;
   locale?: T;
   ogLocale?: T;
   email?: T;
@@ -5449,6 +5467,8 @@ export interface ClubSelect<T extends boolean = true> {
         country?: T;
         countryName?: T;
       };
+  associationLabel?: T;
+  honourKeywords?: T;
   mapQuery?: T;
   socials?:
     | T

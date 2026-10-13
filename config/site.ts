@@ -19,9 +19,12 @@ const LL = { host: 'langlangcricketclub.com', orgId: '484ced51-403a-466c-9a94-bd
 
 /**
  * Cookie names are `${COOKIE_PREFIX}_…` (llcc_rsvps, llcc_story_draft, llcc_ann_dismissed). Env
- * `COOKIE_PREFIX`; Lang Lang keeps `llcc` so saved visitor state is not reset.
+ * `COOKIE_PREFIX`; Lang Lang keeps `llcc` so saved visitor state is not reset. The `llcc` fallback is for development and
+ * tests only; elsewhere the neutral `club` applies (and production requires the variable, see `assertClubEnv`).
  */
-export const COOKIE_PREFIX = env.COOKIE_PREFIX || 'llcc'
+/** Cookie prefixes that belong to another club's deployment; the bootstrap refuses them for a new club. */
+export const RESERVED_COOKIE_PREFIXES: readonly string[] = ['llcc']
+export const COOKIE_PREFIX = env.COOKIE_PREFIX || (isProduction ? 'club' : 'llcc')
 
 /** Wall-clock timezone for event dates, JSON-LD offsets, announcement and PlayHQ dates. Env `CLUB_TIMEZONE`. */
 export const CLUB_TIMEZONE = env.CLUB_TIMEZONE || 'Australia/Melbourne'
@@ -103,6 +106,20 @@ export const PLAYHQ_DEFAULTS = {
 export const BRANDING = { logo: '/assets/branding/logo.png' } as const
 
 /**
+ * A Lang Lang deployment must say so: the neutral template copy would otherwise show on the live site wherever a saved field is
+ * empty. Throws when the canonical host is Lang Lang's and `CLUB_PRESET` is not `lang-lang`. Called from next.config.ts (the build
+ * fails), instrumentation.ts (startup fails) and `verify:cutover`. This file is the one allowed home of the host constant.
+ */
+export function assertClubPreset(e: Record<string, string | undefined> = process.env): void {
+  const host = (e.CANONICAL_HOST ?? '').trim().toLowerCase().replace(/^www\./, '')
+  if (host === LL.host && e.CLUB_PRESET?.trim() !== 'lang-lang') {
+    throw new Error(
+      `CANONICAL_HOST is ${LL.host} but CLUB_PRESET is ${e.CLUB_PRESET?.trim() ? `"${e.CLUB_PRESET.trim()}"` : 'not set'}. Set CLUB_PRESET=lang-lang on this deployment (production and preview).`,
+    )
+  }
+}
+
+/**
  * Throws, outside development and test (Vercel production and preview, or any self-hosted `next start`),
  * when a value with no fallback there is unset. Called from instrumentation.ts (not at build).
  */
@@ -119,6 +136,7 @@ export function assertClubEnv(e: Record<string, string | undefined> = process.en
 }
 
 /** Footer credit; `utm_source` is the club site's host so visits are attributable. */
+export const AGENCY_CREDIT_ENABLED = env.AGENCY_CREDIT?.trim().toLowerCase() !== 'off'
 export const AGENCY_CREDIT = {
   url: 'https://www.sherlabs.com/',
   name: 'sherlabs.com',
@@ -133,6 +151,17 @@ export function agencyCreditHref(siteUrl: string): string {
     // keep the raw value
   }
   return `${AGENCY_CREDIT.url}?utm_source=${host}&utm_medium=referral&utm_campaign=footer_credit`
+}
+
+/**
+ * Search Console ownership file (`/google<16 hex>.html`). Served only when env `GOOGLE_SITE_VERIFICATION_FILE` names exactly that
+ * file, so no club's verification token ships in the repository. The body is Google's one-line token and nothing else.
+ */
+export const GOOGLE_VERIFICATION_PATTERN = /^google[a-f0-9]{16}\.html$/
+export function googleVerificationBody(file: string, e: Record<string, string | undefined> = process.env): string | null {
+  const wanted = e.GOOGLE_SITE_VERIFICATION_FILE?.trim()
+  if (!wanted || wanted !== file || !GOOGLE_VERIFICATION_PATTERN.test(file)) return null
+  return `google-site-verification: ${file}`
 }
 
 /**

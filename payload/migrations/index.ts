@@ -47,6 +47,8 @@ import * as migration_20261012_234856_e1_scouting_settings from './20261012_2348
 import * as migration_20261013_001154_e1_selection_rules from './20261013_001154_e1_selection_rules';
 import * as migration_20261013_023723_signin_broker from './20261013_023723_signin_broker';
 import * as migration_20261013_030923_fantasy from './20261013_030923_fantasy';
+import * as migration_20261013_040514_template_neutral_club_defaults from './20261013_040514_template_neutral_club_defaults';
+import * as migration_20261013_040940_club_favicon_hero from './20261013_040940_club_favicon_hero';
 
 export const migrations = [
   {
@@ -292,6 +294,16 @@ export const migrations = [
   {
     up: migration_20261013_030923_fantasy.up,
     down: migration_20261013_030923_fantasy.down,
-    name: '20261013_030923_fantasy'
+    name: '20261013_030923_fantasy',
+  },
+  {
+    up: migration_20261013_040514_template_neutral_club_defaults.up,
+    down: migration_20261013_040514_template_neutral_club_defaults.down,
+    name: '20261013_040514_template_neutral_club_defaults',
+  },
+  {
+    up: migration_20261013_040940_club_favicon_hero.up,
+    down: migration_20261013_040940_club_favicon_hero.down,
+    name: '20261013_040940_club_favicon_hero'
   },
 ];

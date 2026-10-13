@@ -2,12 +2,14 @@ import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { BRANDING, CANONICAL_HOST } from './config/site'
+import { assertClubPreset, BRANDING, CANONICAL_HOST } from './config/site'
 import { assertSafeEnv } from './payload/env'
 
 // Refuse to start `next dev/start/build` at all with a remote DB or a Blob token
 // off Vercel (payload.config.ts repeats this for the CLI and scripts).
 assertSafeEnv()
+// A Lang Lang host without CLUB_PRESET=lang-lang fails the build (the neutral template copy must never reach the live site).
+assertClubPreset()
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -36,6 +38,10 @@ const nextConfig: NextConfig = {
     '/api/admin/social/post-image': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/admin/social/post-now': [`./public${BRANDING.logo}`, './assets/fonts/**'],
     '/api/cron/social-posts': [`./public${BRANDING.logo}`, './assets/fonts/**'],
+  },
+  // Search Console ownership file: served from env, never from a committed token (see config/site.ts).
+  async rewrites() {
+    return [{ source: '/:file(google[a-f0-9]{16}\\.html)', destination: '/api/google-verification/:file' }]
   },
   async redirects() {
     return [

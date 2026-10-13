@@ -12,6 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s",
     },
     description: club.defaultDescription,
+    // An uploaded favicon (Club details) wins; with none the built-in app/favicon.ico applies.
+    ...(club.faviconUrl ? { icons: { icon: club.faviconUrl } } : {}),
     openGraph: baseOpenGraph(club),
     twitter: {
       card: "summary_large_image",

@@ -3,7 +3,7 @@ import { ClubLogo } from '@/components/club-logo'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, MapPinIcon } from '@hugeicons/core-free-icons'
 import { FacebookIcon } from '@/components/icons'
-import { agencyCreditHref, AGENCY_CREDIT, selectorPaths } from '@/config/site'
+import { agencyCreditHref, AGENCY_CREDIT, AGENCY_CREDIT_ENABLED, selectorPaths } from '@/config/site'
 import { ApparelLink } from '@/components/apparel-link'
 import type { Club } from '@/lib/club'
 import type { Link as NavLink } from '@/payload/seed/club-defaults'
@@ -122,10 +122,14 @@ export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: 
             <span className="whitespace-nowrap">
               &copy; {year} {nav.copyrightName}. All rights reserved.
             </span>
-            <span aria-hidden className="hidden text-white/30 lg:inline">
-              ·
-            </span>
-            <span className="text-balance">{nav.fundingCredit}</span>
+            {nav.fundingCredit ? (
+              <>
+                <span aria-hidden className="hidden text-white/30 lg:inline">
+                  ·
+                </span>
+                <span className="text-balance">{nav.fundingCredit}</span>
+              </>
+            ) : null}
             <span aria-hidden className="hidden text-white/30 lg:inline">
               ·
             </span>
@@ -134,30 +138,34 @@ export function SiteFooter({ club, footerNav }: { club: FooterClub; footerNav?: 
             </Link>
           </p>
 
-          {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
-          <a
-            href={agencyCreditHref(club.siteUrl)}
-            target="_blank"
-            rel="noopener"
-            className="group mt-2 flex min-h-9 flex-col justify-center gap-y-1 self-start rounded-sm sm:flex-row sm:items-center sm:justify-start sm:gap-x-3 lg:mt-0"
-          >
-            <span className="whitespace-nowrap">
-              Built with{' '}
-              <span aria-label="love" role="img" className="inline-block text-status-bad transition group-hover:scale-110">
-                ♥
-              </span>{' '}
-              by{' '}
-              <span className="font-medium text-white/90 underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
-                {AGENCY_CREDIT.name}
-              </span>
-            </span>
-            <span aria-hidden className="hidden text-white/30 sm:inline">
-              ·
-            </span>
-            <span className="text-white/50 transition group-hover:text-white/70">
-              {AGENCY_CREDIT.tagline}
-            </span>
-          </a>
+          {AGENCY_CREDIT_ENABLED && (
+            <>
+              {/* noopener only (no noreferrer) + UTM tags so visits from this credit show up in sherlabs.com analytics. */}
+              <a
+                href={agencyCreditHref(club.siteUrl)}
+                target="_blank"
+                rel="noopener"
+                className="group mt-2 flex min-h-9 flex-col justify-center gap-y-1 self-start rounded-sm sm:flex-row sm:items-center sm:justify-start sm:gap-x-3 lg:mt-0"
+              >
+                <span className="whitespace-nowrap">
+                  Built with{' '}
+                  <span aria-label="love" role="img" className="inline-block text-status-bad transition group-hover:scale-110">
+                    ♥
+                  </span>{' '}
+                  by{' '}
+                  <span className="font-medium text-white/90 underline decoration-brand-gold/60 underline-offset-4 transition group-hover:text-brand-gold group-hover:decoration-brand-gold">
+                    {AGENCY_CREDIT.name}
+                  </span>
+                </span>
+                <span aria-hidden className="hidden text-white/30 sm:inline">
+                  ·
+                </span>
+                <span className="text-white/50 transition group-hover:text-white/70">
+                  {AGENCY_CREDIT.tagline}
+                </span>
+              </a>
+            </>
+          )}
         </div>
       </div>
     </footer>

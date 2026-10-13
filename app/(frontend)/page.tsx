@@ -64,7 +64,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative isolate min-h-[560px] overflow-hidden bg-brand-black text-white sm:min-h-[640px] lg:min-h-[700px]">
         <Image
-          src={club.assets.heroImage}
+          src={club.heroUrl}
           alt={hero.imageAlt}
           fill
           priority

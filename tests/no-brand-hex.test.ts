@@ -101,3 +101,17 @@ describe('no club name in code', () => {
     expect(bad).toEqual([])
   })
 })
+
+/**
+ * Place and association words, the production host and the club email also stay out of code (template extraction, wave F spec 5.2):
+ * only config/site.ts (the one home of the host constant) and the roots the first test skips may hold them. Comments are ignored.
+ */
+const CLUB_WORDS = /ccca|cardinia|caldermeade|gippsland|westernport|langlangcricketclub/i
+
+describe('no club place, association, host or email in code', () => {
+  it('app, components, lib, payload (outside seeds and scripts) and config are free of the preset words', () => {
+    const scanned = [...files, 'next.config.ts', 'payload.config.ts', 'instrumentation.ts']
+    const bad = scanned.filter((f) => !NAME_ALLOWLIST.includes(f) && CLUB_WORDS.test(code(f)))
+    expect(bad).toEqual([])
+  })
+})

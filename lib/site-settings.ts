@@ -1,6 +1,6 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
-import { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, withRenamedGradeRules, type StatsSettings } from './site-settings-core'
+import { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, withClubHonourKeywords, withRenamedGradeRules, type StatsSettings } from './site-settings-core'
 
 export { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, selectCarouselSponsors } from './site-settings-core'
 export type { StatsSettings } from './site-settings-core'
@@ -35,9 +35,13 @@ export async function getSponsorCarouselTiers(): Promise<string[]> {
 export async function getStatsSettings(): Promise<StatsSettings> {
   try {
     const payload = await getPayloadClient()
-    const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
-    if (!settings?.updatedAt) return DEFAULT_STATS_SETTINGS
-    return withRenamedGradeRules(resolveStatsSettings((settings as unknown as { stats?: unknown }).stats))
+    const [settings, club] = await Promise.all([
+      payload.findGlobal({ slug: 'site-settings', depth: 0 }),
+      payload.findGlobal({ slug: 'club', depth: 0 }).catch(() => null),
+    ])
+    const keywords = (club as unknown as { honourKeywords?: unknown } | null)?.honourKeywords
+    if (!settings?.updatedAt) return withClubHonourKeywords(DEFAULT_STATS_SETTINGS, keywords)
+    return withClubHonourKeywords(withRenamedGradeRules(resolveStatsSettings((settings as unknown as { stats?: unknown }).stats)), keywords)
   } catch (err) {
     console.warn('[site-settings] could not read stats settings, using defaults:', (err as Error).message)
     return DEFAULT_STATS_SETTINGS

@@ -67,6 +67,7 @@ import { seedDemoStock } from '../seed/demo-stock'
 import { seedDemoEmail } from '../seed/demo-email'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
+import { langLangDefaults } from '../seed/presets/lang-lang'
 import { seedThemeGlobal } from '../seed/seed-theme-global'
 import { PLAYHQ_ORG_ID } from '../../lib/playhq/client'
 import { PRESETS, presetHref } from '../../lib/stats/presets'
@@ -99,7 +100,7 @@ export const DEMO_DOCUMENTS = [
   { category: 'Child Safety', title: "Australian Cricket's Commitment to Safeguarding Children and Young People", file: 'safeguarding-commitment.pdf' },
   { category: 'Child Safety', title: 'Code of Behaviour for Affiliated Associations, Clubs and Indoor Centres', file: 'code-of-behaviour-affiliated-clubs.pdf' },
   { category: 'Game Day', title: 'Marsh Sport Cricket Game Day Training Checklist', file: 'game-day-training-checklist.pdf' },
-  { category: 'CCCA Directory', title: 'CCCA Directory 25/26', file: 'ccca-directory-25-26.pdf' },
+  { category: 'Association directory', title: 'CCCA Directory 25/26', file: 'ccca-directory-25-26.pdf' },
 ] as const
 
 export const DEMO_SPONSORS = [
@@ -346,7 +347,7 @@ async function main() {
   }
 
   try {
-    console.log(`[seed-demo] club global: ${await seedClubGlobal(payload)}`)
+    console.log(`[seed-demo] club global: ${await seedClubGlobal(payload, { defaults: langLangDefaults })}`)
     const sample = process.argv.includes('--theme-sample') ? process.argv[process.argv.indexOf('--theme-sample') + 1] : undefined
     if (sample && sample !== 'blue') throw new Error(`Unknown --theme-sample "${sample}" (only "blue" exists)`)
     console.log(`[seed-demo] theme global: ${await seedThemeGlobal(payload, sample === 'blue' ? { sample: 'blue', force: true } : {})}`)

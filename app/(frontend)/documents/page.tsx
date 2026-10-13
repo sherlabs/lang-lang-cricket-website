@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/page-header'
 import { getClub } from '@/lib/club'
 import { clubIcon } from '@/lib/club-icons'
 import { listDocuments } from '@/lib/content-queries'
-import { CATEGORY_ORDER } from '@/lib/documents'
+import { CATEGORY_ORDER, categoryLabel } from '@/lib/documents'
 import { canonicalFor, pageSeo } from "@/lib/site-metadata"
 
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,7 @@ export default async function DocumentsPage() {
                 href={`#${slug(cat)}`}
                 className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-sm text-white/85 transition hover:border-brand-gold hover:text-brand-gold"
               >
-                {cat} <span className="text-white/60">({items.length})</span>
+                {categoryLabel(cat, club.associationLabel)} <span className="text-white/60">({items.length})</span>
               </a>
             ))}
           </nav>
@@ -62,7 +62,7 @@ export default async function DocumentsPage() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/30">
                   <HugeiconsIcon icon={Icon} className="h-5 w-5" aria-hidden />
                 </span>
-                <h2 className="display mt-4 text-3xl text-brand-black sm:text-4xl">{cat}</h2>
+                <h2 className="display mt-4 text-3xl text-brand-black sm:text-4xl">{categoryLabel(cat, club.associationLabel)}</h2>
                 {blurb && <p className="mt-2 text-sm leading-relaxed text-brand-grey">{blurb}</p>}
               </div>
               <ul className="divide-y divide-brand-black/5 overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5">

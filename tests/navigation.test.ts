@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NavPage } from '../lib/domain'
 import { buildNavigation, MAX_PRIMARY_PAGES, NEWS_HREF } from '../lib/navigation'
-import { clubDefaults } from '../payload/seed/club-defaults'
+import { langLangDefaults as clubDefaults } from '../payload/seed/presets/lang-lang'
 import { createPayloadFake, type PayloadFake } from './helpers/payload-fake'
 
 const base = clubDefaults.navigation

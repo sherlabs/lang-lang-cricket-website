@@ -41,6 +41,8 @@ Sections A–D happen before the window. E is the window. F is the smoke list, G
 | `PAYLOAD_SECRET` | 32+ random bytes (`openssl rand -hex 32`) | a different random value | [ ] / [ ] |
 | `NEXT_PUBLIC_SERVER_URL` | `https://langlangcricketclub.com` | not needed (derived from `VERCEL_BRANCH_URL`) | [ ] |
 | `CANONICAL_HOST` | `langlangcricketclub.com` | same | [ ] / [ ] |
+| `CLUB_PRESET` | **BLOCKER:** `lang-lang`. Without it the neutral template copy shows wherever a saved club field is empty, and the build and startup fail on this host (`assertClubPreset`). Set it for Production **and Preview** (a preview on another host is not caught by the host rule) | `lang-lang` | [ ] / [ ] |
+| `GOOGLE_SITE_VERIFICATION_FILE` | `googlef3f9083034ceae06.html` (the file is no longer in `public/`; without this Search Console loses verification). `verify:cutover --site-url <built app>` checks the exact body | same | [ ] / [ ] |
 | `REDIRECT_HOSTS` | **BLOCKER:** `www.langlangcricketclub.com,lang-lang-cricket-website.vercel.app`. Set before deploying: the code default is now only `www.<CANONICAL_HOST>`, so without this the vercel.app 308 is lost | same | [ ] / [ ] |
 | `PLAYHQ_ORG_ID`, `PLAYHQ_TEAM_PREFIX` | **BLOCKER:** `484ced51-403a-466c-9a94-bd95eedf7319` and `Lang Lang`. No fallback in production: with either unset (or `CANONICAL_HOST` unset above) the server refuses to start (`instrumentation.ts`, `assertClubEnv`) | same values (Preview is not `VERCEL_ENV=production`, so the Lang Lang defaults apply, but set them anyway) | [ ] / [ ] |
 | `EXPORT_FILENAME_PREFIX` | `langlang` (keeps the StatLab download named `langlang-statlab-<scope>.csv`) | same | [ ] / [ ] |

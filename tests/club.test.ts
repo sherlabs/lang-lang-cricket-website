@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mergeOver, resolveClub } from '@/lib/club-merge'
-import { clubDefaults, clubGlobalSeed } from '@/payload/seed/club-defaults'
+import { clubGlobalSeed } from '@/payload/seed/club-defaults'
+import { langLangDefaults as clubDefaults } from '@/payload/seed/presets/lang-lang'
 
 describe('resolveClub (spec §4.1: the global merged over the defaults module)', () => {
   it('a never-saved global yields the defaults verbatim, with static asset fallbacks', () => {
@@ -27,8 +28,8 @@ describe('resolveClub (spec §4.1: the global merged over the defaults module)',
   })
 
   it('the seeded global resolves to exactly the defaults', () => {
-    const seeded = { ...clubGlobalSeed(), id: 1, updatedAt: '2026-10-03T00:00:00.000Z', logo: null, ogImage: null }
-    const club = resolveClub(seeded)
+    const seeded = { ...clubGlobalSeed(clubDefaults), id: 1, updatedAt: '2026-10-03T00:00:00.000Z', logo: null, ogImage: null }
+    const club = resolveClub(seeded, clubDefaults)
     for (const key of Object.keys(clubDefaults) as (keyof typeof clubDefaults)[]) {
       expect(club[key], key).toEqual(clubDefaults[key])
     }

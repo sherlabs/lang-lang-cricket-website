@@ -60,7 +60,8 @@ describe('individuals come from one place', () => {
   it('no person is stored as free text in the club global or its defaults', () => {
     const globalSrc = read(path.join(root, 'payload/globals/Club.ts'))
     expect(globalSrc).not.toMatch(/president|secretary|treasurer|contactPerson|contactName|contactPhone/i)
-    const defaults = read(path.join(root, 'payload/seed/club-defaults.ts'))
-    expect(defaults).not.toMatch(/Savige|president:|secretary:|treasurer:/i)
+    for (const f of ['payload/seed/club-defaults.ts', 'payload/seed/club-template.ts', 'payload/seed/presets/lang-lang.ts']) {
+      expect(read(path.join(root, f)), f).not.toMatch(/Savige|president:|secretary:|treasurer:/i)
+    }
   })
 })

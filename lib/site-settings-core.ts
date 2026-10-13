@@ -86,8 +86,26 @@ export const DEFAULT_HONOUR_CATEGORIES: HonourCategoryRule[] = [
   { label: 'Best and Fairest / Club Champion', keywords: ['best and fairest', 'best & fairest', 'club champion', 'player of the year'] },
   { label: 'Captain', keywords: ['captain'] },
   { label: 'Leadership / Role', keywords: ['president', 'secretary', 'treasurer', 'coach', 'committee', 'vice'] },
-  { label: 'Association honours', keywords: ['association', 'ccca', 'representative', 'rep '] },
+  { label: 'Association honours', keywords: ['association', 'representative', 'rep '] },
 ]
+
+/** The honour rule that the club's own association keywords (`club.honourKeywords`) are added to. */
+export const ASSOCIATION_HONOUR_LABEL = 'Association honours'
+
+/** Adds the club's association keywords to the association honour rule (a club with none gets the settings back unchanged). */
+export function withClubHonourKeywords(settings: StatsSettings, keywords: unknown): StatsSettings {
+  const extra = (Array.isArray(keywords) ? keywords : [])
+    .filter((k): k is string => typeof k === 'string')
+    .map((k) => k.trim().toLowerCase())
+    .filter(Boolean)
+  if (!extra.length) return settings
+  return {
+    ...settings,
+    honourCategories: settings.honourCategories.map((rule) =>
+      rule.label === ASSOCIATION_HONOUR_LABEL ? { ...rule, keywords: Array.from(new Set([...rule.keywords, ...extra])) } : rule,
+    ),
+  }
+}
 
 export const DEFAULT_STATS_SETTINGS: StatsSettings = {
   defaultIncludedCategories: DEFAULT_INCLUDED_CATEGORIES,
