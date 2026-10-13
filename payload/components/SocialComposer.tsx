@@ -1,36 +1,26 @@
 'use client'
 
-import { toast } from '@payloadcms/ui'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { saveCaptionSettings, saveDraft, schedulePost } from '@/lib/social-actions'
-import type { Network } from '@/lib/social/adapters/types'
-import { composeCopyText, templatesToSave } from '@/lib/social/caption'
-import { composeFinalText, networkLength, validateCaption } from '@/lib/social/final-text'
-import { scheduleBlockers } from '@/lib/social/post-spec'
-import { checkScheduleTime, insideWindow, quietHoursText, type PublishWindow } from '@/lib/social/schedule-time'
-import { NOT_AVAILABLE } from '@/lib/social/queue-view'
+import { composeCopyText } from '@/lib/social/caption'
+import { composerSearch, dropUnknownSources, parseComposerUrl } from '@/lib/social/url-state'
 import { SIZE_KEYS, SIZES, STYLE_KEYS, STYLE_LABELS, type GraphicType, type SizeKey, type SourceChoice, type SourceList, type StyleKey } from '@/lib/social/types'
+import type { CaptionSettings, Scheduling } from './SocialPanels'
+import { useHydrated } from './useHydrated'
+
+// The lower panels are only needed once a picture is chosen, so their script loads on demand.
+const panelSkeleton = (label: string) => function PanelSkeleton() { return <section className="club-panel" data-admin-skeleton="panel" aria-busy="true"><p className="club-muted" role="status">{label}</p></section> }
+const SchedulePanel = dynamic(() => import('./SocialPanels').then((m) => m.SchedulePanel), { ssr: false, loading: panelSkeleton('Getting the scheduling options ready...') })
+const CaptionPanel = dynamic(() => import('./SocialPanels').then((m) => m.CaptionPanel), { ssr: false, loading: panelSkeleton('Getting the caption settings ready...') })
 
 type TypeTile = { key: GraphicType; label: string; hint: string; textField: { label: string; hint: string } | null }
-type NetworkChoice = { id: Network; label: string; sizes: SizeKey[]; maxChars: number; maxHashtags: number }
-type EditPost = { id: number; status: string; caption: string; hashtags: string[]; targets: { network: Network; size: SizeKey }[]; date: string; time: string }
-type Scheduling = {
-  networks: NetworkChoice[]
-  unavailable: { id: string; label: string }[]
-  siteUrlOk: boolean
-  tz: string
-  locale: string
-  window: PublishWindow
-  defaultDate: string
-  heartbeat: { lastChecked: string; warning: string | null; cadence: string | null }
-  edit: EditPost | null
-}
 type Props = {
   scheduling: Scheduling
   api: string
   types: TypeTile[]
   defaultStyle: StyleKey
-  settings: { hashtags: string[]; signOff: string; templates: Record<GraphicType, string> }
+  settings: CaptionSettings
   filePrefix: string
   initial: { type: GraphicType | ''; source: string; style: StyleKey | null; size: SizeKey; text: string }
 }
@@ -64,6 +54,7 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
   // Editing a saved post keeps its caption the first time the standard one arrives.
   const keepCaption = useRef(Boolean(scheduling.edit))
   const tile = types.find((t) => t.key === type) ?? null
+  const hydrated = useHydrated()
 
   const params = useCallback((extra: Record<string, string> = {}) => {
     const q = new URLSearchParams({ type, source, size, style, ...extra })
@@ -72,17 +63,33 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
   }, [type, source, size, style, text])
   const key = `${type}|${source}|${style}|${size}|${text}`
 
-  // The choice lives in the address, so a refresh or a shared link keeps it.
+  // The address is the source of truth, but it is read here, after mount, and never while rendering: the server and the first client
+  // render both use the neutral state from props, so there is no hydration mismatch. (On a hard load the server can receive the
+  // query late or empty, which is why the composer does not depend on it.) The address is rewritten only after this read.
+  const [urlRead, setUrlRead] = useState(false)
+  const router = useRouter()
+  const fromUrl = useRef(false)
   useEffect(() => {
-    const q = new URLSearchParams()
-    if (type) q.set('type', type)
-    if (source) q.set('source', source)
-    if (source) q.set('style', style)
-    if (source) q.set('size', size)
-    if (text) q.set('text', text)
-    if (scheduling.edit) q.set('post', String(scheduling.edit.id))
-    window.history.replaceState(null, '', `${window.location.pathname}${q.size ? `?${q}` : ''}`)
-  }, [type, source, style, size, text, scheduling.edit])
+    const url = parseComposerUrl(window.location.search)
+    if (!scheduling.edit && url.type) {
+      fromUrl.current = true
+      setType(url.type)
+      setSource(url.source)
+      if (url.style) setStyle(url.style)
+      if (url.size) setSize(url.size)
+      setText(url.text)
+    }
+    // A saved post opened by a link whose query did not reach the server: ask the server again once, now that the address is known.
+    if (url.post !== null && !scheduling.edit) router.refresh()
+    setUrlRead(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on mount
+  }, [])
+
+  useEffect(() => {
+    if (!urlRead) return
+    const next = composerSearch(window.location.search, { type, source, style, size, text, post: scheduling.edit?.id ?? null })
+    if (next !== window.location.search) window.history.replaceState(null, '', `${window.location.pathname}${next}`)
+  }, [urlRead, type, source, style, size, text, scheduling.edit])
 
   // Step 1: what can be picked for this type.
   useEffect(() => {
@@ -97,7 +104,16 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
         if (!r.ok) throw new Error('Could not load the choices.')
         return (await r.json()) as SourceList
       })
-      .then((j) => live && setList(j))
+      .then((j) => {
+        if (!live) return
+        setList(j)
+        // Ids that came from the address and are not on offer are dropped (potm lists games first, so it cannot be checked here).
+        if (fromUrl.current && type !== 'potm') {
+          fromUrl.current = false
+          const known = new Set(j.choices.flatMap((c) => [c.id, ...(c.variants?.map((v) => v.id) ?? [])]))
+          setSource((current) => dropUnknownSources(current, known))
+        }
+      })
       .catch((e: Error) => live && setListError(e.message))
     return () => { live = false }
   }, [api, type, game])
@@ -188,12 +204,12 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
   const multiIds = list?.multi && source ? source.split(',') : []
 
   return (
-    <div className="club-stack social">
+    <div className="club-stack social" aria-busy={!hydrated}>
       <section aria-labelledby="social-step-1" className="club-panel">
         <h2 id="social-step-1" className="club-field__title">1. What do you want to post?</h2>
         <div className="social__tiles" role="group" aria-label="Kinds of picture">
           {types.map((t) => (
-            <button key={t.key} type="button" className="social__tile" aria-pressed={t.key === type} onClick={() => pick(t.key)}>
+            <button key={t.key} type="button" className="social__tile" aria-pressed={t.key === type} disabled={!hydrated} onClick={() => pick(t.key)}>
               <strong>{t.label}</strong>
               <span className="club-muted">{t.hint}</span>
             </button>
@@ -288,8 +304,8 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
         <section aria-labelledby="social-step-3" className="club-panel">
           <h2 id="social-step-3" className="club-field__title">3. Use it</h2>
           <div className="club-actions">
-            <button type="button" className="social__button social__button--primary" onClick={share} disabled={preview?.state !== 'ready'}>Share or save to Photos</button>
-            <button type="button" className="social__button" onClick={download} disabled={preview?.state !== 'ready'}>Download picture (PNG)</button>
+            <button type="button" className="social__button social__button--primary" onClick={share} disabled={!hydrated || preview?.state !== 'ready'}>Share or save to Photos</button>
+            <button type="button" className="social__button" onClick={download} disabled={!hydrated || preview?.state !== 'ready'}>Download picture (PNG)</button>
           </div>
           <label className="social__field">
             <span className="club-field__title">Caption</span>
@@ -324,152 +340,5 @@ export function SocialComposer({ api, types, defaultStyle, settings, filePrefix,
 
       <CaptionPanel type={type} settings={settings} />
     </div>
-  )
-}
-
-/** The editor-writable settings: hashtags, the sign-off line and the wording of each caption. */
-function CaptionPanel({ type, settings }: { type: GraphicType | ''; settings: Props['settings'] }) {
-  const [tags, setTags] = useState(settings.hashtags.join(' '))
-  const [signOff, setSignOff] = useState(settings.signOff)
-  const [templates, setTemplates] = useState(settings.templates)
-  const [busy, setBusy] = useState(false)
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setBusy(true)
-    const res = await saveCaptionSettings({ hashtags: tags.split(/[\s,]+/).filter(Boolean), signOff, captionTemplates: templatesToSave(templates) })
-    setBusy(false)
-    if (res.ok) toast.success('Saved.')
-    else toast.error(res.error)
-  }
-  return (
-    <details className="club-panel">
-      <summary className="club-field__title">Captions and hashtags</summary>
-      <form onSubmit={save} className="club-stack">
-        <label className="social__field">
-          <span className="club-field__title">Hashtags</span>
-          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} />
-          <span className="club-muted">Separate with spaces, without the # sign.</span>
-        </label>
-        <label className="social__field">
-          <span className="club-field__title">Sign-off line</span>
-          <input type="text" value={signOff} maxLength={200} onChange={(e) => setSignOff(e.target.value)} />
-        </label>
-        {(Object.keys(templates) as GraphicType[]).filter((t) => !type || t === type).map((t) => (
-          <label key={t} className="social__field">
-            <span className="club-field__title">Caption wording: {t.replace('-', ' ')}</span>
-            <textarea rows={4} maxLength={600} value={templates[t]} onChange={(e) => setTemplates({ ...templates, [t]: e.target.value })} />
-          </label>
-        ))}
-        <p className="club-muted">Words in curly brackets, such as {'{club}'}, {'{opponent}'} or {'{link}'}, are filled in from the game. A line with a missing value is left out.</p>
-        <button type="submit" className="social__button social__button--primary" disabled={busy}>Save captions and hashtags</button>
-      </form>
-    </details>
-  )
-}
-
-/**
- * Step 4: save a draft or schedule (wave C spec 4.1). Scheduling is the human approval. Only networks the site can really send to are
- * offered; the others say so and the download and copy buttons above are the way to post. Every reason Schedule is off is written out.
- */
-function SchedulePanel({ scheduling: s, signOff, tags, caption, spec }: { scheduling: Scheduling; signOff: string; tags: string[]; caption: string; spec: { type: GraphicType | ''; source: string; text: string; style: StyleKey | null } }) {
-  const edit = s.edit
-  const [picked, setPicked] = useState<Record<string, SizeKey>>(() => Object.fromEntries((edit?.targets ?? []).map((t) => [t.network, t.size])))
-  const [date, setDate] = useState(edit?.date || s.defaultDate)
-  const [time, setTime] = useState(edit?.time || '18:30')
-  const [outside, setOutside] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const selected = Object.entries(picked).map(([network, size]) => ({ network: network as Network, size }))
-  const finals = selected.map((t) => {
-    const net = s.networks.find((n) => n.id === t.network)
-    if (!net) return { network: t.network, label: t.network, text: '', length: 0, max: 0, errors: [] as string[], warnings: [] as string[] }
-    const text = composeFinalText({ body: caption, signOff, hashtags: tags, limits: net })
-    const check = validateCaption(net.id, text, net, net.label)
-    return { network: net.id, label: net.label, text, length: networkLength(net.id, text), max: net.maxChars, ...check }
-  })
-  const timeCheck = date && time ? checkScheduleTime({ date, time, tz: s.tz, now: new Date(), window: s.window, allowOutside: outside }) : ({ ok: false, error: 'Choose a date and time to post.' } as const)
-  const needsTick = Boolean(time) && !insideWindow(time, s.window)
-  const blockers = scheduleBlockers({ body: caption, networks: s.networks, selected, siteUrlOk: s.siteUrlOk, captionErrors: finals.flatMap((f) => f.errors), timeError: timeCheck.ok ? null : timeCheck.error })
-  const form = () => ({ id: edit?.id, type: spec.type, source: spec.source, text: spec.text, style: spec.style, caption, hashtags: tags, targets: selected, date, time, allowOutside: outside })
-
-  const go = async (mode: 'draft' | 'schedule') => {
-    setBusy(true)
-    setError('')
-    const r = mode === 'draft' ? await saveDraft(form()) : await schedulePost(form())
-    setBusy(false)
-    if (!r.ok) { setError(r.error); toast.error(r.error); return }
-    toast.success(mode === 'draft' ? 'Saved as a draft.' : 'Scheduled.')
-    // A full reload on purpose: it clears the composer and shows the queue with the new post.
-    window.location.replace(`${window.location.pathname}?tab=${mode === 'draft' ? 'drafts' : 'scheduled'}`)
-  }
-
-  return (
-    <section aria-labelledby="social-step-4" className="club-panel">
-      <h2 id="social-step-4" className="club-field__title">4. Schedule it</h2>
-      {edit?.status === 'scheduled' && <p role="status">Saving changes moves this post back to a draft. Schedule it again when you are happy with it.</p>}
-      {s.networks.length > 0 ? (
-        <fieldset className="social__list">
-          <legend className="club-field__title">Where should it go?</legend>
-          {s.networks.map((n) => (
-            <div key={n.id} className="social__net">
-              <label className="social__choice">
-                <input type="checkbox" checked={n.id in picked} onChange={(e) => setPicked((p) => { const next = { ...p }; if (e.target.checked) next[n.id] = n.sizes[0]; else delete next[n.id]; return next })} />
-                <span>{n.label}</span>
-              </label>
-              {n.id in picked && (
-                <label>
-                  <span className="sr-only">Picture size for {n.label}</span>
-                  <select value={picked[n.id]} onChange={(e) => setPicked((p) => ({ ...p, [n.id]: e.target.value as SizeKey }))}>
-                    {n.sizes.map((z) => <option key={z} value={z}>{SIZES[z].label}</option>)}
-                  </select>
-                </label>
-              )}
-            </div>
-          ))}
-        </fieldset>
-      ) : (
-        <p>No network is connected for scheduling yet. Download the picture above and post it by hand.</p>
-      )}
-      {s.unavailable.map((n) => <p key={n.id} className="club-muted">{NOT_AVAILABLE(n.label)}</p>)}
-
-      {finals.filter((f) => f.text).map((f) => (
-        <div key={f.network} className="social__field">
-          <span className="club-field__title">{f.label}: the words that will go out</span>
-          <pre className="social__final">{f.text}</pre>
-          <span className="club-muted">{f.length} of {f.max} characters</span>
-          {f.warnings.map((w) => <span key={w} className="club-muted">{w}</span>)}
-        </div>
-      ))}
-
-      <div className="social__when">
-        <label className="social__field">
-          <span className="club-field__title">Post on</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
-        <label className="social__field">
-          <span className="club-field__title">At (club time)</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        </label>
-      </div>
-      <p className="club-muted">{s.heartbeat.lastChecked}. {s.heartbeat.cadence ?? 'Posts go out when the scheduler next checks. Until it has been seen running more than once, assume a post may go out up to a day after the time you pick.'}</p>
-      {s.heartbeat.warning && <p role="alert"><span aria-hidden="true">! </span>{s.heartbeat.warning}</p>}
-      {needsTick && (
-        <label className="social__choice">
-          <input type="checkbox" checked={outside} onChange={(e) => setOutside(e.target.checked)} />
-          <span>{quietHoursText(s.window, s.locale)}</span>
-        </label>
-      )}
-
-      {blockers.length > 0 && (
-        <ul className="social__blockers" id="social-blockers" role="status">
-          {blockers.map((b) => <li key={b}>{b}</li>)}
-        </ul>
-      )}
-      {error && <p role="alert">{error}</p>}
-      <div className="club-actions">
-        <button type="button" className="social__button" disabled={busy || !spec.type} onClick={() => go('draft')}>Save as draft</button>
-        <button type="button" className="social__button social__button--primary" disabled={busy || blockers.length > 0} aria-describedby={blockers.length ? 'social-blockers' : undefined} onClick={() => go('schedule')}>Schedule</button>
-      </div>
-    </section>
   )
 }

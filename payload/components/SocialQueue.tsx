@@ -2,10 +2,11 @@
 
 import { toast } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { deleteQueuedPost, markNetworkNotPosted, markNetworkPosted, pauseScheduledPost, retryFailedPost } from '@/lib/social-actions'
 import type { QueueRowView } from '@/lib/social/queue-rows'
-import { TABS, type Tab } from '@/lib/social/queue-view'
+import { TABS, isTab, type Tab } from '@/lib/social/queue-view'
+import { useHydrated } from './useHydrated'
 
 type Props = {
   api: string
@@ -31,6 +32,13 @@ export function SocialQueue({ api, rows, initialTab, heartbeat, editBase }: Prop
   const router = useRouter()
   const [tab, setTab] = useState<Tab>(initialTab)
   const [pending, start] = useTransition()
+  const hydrated = useHydrated()
+  // The tab in the address wins over the server's guess, which can arrive without the query on a hard load. Read after mount only.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab')
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from the address bar (an external system) after mount, on purpose
+    if (isTab(wanted)) setTab(wanted)
+  }, [])
   const [message, setMessage] = useState('')
   const counts = Object.fromEntries(TABS.map((t) => [t.key, rows.filter((r) => r.tab === t.key).length])) as Record<Tab, number>
   const shown = rows.filter((r) => r.tab === tab)
@@ -72,7 +80,7 @@ export function SocialQueue({ api, rows, initialTab, heartbeat, editBase }: Prop
       {heartbeat.warning && <p role="alert" className="social-queue__warn"><span aria-hidden="true">! </span>{heartbeat.warning}</p>}
       <div role="group" aria-label="Show posts" className="social__tabs">
         {TABS.map((t) => (
-          <button key={t.key} type="button" className="social__tab" aria-pressed={tab === t.key} onClick={() => setTab(t.key)}>
+          <button key={t.key} type="button" className="social__tab" aria-pressed={tab === t.key} disabled={!hydrated} onClick={() => setTab(t.key)}>
             {t.label} <span className="club-muted">({counts[t.key]})</span>
           </button>
         ))}
