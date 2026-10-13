@@ -15,6 +15,24 @@ const CTX = { disableRevalidate: true } as const
 const SVG_OK = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="#2a6"/><circle cx="40" cy="40" r="24" fill="#fff"/></svg>'
 const SVG_BAD = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><image href="file:///etc/passwd" width="20" height="20"/></svg>'
 
+describe('seed:demo social additions are idempotent', () => {
+  it('creates the SVG, PNG and WebP sponsors once, and every one of them is drawable', async () => {
+    const payload = await getTestPayload()
+    await clearCollection(payload, 'sponsors')
+    await clearCollection(payload, 'media')
+    const { seedFormatSponsors } = await import('@/payload/seed/demo-social')
+    expect(await seedFormatSponsors(payload)).toBe(3)
+    expect(await seedFormatSponsors(payload)).toBe(0)
+    expect((await payload.count({ collection: 'sponsors', overrideAccess: true })).totalDocs).toBe(3)
+    const { sponsorLogo } = await import('@/lib/social/sources/logos')
+    const docs = await payload.find({ collection: 'sponsors', depth: 1, overrideAccess: true, limit: 10 })
+    for (const d of docs.docs) expect('dataUri' in (await sponsorLogo(payload, d.logo)), d.name).toBe(true)
+    await clearCollection(payload, 'sponsors')
+    await clearCollection(payload, 'media')
+    await destroyTestPayload(payload)
+  }, 60_000)
+})
+
 describe('sponsor logos and the logo endpoint', () => {
   let payload: Payload
   let admin: string, editor: string, selector: string

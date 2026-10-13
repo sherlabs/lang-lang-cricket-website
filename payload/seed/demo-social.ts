@@ -5,6 +5,7 @@ import { importedGameId, type ImportedGame, type MatchPlayerRow } from '../../li
 import { matchTables } from '../../lib/match-store/db'
 import { playerTables } from '../../lib/players/db'
 import { writeBundle } from '../../lib/match-store/write'
+import sharp from 'sharp'
 import { demoLogoPng } from './demo-png'
 import { seedSocialGlobal } from './seed-social-global'
 
@@ -38,6 +39,60 @@ async function seedSponsors(payload: Payload): Promise<number> {
   return n
 }
 
+/** Neutral logos made in code: abstract shapes and two initials, as SVG text. No real brand, no download. */
+const logoSvg = (initials: string, a: string, b: string): string =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240"><rect width="480" height="240" rx="24" fill="${a}"/><circle cx="120" cy="120" r="78" fill="${b}"/><rect x="230" y="70" width="190" height="24" rx="12" fill="${b}"/><rect x="230" y="116" width="140" height="24" rx="12" fill="${b}" opacity="0.7"/><rect x="230" y="162" width="100" height="24" rx="12" fill="${b}" opacity="0.45"/><text x="120" y="146" font-family="sans-serif" font-size="72" font-weight="700" text-anchor="middle" fill="${a}">${initials}</text></svg>`
+
+/**
+ * Sponsors that exercise the logo pipeline: one SVG, one PNG made by sharp, one WebP. Named "Sample ..." (not "Demo ...") because the demo
+ * posting queue picks its sponsors by the "Demo" prefix. Idempotent by name.
+ */
+export async function seedFormatSponsors(payload: Payload): Promise<number> {
+  const defs = [
+    { name: 'Sample Studio', tier: 'Silver', mime: 'image/svg+xml', file: 'sample-studio.svg', data: async () => Buffer.from(logoSvg('SS', '#1f4e79', '#f2f2f2')) },
+    { name: 'Sample Orchard', tier: 'Gold', mime: 'image/png', file: 'sample-orchard.png', data: async () => sharp(Buffer.from(logoSvg('SO', '#2f6b3a', '#f6efe0'))).png().toBuffer() },
+    { name: 'Sample Print Co', tier: 'Bronze', mime: 'image/webp', file: 'sample-print-co.webp', data: async () => sharp(Buffer.from(logoSvg('PC', '#7a3b1d', '#fbe9d0'))).webp().toBuffer() },
+  ]
+  let n = 0
+  for (const d of defs) {
+    if ((await payload.count({ collection: 'sponsors', where: { name: { equals: d.name } }, overrideAccess: true })).totalDocs > 0) continue
+    const data = await d.data()
+    const media = await payload.create({ collection: 'media', data: { alt: `${d.name} logo` }, file: { data, mimetype: d.mime, name: d.file, size: data.length }, overrideAccess: true, context: CTX })
+    await payload.create({ collection: 'sponsors', data: { name: d.name, tier: d.tier as 'Silver', logo: media.id, linkUrl: '', sortOrder: 70 + n }, overrideAccess: true, context: CTX })
+    n++
+  }
+  return n
+}
+
+/**
+ * A second stored game so the picker has more than one row: a long opposition name and a grade with a competition numbering prefix, both
+ * invented. Keyed by its import batch, so it is created once.
+ */
+export async function seedDemoSecondGame(payload: Payload): Promise<void> {
+  if ((await payload.count({ collection: 'matches', where: { importBatch: { equals: 'imp-demo-social-2' } }, overrideAccess: true })).totalDocs > 0) return
+  const found = await payload.find({ collection: 'players', where: { slug: { in: ['riley-starr', 'jamie-junior', 'casey-consent'] } }, limit: 3, depth: 0, overrideAccess: true })
+  const idOf = (slug: string) => found.docs.find((p) => p.slug === slug)?.id
+  const [riley, jamie, casey] = [idOf('riley-starr'), idOf('jamie-junior'), idOf('casey-consent')]
+  if (riley === undefined || jamie === undefined || casey === undefined) return
+  const season = MATCH_SEED_SEASONS[MATCH_SEED_SEASONS.length - 1]
+  const date = isoDay(new Date(Date.now() - 10 * 86_400_000))
+  const row = (n: number, first: string, last: string, over: Partial<MatchPlayerRow>): MatchPlayerRow => ({
+    row: n, firstName: first, lastName: last, nameKey: `${first}|${last}`.toLowerCase(), batted: true, runs: 0, balls: null, fours: null, sixes: null, howOut: 'bowled',
+    bowlBalls: null, maidens: null, runsConceded: null, wickets: null, ...over,
+  })
+  const opponent = 'Northern Districts Cricket Association Seniors Reserve'
+  const game: ImportedGame = {
+    gameId: importedGameId({ date, gradeName: '2. Demo District Seniors', teamName: 'Demo CC District Seniors', opponent, gameRef: null }),
+    firstRow: 2, date, seasonStartYear: season.startYear, seasonName: season.name, gradeName: '2. Demo District Seniors', teamName: 'Demo CC District Seniors', teamSlug: 'demo-district', opponent, gameRef: null,
+    format: 'one_day', result: 'lost', teamRuns: 141, teamWickets: 10, oppRuns: 142, oppWickets: 6,
+    players: [row(2, 'Riley', 'Starr', { runs: 47, balls: 52, fours: 5, howOut: 'caught' }), row(3, 'Jamie', 'Junior', { runs: 22, balls: 31, howOut: 'bowled' }), row(4, 'Casey', 'Consent', { runs: 9, balls: 14, howOut: 'lbw', bowlBalls: 54, runsConceded: 41, wickets: 2, maidens: 1 })],
+  }
+  await payload.db.drizzle.transaction((tx: unknown) =>
+    writeBundle(tx, matchTables(payload), buildImportedBundle(game), new Map([['riley|starr', riley], ['jamie|junior', jamie], ['casey|consent', casey]]), { source: 'import', importBatch: 'imp-demo-social-2' }),
+  )
+  console.log('[seed-demo] social demo game 2: long opposition name and a numbered grade created')
+}
+
 /**
  * Toss details for the demo game (the club won the toss and chose to bat), so the Toss picture has one game to draw. The games the
  * selection demo stores have no toss at all, so the chooser lists exactly one game. Idempotent: only a game with no toss yet is touched.
@@ -58,7 +113,7 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10)
  */
 export async function seedDemoSocial(payload: Payload): Promise<void> {
   console.log(`[seed-demo] social settings: ${await seedSocialGlobal(payload)}`)
-  console.log(`[seed-demo] social sponsors: ${await seedSponsors(payload)} created`)
+  console.log(`[seed-demo] social sponsors: ${await seedSponsors(payload)} created, ${await seedFormatSponsors(payload)} with SVG, PNG and WebP logos`)
   if ((await payload.count({ collection: 'matches', overrideAccess: true })).totalDocs === 0) {
     console.log('[seed-demo] social demo game: no stored matches, skipped')
     return
@@ -66,6 +121,7 @@ export async function seedDemoSocial(payload: Payload): Promise<void> {
   if ((await payload.count({ collection: 'players', where: { slug: { equals: 'riley-starr' } }, overrideAccess: true })).totalDocs > 0) {
     console.log('[seed-demo] social demo game: already present, skipped')
     await seedDemoToss(payload)
+    await seedDemoSecondGame(payload)
     return
   }
   const season = MATCH_SEED_SEASONS[MATCH_SEED_SEASONS.length - 1]
@@ -105,6 +161,7 @@ export async function seedDemoSocial(payload: Payload): Promise<void> {
   )
   console.log('[seed-demo] social demo game: 1 stored game with a 112 not out, and two juniors (one with the social opt-in) created')
   await seedDemoToss(payload)
+  await seedDemoSecondGame(payload)
 }
 
 type SeedTarget = { network: string; size: string; status: string; attempts?: number; finalText?: string | null; nextAttemptAt?: string | null; lastError?: string; errorCode?: string; remoteId?: string; manual?: boolean; publishedAt?: string }
