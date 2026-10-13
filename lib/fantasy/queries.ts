@@ -1,10 +1,12 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 import { cookies, headers } from 'next/headers'
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 import { getPayloadClient } from '@/lib/payload/client'
-import { getSeasonFacts } from '@/lib/match-store/stats-queries'
+import { getSeasonFacts, NO_YEAR_SEASON } from '@/lib/match-store/stats-queries'
+import { mergeFactSets } from '@/lib/stats/match/facts'
 import { ALL_STATS_TAGS } from '@/lib/stats/tags'
 import { isStaffUser } from '@/payload/access'
 import { fantasyCookieName } from './link'
@@ -43,10 +45,14 @@ type SeasonRoundData = { inputs: RoundInputs; points: Record<string, [number, nu
 async function loadSeasonRoundData(seasonId: number, seasonStartYear: number, scoring: ScoringTable): Promise<SeasonRoundData> {
   const payload = await getPayloadClient()
   const inputs = await loadRoundInputs(payload, { id: seasonId, seasonStartYear })
-  const set = await getSeasonFacts(seasonStartYear)
+  // Stored games whose season name has no year sit in a separate blob; they score when their date falls in a round of this season.
+  const set = mergeFactSets([await getSeasonFacts(seasonStartYear), await getSeasonFacts(NO_YEAR_SEASON)])
   const juniors = await payload.find({ collection: 'players', where: { isJunior: { equals: true } }, limit: 5000, pagination: false, depth: 0, joins: false, overrideAccess: true, select: { slug: true } })
   const junior = new Set(juniors.docs.map((p) => p.id))
-  const eligible = new Set(set.appearances.map((a) => a.player).filter((p) => !junior.has(p)))
+  // Players the committee took out of the game (this season's price rows) score nothing in any round, past ones included.
+  const out = await payload.find({ collection: 'fantasy-prices', where: { and: [{ season: { equals: seasonId } }, { available: { equals: false } }] } as Where, limit: 5000, pagination: false, depth: 0, overrideAccess: true, select: { player: true } })
+  const takenOut = new Set(out.docs.map((d) => (typeof d.player === 'object' && d.player ? (d.player as { id: number }).id : d.player) as number))
+  const eligible = new Set(set.appearances.map((a) => a.player).filter((p) => !junior.has(p) && !takenOut.has(p)))
   const keys = new Set(inputs.fixtures.filter((f) => f.status !== 'removed').map((f) => weekendKey(f.localDate)))
   const points: Record<string, [number, number][]> = {}
   for (const key of keys) points[key] = [...roundPoints(set, key, scoring, eligible)].map(([p, v]) => [p, v.points])
@@ -60,10 +66,13 @@ export const roundLabel = (key: string): string => `Weekend of ${labelFormat.for
 
 const summarise = (r: RoundView): RoundSummary => ({ key: r.key, label: roundLabel(r.key), status: r.status, provisional: r.provisional, closedByCommittee: r.closedByCommittee, locksAt: r.locksAt.toISOString() })
 
+/** Live round inputs, read once per request (the page, its metadata and the team view all ask). */
+const freshRoundInputs = cache(async (id: number, seasonStartYear: number): Promise<RoundInputs> => loadRoundInputs(await getPayloadClient(), { id, seasonStartYear }))
+
 export async function getSeasonRounds(payload: Payload, season: FantasySeason, now: Date = new Date()): Promise<{ rounds: RoundView[]; summaries: RoundSummary[]; points: Map<string, Map<number, number>>; reasons: Map<string, string> }> {
-  const data = await fantasyCached(['fantasy-round-data', 'v1', String(season.id), JSON.stringify(season.rules.scoring)], () => loadSeasonRoundData(season.id, season.seasonStartYear, season.rules.scoring))
+  const data = await fantasyCached(['fantasy-round-data', 'v2', String(season.id), JSON.stringify(season.rules.scoring)], () => loadSeasonRoundData(season.id, season.seasonStartYear, season.rules.scoring))
   // Round state is read fresh (a committee change must show at once); only the points come from the cache.
-  const fresh = await loadRoundInputs(payload, season)
+  const fresh = await freshRoundInputs(season.id, season.seasonStartYear)
   const rounds = buildRounds(fresh.fixtures, fresh.states, new Set(fresh.storedGameIds), now)
   const points = new Map(Object.entries(data.points).map(([k, v]) => [k, new Map(v)]))
   const reasons = new Map(fresh.states.filter((s) => s.scoredManually && s.scoredReason).map((s) => [s.weekendKey, s.scoredReason as string]))
@@ -88,7 +97,12 @@ export const canSeeLeaderboard = (settings: Pick<FantasySettings, 'publicLeaderb
 export type Overview = { competitionName: string; season: { name: string; rules: FantasyRules }; round: RoundSummary | null; leaderboardOpen: boolean; managers: number }
 
 /** What `/fantasy` shows. Null (a plain 404) while the competition is off or no season is open. */
-export async function getOverview(now: Date = new Date()): Promise<{ overview: Overview; settings: FantasySettings; season: FantasySeason } | null> {
+type OverviewResult = { overview: Overview; settings: FantasySettings; season: FantasySeason } | null
+const overviewOnce = cache((): Promise<OverviewResult> => loadOverview(new Date()))
+/** Without an explicit clock the result is shared within one request (`generateMetadata` and the page both call it). */
+export const getOverview = (now?: Date): Promise<OverviewResult> => (now ? loadOverview(now) : overviewOnce())
+
+async function loadOverview(now: Date): Promise<OverviewResult> {
   const payload = await getPayloadClient()
   const live = await getPlayableCompetition(payload)
   if (!live) return null

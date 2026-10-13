@@ -39,16 +39,23 @@ describe('computePrices', () => {
     expect(by.get(6)!.basis.thin).toBe(true)
     expect(by.get(1)!.basis.thin).toBe(false)
   })
-  it('breaks ties on player id so the same inputs give the same output', () => {
-    const r = computePrices([{ id: 9, games: 5, points: 50 }, { id: 3, games: 5, points: 50 }], P)
-    const by = new Map(r.map((x) => [x.id, x.priceTenths]))
-    expect(by.get(3)).toBeLessThan(by.get(9)!)
+  it('gives tied players the same price whatever their id, and is deterministic', () => {
+    const input = [{ id: 9, games: 5, points: 50 }, { id: 3, games: 5, points: 50 }, { id: 5, games: 5, points: 5 }, { id: 6, games: 5, points: 500 }]
+    const by = new Map(computePrices(input, P).map((x) => [x.id, x.priceTenths]))
+    expect(by.get(3)).toBe(by.get(9))
+    expect(computePrices(input, P)).toEqual(computePrices([...input].reverse(), P).sort((a, b) => input.findIndex((i) => i.id === a.id) - input.findIndex((i) => i.id === b.id)))
+  })
+  it('players with no data all sit at the same middle price, wherever their id falls', () => {
+    const data = Array.from({ length: 10 }, (_, i) => ({ id: 100 + i, games: 10, points: 100 + i * 40 }))
+    const none = Array.from({ length: 20 }, (_, i) => ({ id: i + 1, games: 0, points: 0 }))
+    const prices = new Set(computePrices([...none, ...data], P).filter((r) => r.id <= 20).map((r) => r.priceTenths))
+    expect(prices.size).toBe(1)
   })
   it('a single player is priced in the middle', () => expect(computePrices([{ id: 1, games: 5, points: 100 }], P)[0].priceTenths).toBe(middlePrice(P)))
   it('an empty pool prices nobody and a flat pool is not extreme', () => {
     expect(computePrices([], P)).toEqual([])
     const flat = computePrices([{ id: 1, games: 5, points: 50 }, { id: 2, games: 5, points: 50 }], P)
-    expect(flat.map((r) => r.priceTenths)).toEqual([40, 140])
+    expect(flat.map((r) => r.priceTenths)).toEqual([middlePrice(P), middlePrice(P)])
   })
   it('stores the inputs behind every price', () => {
     const r = computePrices(pool, P)[0]

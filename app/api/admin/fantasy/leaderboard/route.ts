@@ -2,7 +2,7 @@ import { EXPORT_FILENAME_PREFIX } from '@/config/site'
 import { getClub } from '@/lib/club'
 import { leaderboardCsv } from '@/lib/fantasy/csv'
 import { computeLeaderboard } from '@/lib/fantasy/queries'
-import { getWorkingSeason, getOpenSeason } from '@/lib/fantasy/store'
+import { getViewedSeason } from '@/lib/fantasy/store'
 import { getPayloadClient } from '@/lib/payload/client'
 import { requireStaff } from '@/lib/payload/staff-route'
 import { slugify } from '@/lib/slugify'
@@ -19,11 +19,11 @@ export async function GET(request: Request): Promise<Response> {
   if ('response' in gate) return gate.response
   if (!isAdminUser(gate.user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
   const payload = await getPayloadClient()
-  const season = (await getOpenSeason(payload)) ?? (await getWorkingSeason(payload))
+  const season = await getViewedSeason(payload)
   if (!season) return Response.json({ error: 'No season' }, { status: 404 })
   const lb = await computeLeaderboard(payload, season, { includeDisabled: false })
   const club = await getClub()
-  const body = leaderboardCsv(lb.rows.map((r) => ({ rank: r.rank, teamName: r.teamName, total: r.total, best: r.best, rounds: r.rounds.length, joined: r.joinedAt.slice(0, 10) })))
+  const body = leaderboardCsv(lb.rows.map((r) => ({ rank: r.rank, teamName: r.teamName, total: r.total, best: r.best, rounds: r.rounds.filter((x) => !x.provisional).length, joined: r.joinedAt.slice(0, 10) })))
   const prefix = EXPORT_FILENAME_PREFIX || slugify(club.shortName) || 'club'
   return new Response(body, {
     headers: {

@@ -139,7 +139,7 @@ export async function setAvailable(payload: Payload, user: unknown, season: Fant
 // ---- Season set up ----
 
 /** Creates the draft season for `year` (with last season's rules, or the built-in defaults) and calculates prices once. Idempotent for a year that exists. */
-export async function setUpSeason(payload: Payload, user: unknown, input: { year: number; name: string; facts: FactSet }): Promise<Outcome<{ season: FantasySeason; created: boolean }>> {
+export async function setUpSeason(payload: Payload, user: unknown, input: { year: number; name: string; facts: FactSet | ((rules: FantasyRules) => Promise<FactSet>) }): Promise<Outcome<{ season: FantasySeason; created: boolean }>> {
   if (!requireAdmin(user)) return DENIED
   if (!Number.isInteger(input.year) || input.year < 2000 || input.year > 2200) return { ok: false, message: 'Choose a season year.' }
   const name = input.name.trim().slice(0, 60)
@@ -151,7 +151,7 @@ export async function setUpSeason(payload: Payload, user: unknown, input: { year
   const rules = base ? base.rules : resolveRules(DEFAULT_RULES)
   const doc = await payload.create({ collection: 'fantasy-seasons', data: { seasonStartYear: input.year, name, status: 'draft', ...ruleData(rules), blockedWords: base?.blockedWords ?? [] } as never, overrideAccess: true, context: CTX })
   const season = toSeason(doc as never)
-  const r = await calculatePrices(payload, user, season, input.facts)
+  const r = await calculatePrices(payload, user, season, typeof input.facts === 'function' ? await input.facts(season.rules) : input.facts)
   if (!r.ok) return r
   await touch()
   return { ok: true, season, created: true }

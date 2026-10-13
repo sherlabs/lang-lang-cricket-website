@@ -13,7 +13,7 @@ import { changePin, identifyEntry, issueDeviceCode, registerEntry, rememberedEnt
 import { NAME_UNAVAILABLE } from '@/lib/fantasy/names'
 import { computeLeaderboard } from '@/lib/fantasy/queries'
 import { saveSquad } from '@/lib/fantasy/squads'
-import { getFantasySettings, getOpenSeason, getSeasonById, resolveFantasyLink, squadsOfEntry, type FantasySeason } from '@/lib/fantasy/store'
+import { getFantasySettings, getOpenSeason, getSeasonById, getViewedSeason, resolveFantasyLink, squadsOfEntry, type FantasySeason } from '@/lib/fantasy/store'
 import { fantasyToken } from '@/lib/fantasy/link'
 import { LOCKED_MESSAGE, NO_MATCH_MESSAGE } from '@/lib/fantasy/throttle'
 import { getFactsFor } from '@/lib/match-store/stats-queries'
@@ -419,6 +419,27 @@ describe('fantasy competition', () => {
     // The next save is for the following round.
     const next = await saveSquad(payload, season, e.id, { picks: pick(ELEVEN), captain: ids.c3 })
     expect(next).toMatchObject({ ok: true, round: sat4 })
+  })
+
+  it('a player taken out of the game scores nothing on the leaderboard, and putting them back restores it', async () => {
+    const before = (await computeLeaderboard(payload, season)).rows.find((r) => r.teamName === 'Alpha XI')!
+    expect(before.rounds[0].points).toBe(209)
+    await setAvailable(payload, admin, season, ids.c4, false)
+    const out = (await computeLeaderboard(payload, season)).rows.find((r) => r.teamName === 'Alpha XI')!
+    expect(out.rounds[0].points).toBe(209 - 74 * 2)
+    await setAvailable(payload, admin, season, ids.c4, true)
+    expect((await computeLeaderboard(payload, season)).rows.find((r) => r.teamName === 'Alpha XI')!.rounds[0].points).toBe(209)
+  })
+
+  it('a draft season beside the open one is not the season the committee works on, and Set up a season takes its facts after the copied rules', async () => {
+    const seen: number[] = []
+    const made = await setUpSeason(payload, admin, { year: year + 1, name: 'Next season', facts: async (rules) => { seen.push(rules.priceSeasonsBack); return getFactsFor([year]) } })
+    expect(made.ok).toBe(true)
+    expect(seen).toEqual([season.rules.priceSeasonsBack])
+    expect((await getViewedSeason(payload))?.id).toBe(season.id)
+    expect((await getViewedSeason(payload))?.status).toBe('open')
+    await payload.delete({ collection: 'fantasy-prices', where: { season: { equals: (made as { season: { id: number } }).season.id } }, overrideAccess: true, context: { disableRevalidate: true } })
+    await payload.delete({ collection: 'fantasy-seasons', id: (made as { season: { id: number } }).season.id, overrideAccess: true, context: { disableRevalidate: true } })
   })
 
   it('closing a season takes the competition off', async () => {

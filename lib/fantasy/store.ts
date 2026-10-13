@@ -58,6 +58,14 @@ export async function getWorkingSeason(payload: Payload): Promise<FantasySeason 
   return any.docs[0] ? toSeason(any.docs[0] as unknown as SeasonRow) : null
 }
 
+/**
+ * The season the committee view shows and every committee action targets: the open one, else the working one. Using one rule
+ * everywhere means an action never lands on a draft season sitting beside the open one the screen shows.
+ */
+export async function getViewedSeason(payload: Payload): Promise<FantasySeason | null> {
+  return (await getOpenSeason(payload)) ?? (await getWorkingSeason(payload))
+}
+
 export async function getSeasonById(payload: Payload, id: number): Promise<FantasySeason | null> {
   const d = await payload.findByID({ collection: 'fantasy-seasons', id, depth: 0, overrideAccess: true }).catch(() => null)
   return d ? toSeason(d as unknown as SeasonRow) : null

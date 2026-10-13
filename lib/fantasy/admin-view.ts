@@ -5,7 +5,7 @@ import { currentSeasonStartYear } from '@/lib/selection/season'
 import { fantasyToken } from './link'
 import { computeLeaderboard, getSeasonRounds, roundLabel } from './queries'
 import { currentRound } from './rounds'
-import { getFantasySettings, getOpenSeason, getWorkingSeason, listEntries, loadPool, savedCountForRound, type FantasySeason } from './store'
+import { getFantasySettings, getViewedSeason, listEntries, loadPool, savedCountForRound, type FantasySeason } from './store'
 
 /** Everything the Fantasy cricket view shows, read once on the server for a staff member. Counts only for this week's squads; no PIN data. */
 export type AdminData = {
@@ -25,7 +25,7 @@ const lockFormat = new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZON
 
 export async function getAdminData(payload: Payload, isAdmin: boolean, now: Date = new Date()): Promise<AdminData> {
   const settings = await getFantasySettings(payload)
-  const season = (await getOpenSeason(payload)) ?? (await getWorkingSeason(payload))
+  const season = await getViewedSeason(payload)
   const out: AdminData = {
     isAdmin,
     settings: { enabled: settings.enabled, publicLeaderboard: settings.publicLeaderboard, competitionName: settings.competitionName },

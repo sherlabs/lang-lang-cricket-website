@@ -3,18 +3,21 @@
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import type { TypedUser } from 'payload'
+import { SEASON_START_MONTH } from '@/config/site'
+import { filterFacts } from '@/lib/stats/match/facts'
+import { seasonWindow } from './rounds'
 import { getFactsFor, getMatchSeasonYears, NO_YEAR_SEASON } from '@/lib/match-store/stats-queries'
 import { getPayloadClient } from '@/lib/payload/client'
 import { isStaffUser } from '@/payload/access'
 import * as admin from './admin'
-import { getSeasonById, getWorkingSeason, type FantasySeason } from './store'
+import { getSeasonById, getViewedSeason, type FantasySeason } from './store'
 import type { FantasyRules } from './rules'
 import type { FactSet } from '../stats/match/types'
 
 /**
  * Server actions behind the Fantasy cricket view. Each is a public POST: the caller is re-derived from the session on every call and
  * checked again inside `lib/fantasy/admin.ts` (staff for the day to day, admin for rules, prices, opening and the link). Season is
- * always the one the server finds; a season id from the browser is only accepted when it names an existing season.
+ * always the one the server finds (the open season, else the working one, the same rule the view uses); a season id from the browser is only accepted when it names an existing season.
  */
 export type ActionResult<T = object> = ({ ok: true } & T) | { ok: false; message: string }
 const SIGN_IN = { ok: false, message: 'Please sign in again.' } as const
@@ -26,12 +29,23 @@ async function caller() {
 }
 
 async function seasonFor(payload: Awaited<ReturnType<typeof getPayloadClient>>, id?: number): Promise<FantasySeason | null> {
-  return typeof id === 'number' ? getSeasonById(payload, id) : getWorkingSeason(payload)
+  return typeof id === 'number' ? getSeasonById(payload, id) : getViewedSeason(payload)
 }
 
-async function factsFor(season: Pick<FantasySeason, 'seasonStartYear' | 'rules'>): Promise<FactSet> {
-  const years = (await getMatchSeasonYears()).filter((y) => y !== NO_YEAR_SEASON && y <= season.seasonStartYear).slice(0, season.rules.priceSeasonsBack)
-  return getFactsFor(years)
+/**
+ * Facts the prices are worked out from: the last `priceSeasonsBack` stored seasons up to the season's year, plus stored games with
+ * no year in their season name whose date falls inside that span (getFactsFor adds the undated blob; the date filter keeps it honest).
+ */
+async function factsFor(season: Pick<FantasySeason, 'seasonStartYear'>, back: number): Promise<FactSet> {
+  const stored = await getMatchSeasonYears()
+  const years = stored.filter((y) => y !== NO_YEAR_SEASON && y <= season.seasonStartYear).slice(0, back)
+  const from = seasonWindow(years[years.length - 1] ?? season.seasonStartYear, SEASON_START_MONTH).from
+  const to = seasonWindow(season.seasonStartYear, SEASON_START_MONTH).to
+  const set = await getFactsFor(stored.includes(NO_YEAR_SEASON) ? [...years, NO_YEAR_SEASON] : years)
+  return filterFacts(set, (h) => {
+    if (h.seasonStartYear != null) return true
+    return h.date !== null && h.date >= from && h.date < to
+  })
 }
 
 const done = <T extends { ok: boolean }>(r: T): T => {
@@ -43,8 +57,7 @@ export async function setUpSeasonAction(input: { year: number; name: string }): 
   const c = await caller()
   if (!c) return SIGN_IN
   const year = Number(input?.year)
-  const facts = await factsFor({ seasonStartYear: year, rules: { priceSeasonsBack: 2 } as FantasyRules })
-  const r = await admin.setUpSeason(c.payload, c.user, { year, name: String(input?.name ?? ''), facts })
+  const r = await admin.setUpSeason(c.payload, c.user, { year, name: String(input?.name ?? ''), facts: (rules) => factsFor({ seasonStartYear: year }, rules.priceSeasonsBack) })
   return done(r.ok ? { ok: true } : r)
 }
 
@@ -53,7 +66,7 @@ export async function recalculatePricesAction(): Promise<ActionResult<{ priced: 
   if (!c) return SIGN_IN
   const season = await seasonFor(c.payload)
   if (!season) return { ok: false, message: 'Set up a season first.' }
-  return done(await admin.calculatePrices(c.payload, c.user, season, await factsFor(season)))
+  return done(await admin.calculatePrices(c.payload, c.user, season, await factsFor(season, season.rules.priceSeasonsBack)))
 }
 
 export async function addMissingPlayersAction(): Promise<ActionResult<{ added: number }>> {
@@ -61,7 +74,7 @@ export async function addMissingPlayersAction(): Promise<ActionResult<{ added: n
   if (!c) return SIGN_IN
   const season = await seasonFor(c.payload)
   if (!season) return { ok: false, message: 'Set up a season first.' }
-  return done(await admin.addMissingPlayers(c.payload, c.user, season, await factsFor(season)))
+  return done(await admin.addMissingPlayers(c.payload, c.user, season, await factsFor(season, season.rules.priceSeasonsBack)))
 }
 
 export async function saveRulesAction(input: { patch: Partial<Omit<FantasyRules, 'scoring'>> & { scoring?: Partial<FantasyRules['scoring']> } }): Promise<ActionResult> {

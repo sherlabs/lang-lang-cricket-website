@@ -2,7 +2,8 @@
  * Deterministic prices (wave F spec 4.3). A price is a PERCENTILE RANK of shrunk points per game, not a rating of how good a
  * player is. The shrinkage pulls thin data toward the average, so a debutant sits near the middle by design. Money-like values are
  * integer tenths of a credit, so there is no floating point arithmetic on prices. Pure: ties break on player id, so the same inputs
- * always give the same output.
+ * always give the same output. Players with identical shrunk values (every newcomer with no data) share the AVERAGE rank of their
+ * tie block, so they all get the same price instead of one spread over the whole block by id.
  */
 export type PriceInput = { id: number; games: number; points: number }
 export type PriceParams = { minPriceTenths: number; maxPriceTenths: number; priorGames: number; minGamesForPrice: number }
@@ -20,8 +21,14 @@ export function computePrices(players: readonly PriceInput[], params: PriceParam
   const ordered = [...shrunk].sort((a, b) => a.s - b.s || a.p.id - b.p.id)
   const n = ordered.length
   const rank = new Map<number, number>()
-  // Percentile rank in [0, 1]: the lowest is 0, the highest is 1; a single player sits in the middle.
-  ordered.forEach((x, i) => rank.set(x.p.id, n === 1 ? 0.5 : i / (n - 1)))
+  // Percentile rank in [0, 1]: the lowest is 0, the highest is 1; a single player sits in the middle. Tied values share the mean
+  // position of their block.
+  for (let i = 0; i < n; ) {
+    let j = i
+    while (j + 1 < n && ordered[j + 1].s === ordered[i].s) j++
+    for (let k = i; k <= j; k++) rank.set(ordered[k].p.id, n === 1 ? 0.5 : (i + j) / 2 / (n - 1))
+    i = j + 1
+  }
   const { minPriceTenths: lo, maxPriceTenths: hi } = params
   return shrunk.map(({ p, s }) => {
     const r = rank.get(p.id) ?? 0.5
