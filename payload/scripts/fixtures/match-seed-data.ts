@@ -63,6 +63,13 @@ export const MATCH_SEED_SAME_NAME = 'sam|pritchard'
 const OPP_FIRST = ['Aaron', 'Blake', 'Cody', 'Drew', 'Elliot', 'Finn', 'Grant', 'Harvey', 'Ivan', 'Jed', 'Kyle', 'Liam', 'Marty', 'Neil', 'Oscar']
 const OPP_LAST = ['Archer', 'Baxter', 'Calder', 'Dawson', 'Eastman', 'Fenwick', 'Gallo', 'Hartley', 'Irving', 'Jessop', 'Kemp', 'Lowe', 'Marsh', 'Norris', 'Oakes']
 const OPP_CLUBS = ['Caldermeade Rovers', 'Bunyip Creek', 'Tynong North', 'Garfield Bandits', 'Koo Wee Rup Colts', 'Nyora Hawks']
+/** The invented opposition clubs, so the demo's upcoming fixtures can point at them (the scouting link resolves by name). */
+export const MATCH_SEED_OPPOSITIONS: readonly string[] = OPP_CLUBS
+/**
+ * An invented opposition player who bats and bowls in the first opposition's games. Tests assert this name exists in the store
+ * (so a grep for its absence from public pages cannot pass on an empty seed) and then that no public route or cached blob shows it.
+ */
+export const DEMO_OPPOSITION_PLAYER = `${OPP_FIRST[0]} ${OPP_LAST[0]}`
 
 export const MATCH_SEED_FILL_IN: Person = { firstName: 'Quentin', lastName: 'Fillin' }
 

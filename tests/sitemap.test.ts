@@ -38,6 +38,12 @@ beforeEach(() => {
 })
 
 describe('sitemap', () => {
+  it('never lists the selector area (scouting reports name opposition players)', async () => {
+    const { default: sitemap } = await import('@/app/sitemap')
+    const urls = (await sitemap()).map((e) => e.url)
+    expect(urls.some((u) => u.includes('/selector'))).toBe(false)
+  })
+
   it('includes the honour board and leaves the compare tool out', async () => {
     const { default: sitemap } = await import('@/app/sitemap')
     const urls = (await sitemap()).map((e) => e.url)

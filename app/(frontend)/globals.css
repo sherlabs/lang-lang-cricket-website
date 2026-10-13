@@ -323,3 +323,20 @@
     text-decoration: none !important;
   }
 }
+
+/* Opposition scouting print (wave E, WP-1). A4 portrait cheat sheet: no site or selector chrome, every section open, sections kept whole.
+   Scoped under `.scout-print` / the page that holds it, so no other page changes. Colours stay theme tokens (no literals). */
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  body:has(.scout-print) header,
+  body:has(.scout-print) footer,
+  body:has(.scout-print) .selector-chrome,
+  body:has(.scout-print) .scout-hide {
+    display: none !important;
+  }
+  body:has(.scout-print) { background: none !important; padding-bottom: 0 !important; }
+  body:has(.scout-print) .scout-show { display: block !important; }
+  .scout-print .scout-section { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
+  .scout-print details > summary { list-style: none; }
+  .scout-print details > summary::-webkit-details-marker { display: none; }
+}

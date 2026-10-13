@@ -1,0 +1,50 @@
+---
+title: Opposition scouting report
+status: shipped
+routes: ["/selector/scouting", "/selector/scouting/[opp]"]
+collections: [matches, match-innings, match-appearances, match-batting, match-bowling, selection-settings]
+admin: "Advanced > Selection settings > Opposition scouting (admin only); the report itself is in the selector area (/selector/scouting)"
+owner: "Selectors"
+related: [match-data-store, match-stats, team-selection-and-announce, match-day-overview, selector-accounts]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector or captain** who wants to know, before Saturday, how the club has gone against this opposition, what totals to expect, how often they bowl first and which of their players have hurt the club before.
+- **The site admin**, who decides whether opposition players are named to selectors at all.
+
+## Why it was built
+
+Match prep was memory and phone calls. The site already stores every finished senior game innings by innings ([Match data store](./match-data-store.mdx)), including the other side's batters and bowlers, so a scouting sheet can come straight from it (issue [#31](https://github.com/sherlabs/lang-lang-cricket-website/issues/31), part of the analytics block in the tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
+
+## What it does
+
+**One report per opposition club**, in the selector area only. Everything comes from stored games against the club; nothing is predicted and no text is written by a model.
+
+- **Status line first.** "Only 3 games stored against X. That is not enough for a plan yet (it needs 5); here are the results so far." followed by the plain list of games. Most clubs have fewer than five games against a given opponent, so this is the common first screen.
+- **Game plan.** A few sentences from fixed rules, each showing the number it rests on and its sample, for example "They chose to bowl in 6 of the 8 tosses they won (n=8)", "Their innings ended all out in 5 of 9 (n=9)", "Opening partnership against them: 3 of 9 started with a wicket by 10 runs (n=9)", or the result when they batted first. A rule is left out below five games (or tosses, or innings). When no rule has enough behind it the page says so.
+- **Danger batters and bowlers.** Their top batters (innings, runs, average only when there is at least one dismissal, high score, fifties, last five innings) and bowlers (spells, balls, wickets, runs, economy, last five spells) from games against the club. A batter is listed from the number of innings set in Selection settings (default 2); a bowler from 24 balls. A standing notice reads "Third-party names, for selection use only" and the figures are labelled approximate, because opposition players are matched by name only: two players with the same name merge, and the page flags a name that appeared twice in one game.
+- **Collapsed sections, each with a one-line summary:** head to head (home and away, by season, last meeting), their last results against us as a strip (the store holds only games against the club, so this is not their form against others), typical totals both ways with first innings and chasing separately where a game had one innings each, all-out rate and wickets lost, the toss (how often they won it, what they chose, how we went), our best against them, and venue history.
+- **Honest numbers.** A missing total or toss reads "not recorded" and is never 0. An average needs a dismissal. Imported history games count in the record and in totals where the old record had them, and nowhere else (they have no opposition players). A report reads the newest 60 games and says when it was capped.
+- **Print.** "Print or save as PDF" gives an A4 portrait cheat sheet with the club name, every section open and no site or selector menus. Print is the way to share it: the page has no share link, picture, download or social graphic.
+
+**Where to find it.** Match prep on the selector home opens the list of clubs (with a search box); each club opens its report. A "Scout <club>" link sits on each upcoming game in Teams and in the team builder. It links by name, because upcoming games carry only a name: if two stored clubs share a name both are offered, and if nothing matches the builder says "No stored games against this club".
+
+**Privacy.** Opposition player names appear only on these selector pages. They are read by a separate loader that is never cached or tagged, never added to the public stats data, and never in a public page, picture, log line or download. The pages are never static, never cached (`private, no-store`), `noindex` and not in the sitemap. An unknown club in the address is the ordinary "not found" page and the address is not repeated anywhere. Our own players in "our best against them" come from the public stats data, so a hidden player is never there. The match tables stay readable over the API by admins and editors only.
+
+## How to use it
+
+1. Open the selector area and tap **Match prep**, or tap **Scout <club>** on a game in Teams.
+2. Read the status line and the game plan, then the danger players; open the other sections as needed.
+3. To hand it to the captain, tap **Print or save as PDF**.
+4. An **admin** can switch names off for every selector under Advanced > Selection settings > Opposition scouting ("Show opposition players' names to selectors"); the page then lists opposition batters by batting position and bowlers by bowling order, with no names. The same place sets the innings needed before a batter is listed. Selectors can read but not change these settings.
+
+## Not included / deferred
+
+- Opposition players' results against other clubs, venue or pitch conditions, and anything not recorded on the scorecard.
+- Stable opposition player identity: PlayHQ gives none here, so names are matched as text.
+- Opposition club renames and merges set by the admin on the public stats labels are not applied to this report; it groups by the stored organisation or club name.
+- Ball-by-ball or over-by-over detail, which PlayHQ does not provide ([#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- A rate limit: selector sign-in already sits behind the PIN throttle and invite flow, and each report is a bounded set of batched reads.
+- The best XI suggester and the trends pages (tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).

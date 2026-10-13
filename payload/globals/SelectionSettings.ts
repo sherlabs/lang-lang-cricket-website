@@ -35,6 +35,16 @@ export const SelectionSettings: GlobalConfig = {
     },
     { name: 'publishBattingOrder', type: 'checkbox', defaultValue: true, label: 'Show the batting order on the public teams page', admin: { description: 'Untick to list the team alphabetically without numbers (captain and keeper stay marked).' } },
     { name: 'announceOnPublish', type: 'checkbox', defaultValue: true, label: 'Post a site announcement when teams are published', admin: { description: 'Adds one announcement per weekend (updated if the teams change) that links to the teams page.' } },
+    {
+      name: 'scouting',
+      type: 'group',
+      label: 'Opposition scouting',
+      admin: { description: 'Controls the opposition scouting report in the selector area. These settings apply to every selector.' },
+      fields: [
+        { name: 'showOppositionNames', type: 'checkbox', defaultValue: true, label: 'Show opposition players’ names to selectors', admin: { description: 'Names come from the scorecards and are matched by name only, so they are approximate. Untick to show opposition batters and bowlers by batting position instead, with no names.' } },
+        { name: 'minInnings', type: 'number', defaultValue: 2, min: 1, max: 20, label: 'Innings before an opposition batter is listed', admin: { description: 'A batter appears in the danger list only after this many innings against the club.' } },
+      ],
+    },
       {
       name: 'votes',
       type: 'group',

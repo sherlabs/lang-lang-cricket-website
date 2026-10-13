@@ -46,6 +46,7 @@ Until now only season totals were stored, so anything about a single game (who g
 
 - Season totals still feed every existing leaderboard, record and profile line; switching them to be derived from match rows is a later decision. The match rows now feed the match-analysis pages ([Match analysis](./match-stats.mdx), [Partnership records](./partnership-records.mdx)), which read them through `lib/match-store/stats-queries.ts` as cached per-season fact blobs.
 - Partnerships are not stored: they are derived at read time from batting order and fall of wickets and labelled inferred.
+- Opposition players are stored (name text only, no stable id) and are read by one selector-only loader for the [Opposition scouting report](./opposition-scouting.mdx); they never reach the public stats data.
 - Not available from PlayHQ and so never stored: ball-by-ball, over-by-over scores, powerplay or death-over phases, dot balls, wagon wheels and who was on strike ([#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35) cannot be built from this source).
 - Junior games are not stored (no junior name may be stored before a rule hides them from public pages), and a game between two of the club's own teams is skipped.
 - The raw PlayHQ response is not kept; a corrected mapper is re-run with `--force`. How out for run out, stumped, retired and hit wicket is covered by invented data only, because no captured game contained them; the backfill log reports any shape it does not recognise.

@@ -7,6 +7,7 @@ import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
 import { formatMatchDay } from '@/lib/selection/lineup-text'
 import { getSelectionSettings } from '@/lib/selection/store'
+import { resolveOpponents } from '@/lib/selector-scouting-queries'
 import { loadWeekendBoard } from '@/lib/selector-team-queries'
 import { getPayloadClient } from '@/lib/payload/client'
 
@@ -21,6 +22,7 @@ export default async function TeamsPage({ searchParams }: Props) {
   const sp = await searchParams
   const board = await loadWeekendBoard(user, { weekend: typeof sp.weekend === 'string' ? sp.weekend : null })
   const settings = await getSelectionSettings(await getPayloadClient())
+  const scout = await resolveOpponents(user, board.fixtures.map((b) => b.fixture.opponentName))
   const ready = board.fixtures.filter((b) => b.view.status === 'ready' && b.view.chip !== 'published')
   return (
     <main className="container-site max-w-5xl py-6 sm:py-10">
@@ -37,7 +39,7 @@ export default async function TeamsPage({ searchParams }: Props) {
             ))}
           </nav>
           <PublishAll gameIds={ready.map((b) => b.fixture.gameId)} revisions={Object.fromEntries(ready.map((b) => [b.fixture.gameId, b.view.revision]))} grades={ready.map((b) => b.fixture.gradeName)} announceDefault={settings.announceOnPublish} />
-          <TeamCards board={board} locale={locale} />
+          <TeamCards board={board} locale={locale} scout={scout} />
         </>
       )}
     </main>

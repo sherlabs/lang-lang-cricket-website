@@ -4818,6 +4818,19 @@ export interface SelectionSetting {
    */
   announceOnPublish?: boolean | null;
   /**
+   * Controls the opposition scouting report in the selector area. These settings apply to every selector.
+   */
+  scouting?: {
+    /**
+     * Names come from the scorecards and are matched by name only, so they are approximate. Untick to show opposition batters and bowlers by batting position instead, with no names.
+     */
+    showOppositionNames?: boolean | null;
+    /**
+     * A batter appears in the danger list only after this many innings against the club.
+     */
+    minInnings?: number | null;
+  };
+  /**
    * Players vote after a game from the availability link. Selectors change these in the selector area (Votes, Settings).
    */
   votes?: {
@@ -5359,6 +5372,12 @@ export interface SelectionSettingsSelect<T extends boolean = true> {
   defaultXiSize?: T;
   publishBattingOrder?: T;
   announceOnPublish?: T;
+  scouting?:
+    | T
+    | {
+        showOppositionNames?: T;
+        minInnings?: T;
+      };
   votes?:
     | T
     | {

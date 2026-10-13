@@ -14,7 +14,7 @@ export function SelectorShell({ name, signOut, children }: { name: string; signO
   return (
     <div>
       <style>{`@media (max-width: 639px) { body { padding-bottom: calc(3.5rem + env(safe-area-inset-bottom)); } }`}</style>
-      <div className="border-b border-brand-black/10 bg-brand-stone/60">
+      <div className="selector-chrome border-b border-brand-black/10 bg-brand-stone/60">
         <div className="container-site flex items-center justify-between gap-3 py-2">
           <p className="truncate text-sm text-brand-grey">Selectors{name ? ` · ${name}` : ''}</p>
           <nav aria-label="Selector tools" className="hidden items-center gap-1 sm:flex">
@@ -31,7 +31,7 @@ export function SelectorShell({ name, signOut, children }: { name: string; signO
         </div>
       </div>
       {children}
-      <nav aria-label="Selector tools" className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-black/10 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav aria-label="Selector tools" className="selector-chrome fixed inset-x-0 bottom-0 z-40 border-t border-brand-black/10 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
         <ul className="grid" style={{ gridTemplateColumns: `repeat(${selectorTabs.length}, minmax(0, 1fr))` }}>
           {selectorTabs.map((t) => (
             <li key={t.key}>

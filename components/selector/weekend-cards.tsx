@@ -3,9 +3,11 @@ import { selectorPaths } from '@/config/site'
 import { ANSWER_DOT } from '@/lib/availability'
 import { formatMatchDay, formatMatchTime, personTag } from '@/lib/selection/lineup-text'
 import { telHref } from '@/lib/selection/phone'
+import type { Resolved } from '@/lib/scouting/resolve-opponent'
 import { PUBLISH_CHIP_LABEL, TEAM_STATUS_LABEL } from '@/lib/team-status'
 import type { BoardFixture, WeekendBoard } from '@/lib/selector-team-queries'
 import { btnQuiet } from './styles'
+import { ScoutLink } from './scout-link'
 import { CopyButton } from './ui'
 
 const tone: Record<string, string> = {
@@ -27,7 +29,7 @@ function Chips({ b }: { b: BoardFixture }) {
 }
 
 /** The all-teams view: one card per grade with the XI, status, warning count and who last edited. Not-started cards open the builder. */
-export function TeamCards({ board, locale }: { board: WeekendBoard; locale: string }) {
+export function TeamCards({ board, locale, scout = {} }: { board: WeekendBoard; locale: string; scout?: Record<string, Resolved> }) {
   return (
     <ul className="mt-4 grid gap-4 md:grid-cols-2">
       {board.fixtures.map((b) => {
@@ -54,6 +56,7 @@ export function TeamCards({ board, locale }: { board: WeekendBoard; locale: stri
                 {b.view.updatedByName && b.view.updatedAt ? ` · last edited by ${b.view.updatedByName}` : ''}
               </p>
             </Link>
+            <ScoutLink resolved={scout[f.opponentName]} name={f.opponentName} />
           </li>
         )
       })}

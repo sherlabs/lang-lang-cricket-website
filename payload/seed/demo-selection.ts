@@ -10,6 +10,7 @@ import { weekendKey } from '../../lib/selection/weekend'
 import { DEFAULT_MATCHDAY_LABEL } from '../../lib/site-settings-core'
 import { normalisePhone, lastFour } from '../../lib/selection/phone'
 import { hashPin } from '../../lib/selection/pin'
+import { MATCH_SEED_OPPOSITIONS } from '../scripts/fixtures/match-seed-data'
 
 /**
  * Demo data for availability and squads (announce-teams spec 4.10). Invented players (nobody real), two grades, the next three
@@ -70,7 +71,8 @@ export async function seedDemoSelection(payload: Payload, selectorEmail = 'sam.s
           localTime: g.id === 'demo-grade-a' ? '13:00:00' : '12:30:00',
           startsAt: wallClockToUtc(date, g.id === 'demo-grade-a' ? '13:00:00' : '12:30:00'),
           venueName: i % 2 === 0 ? `${club} Recreation Reserve` : `${OPPONENTS[i]} Oval`,
-          opponentName: `${OPPONENTS[(i + (g.id === 'demo-grade-a' ? 0 : 1)) % OPPONENTS.length]} CC`,
+          // The stored demo oppositions, so the "Scout" link on the team pages resolves to a report with data.
+          opponentName: MATCH_SEED_OPPOSITIONS[(i + (g.id === 'demo-grade-a' ? 0 : 1)) % 3],
           isHome: i % 2 === 0,
           status: 'upcoming',
           syncedAt: new Date().toISOString(),

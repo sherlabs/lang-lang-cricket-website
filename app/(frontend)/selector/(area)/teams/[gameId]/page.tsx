@@ -9,6 +9,8 @@ import { formatMatchDay, formatMatchTime } from '@/lib/selection/lineup-text'
 import { getSelectionSettings } from '@/lib/selection/store'
 import { getClub } from '@/lib/club'
 import { requireSelection } from '@/lib/selector-auth'
+import { ScoutLink } from '@/components/selector/scout-link'
+import { resolveOpponents } from '@/lib/selector-scouting-queries'
 import { loadBuilder } from '@/lib/selector-team-queries'
 import { postTextFor } from '@/lib/teams-queries'
 
@@ -25,6 +27,7 @@ export default async function BuilderPage({ params }: Props) {
   if (!builder) notFound()
   const f = builder.view.fixture
   const settings = await getSelectionSettings(await getPayloadClient())
+  const scout = (await resolveOpponents(user, [f.opponentName]))[f.opponentName]
   const postText = builder.published ? await postTextFor(builder.published) : null
   return (
     <main className="container-site max-w-2xl py-6 sm:py-10">
@@ -32,6 +35,7 @@ export default async function BuilderPage({ params }: Props) {
       <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-brand-grey">{f.gradeName}{f.roundName ? ` · ${f.roundName}` : ''}</p>
       <h1 className="display text-3xl text-brand-black">v {f.opponentName}</h1>
       <p className="mt-1 text-brand-grey">{[formatMatchDay(f.localDate, locale), formatMatchTime(f.localTime), [f.venueName, f.venueSuburb].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</p>
+      <div className="mt-1"><ScoutLink resolved={scout} name={f.opponentName} showNone /></div>
       <div className="mt-4">
         <TeamBuilder builder={builder} gameId={gameId} announceDefault={settings.announceOnPublish} />
       </div>

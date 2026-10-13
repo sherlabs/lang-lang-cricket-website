@@ -13,6 +13,7 @@ export const metadata: Metadata = { title: 'Selectors', robots: { index: false, 
 
 const TOOLS = [
   { href: selectorPaths.teams, title: 'Teams', text: 'Pick each grade’s team and announce it.' },
+  { href: selectorPaths.scouting, title: 'Match prep', text: 'Scout the opposition: our record against them, their typical totals and their danger players.' },
   { href: selectorPaths.availability, title: 'Availability', text: 'Who is in, maybe or out for each game, and who has not replied. Nets are in here too.' },
   { href: selectorPaths.squads, title: 'Squads', text: 'Who is in each grade this season. Add, move and remove players.' },
   { href: selectorPaths.link, title: 'Player link', text: 'The one link players use to tell you if they can play.' },

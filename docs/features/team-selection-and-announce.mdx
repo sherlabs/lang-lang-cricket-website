@@ -43,6 +43,8 @@ Picking teams happened in group chats and on paper, and the result was typed up 
 
 **Withdraw** takes a team off the site: the teams page and the picture return the same "not found" answer as a team that was never published (the page shows the site's not-found page, the picture a plain-text 404), the weekend's announcement is updated or switched off, and the caches are refreshed.
 
+**Scouting.** Each upcoming game in Teams and in the builder has a "Scout <club>" link to the [opposition scouting report](./opposition-scouting.mdx) when stored games match the opponent's name.
+
 **Settings** (admin: Advanced > Selection settings and Site settings, Club details). *Players in a team* (default 11), *Show the batting order on the public teams page* (default on), *Post a site announcement when teams are published* (default on), **Matchday label** (Site settings, default "Matchday") and **Sign-off for team announcements** (Club details, default empty so nothing is added). Club name, crest, colours, font, site address and locale all come from the club's settings; nothing is written for one club.
 
 **What stays private.** Draft teams, unpublished edits, notes, availability and phones are never on a public page, in the sitemap or over the public API (there is none for these). The public pages read only the published snapshot and show only players who are not hidden. A draft, a withdrawn team, a game removed from PlayHQ and an unknown address all give the same not-found answer, from the page and from the picture. Writing a team is only possible through the selector area, which checks who is signed in, validates the team and records who saved or published it from the signed-in user, never from the request.

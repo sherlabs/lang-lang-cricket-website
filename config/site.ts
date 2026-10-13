@@ -174,6 +174,27 @@ export const selectorPaths = {
   teams: '/selector/teams',
   team: (gameId: string) => `/selector/teams/${gameId}`,
   teamPreviewImage: (gameId: string) => `/selector/teams/${gameId}/preview-image`,
+  scouting: '/selector/scouting',
+  scoutingFor: (key: string) => `/selector/scouting/${encodeURIComponent(key)}`,
+} as const
+
+/**
+ * Opposition scouting (wave E, WP-1). Every threshold is here so a club can tune it in one place; a sentence in the game plan
+ * or a rate appears only from `minSample` games, a danger batter from the `scouting.minInnings` setting and `minBalls`.
+ */
+export const SCOUTING = {
+  /** A plan sentence needs at least this many games (or tosses, innings) behind it. */
+  minSample: 5,
+  /** A danger bowler needs this many balls bowled against us (24 = four overs). */
+  minBalls: 24,
+  /** Newest FINAL games read for one opposition. */
+  maxMatches: 60,
+  /** How many players per danger list. */
+  topPlayers: 5,
+  /** The "last N" line beside a danger player and the strip of their recent results against us. */
+  recentCount: 5,
+  /** An opening stand "started with a wicket" when the first wicket fell on or before this many runs. */
+  earlyWicketRuns: 10,
 } as const
 
 /**
