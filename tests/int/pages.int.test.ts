@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 // Outside a Next request there is no incremental cache: pass the cached nav query straight through.
 vi.mock('next/cache', async (orig) => ({ ...(await orig<typeof import('next/cache')>()), unstable_cache: (fn: unknown) => fn }))
@@ -29,6 +29,7 @@ describe('pages', () => {
   afterAll(async () => {
     for (const id of mediaIds) await payload.delete({ collection: 'media', id, context: ctx }).catch(() => {})
     await clearCollection(payload, 'pages')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

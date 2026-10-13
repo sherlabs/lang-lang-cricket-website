@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 describe('news', () => {
   let payload: Payload
@@ -24,6 +24,7 @@ describe('news', () => {
   })
   afterAll(async () => {
     await clearCollection(payload, 'news')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { sql } from '@payloadcms/db-postgres/drizzle'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
@@ -78,6 +78,7 @@ describe('membership fees', () => {
     for (const c of ['fee-payments', 'fee-waivers', 'fee-charges', 'fee-seasons', 'memberships', 'membership-tiers', 'members', 'office-audit-log'] as const) await clearCollection(payload, c)
     await resetPlayers(payload)
     await clearCollection(payload, 'users')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
   beforeEach(reset)

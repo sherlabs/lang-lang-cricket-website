@@ -13,7 +13,7 @@ import { playerTables } from '@/lib/players/db'
 import { buildSyncPlan } from '@/lib/players/plan'
 import { getDuplicateSuggestions, getRecentMerges } from '@/lib/players/duplicate-queries'
 import type { PlayerSeasonStats } from '@/lib/playhq/types'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
@@ -32,6 +32,7 @@ beforeAll(async () => {
   admin = await tokenFor(payload, 'admin')
 })
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

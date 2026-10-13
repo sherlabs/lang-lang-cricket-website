@@ -7,7 +7,7 @@
 import type { Payload } from 'payload'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
@@ -52,6 +52,7 @@ afterAll(async () => {
   await clearCollection(payload, 'people')
   await resetPlayers(payload)
   for (const m of [mediaA, mediaB]) await payload.delete({ collection: 'media', id: m.id, context: { etl: true, disableRevalidate: true } }).catch(() => undefined)
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

@@ -7,7 +7,7 @@ import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
-import { destroyTestPayload, getTestPayload } from './helpers'
+import { destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: <T,>(fn: T) => fn }))
@@ -35,6 +35,7 @@ beforeAll(async () => {
   payload = await getTestPayload()
 })
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

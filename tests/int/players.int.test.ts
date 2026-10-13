@@ -8,7 +8,7 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { playerTables } from '@/lib/players/db'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
@@ -24,6 +24,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { applyImport } from '@/lib/history-import/server'
 import { mergePlayerInto } from '@/lib/players/merge-core'
 import { playerTables } from '@/lib/players/db'
-import { destroyTestPayload, getTestPayload } from './helpers'
+import { destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: <T,>(fn: T) => fn }))
@@ -22,6 +22,7 @@ beforeAll(async () => {
   payload = await getTestPayload()
 })
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

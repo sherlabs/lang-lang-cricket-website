@@ -14,7 +14,7 @@ import { playerTables } from '@/lib/players/db'
 import { currentSeasonStartYear } from '@/lib/selection/season'
 import { publishSheets, saveSheet } from '@/lib/selector-team-queries'
 import { demoLogoPng } from '@/payload/seed/demo-png'
-import { clearCollection, destroyTestPayload, getTestPayload, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, tokenFor, wipeTestData } from './helpers'
 import { addToSquad, makeFixture, makePlayer, makeSquad, resetSelection } from './selection-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }))
@@ -76,6 +76,7 @@ describe('social graphics', () => {
     await clearCollection(payload, 'media')
     await clearCollection(payload, 'events')
     await payload.db.drizzle.execute(sql.raw('DELETE FROM "payload"."social_settings"; DELETE FROM "payload"."throttle_hits"'))
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

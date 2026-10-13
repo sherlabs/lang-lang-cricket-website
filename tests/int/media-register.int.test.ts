@@ -8,7 +8,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 
 const blob = vi.hoisted(() => {
   process.env.PAYLOAD_BLOB_FAKE = '1'
@@ -44,6 +44,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   vi.unstubAllGlobals()
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
   delete process.env.PAYLOAD_BLOB_FAKE
 })

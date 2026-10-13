@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { EtlReport } from '@/payload/scripts/etl/report'
 import { clubStep } from '@/payload/scripts/etl/steps/club'
 import type { EtlContext } from '@/payload/scripts/etl/media'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 // WP2 review fixes: trim before validation, sortFirst without a field default, ETL club step.
 describe('wp2 review fixes', () => {
@@ -18,6 +18,7 @@ describe('wp2 review fixes', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

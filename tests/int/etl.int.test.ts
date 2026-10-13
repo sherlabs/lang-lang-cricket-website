@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { destroyTestPayload, getTestPayload, resetGlobal } from './helpers'
+import { destroyTestPayload, getTestPayload, resetGlobal, wipeTestData } from './helpers'
 
 const blob = vi.hoisted(() => {
   process.env.PAYLOAD_BLOB_FAKE = '1'
@@ -119,6 +119,7 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals()
   await source?.close()
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
   delete process.env.PAYLOAD_BLOB_FAKE
   delete process.env.PAYLOAD_ETL

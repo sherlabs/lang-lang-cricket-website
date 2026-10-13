@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, wipeTestData } from './helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('next/cache', () => cache)
@@ -39,6 +39,7 @@ describe('selector is not staff (access matrix)', () => {
   afterAll(async () => {
     // Later files create their own users with the conventional `<role>@example.com` addresses and passwords.
     await clearCollection(payload, 'users')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

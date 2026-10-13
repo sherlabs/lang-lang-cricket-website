@@ -6,7 +6,7 @@
  */
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 const clock = vi.hoisted(() => ({ now: null as Date | null }))
 vi.mock('@/lib/event-occurrences', async (importOriginal) => {
@@ -25,6 +25,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

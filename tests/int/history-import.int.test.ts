@@ -13,7 +13,7 @@ import twoDay from '../fixtures/playhq/game-summary-two-day.json'
 import { applyImport, exportMatchRows, exportSeasonTotals, listImportBatches, planImport, undoImportBatch } from '@/lib/history-import/server'
 import { isImportedSeasonOrder } from '@/lib/history-import/constants'
 import { matchTables } from '@/lib/match-store/db'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
@@ -62,6 +62,7 @@ beforeAll(async () => {
   payload = await getTestPayload()
 })
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

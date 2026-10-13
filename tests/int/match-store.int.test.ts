@@ -15,7 +15,7 @@ import { isSkip, mapMatchBundle, type MatchBundle } from '@/lib/playhq/match-row
 import type { RawGameSummary } from '@/lib/playhq/types'
 import { generateMatchSeed, MATCH_SEED_HIDDEN_KEY } from '../../payload/scripts/fixtures/match-seed-data'
 import { reconcileSeed, seedMatchStore } from '../../payload/scripts/fixtures/match-seed-db'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetMatches } from './match-helpers'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
@@ -35,6 +35,7 @@ beforeAll(async () => {
   t = matchTables(payload)
 })
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

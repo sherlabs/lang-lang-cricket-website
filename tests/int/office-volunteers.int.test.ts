@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, tokenFor, wipeTestData } from './helpers'
 import { ipHit } from '@/lib/throttle'
 import { seasonOfClubDate } from '@/lib/office/season'
 import { volunteerToken } from '@/lib/volunteer-link'
@@ -61,6 +61,7 @@ describe('volunteer roster', () => {
   afterAll(async () => {
     await wipe().catch(() => undefined)
     await clearCollection(payload, 'users')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
   beforeEach(async () => {

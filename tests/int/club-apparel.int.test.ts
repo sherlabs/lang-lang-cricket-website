@@ -5,7 +5,7 @@
  */
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
@@ -20,6 +20,7 @@ beforeAll(async () => {
 })
 afterAll(async () => {
   await setApparel({ apparelUrl: '', apparelLabel: 'Club apparel', apparelBlurb: '' })
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

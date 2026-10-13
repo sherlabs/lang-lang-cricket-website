@@ -11,7 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import oneDay from '../fixtures/playhq/game-summary-one-day.json'
 import twoDay from '../fixtures/playhq/game-summary-two-day.json'
 import { PLAYER_COLUMN_KEYS, playerTables } from '@/lib/players/db'
-import { destroyTestPayload, getTestPayload } from './helpers'
+import { destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
@@ -58,6 +58,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

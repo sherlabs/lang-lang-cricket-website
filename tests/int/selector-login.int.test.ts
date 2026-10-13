@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { hashInviteToken, newInviteToken } from '@/lib/selector-invite'
 import { clear, hit, isLocked, ipHit } from '@/lib/throttle'
-import { clearCollection, destroyTestPayload, getTestPayload } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('next/cache', () => cache)
@@ -33,6 +33,7 @@ describe('throttle (atomic, serverless-safe)', () => {
   afterAll(async () => {
     // Later files create their own users with the conventional `<role>@example.com` addresses and passwords.
     await clearCollection(payload, 'users')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -108,6 +109,7 @@ describe('selector login, invite and account actions', () => {
   })
   afterAll(async () => {
     await clearCollection(payload, 'users')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

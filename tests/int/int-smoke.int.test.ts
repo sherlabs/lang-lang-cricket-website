@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, wipeTestData } from './helpers'
 
 // Proves the int harness (guarded test DB, migrations, Local API) before later WPs rely on it.
 describe('int smoke', () => {
@@ -13,6 +13,7 @@ describe('int smoke', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

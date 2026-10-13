@@ -11,7 +11,7 @@ import path from 'node:path'
 import config from '@payload-config'
 import { handleEndpoints, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 const blob = vi.hoisted(() => {
   process.env.PAYLOAD_BLOB_FAKE = '1'
@@ -51,6 +51,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
   delete process.env.PAYLOAD_BLOB_FAKE
   delete process.env.BLOB_DELETE_DISABLED

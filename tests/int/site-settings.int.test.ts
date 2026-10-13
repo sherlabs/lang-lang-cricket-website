@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor, wipeTestData } from './helpers'
 
 // Spec §15: sponsor-carousel-actions → site-settings.int.
 describe('site-settings global', () => {
@@ -15,6 +15,7 @@ describe('site-settings global', () => {
 
   afterAll(async () => {
     await resetGlobal(payload, 'site-settings')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

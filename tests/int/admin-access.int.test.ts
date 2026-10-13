@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('next/cache', () => cache)
@@ -26,6 +26,7 @@ describe('admin simplification leaves access rules unchanged', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor, wipeTestData } from './helpers'
 
 // Route handlers call next/cache directly; it throws outside a Next request.
 const cache = vi.hoisted(() => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }))
@@ -16,6 +16,7 @@ describe('access: users', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -124,6 +125,7 @@ describe('access: club content (WP2)', () => {
 
   afterAll(async () => {
     await resetGlobal(payload, 'club')
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -219,6 +221,7 @@ describe('access: events (WP3)', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -341,6 +344,7 @@ describe('access: stories (WP4)', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -453,6 +457,7 @@ describe('access: players (WP5)', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 
@@ -535,6 +540,7 @@ describe('access: every collection and global (WP6)', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

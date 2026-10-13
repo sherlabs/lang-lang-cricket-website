@@ -15,8 +15,8 @@
  *     unstubGlobals config flags are NOT used: they undo after every TEST, which breaks the
  *     files that stub fetch in beforeAll (etl, media-register).
  *  4. INT_LEAKS=1 (pnpm test:int:leaks) audits instead: fails a file that leaves env keys,
- *     globalThis keys or open database connections behind, and, before the next file's truncate, warns
- *     which tables the previous file left rows in (named by file and row count).
+ *     globalThis keys, open database connections or table rows behind (`left rows: table=n ...`, named by
+ *     file; clean up with dropTestUsers/cleanTestTables from ./helpers in the file's afterAll).
  * The advisory run lock in setup.ts keeps two int runs from sharing langlang_test.
  *
  * Hypotheses (H1-H6 in docs/superpowers/specs/2026-10-12-wave-e-iq-design.md section 2.2):
@@ -52,7 +52,7 @@ import pg from 'pg'
 import { restoreEnv, snapshotEnv } from './env-snapshot'
 import { assertTestDb } from './env'
 
-type Store = { pidsAtStart?: Set<number>; env?: Record<string, string>; fetch?: typeof fetch; globalKeys?: Set<string>; lastFile?: string }
+type Store = { pidsAtStart?: Set<number>; env?: Record<string, string>; fetch?: typeof fetch; globalKeys?: Set<string> }
 const store = ((globalThis as { __intHermetic?: Store }).__intHermetic ??= {})
 const leakMode = process.env.INT_LEAKS === '1'
 
@@ -121,11 +121,6 @@ async function truncateAll(): Promise<void> {
   }
 }
 
-if (leakMode) {
-  // Count what the previous file left behind BEFORE the truncate erases it, and name that file.
-  const left = Object.entries(await withClient(residue)).map(([t, n]) => `${t}=${n}`)
-  if (left.length) console.warn(`[int:leaks] ${store.lastFile ?? 'a previous run'} left rows: ${left.join(' ')}`)
-}
 await truncateAll()
 if (leakMode) store.pidsAtStart = new Set(await withClient(async (c) => (await c.query("SELECT pid FROM pg_stat_activity WHERE datname = current_database() AND backend_type = 'client backend' AND pid <> pg_backend_pid()")).rows.map((r) => r.pid as number)))
 
@@ -151,8 +146,10 @@ if (leakMode) {
     await new Promise((r) => setTimeout(r, 500)) // let a just-destroyed pool finish closing
     const conns = await withClient((c) => blockers(c, store.pidsAtStart))
     if (conns) problems.push(`database connections opened by this file and still open after it:\n${conns}`)
-    // Row residue is reported by the next file's start (above); the truncate is the contract, not a failure.
-    store.lastFile = testFile()
+    // Rows: the file's own hooks have run, so anything left is this file's residue. Fail it by name (the next file's
+    // truncate still erases it, so the run continues; the failure is the signal).
+    const left = Object.entries(await withClient(residue)).map(([t, n]) => `${t}=${n}`)
+    if (left.length) problems.push(`left rows: ${left.join(' ')}`)
     if (problems.length) throw new Error(`[int:leaks] ${testFile()}\n${problems.join('\n')}`)
   }, 60_000)
 }

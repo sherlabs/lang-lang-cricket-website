@@ -6,7 +6,7 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { seedThemeGlobal } from '@/payload/seed/seed-theme-global'
-import { destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor } from './helpers'
+import { destroyTestPayload, getTestPayload, resetGlobal, rest, tokenFor, wipeTestData } from './helpers'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
@@ -40,6 +40,7 @@ beforeEach(async () => {
 })
 afterAll(async () => {
   await resetGlobal(payload, 'theme')
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 

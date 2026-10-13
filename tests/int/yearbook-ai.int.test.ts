@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { claimDraft, draftDay } from '@/lib/ai/draft-counter'
 import { playerTables } from '@/lib/players/db'
-import { destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { cleanTestTables, destroyTestPayload, dropTestUsers, wipeTestData, getTestPayload, rest, tokenFor } from './helpers'
 import { resetPlayers } from './players-helpers'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: <T,>(fn: T) => fn }))
@@ -33,6 +33,9 @@ afterAll(async () => {
     if (saved[k] === undefined) delete process.env[k]
     else process.env[k] = saved[k]
   }
+  await dropTestUsers(payload, ['admin@example.com', 'editor@example.com'])
+  await cleanTestTables(payload, ['yearbooks'])
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 beforeEach(async () => {

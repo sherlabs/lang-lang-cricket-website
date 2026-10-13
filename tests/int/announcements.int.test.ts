@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 // Spec §15: announcements-queries + announcements-admin-actions → announcements.int.
 describe('announcements', () => {
@@ -19,6 +19,7 @@ describe('announcements', () => {
   })
 
   afterAll(async () => {
+    await wipeTestData(payload)
     await destroyTestPayload(payload)
   })
 

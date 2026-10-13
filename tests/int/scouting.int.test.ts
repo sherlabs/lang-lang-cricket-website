@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { SCOUTING } from '@/config/site'
 import { generateMatchSeed, DEMO_OPPOSITION_PLAYER } from '../../payload/scripts/fixtures/match-seed-data'
 import { seedMatchSeasonRows, seedMatchStore } from '../../payload/scripts/fixtures/match-seed-db'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 import { resetMatches } from './match-helpers'
 
 const cached = vi.hoisted(() => ({ values: [] as unknown[] }))
@@ -53,6 +53,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await resetMatches(payload)
   await clearCollection(payload, 'users')
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
 })
 afterEach(async () => {

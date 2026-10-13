@@ -12,7 +12,7 @@ Public site and committee admin for a community cricket club. Branch `feat/paylo
 ## Commands
 
 - `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm tsc --noEmit`
-- `pnpm test` (unit, no DB), `pnpm test:int` (needs local Postgres), single file: `pnpm vitest run tests/<file>`; `pnpm test:int:leaks` audits int files for leaked env, globals, connections and rows (files run in path order and each starts on truncated tables, see `tests/int/isolate.ts`)
+- `pnpm test` (unit, no DB), `pnpm test:int` (needs local Postgres), single file: `pnpm vitest run tests/<file>`; `pnpm test:int:leaks` audits int files for leaked env, globals, connections and rows (files run in path order and each starts on truncated tables, see `tests/int/isolate.ts`; in leak mode a file that leaves rows fails by name, so end every int file's `afterAll` with `wipeTestData(payload)` or `dropTestUsers`/`cleanTestTables` from `tests/int/helpers.ts`)
 - `pnpm generate` then `pnpm check:generated` (regenerates `payload-types.ts` and the admin import map; both are committed)
 - `pnpm payload migrate:create <name>` for schema changes, `pnpm check:migrations` to replay them on `langlang_mig`
 - Scripts: `pnpm seed:admin|seed:club|seed:demo|etl|verify:cutover|export:since --target <host>/<db> [--confirm]`

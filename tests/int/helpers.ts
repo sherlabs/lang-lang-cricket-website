@@ -87,3 +87,62 @@ export async function resetGlobal(payload: Payload, slug: 'club' | 'site-setting
   const { sql } = await import('@payloadcms/db-postgres/drizzle')
   await payload.db.drizzle.execute(sql.raw(`DELETE FROM "payload"."${slug.replace(/-/g, '_')}"`))
 }
+
+type Rows<T> = { rows: T[] }
+const quoteId = (s: string) => `"${s.replace(/"/g, '""')}"`
+
+/**
+ * Deletes the given users and every row that references them, in one transaction. The referencing columns are discovered
+ * from pg_constraint (any table with a foreign key to payload.users, so notifications, sessions, locked documents and any
+ * later table are covered without a hand-kept list). Rows that merely point at a user (a yearbook a test user created) are
+ * deleted, not nulled. Asserts afterwards that nothing references the ids.
+ */
+export async function dropTestUsers(payload: Payload, emails: readonly string[]): Promise<void> {
+  if (!emails.length) return
+  const { sql } = await import('@payloadcms/db-postgres/drizzle')
+  await payload.db.drizzle.transaction(async (tx) => {
+    const found = (await tx.execute(sql`SELECT id FROM payload.users WHERE email IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})`)) as unknown as Rows<{ id: number }>
+    const ids = found.rows.map((r) => Number(r.id))
+    if (!ids.length) return
+    const idList = sql.raw(ids.join(', '))
+    const refs = (await tx.execute(sql`
+      SELECT c.conrelid::regclass::text AS tbl, a.attname AS col
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
+       WHERE c.contype = 'f' AND c.confrelid = 'payload.users'::regclass AND c.conrelid <> 'payload.users'::regclass`)) as unknown as Rows<{ tbl: string; col: string }>
+    const refTables = refs.rows.map((r) => ({ tbl: r.tbl.split('.').map((p) => quoteId(p.replace(/^"|"$/g, ''))).join('.'), col: quoteId(r.col) }))
+    // Delete referencing rows first (a few passes: a deleted row can itself be referenced, for example a yearbook's children).
+    for (let pass = 0; pass < 3; pass++) {
+      for (const { tbl, col } of refTables) await tx.execute(sql.raw(`DELETE FROM ${tbl} WHERE ${col} IN (${ids.join(', ')})`))
+    }
+    await tx.execute(sql`DELETE FROM payload.users WHERE id IN (${idList})`)
+    for (const { tbl, col } of refTables) {
+      const left = (await tx.execute(sql.raw(`SELECT count(*)::int AS n FROM ${tbl} WHERE ${col} IN (${ids.join(', ')})`))) as unknown as Rows<{ n: number }>
+      if (left.rows[0].n) throw new Error(`[int] dropTestUsers: ${tbl}.${col} still references the removed users`)
+    }
+  })
+}
+
+/** Deletes every row of the named payload tables (in the order given: children first) and asserts they are empty. */
+export async function cleanTestTables(payload: Payload, tables: readonly string[]): Promise<void> {
+  const { sql } = await import('@payloadcms/db-postgres/drizzle')
+  await payload.db.drizzle.transaction(async (tx) => {
+    for (const t of tables) await tx.execute(sql.raw(`DELETE FROM payload.${quoteId(t)}`))
+    for (const t of tables) {
+      const left = (await tx.execute(sql.raw(`SELECT count(*)::int AS n FROM payload.${quoteId(t)}`))) as unknown as Rows<{ n: number }>
+      if (left.rows[0].n) throw new Error(`[int] cleanTestTables: payload.${t} still has ${left.rows[0].n} rows`)
+    }
+  })
+}
+
+/**
+ * Empties every payload data table (all but payload_migrations) in one TRUNCATE, so a file that created rows through the
+ * app leaves nothing behind. Call it first in `afterAll`, before destroyTestPayload. The strict leak audit
+ * (`pnpm test:int:leaks`) fails any file that skips it while leaving rows.
+ */
+export async function wipeTestData(payload: Payload): Promise<void> {
+  const { sql } = await import('@payloadcms/db-postgres/drizzle')
+  const res = (await payload.db.drizzle.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname = 'payload' AND tablename <> 'payload_migrations'`)) as unknown as Rows<{ tablename: string }>
+  if (!res.rows.length) return
+  await payload.db.drizzle.execute(sql.raw(`TRUNCATE ${res.rows.map((r) => `payload.${quoteId(r.tablename)}`).join(', ')} RESTART IDENTITY CASCADE`))
+}

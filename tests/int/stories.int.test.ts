@@ -8,7 +8,7 @@
 import type { Payload } from 'payload'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor } from './helpers'
+import { clearCollection, destroyTestPayload, getTestPayload, rest, tokenFor, wipeTestData } from './helpers'
 
 const blob = vi.hoisted(() => {
   process.env.PAYLOAD_BLOB_FAKE = '1'
@@ -73,6 +73,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await wipeTestData(payload)
   await destroyTestPayload(payload)
   delete process.env.PAYLOAD_BLOB_FAKE
 })
