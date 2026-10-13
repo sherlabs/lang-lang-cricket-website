@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, officeCollections, selectionCollections, socialCollections } from '../payload/admin/navigation'
+import { advancedNav, everydayNav, internalCollections, isNavActive, jobTiles, navFor, navGroups, navSections, navSubgroups, officeCollections, roleLabel, selectionCollections, socialCollections } from '../payload/admin/navigation'
+import { ICONS, isIconKey } from '../payload/components/ui/icons'
 import { adminOnlyCondition, hiddenFromEditors, isAdminUser } from '../payload/admin/visibility'
 import { helpSections } from '../payload/admin/helpContent'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -88,6 +89,51 @@ describe('navigation', () => {
 
   it('help content has steps in every section', () => {
     for (const s of helpSections) expect(s.steps.length).toBeGreaterThan(0)
+  })
+})
+
+describe('sidebar groups and icons (wave G WP-1)', () => {
+  it('every everyday entry sits under a known group heading; headings are not entries and never repeat an entry label', () => {
+    for (const e of everydayNav) expect(Object.keys(navGroups), `${e.key} group`).toContain(e.group)
+    const entryLabels = new Set([...everydayNav, ...advancedNav].map((e) => e.label.toLowerCase()))
+    for (const [key, g] of [...Object.entries(navGroups), ...Object.entries(navSubgroups)]) {
+      expect(entryLabels.has(g.label.toLowerCase()), `group heading "${g.label}" (${key}) repeats an entry label`).toBe(false)
+      expect(Object.keys(g)).toEqual(['label']) // a heading has no key, path or matches: it cannot be active or counted as an entry
+    }
+  })
+
+  it('entries of one group are contiguous, so each heading is drawn once', () => {
+    const keys = navSections(everydayNav, 'group').map((s) => s.key)
+    expect(new Set(keys).size).toBe(keys.length)
+    expect(keys).toEqual(['today', 'website', 'people', 'office', 'help'])
+    const advanced = navSections(advancedNav, 'subgroup').map((s) => s.key)
+    expect(new Set(advanced).size).toBe(advanced.length)
+    // Sync runs, aliases and seasons share one sub-heading instead of being deleted.
+    const playerData = navSections(advancedNav, 'subgroup').find((s) => s.key === 'player-data')!
+    expect(playerData.label).toBe('Player data')
+    expect(playerData.entries.map((e) => e.key)).toEqual(expect.arrayContaining(['player-aliases', 'player-seasons', 'player-sync-runs', 'player-data-tools']))
+  })
+
+  it('grouping did not add, drop or move an entry across the everyday / advanced / editor lines', () => {
+    expect(everydayNav.length).toBe(15)
+    expect(navSections(everydayNav, 'group').flatMap((s) => s.entries).length).toBe(everydayNav.length)
+    expect(navFor('editor').advanced.map((e) => e.key)).toEqual(['selectors', 'social', 'fantasy', 'stories', 'yearbooks'])
+    expect(everydayNav.map((e) => e.key)).not.toContain('social')
+    expect(everydayNav.map((e) => e.key)).not.toContain('selectors')
+  })
+
+  it('every entry and every job tile has a known icon', () => {
+    for (const e of [...everydayNav, ...advancedNav]) expect(isIconKey(e.icon), `${e.key} icon "${e.icon}"`).toBe(true)
+    for (const t of jobTiles) expect(isIconKey(t.icon), `${t.key} icon "${t.icon}"`).toBe(true)
+    for (const key of Object.keys(ICONS)) expect(ICONS[key as keyof typeof ICONS], key).toBeTruthy()
+  })
+
+  it('editors never receive an admin-only entry; the role is shown in plain words', () => {
+    const editorKeys = new Set(navFor('editor').advanced.map((e) => e.key))
+    for (const e of advancedNav.filter((x) => !x.forEditors)) expect(editorKeys.has(e.key), `${e.key} must stay admin only`).toBe(false)
+    expect(roleLabel('admin')).toBe('Site admin')
+    expect(roleLabel('editor')).toBe('Committee')
+    expect(roleLabel('selector')).not.toMatch(/selector/i) // the sidebar never renders for a selector, but never print a raw role either
   })
 })
 

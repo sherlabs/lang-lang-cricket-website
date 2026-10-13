@@ -32,7 +32,7 @@ describe('every registered admin view calls requireStaff first', () => {
   }
 
   it('the old truthiness gate is gone', () => {
-    const hits = fs.readdirSync(path.join(root, 'payload/components')).filter((f) => fs.readFileSync(path.join(root, 'payload/components', f), 'utf8').includes('requireUser'))
+    const hits = fs.readdirSync(path.join(root, 'payload/components')).filter((f) => /\.tsx?$/.test(f)).filter((f) => fs.readFileSync(path.join(root, 'payload/components', f), 'utf8').includes('requireUser'))
     expect(hits).toEqual([])
   })
 })

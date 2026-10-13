@@ -55,6 +55,7 @@ export const Stories: CollectionConfig = {
     { name: 'title', label: 'Title', type: 'text', required: true, validate: maxChars(200, { required: true }), admin: { placeholder: 'e.g. Our first premiership' } },
     {
       name: 'slug',
+      label: 'Web address',
       type: 'text',
       unique: true,
       index: true,

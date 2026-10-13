@@ -607,3 +607,25 @@ The frontend layout reads `club` and `theme` once per request (cached), prints t
 9. `components.json` declares `iconLibrary: "lucide"`, but the site uses Hugeicons.
 10. There is no `not-found.tsx` and no reduced-motion handling beyond the marquee.
 11. **[unverified]** Tailwind v4-only classes in `components/ui/*` may compile to nothing on Tailwind 3.4.
+
+## 14. Admin design system (wave G)
+
+The committee admin (`/admin`) wears the same club identity as the public site with the volume turned down: paper-warm surfaces, white cards, ink text, the club accent used sparingly (primary button, active marker, focus ring, the 4px gradient rule at the top of the sidebar). The display font is used only for page titles and the Home greeting. Every page is a short sentence plus one obvious next step. Spec: `docs/superpowers/specs/2026-10-13-wave-g-admin-redesign-design.md`; feature doc: `docs/features/admin-design-system.mdx`.
+
+**Tokens.** `lib/theme/admin-tokens.ts` derives them from the resolved theme and clamps any text or control colour that misses its contrast requirement; the layout sets them on `<html>` as `R G B` channel triples (`--admin-<name>`), and `payload/components/admin-theme.css` maps them onto Payload's variables. The admin stylesheets contain no colour literal (`tests/admin-contrast.test.ts`).
+
+| Token | Built from | Use |
+| --- | --- | --- |
+| `--admin-bg` | `brand-stone` | page background |
+| `--admin-surface` | white mixed 60/40 with `brand-cream` | cards, inputs, sidebar |
+| `--admin-ink`, `--admin-text` | `brand-black`, `brand-charcoal` | headings, body |
+| `--admin-muted` | `brand-grey`, clamped to 4.5:1 on surface, page and tint | help text, meta |
+| `--admin-line`, `--admin-control` | ink at 10 percent on surface; ink at 50 percent on surface, clamped to 3:1 | hairlines; input borders |
+| `--admin-accent`, `--admin-on-accent` | `brand-gold`; black or white, whichever reads better | primary button |
+| `--admin-accent-ink`, `--admin-tint` | `brand-gold-deep` clamped to 4.5:1; `brand-gold-pale` | accent text; selected row, callout, active nav |
+| `--admin-focus` | the accent, clamped to 3:1 on surface and page | 2px focus ring, offset 2px |
+| `--admin-ok`, `--admin-warn`, `--admin-danger` (+ `-tint`) | fixed green-700, amber-800, red-700 on their 50 tints | status pills and errors only |
+
+**Rules.** 4px spacing grid (8, 12, 16, 24, 32, 48); radii 6, 10 and 16; page gutter 16px on a phone and 32px from 1024; page width 1200, forms 760. Body 16px (inputs never below 16px). Controls 40px tall on a desktop and 44px on a phone. One shadow, on raised cards only; no coloured side borders. Motion is 150 ms ease-out-quint on opacity and transform and is switched off under reduced motion. Status is always words, never colour alone. Committee-facing text avoids developer words (`tests/admin-microcopy.test.ts`).
+
+**Components** (`payload/components/ui/`, added only when two real screens use them): `PageHeader`, `Card`, `Section`, `Button`, `LinkButton`, `StatusPill`, `EmptyState`, `Skeleton`, `SkeletonRows`, `Disclosure`, `Icon` (the registry `icons.ts`, Hugeicons). Custom views sit in `AdminShell`. Not built yet: Tabs, Segmented, SearchPicker, StickyActionBar, Field, Avatar.

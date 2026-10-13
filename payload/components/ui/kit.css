@@ -1,0 +1,304 @@
+/* Shared component kit (wave G WP-1): Card, Section, PageHeader, Button, StatusPill, EmptyState, Skeleton, Disclosure, Icon.
+   Colours are only the --admin-* / --brand-* variables (see ../admin-theme.css). 4px spacing grid; radii 6 / 10 / 16;
+   controls are 40px tall on a desktop and 44px on a phone; motion is opacity and transform only and stops under reduced motion. */
+
+.ui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ui-icon {
+  flex: none;
+}
+
+/* Focus: one visible ring on every interactive element. */
+:focus-visible {
+  outline: 2px solid rgb(var(--admin-focus));
+  outline-offset: 2px;
+}
+
+/* Skip link: first in the tab order, visible only when focused. */
+.ui-skip {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: var(--admin-radius-s);
+  background: rgb(var(--admin-ink));
+  color: rgb(var(--admin-surface));
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.ui-skip:focus {
+  transform: none;
+}
+
+/* Card and Section */
+.ui-card {
+  padding: 1rem;
+  background: rgb(var(--admin-surface));
+  border: 1px solid rgb(var(--admin-line));
+  border-radius: var(--admin-radius-m);
+  color: rgb(var(--admin-text));
+}
+.ui-card--raised {
+  border-color: transparent;
+  box-shadow: var(--admin-shadow-card);
+}
+.ui-card--tint {
+  background: rgb(var(--admin-tint));
+  border-color: rgb(var(--admin-accent) / 0.45);
+}
+.ui-section {
+  margin: 0 0 2rem;
+}
+.ui-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 0 0.75rem;
+}
+.ui-section__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgb(var(--admin-ink));
+}
+
+/* Page header: one h1, one sentence, one obvious next step. */
+.ui-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin: 0 0 1.5rem;
+}
+.ui-page-header__text {
+  min-width: 0;
+  max-width: 42rem;
+}
+.ui-page-header__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.35rem + 1.6vw, 2.25rem);
+  overflow-wrap: anywhere;
+}
+.ui-page-header__lead {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: rgb(var(--admin-muted));
+}
+.ui-page-header__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--admin-target);
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--admin-accent-ink));
+  text-decoration: none;
+}
+.ui-page-header__back:hover {
+  text-decoration: underline;
+}
+.ui-page-header__action {
+  flex: none;
+}
+
+/* Buttons */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-s);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--admin-motion) var(--admin-ease), transform var(--admin-motion) var(--admin-ease), opacity var(--admin-motion) var(--admin-ease);
+}
+.ui-btn--primary {
+  background: rgb(var(--admin-accent));
+  color: rgb(var(--admin-on-accent));
+}
+.ui-btn--primary:hover {
+  background: color-mix(in srgb, rgb(var(--admin-accent)) 88%, rgb(var(--admin-ink)));
+}
+.ui-btn--secondary {
+  background: rgb(var(--admin-surface));
+  border-color: rgb(var(--admin-control));
+  color: rgb(var(--admin-ink));
+}
+.ui-btn--secondary:hover {
+  background: rgb(var(--admin-tint));
+}
+.ui-btn--quiet {
+  background: transparent;
+  color: rgb(var(--admin-accent-ink));
+}
+.ui-btn--quiet:hover {
+  background: rgb(var(--admin-tint));
+}
+.ui-btn--danger {
+  background: rgb(var(--admin-danger));
+  color: rgb(var(--admin-surface));
+}
+.ui-btn--danger:hover {
+  background: color-mix(in srgb, rgb(var(--admin-danger)) 88%, rgb(var(--admin-ink)));
+}
+.ui-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.ui-btn:disabled,
+.ui-btn.is-busy {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.ui-btn.is-busy {
+  cursor: progress;
+}
+@media (max-width: 768px), (pointer: coarse) {
+  .ui-btn {
+    min-height: var(--admin-target);
+  }
+}
+
+/* Status pills: always words, so never colour alone. */
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.ui-pill--neutral {
+  background: rgb(var(--admin-bg));
+  color: rgb(var(--admin-muted));
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-line));
+}
+.ui-pill--ok {
+  background: rgb(var(--admin-ok-tint));
+  color: rgb(var(--admin-ok));
+}
+.ui-pill--warn {
+  background: rgb(var(--admin-warn-tint));
+  color: rgb(var(--admin-warn));
+}
+.ui-pill--danger {
+  background: rgb(var(--admin-danger-tint));
+  color: rgb(var(--admin-danger));
+}
+.ui-pill--accent {
+  background: rgb(var(--admin-accent));
+  color: rgb(var(--admin-on-accent));
+}
+
+/* Empty state */
+.ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 34rem;
+  padding: 1.25rem;
+  background: rgb(var(--admin-surface));
+  border: 1px dashed rgb(var(--admin-control));
+  border-radius: var(--admin-radius-m);
+}
+.ui-empty__icon {
+  color: rgb(var(--admin-accent-ink));
+}
+.ui-empty__text {
+  margin: 0;
+  color: rgb(var(--admin-text));
+}
+.ui-empty__action {
+  margin-top: 0.25rem;
+}
+
+/* Skeleton: a calm shimmer; a static tint under reduced motion. */
+.ui-skel {
+  display: block;
+  min-height: 1rem;
+  border-radius: var(--admin-radius-s);
+  background: linear-gradient(90deg, rgb(var(--admin-ink) / 0.07), rgb(var(--admin-ink) / 0.13), rgb(var(--admin-ink) / 0.07));
+  background-size: 200% 100%;
+  animation: ui-shimmer 1.4s ease-in-out infinite;
+}
+.ui-skel-rows {
+  display: grid;
+  gap: 0.6rem;
+}
+@keyframes ui-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Disclosure */
+.ui-disclosure {
+  border-top: 1px solid rgb(var(--admin-line));
+}
+.ui-disclosure__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: var(--admin-target);
+  padding: 0 0.25rem;
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+  cursor: pointer;
+  list-style: none;
+}
+.ui-disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+.ui-disclosure__summary::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--admin-motion) var(--admin-ease);
+}
+.ui-disclosure[open] > .ui-disclosure__summary::after {
+  transform: rotate(-135deg);
+}
+.ui-disclosure__body {
+  padding: 0.5rem 0 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn,
+  .ui-disclosure__summary::after {
+    transition: none;
+  }
+  .ui-skel {
+    animation: none;
+    background: rgb(var(--admin-ink) / 0.1);
+  }
+}

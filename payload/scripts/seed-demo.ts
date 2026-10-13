@@ -465,7 +465,19 @@ async function main() {
         overrideAccess: true,
         context: CTX,
       })
-      return 1
+      // A story a member sent in from the website, so Waiting for approval, its sidebar count and the Home list have something to show (wave G).
+      await payload.create({
+        collection: 'stories',
+        data: {
+          title: 'My first season at the club',
+          content: await htmlToLexical('<p>I joined as a nervous beginner and left every Saturday with a new friend and a story to tell.</p>', payload.config),
+          authorName: 'A club member',
+          status: 'pending',
+        },
+        overrideAccess: true,
+        context: CTX,
+      })
+      return 2
     })
 
     await seedCollection(payload, 'pages', async () => {

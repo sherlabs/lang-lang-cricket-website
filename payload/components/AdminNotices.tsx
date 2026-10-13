@@ -1,3 +1,6 @@
+// @committee-facing
+import { LinkButton } from './ui/Button'
+
 /**
  * Calm full-page messages for the two cases where a custom admin view must not redirect (wave G WP-0): a signed-in person who is not
  * on the committee (a redirect to the login page would loop, because the login page sends signed-in people straight back), and a
@@ -10,8 +13,8 @@ export function NoAccessNotice({ signOutHref, selectorHref }: { signOutHref: str
       <h1 className="club-notice__title">This part of the admin is for the committee.</h1>
       <p className="club-notice__text">If you think you should be able to open it, ask the person who looks after the site.</p>
       <p className="club-notice__actions">
-        {selectorHref !== null && <a className="club-button-link" href={selectorHref}>Go to the selector area</a>}
-        <a className="club-button-link" href={signOutHref}>Sign out</a>
+        {selectorHref !== null && <LinkButton href={selectorHref}>Go to the selector area</LinkButton>}
+        <LinkButton href={signOutHref} variant={selectorHref !== null ? 'secondary' : 'primary'}>Sign out</LinkButton>
       </p>
     </main>
   )
@@ -23,8 +26,8 @@ export function AuthTroubleNotice({ reloadHref, signInHref }: { reloadHref: stri
       <h1 className="club-notice__title">We could not check that you are signed in.</h1>
       <p className="club-notice__text">This is usually a short hiccup. Reload the page, or sign in again.</p>
       <p className="club-notice__actions">
-        <a className="club-button-link" href={reloadHref}>Reload</a>
-        <a className="club-button-link" href={signInHref}>Sign in</a>
+        <LinkButton href={reloadHref}>Reload</LinkButton>
+        <LinkButton href={signInHref} variant="secondary">Sign in</LinkButton>
       </p>
     </main>
   )

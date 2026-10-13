@@ -97,6 +97,7 @@ export const Yearbooks: CollectionConfig = {
     },
     {
       name: 'slug',
+      label: 'Web address',
       type: 'text',
       unique: true,
       index: true,

@@ -1,8 +1,14 @@
+// @committee-facing
 import type { AdminViewServerProps } from 'payload'
 import { CLUB_LOCALE } from '@/config/site'
 import { SetStepNav } from '@payloadcms/ui'
 import { AdminPage, requireStaff } from './AdminPage'
 import { ApprovalPhotos, type PendingPhotoItem } from './ApprovalPhotos'
+import { Card, Section } from './ui/Card'
+import { EmptyState } from './ui/EmptyState'
+import { LinkButton } from './ui/Button'
+import { PageHeader } from './ui/PageHeader'
+import { StatusPill } from './ui/StatusPill'
 
 const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -36,37 +42,34 @@ export async function ApprovalsView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Waiting for approval' }]} />
-      <h1 className="club-page__title">Waiting for approval</h1>
-      <p className="club-page__lead">Stories and photos that members sent in from the website. Nobody sees them until you approve them.</p>
+      <PageHeader title="Waiting for approval" lead="Stories and photos that members sent in from the website. Nobody sees them until you approve them." />
 
-      {nothing && <p className="club-attention__none">Nothing is waiting. You are all caught up.</p>}
+      {nothing && <EmptyState icon="approvals">Nothing is waiting. You are all caught up.</EmptyState>}
 
       {stories.docs.length > 0 && (
-        <div className="club-field">
-          <h2 className="club-field__title">Stories ({stories.docs.length})</h2>
+        <Section id="stories" title="Stories" action={<StatusPill tone="warn" label={`${stories.docs.length} stories waiting`}>{stories.docs.length}</StatusPill>}>
           <ul className="club-approval-list">
             {stories.docs.map((s) => (
-              <li key={s.id} className="club-approval-list__item">
+              <Card as="li" key={s.id} className="club-approval-list__item">
                 <div>
                   <p className="club-table__strong">{s.title}</p>
                   <p className="club-muted">
                     By {s.authorName || 'someone'} on {when.format(new Date(s.createdAt))}
                   </p>
                 </div>
-                <a className="club-button-link" href={`${adminRoute}/collections/stories/${s.id}`}>
+                <LinkButton variant="secondary" href={`${adminRoute}/collections/stories/${s.id}`}>
                   Read and decide
-                </a>
-              </li>
+                </LinkButton>
+              </Card>
             ))}
           </ul>
-        </div>
+        </Section>
       )}
 
       {photoItems.length > 0 && (
-        <div className="club-field">
-          <h2 className="club-field__title">Event photos ({photoItems.length})</h2>
+        <Section id="photos" title="Event photos" action={<StatusPill tone="warn" label={`${photoItems.length} photos waiting`}>{photoItems.length}</StatusPill>}>
           <ApprovalPhotos photos={photoItems} />
-        </div>
+        </Section>
       )}
     </AdminPage>
   )

@@ -1,9 +1,13 @@
 'use client'
 import { useForm, useFormFields } from '@payloadcms/ui'
+import { adminContrastChecks, deriveAdminTokens, type AdminTokenName } from '../../lib/theme/admin-tokens'
 import { checkTheme, colorsFromForm } from '../../lib/theme/contrast'
 import { suggestShades } from '../../lib/theme/derive'
 import { seedColors } from '../../lib/theme/seed-colors'
 import { PALETTE_FIELDS, SHADE_FIELDS } from '../../lib/theme/tokens'
+
+/** Plain words for the admin colours the editor may have nudged (see `deriveAdminTokens`). */
+const ADJUSTED: Partial<Record<AdminTokenName, string>> = { muted: 'help text', 'accent-ink': 'accent text', focus: 'the keyboard focus ring', control: 'input borders' }
 
 const MARK = { pass: 'Pass', warn: 'Check', error: 'Too low' } as const
 
@@ -29,6 +33,9 @@ export function ThemeContrast() {
     if (window.confirm('Throw away your unsaved colour changes and go back to the last saved look?')) window.location.reload()
   }
   const errors = results.filter((r) => r.level === 'error' && !r.pass).length
+  const admin = deriveAdminTokens({ colors })
+  const adminResults = adminContrastChecks(admin)
+  const adjusted = admin.clamped.map((n) => ADJUSTED[n]).filter(Boolean)
   return (
     <>
     <div className="theme-sample" aria-label="Sample of the colours as you type">
@@ -80,6 +87,23 @@ export function ThemeContrast() {
             </li>
           )
         })}
+      </ul>
+      <h3 className="theme-contrast__title">Readability in the admin</h3>
+      <p className="theme-contrast__summary">
+        {adjusted.length === 0
+          ? 'The admin uses your colours as they are.'
+          : `To keep the admin readable it darkens ${adjusted.join(', ')} a little. The website is not affected.`}
+      </p>
+      <ul className="theme-contrast__list">
+        {adminResults.map((r) => (
+          <li key={r.id} className={`theme-contrast__row theme-contrast__row--${r.pass ? 'pass' : 'error'}`}>
+            <span className="theme-contrast__mark">{r.pass ? MARK.pass : MARK.error}</span>
+            <span>{r.label}</span>
+            <span className="theme-contrast__ratio">
+              {r.ratio.toFixed(2)} to 1 (needs {r.min})
+            </span>
+          </li>
+        ))}
       </ul>
     </div>
     </>

@@ -7,9 +7,34 @@
  *    a common job), and leave `admin.hidden` off the collection.
  *  - Admins only: add an entry to `advancedNav` and set `admin.hidden: hiddenFromEditors`
  *    on the collection (or global).
+ * Every entry needs a `group` (a heading from `navGroups`) and an `icon` key from the icon registry.
  * Every collection/global also needs `admin.group: false` (the sidebar is drawn here, not by
  * Payload's grouped nav) and plain-English `labels`.
  */
+import type { IconKey } from '../components/ui/icons'
+
+export type NavGroupKey = 'today' | 'website' | 'people' | 'office' | 'help' | 'advanced'
+
+/**
+ * Group headings for the sidebar (wave G WP-1). These are labels over the existing entries, never entries themselves: no key, no
+ * path, nothing to click, so they cannot be "active" and do not count toward the everyday cap. A label must not repeat an entry's
+ * label (`tests/admin-visibility.test.ts`).
+ */
+export const navGroups: Record<NavGroupKey, { label: string }> = {
+  today: { label: 'Today' },
+  website: { label: 'Club website' },
+  people: { label: 'People' },
+  office: { label: 'Running the club' },
+  help: { label: 'Support' },
+  advanced: { label: 'Advanced' },
+}
+
+/** Sub-headings inside Advanced. The player data screens sit together instead of being scattered through the list. */
+export type NavSubgroupKey = 'player-data'
+export const navSubgroups: Record<NavSubgroupKey, { label: string }> = {
+  'player-data': { label: 'Player data' },
+}
+
 export type NavEntry = {
   /** Stable key (used for the DOM id and tests). */
   key: string
@@ -22,53 +47,59 @@ export type NavEntry = {
   badge?: 'approvals'
   /** Advanced entries only: also shown to editors (the committee), not just admins. */
   forEditors?: boolean
+  /** The heading it sits under. Entries of one group are contiguous in their list (tested). */
+  group: NavGroupKey
+  /** Advanced entries only: a sub-heading inside Advanced. */
+  subgroup?: NavSubgroupKey
+  /** A key of the icon registry (`payload/components/ui/icons.ts`). */
+  icon: IconKey
 }
 
 export const everydayNav: NavEntry[] = [
-  { key: 'home', label: 'Home', path: '' },
-  { key: 'events', label: 'Events', path: '/collections/events' },
-  { key: 'announcements', label: 'Announcements', path: '/collections/announcements' },
-  { key: 'photos', label: 'Photo gallery', path: '/collections/gallery-photos' },
-  { key: 'sponsors', label: 'Sponsors', path: '/collections/sponsors' },
-  { key: 'people', label: 'Committee & contacts', path: '/collections/people' },
-  { key: 'documents', label: 'Documents', path: '/collections/documents' },
-  { key: 'pages', label: 'Pages', path: '/collections/pages' },
-  { key: 'news', label: 'News', path: '/collections/news' },
-  { key: 'players', label: 'Players', path: '/collections/players' },
-  { key: 'player-sponsors', label: 'Player sponsors', path: '/collections/player-sponsors' },
-  { key: 'club-apparel', label: 'Club apparel link', path: '/globals/club-apparel' },
-  { key: 'approvals', label: 'Waiting for approval', path: '/approvals', badge: 'approvals' },
+  { key: 'home', label: 'Home', path: '', group: 'today', icon: 'home' },
+  { key: 'approvals', label: 'Waiting for approval', path: '/approvals', badge: 'approvals', group: 'today', icon: 'approvals' },
+  { key: 'events', label: 'Events', path: '/collections/events', group: 'website', icon: 'events' },
+  { key: 'announcements', label: 'Announcements', path: '/collections/announcements', group: 'website', icon: 'announcements' },
+  { key: 'news', label: 'News', path: '/collections/news', group: 'website', icon: 'news' },
+  { key: 'photos', label: 'Photo gallery', path: '/collections/gallery-photos', group: 'website', icon: 'photos' },
+  { key: 'sponsors', label: 'Sponsors', path: '/collections/sponsors', group: 'website', icon: 'sponsors' },
+  { key: 'pages', label: 'Pages', path: '/collections/pages', group: 'website', icon: 'pages' },
+  { key: 'documents', label: 'Documents', path: '/collections/documents', group: 'website', icon: 'documents' },
+  { key: 'players', label: 'Players', path: '/collections/players', group: 'people', icon: 'players' },
+  { key: 'people', label: 'Committee & contacts', path: '/collections/people', group: 'people', icon: 'people' },
+  { key: 'player-sponsors', label: 'Player sponsors', path: '/collections/player-sponsors', group: 'people', icon: 'player-sponsors' },
+  { key: 'club-apparel', label: 'Club apparel link', path: '/globals/club-apparel', group: 'people', icon: 'apparel' },
   // Wave D: ONE entry for the whole club back office (members, fees, volunteers, meetings, diary, email, stock); every module is a tile on its page, so the menu grows by one, not seven.
-  { key: 'office', label: 'Club office', path: '/office', matches: ['/office'] },
-  { key: 'help', label: 'Help', path: '/help' },
+  { key: 'office', label: 'Club office', path: '/office', matches: ['/office'], group: 'office', icon: 'office' },
+  { key: 'help', label: 'Help', path: '/help', group: 'help', icon: 'help' },
 ]
 
 export const advancedNav: NavEntry[] = [
-  { key: 'users', label: 'Users', path: '/collections/users' },
+  { key: 'users', label: 'Users', path: '/collections/users', group: 'advanced', icon: 'users' },
   // Selectors are an occasional task, so they sit under Advanced; the committee reaches them here and from the Home tile.
-  { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true },
+  { key: 'selectors', label: 'Selectors', path: '/selectors', forEditors: true, group: 'advanced', icon: 'selectors' },
   // Posting a result is a weekly job for editors, so Social posts is reachable by them here and from a Home tile (wave C spec 3.6).
-  { key: 'social', label: 'Social posts', path: '/social', forEditors: true },
+  { key: 'social', label: 'Social posts', path: '/social', forEditors: true, group: 'advanced', icon: 'social' },
   // The club fantasy game (wave F, issue #36): run a few times a year, so one Advanced entry for the whole view, no Home tile.
-  { key: 'fantasy', label: 'Fantasy cricket', path: '/fantasy', forEditors: true },
+  { key: 'fantasy', label: 'Fantasy cricket', path: '/fantasy', forEditors: true, group: 'advanced', icon: 'fantasy' },
   // Occasional, editor-run content: kept out of the everyday list so it stays short on a phone, still reachable by the committee here and from Home tiles / approvals.
-  { key: 'stories', label: 'Club history stories', path: '/collections/stories', forEditors: true },
-  { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks', forEditors: true },
-  { key: 'social-settings', label: 'Social graphics settings', path: '/globals/social-settings' },
-  { key: 'office-settings', label: 'Club office settings', path: '/globals/office-settings' },
-  { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings' },
-  { key: 'club', label: 'Club details', path: '/globals/club' },
-  { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings' },
-  { key: 'theme', label: 'Site look (colours and fonts)', path: '/globals/theme' },
-  { key: 'media', label: 'Media library', path: '/collections/media' },
-  { key: 'event-photos', label: 'Event photos', path: '/collections/event-photos' },
-  { key: 'event-rsvps', label: 'RSVPs', path: '/collections/event-rsvps' },
-  { key: 'player-aliases', label: 'Player aliases', path: '/collections/player-aliases' },
-  { key: 'player-seasons', label: 'Player seasons', path: '/collections/player-seasons' },
-  { key: 'player-sync-runs', label: 'Sync runs', path: '/collections/player-sync-runs' },
-  { key: 'saved-reports', label: 'Saved reports', path: '/collections/saved-reports' },
-  // Import and export of history, and the duplicate-players list: one advanced entry for both (W2 spec 6.1).
-  { key: 'player-data-tools', label: 'Player data tools', path: '/player-data-tools' },
+  { key: 'stories', label: 'Club history stories', path: '/collections/stories', forEditors: true, group: 'advanced', icon: 'stories' },
+  { key: 'yearbooks', label: 'Season yearbooks', path: '/collections/yearbooks', forEditors: true, group: 'advanced', icon: 'yearbooks' },
+  { key: 'social-settings', label: 'Social graphics settings', path: '/globals/social-settings', group: 'advanced', icon: 'settings' },
+  { key: 'office-settings', label: 'Club office settings', path: '/globals/office-settings', group: 'advanced', icon: 'settings' },
+  { key: 'selection-settings', label: 'Selection settings', path: '/globals/selection-settings', group: 'advanced', icon: 'settings' },
+  { key: 'club', label: 'Club details', path: '/globals/club', group: 'advanced', icon: 'settings' },
+  { key: 'site-settings', label: 'Site settings', path: '/globals/site-settings', group: 'advanced', icon: 'settings' },
+  { key: 'theme', label: 'Site look (colours and fonts)', path: '/globals/theme', group: 'advanced', icon: 'theme' },
+  { key: 'media', label: 'Media library', path: '/collections/media', group: 'advanced', icon: 'media' },
+  { key: 'event-photos', label: 'Event photos', path: '/collections/event-photos', group: 'advanced', icon: 'photos' },
+  { key: 'event-rsvps', label: 'RSVPs', path: '/collections/event-rsvps', group: 'advanced', icon: 'events' },
+  { key: 'saved-reports', label: 'Saved reports', path: '/collections/saved-reports', group: 'advanced', icon: 'documents' },
+  // Import and export of history, and the duplicate-players list: one advanced entry for both (W2 spec 6.1). With the player data screens below it, under one sub-heading.
+  { key: 'player-data-tools', label: 'Player data tools', path: '/player-data-tools', group: 'advanced', subgroup: 'player-data', icon: 'data' },
+  { key: 'player-aliases', label: 'Player aliases', path: '/collections/player-aliases', group: 'advanced', subgroup: 'player-data', icon: 'tag' },
+  { key: 'player-seasons', label: 'Player seasons', path: '/collections/player-seasons', group: 'advanced', subgroup: 'player-data', icon: 'data' },
+  { key: 'player-sync-runs', label: 'Sync runs', path: '/collections/player-sync-runs', group: 'advanced', subgroup: 'player-data', icon: 'data' },
 ]
 
 /**
@@ -144,24 +175,24 @@ export function navFor(role: string | null | undefined): { everyday: NavEntry[];
   return { everyday: everydayNav, advanced }
 }
 
-export type JobTile = { key: string; title: string; hint: string; path: string }
+export type JobTile = { key: string; title: string; hint: string; path: string; icon: IconKey }
 
 /** Big dashboard buttons: the jobs the committee does most. `path` is under the admin route. */
 export const jobTiles: JobTile[] = [
-  { key: 'event', title: 'Add an event', hint: 'Dinners, working bees, presentation days', path: '/collections/events/create' },
-  { key: 'announcement', title: 'Post an announcement', hint: 'Shows as a banner on the home page', path: '/collections/announcements/create' },
-  { key: 'photos', title: 'Add photos to the gallery', hint: 'Pick one or many pictures', path: '/collections/gallery-photos/create' },
-  { key: 'sponsor', title: 'Add a sponsor', hint: 'Name, level and logo', path: '/collections/sponsors/create' },
-  { key: 'player-sponsor', title: 'Add a player sponsor', hint: 'Link a business to a player', path: '/collections/player-sponsors/create' },
-  { key: 'apparel', title: 'Change the apparel link', hint: 'Where the Club apparel button goes', path: '/globals/club-apparel' },
-  { key: 'contact', title: 'Update a contact', hint: 'Change a phone number, email or role', path: '/collections/people' },
-  { key: 'document', title: 'Upload a document', hint: 'Forms, policies and newsletters (PDF)', path: '/collections/documents/create' },
-  { key: 'page', title: 'Add a page', hint: 'An info page such as About or Join us', path: '/collections/pages/create' },
-  { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create' },
-  { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create' },
-  { key: 'selector', title: 'Add a selector', hint: 'A login for someone who picks the teams', path: '/selectors' },
-  { key: 'social', title: 'Make a social post', hint: 'Results, line-ups, milestones and more', path: '/social' },
-  { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help' },
+  { key: 'event', title: 'Add an event', hint: 'Dinners, working bees, presentation days', path: '/collections/events/create', icon: 'events' },
+  { key: 'announcement', title: 'Post an announcement', hint: 'Shows as a banner on the home page', path: '/collections/announcements/create', icon: 'announcements' },
+  { key: 'photos', title: 'Add photos to the gallery', hint: 'Pick one or many pictures', path: '/collections/gallery-photos/create', icon: 'photos' },
+  { key: 'sponsor', title: 'Add a sponsor', hint: 'Name, level and logo', path: '/collections/sponsors/create', icon: 'sponsors' },
+  { key: 'player-sponsor', title: 'Add a player sponsor', hint: 'Link a business to a player', path: '/collections/player-sponsors/create', icon: 'player-sponsors' },
+  { key: 'apparel', title: 'Change the apparel link', hint: 'Where the Club apparel button goes', path: '/globals/club-apparel', icon: 'apparel' },
+  { key: 'contact', title: 'Update a contact', hint: 'Change a phone number, email or role', path: '/collections/people', icon: 'people' },
+  { key: 'document', title: 'Upload a document', hint: 'Forms, policies and newsletters (PDF)', path: '/collections/documents/create', icon: 'documents' },
+  { key: 'page', title: 'Add a page', hint: 'An info page such as About or Join us', path: '/collections/pages/create', icon: 'pages' },
+  { key: 'news', title: 'Post news', hint: 'A news article with a picture', path: '/collections/news/create', icon: 'news' },
+  { key: 'story', title: 'Write a club history story', hint: 'Or approve one sent in by a member', path: '/collections/stories/create', icon: 'stories' },
+  { key: 'selector', title: 'Add a selector', hint: 'A login for someone who picks the teams', path: '/selectors', icon: 'selectors' },
+  { key: 'social', title: 'Make a social post', hint: 'Results, line-ups, milestones and more', path: '/social', icon: 'social' },
+  { key: 'help', title: 'Need a hand?', hint: 'Step-by-step help and who to call', path: '/help', icon: 'help' },
 ]
 
 /** Pure helper (unit-tested): is `pathname` inside `entry`? Home matches only the admin root. */
@@ -170,4 +201,28 @@ export function isNavActive(entry: NavEntry, pathname: string, adminRoute: strin
   if (entry.path === '') return pathname === adminRoute || pathname === `${adminRoute}/`
   const prefixes = [base, ...(entry.matches ?? []).map((m) => `${adminRoute}${m}`)]
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
+
+export type NavSection = { key: string; label: string | null; entries: NavEntry[] }
+
+/**
+ * Pure (unit-tested): cut a menu list into the runs the sidebar draws under one heading. `by: 'group'` is the everyday list (a
+ * heading per `navGroups` entry); `by: 'subgroup'` is Advanced (entries without a sub-heading come first, unlabelled). Order is the
+ * array order, so a group must be contiguous in its list; `tests/admin-visibility.test.ts` checks that it is.
+ */
+export function navSections(entries: NavEntry[], by: 'group' | 'subgroup'): NavSection[] {
+  const out: NavSection[] = []
+  for (const e of entries) {
+    const key = by === 'group' ? e.group : (e.subgroup ?? '')
+    const label = by === 'group' ? navGroups[e.group].label : e.subgroup ? navSubgroups[e.subgroup].label : null
+    const last = out[out.length - 1]
+    if (last && last.key === key) last.entries.push(e)
+    else out.push({ key, label, entries: [e] })
+  }
+  return out
+}
+
+/** Plain-English role names for the sidebar footer (never the raw role string). */
+export function roleLabel(role: string | null | undefined): string {
+  return role === 'admin' ? 'Site admin' : role === 'editor' ? 'Committee' : 'Member'
 }

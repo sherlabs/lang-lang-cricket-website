@@ -6,7 +6,9 @@ import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
+import { adminTokenVars, deriveAdminTokens } from '@/lib/theme/admin-tokens'
 import { themeCssVars } from '@/lib/theme/css'
+import { HEADING_FONT_CLASSES, headingFontVar } from '@/lib/theme/font-faces'
 import { getAdminTheme } from '@/lib/theme'
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
@@ -32,9 +34,13 @@ const Layout = async ({ children }: Args) => {
       config={config}
       importMap={importMap}
       serverFunction={serverFunction}
-      // The --brand-* variables go on <html> itself: RootLayout owns <head> and the admin body streams in,
-      // so an inline style attribute is the one place guaranteed to be in the first HTML.
-      htmlProps={{ style: themeCssVars(theme) as React.CSSProperties }}
+      // The --brand-* variables, the contrast-checked --admin-* tokens derived from them (lib/theme/admin-tokens.ts) and the display
+      // font go on <html> itself: RootLayout owns <head> and the admin body streams in, so an inline style attribute is the one place
+      // guaranteed to be in the first HTML. The font classes only define the --font-h-* variables; a face downloads when it is used.
+      htmlProps={{
+        className: HEADING_FONT_CLASSES,
+        style: { ...themeCssVars(theme), ...adminTokenVars(deriveAdminTokens(theme)), '--admin-font-display': headingFontVar(theme.font.key) } as React.CSSProperties,
+      }}
     >
       {children}
     </RootLayout>

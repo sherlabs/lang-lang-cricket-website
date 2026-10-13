@@ -1,6 +1,9 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { AdminPage, requireStaff } from './AdminPage'
+import { Card } from './ui/Card'
+import { PageHeader } from './ui/PageHeader'
 import { helpContacts, helpIntro, helpSections } from '../admin/helpContent'
 
 /** `/admin/help` (custom view): a one-page guide. The words live in `payload/admin/helpContent.ts`. */
@@ -10,8 +13,7 @@ export async function HelpView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view} className="club-help">
       <SetStepNav nav={[{ label: 'Help' }]} />
-      <h1 className="club-page__title">Help</h1>
-      <p className="club-page__lead">{helpIntro}</p>
+      <PageHeader title="Help" lead={helpIntro} />
 
       <ul className="club-help__jump">
         {helpSections.map((s) => (
@@ -22,17 +24,17 @@ export async function HelpView(view: AdminViewServerProps) {
       </ul>
 
       {helpSections.map((s) => (
-        <section key={s.id} id={s.id} className="club-help__section">
+        <Card as="section" key={s.id} id={s.id} className="club-help__section ui-stack">
           <h2>{s.title}</h2>
           <ol>
             {s.steps.map((step) => (
               <li key={step}>{step}</li>
             ))}
           </ol>
-        </section>
+        </Card>
       ))}
 
-      <section className="club-help__section">
+      <Card as="section" className="club-help__section ui-stack">
         <h2>Who to call</h2>
         <ul>
           {helpContacts.map((c) => (
@@ -41,7 +43,7 @@ export async function HelpView(view: AdminViewServerProps) {
             </li>
           ))}
         </ul>
-      </section>
+      </Card>
     </AdminPage>
   )
 }

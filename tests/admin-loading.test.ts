@@ -13,7 +13,17 @@ describe('admin first paint', () => {
 
   it('the login intro is static copy: no data, no club name', () => {
     const html = renderToStaticMarkup(LoginIntro())
-    expect(html).toContain('Committee sign-in')
+    expect(html).toContain('Sign in to look after the website')
     expect(html).not.toMatch(/Lang Lang/i)
+  })
+
+  it('the password help matches whether the reset link exists: it points at the link only when outbound mail is configured', () => {
+    const on = renderToStaticMarkup(LoginIntro({ resetByEmail: true }))
+    const off = renderToStaticMarkup(LoginIntro({ resetByEmail: false }))
+    expect(on).toContain('data-login-reset="on"')
+    expect(on).toContain('Use the link below the form')
+    expect(off).toContain('data-login-reset="off"')
+    expect(off).toContain('Ask the person who looks after the site')
+    expect(off).not.toContain('link below the form')
   })
 })

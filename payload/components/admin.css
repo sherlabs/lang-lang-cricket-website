@@ -1,36 +1,10 @@
-/* Payload admin brand layer (spec §9). Uses Payload's CSS variables, not Tailwind.
-   --theme-elevation-* is untouched; success and the primary button go gold on black. */
-:root {
-  /* The theme variables (--brand-*) are set as an inline style on <html> by app/(payload)/layout.tsx. */
-  --club-gold: rgb(var(--brand-gold));
-  --club-gold-light: rgb(var(--brand-gold-light));
-  --club-black: rgb(var(--brand-black));
-  /* Success ramp: five exact anchors from the theme, five in-between steps mixed from their neighbours.
-     Percentages are fitted so the Lang Lang seed lands within 2 per channel of the previous hex ramp. */
-  --color-success-50: rgb(var(--brand-gold-pale));
-  --color-success-100: color-mix(in srgb, rgb(var(--brand-gold-pale)) 61%, rgb(var(--brand-gold-light)) 39%);
-  --color-success-150: color-mix(in srgb, rgb(var(--brand-gold-pale)) 26%, rgb(var(--brand-gold-light)) 74%);
-  --color-success-200: rgb(var(--brand-gold-light));
-  --color-success-250: color-mix(in srgb, rgb(var(--brand-gold-light)) 52%, rgb(var(--brand-gold)) 48%);
-  --color-success-300: rgb(var(--brand-gold));
-  --color-success-350: color-mix(in srgb, rgb(var(--brand-gold)) 55%, rgb(var(--brand-gold-dark)) 45%);
-  --color-success-400: rgb(var(--brand-gold-dark));
-  --color-success-450: color-mix(in srgb, rgb(var(--brand-gold-dark)) 47%, rgb(var(--brand-gold-deep)) 53%);
-  --color-success-500: rgb(var(--brand-gold-deep));
-}
-
-.btn--style-primary {
-  --bg-color: var(--club-gold);
-  --hover-bg: var(--club-gold-light);
-  --color: var(--club-black);
-  --hover-color: var(--club-black);
-  background-color: var(--club-gold);
-  color: var(--club-black);
-}
-.btn--style-primary:hover:not(:disabled) {
-  background-color: var(--club-gold-light);
-  color: var(--club-black);
-}
+/* Payload admin brand layer. Uses Payload's CSS variables, not Tailwind. The tokens and their mapping live in ./admin-theme.css; the shared
+   kit in ./ui/kit.css; the shell (sidebar, page, sign-in, Payload controls) in ./ui/shell.css. Nothing in these files names a colour:
+   every colour is a --admin-* / --brand-* variable from the theme (tests/admin-contrast.test.ts). The per-view rules below
+   (office, stories, players, social, sign-in settings) move onto the kit view by view and are being retired. */
+@import './admin-theme.css';
+@import './ui/kit.css';
+@import './ui/shell.css';
 
 /* Logo / Icon */
 .club-logo {
@@ -43,7 +17,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: rgb(var(--admin-surface));
   border-radius: 0.5rem;
   box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.1);
 }
@@ -428,320 +402,11 @@
   max-width: 28rem;
 }
 
-/* ===== Simple admin theme (spec 2026-10-03-simple-admin-design.md) =====
-   Light, roomy, high contrast. The cream, stone, charcoal, grey and gold-deep variables below read
-   the club theme (Advanced > Site look), so the admin matches the website. */
-:root {
-  --club-cream: rgb(var(--brand-cream));
-  --club-stone: rgb(var(--brand-stone));
-  --club-charcoal: rgb(var(--brand-charcoal));
-  --club-grey: rgb(var(--brand-grey));
-  --club-gold-deep: rgb(var(--brand-gold-deep));
-}
-html[data-theme='light'] {
-  --theme-bg: var(--club-cream);
-  --theme-text: var(--club-black);
-  --theme-input-bg: #fff;
-  --font-body: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
-}
-body {
-  font-size: 1.0625rem;
-  line-height: 1.55;
-  background: var(--club-cream);
-  color: var(--club-black);
-}
-/* Bigger, clearer controls */
-.btn {
-  font-size: 1rem;
-}
-.btn--size-medium,
-.btn--size-large {
-  min-height: 2.75rem;
-}
-.btn--style-primary {
-  font-weight: 700;
-}
-.field-label {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--club-black);
-}
-.field-description {
-  font-size: 0.9375rem;
-  color: var(--club-grey);
-}
-.field-type input,
-.field-type textarea,
-.field-type .rs__control {
-  font-size: 1.0625rem;
-  min-height: 2.75rem;
-  background: #fff;
-  border-color: var(--theme-elevation-300);
-}
-.field-type textarea {
-  min-height: 7rem;
-}
-:focus-visible {
-  outline: 3px solid var(--club-gold);
-  outline-offset: 2px;
-}
-/* Nothing here uses password reset by email (disabled), so do not offer it */
-a[href$='/forgot'] {
-  display: none;
-}
-.card,
-.collection-list,
-.document-fields__main {
-  background: transparent;
-}
-
-/* Sidebar */
-.nav {
-  background: #fff;
-  border-right: 1px solid var(--theme-elevation-150);
-}
-.club-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-}
-.club-nav .club-nav__link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 0.5rem;
-  font-size: 1.0625rem;
-  font-weight: 500;
-  color: var(--club-charcoal);
-  text-decoration: none;
-}
-.club-nav .club-nav__link:hover {
-  background: var(--club-stone);
-  color: var(--club-black);
-}
-.club-nav .club-nav__link--active {
-  background: var(--color-success-50);
-  box-shadow: inset 4px 0 0 var(--club-gold);
-  color: var(--club-black);
-  font-weight: 700;
-}
-.club-nav__badge {
-  min-width: 1.5rem;
-  padding: 0 0.45rem;
-  border-radius: 999px;
-  background: var(--club-gold);
-  color: var(--club-black);
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-align: center;
-}
-.club-nav__advanced {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--theme-elevation-150);
-}
-.club-nav__advanced summary {
-  cursor: pointer;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--club-grey);
-}
-.club-nav__advanced .club-nav__link {
-  font-size: 0.9375rem;
-  color: var(--club-grey);
-}
-
-/* Home */
-.club-home {
-  padding-bottom: calc(var(--base) * 2);
-}
-.club-home__title,
-.club-page__title {
-  margin: 0;
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1.15;
-}
-.club-home__lead,
-.club-page__lead {
-  margin: 0.25rem 0 1.5rem;
-  max-width: 42rem;
-  font-size: 1.1875rem;
-  color: var(--club-grey);
-}
-.club-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 1rem;
-  margin: 0 0 2rem;
-  padding: 0;
-  list-style: none;
-}
-.club-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  height: 100%;
-  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
-  background: #fff;
-  border: 1px solid var(--theme-elevation-150);
-  border-left: 6px solid var(--club-gold);
-  border-radius: 0.75rem;
-  color: var(--club-black);
-  text-decoration: none;
-  transition: box-shadow 150ms ease, transform 150ms ease;
-}
-.club-tile:hover,
-.club-tile:focus-visible {
-  box-shadow: 0 6px 18px rgb(var(--brand-black) / 0.12);
-  transform: translateY(-1px);
-}
-.club-tile__title {
-  font-size: 1.3125rem;
-  font-weight: 700;
-  line-height: 1.25;
-}
-.club-tile__hint {
-  font-size: 0.9375rem;
-  color: var(--club-grey);
-}
-.club-attention {
-  max-width: 42rem;
-  margin-bottom: 2rem;
-  padding: 1.25rem 1.5rem;
-  background: var(--color-success-50);
-  border: 1px solid var(--club-gold);
-  border-radius: 0.75rem;
-}
-.club-attention__title {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-}
-.club-attention__none {
-  margin: 0;
-  color: var(--club-charcoal);
-}
-.club-attention__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-.club-attention__list a {
-  color: var(--club-black);
-  font-size: 1.125rem;
-}
-.club-advanced {
-  margin-top: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px dashed var(--theme-elevation-300);
-  border-radius: 0.75rem;
-}
-.club-advanced > summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--club-grey);
-}
-.club-advanced .club-dashboard__cards {
-  margin-top: 1rem;
-}
-
-/* Custom pages (Help, Waiting for approval) */
-.club-page {
-  padding-bottom: calc(var(--base) * 2);
-}
-.club-help__jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 0 2rem;
-  padding: 0;
-  list-style: none;
-}
-.club-help__jump a,
-.club-button-link {
-  display: inline-block;
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid var(--theme-elevation-200);
-  color: var(--club-black);
-  font-weight: 600;
-  text-decoration: none;
-}
-.club-help__jump a:hover,
-.club-button-link:hover {
-  background: var(--club-gold);
-  border-color: var(--club-gold);
-}
-.club-help__section {
-  max-width: 44rem;
-  margin-bottom: 1.5rem;
-  padding: 1.25rem 1.5rem;
-  background: #fff;
-  border: 1px solid var(--theme-elevation-150);
-  border-radius: 0.75rem;
-}
-.club-help__section h2 {
-  margin: 0 0 0.75rem;
-  font-size: 1.5rem;
-}
-.club-help__section ol,
-.club-help__section ul {
-  margin: 0;
-  padding-left: 1.5rem;
-  display: grid;
-  gap: 0.6rem;
-}
-.club-approval-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.75rem;
-  max-width: 44rem;
-}
-.club-approval-list__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: #fff;
-  border: 1px solid var(--theme-elevation-150);
-  border-radius: 0.75rem;
-}
-.club-approval-list__item p {
-  margin: 0;
-}
-
-/* Phones */
-@media (max-width: 768px) {
-  .club-home__title,
-  .club-page__title {
-    font-size: 1.75rem;
-  }
-  .club-tiles {
-    grid-template-columns: 1fr;
-  }
-  .club-approval-list__item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
 /* ===== Site look: readability report (payload/components/ThemeContrast.tsx) ===== */
 .theme-contrast {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
-  background: #fff;
+  background: rgb(var(--admin-surface));
   border-radius: 0.75rem;
   box-shadow: 0 0 0 1px rgb(var(--brand-black) / 0.1);
 }
@@ -878,25 +543,25 @@ a[href$='/forgot'] {
 /* Club office (wave D). Mobile first; the table becomes cards under 48rem. */
 .office-stat { margin-top: 0.35rem; font-size: 0.9375rem; font-weight: 600; color: var(--club-charcoal); }
 .office-footer-links { margin-top: 1rem; }
-.office-flash { max-width: 42rem; margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--club-gold); background: #fff; font-size: 1.0625rem; }
+.office-flash { max-width: 42rem; margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--club-gold); background: rgb(var(--admin-surface)); font-size: 1.0625rem; }
 .office-flash--error { border-color: var(--theme-error-500); border-left-width: 6px; }
-.office-flash--ok { border-left: 6px solid var(--club-gold); }
-.office-strip { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-left: 6px solid var(--club-gold); border-radius: 0.75rem; }
+.office-flash--ok { border-color: rgb(var(--admin-ok)); }
+.office-strip { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: var(--admin-radius-m); }
 .office-strip__total { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.125rem; }
 .office-strip ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
-.office-box { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-box { max-width: 42rem; margin: 0 0 1.25rem; padding: 1rem 1.25rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
 .office-box > summary { cursor: pointer; font-weight: 700; font-size: 1.125rem; min-height: 2.75rem; display: flex; align-items: center; }
 .office-box--danger { border-color: var(--theme-error-500); border-left-width: 6px; }
 .office-form { display: grid; gap: 0.85rem; margin-top: 0.75rem; }
 .office-form label, .office-filters label { display: grid; gap: 0.25rem; font-weight: 600; }
-.office-form input:not([type='checkbox']), .office-filters input, .office-filters select { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: #fff; }
+.office-form input:not([type='checkbox']), .office-filters input, .office-filters select { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: rgb(var(--admin-surface)); }
 .office-form fieldset { border: 1px solid var(--theme-elevation-150); border-radius: 0.5rem; padding: 0.5rem 0.75rem 0.75rem; }
 .office-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.25rem 0.75rem; }
 .office-check { display: flex !important; align-items: center; gap: 0.5rem; min-height: 2.75rem; font-weight: 500 !important; }
 .office-check input { width: 1.25rem; height: 1.25rem; }
 .office-filters { display: grid; gap: 0.75rem; max-width: 42rem; margin-bottom: 0.75rem; align-items: end; }
 .office-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.25rem; }
-.office-chip { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 0.9rem; border: 1px solid var(--club-gold); border-radius: 999px; background: #fff; color: var(--club-black); text-decoration: none; font-weight: 600; }
+.office-chip { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 0.9rem; border: 1px solid var(--club-gold); border-radius: 999px; background: rgb(var(--admin-surface)); color: var(--club-black); text-decoration: none; font-weight: 600; }
 .office-chip--on { background: var(--club-gold); }
 .office-chip:focus-visible, .office-box > summary:focus-visible { outline: 3px solid var(--club-gold); outline-offset: 2px; }
 .office-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0 0 1.25rem; }
@@ -905,7 +570,7 @@ a[href$='/forgot'] {
 .office-pager a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .office-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .office-table, .office-table tbody, .office-table tr, .office-table th, .office-table td { display: block; }
-.office-table tr { margin: 0 0 0.75rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-table tr { margin: 0 0 0.75rem; padding: 0.75rem 1rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
 .office-table caption { display: block; text-align: left; margin: 0 0 0.5rem; }
 .office-table th[scope='row'], .office-table td { padding: 0.2rem 0; border: 0; text-align: left; }
 .office-table th[scope='row'], .office-table td { overflow-wrap: anywhere; }
@@ -924,28 +589,28 @@ a[href$='/forgot'] {
 
 /* Club office: fees (wave D WP-2). */
 .office-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 0.75rem; margin: 0 0 1.25rem; padding: 0; list-style: none; max-width: 56rem; }
-.office-card { padding: 0.85rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-card { padding: 0.85rem 1rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
 .office-card__label { display: block; font-weight: 600; color: var(--club-grey); }
 .office-card__value { display: block; font-size: 1.5rem; font-weight: 800; }
 .office-card__hint { display: block; font-size: 0.875rem; color: var(--club-grey); margin-top: 0.25rem; }
 .office-badge { display: inline-flex; align-items: center; min-height: 1.75rem; padding: 0 0.7rem; border: 2px solid var(--club-charcoal); border-radius: 999px; font-weight: 700; font-size: 0.9375rem; }
 .office-status { font-weight: 700; white-space: nowrap; }
 .office-num { text-align: right; font-variant-numeric: tabular-nums; }
-.office-form select, .office-form textarea { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: #fff; }
+.office-form select, .office-form textarea { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: rgb(var(--admin-surface)); }
 .office-split { display: grid; gap: 0.5rem; }
 .office-split__row { display: grid; grid-template-columns: 1fr 7rem; gap: 0.5rem; align-items: center; }
 .office-inline { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .office-void > summary { cursor: pointer; min-height: 2.75rem; display: inline-flex; align-items: center; font-weight: 600; text-decoration: underline; }
 .office-void > summary:focus-visible { outline: 3px solid var(--club-gold); outline-offset: 2px; }
 .office-list { display: grid; gap: 0.5rem; margin: 0 0 1.25rem; padding: 0; list-style: none; max-width: 56rem; }
-.office-list > li { padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
+.office-list > li { padding: 0.75rem 1rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: 0.75rem; }
 .office-list > li > .office-inline { display: flex; margin-top: 0.5rem; max-width: 100%; }
 .office-list--voided { opacity: 0.75; text-decoration: line-through; }
-.office-minutes { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 1.0625rem; line-height: 1.5; max-width: 48rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--theme-elevation-150); border-radius: 0.5rem; }
+.office-minutes { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 1.0625rem; line-height: 1.5; max-width: 48rem; padding: 1rem 1.25rem; background: rgb(var(--admin-surface)); border: 1px solid var(--theme-elevation-150); border-radius: 0.5rem; }
 .office-attendance { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
-.office-attendance form { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; padding: 0.25rem 0.5rem; border: 1px solid var(--theme-elevation-150); border-radius: 999px; background: #fff; }
+.office-attendance form { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; padding: 0.25rem 0.5rem; border: 1px solid var(--theme-elevation-150); border-radius: 999px; background: rgb(var(--admin-surface)); }
 .office-textarea { width: 100%; min-height: 6rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; }
-.office-form select { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: #fff; }
+.office-form select { min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--theme-elevation-250); border-radius: 0.375rem; font: inherit; background: rgb(var(--admin-surface)); }
 @media print {
   .office-noprint, .nav, .app-header, .template-default__nav-wrap, .template-default__nav-overlay { display: none !important; }
   .office-minutes { border: 0; padding: 0; }
@@ -1013,31 +678,17 @@ a[href$='/forgot'] {
   font-size: 0.875rem;
 }
 
-/* ---- Loading skeleton and calm notices (wave G WP-0). Colours come only from the --brand-* variables on <html>. ---- */
-.admin-skel { display: flex; min-height: 100vh; background: var(--theme-bg, rgb(var(--brand-cream))); }
+/* ---- First-paint skeleton and calm notices (wave G WP-0, restyled in WP-1). Same shell proportions as the real page; tokens only. ---- */
+.admin-skel { display: flex; min-height: 100vh; background: rgb(var(--admin-bg)); }
 .admin-skel__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.admin-skel__nav { display: none; flex: 0 0 17rem; flex-direction: column; gap: 0.9rem; padding: 1.5rem 1.25rem; background: rgb(var(--brand-black)); }
-.admin-skel__main { flex: 1; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 1rem; max-width: 72rem; }
-.admin-skel__crest { width: 3rem; height: 3rem; border-radius: 0.75rem; background: rgb(var(--brand-gold)); }
-.admin-skel__bar { display: block; height: 0.9rem; width: 70%; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); animation: admin-skel-pulse 1.4s ease-in-out infinite; }
-.admin-skel__nav .admin-skel__bar { background: rgb(var(--brand-gold) / 0.28); }
-.admin-skel__main .admin-skel__bar { background: rgb(var(--brand-black) / 0.1); }
-.admin-skel__bar--wide { width: 90%; }
-.admin-skel__bar--title { height: 1.75rem; width: 12rem; }
+.admin-skel__nav { position: relative; display: none; flex: 0 0 var(--nav-width, 17rem); flex-direction: column; gap: 0.9rem; padding: 1.75rem 1.25rem 1.5rem; background: rgb(var(--admin-surface)); border-right: 1px solid rgb(var(--admin-line)); }
+.admin-skel__nav::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, rgb(var(--brand-gold-dark)), rgb(var(--brand-gold-light))); }
+.admin-skel__main { flex: 1; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 1rem; max-width: var(--admin-page-max); }
+.admin-skel__crest { display: block; width: 2.75rem; height: 2.75rem; border-radius: var(--admin-radius-m); background: rgb(var(--admin-accent)); }
 .admin-skel__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; margin-top: 0.5rem; }
-.admin-skel__card { display: block; height: 7rem; border-radius: 1rem; background: rgb(var(--brand-black) / 0.06); animation: admin-skel-pulse 1.4s ease-in-out infinite; }
-@media (min-width: 768px) { .admin-skel__nav { display: flex; } .admin-skel__main { padding: 2rem; } }
-@keyframes admin-skel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-@media (prefers-reduced-motion: reduce) { .admin-skel__bar, .admin-skel__card { animation: none; } }
+@media (min-width: 1025px) { .admin-skel__nav { display: flex; } .admin-skel__main { padding: 2rem; } }
 
 .club-notice { max-width: 34rem; margin: 12vh auto 0; padding: 1.5rem; }
-.club-notice__title { font-size: 1.5rem; line-height: 1.25; margin: 0 0 0.75rem; }
-.club-notice__text { margin: 0 0 1.25rem; color: var(--theme-elevation-650); }
+.club-notice__title { margin: 0 0 0.75rem; font-family: var(--admin-display); font-size: 1.75rem; font-weight: 600; line-height: 1.2; color: rgb(var(--admin-ink)); }
+.club-notice__text { margin: 0 0 1.25rem; color: rgb(var(--admin-muted)); }
 .club-notice__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0; }
-.club-notice__actions a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 1.1rem; border-radius: 0.6rem; border: 1px solid var(--theme-elevation-250); color: var(--theme-text); text-decoration: none; font-weight: 600; }
-.club-notice__actions a:first-child { background: rgb(var(--brand-gold)); border-color: rgb(var(--brand-gold)); color: rgb(var(--brand-black)); }
-.club-notice__actions a:focus-visible { outline: 3px solid rgb(var(--brand-gold)); outline-offset: 2px; }
-
-.club-login-intro { margin: 0 0 1.25rem; text-align: center; }
-.club-login-intro__title { margin: 0 0 0.35rem; font-size: 1.25rem; font-weight: 700; color: var(--theme-text); }
-.club-login-intro__text { margin: 0; color: var(--theme-elevation-650); }

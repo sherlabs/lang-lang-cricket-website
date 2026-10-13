@@ -1,0 +1,75 @@
+import {
+  Alert02Icon,
+  ArrowRight01Icon,
+  Book02Icon,
+  BookOpen01Icon,
+  Building02Icon,
+  Calendar03Icon,
+  CheckmarkBadge01Icon,
+  CricketBatIcon,
+  Database01Icon,
+  File02Icon,
+  FileAttachmentIcon,
+  HandshakeIcon,
+  Home01Icon,
+  HelpCircleIcon,
+  HeartHandshakeIcon,
+  Image01Icon,
+  Key01Icon,
+  Logout01Icon,
+  Megaphone01Icon,
+  NewspaperIcon,
+  PaintBoardIcon,
+  Settings02Icon,
+  Share08Icon,
+  Shirt01Icon,
+  Store01Icon,
+  Tag01Icon,
+  TrophyIcon,
+  UserGroupIcon,
+  UserMultiple02Icon,
+  UserIcon,
+} from '@hugeicons/core-free-icons'
+
+/**
+ * The admin's icon registry (wave G WP-1): one fixed set of icons, keyed by the names the navigation, tiles and actions use.
+ * Named imports only, so the admin bundle carries just these. `payload/admin/navigation.ts` stores an `IconKey` per entry and
+ * `tests/admin-visibility.test.ts` checks every key exists here. A key missing from the free Hugeicons set would get an inline
+ * SVG entry in this file instead.
+ */
+export const ICONS = {
+  home: Home01Icon,
+  events: Calendar03Icon,
+  announcements: Megaphone01Icon,
+  photos: Image01Icon,
+  sponsors: HandshakeIcon,
+  people: UserMultiple02Icon,
+  documents: FileAttachmentIcon,
+  pages: File02Icon,
+  news: NewspaperIcon,
+  players: CricketBatIcon,
+  'player-sponsors': HeartHandshakeIcon,
+  apparel: Shirt01Icon,
+  approvals: CheckmarkBadge01Icon,
+  office: Building02Icon,
+  help: HelpCircleIcon,
+  selectors: UserGroupIcon,
+  social: Share08Icon,
+  fantasy: TrophyIcon,
+  stories: BookOpen01Icon,
+  yearbooks: Book02Icon,
+  settings: Settings02Icon,
+  theme: PaintBoardIcon,
+  media: Image01Icon,
+  users: Key01Icon,
+  data: Database01Icon,
+  store: Store01Icon,
+  tag: Tag01Icon,
+  account: UserIcon,
+  signout: Logout01Icon,
+  alert: Alert02Icon,
+  next: ArrowRight01Icon,
+} as const
+
+export type IconKey = keyof typeof ICONS
+export const isIconKey = (key: string): key is IconKey => Object.prototype.hasOwnProperty.call(ICONS, key)

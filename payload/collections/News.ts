@@ -69,6 +69,7 @@ export const News: CollectionConfig = {
     { name: 'title', label: 'Headline', type: 'text', required: true, validate: maxChars(200, { required: true }), admin: { placeholder: 'e.g. A Grade win the grand final' } },
     {
       name: 'slug',
+      label: 'Web address',
       type: 'text',
       unique: true,
       index: true,

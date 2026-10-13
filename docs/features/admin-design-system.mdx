@@ -1,0 +1,42 @@
+---
+title: Admin design system
+status: shipped
+routes: ["/admin", "/admin/login", "/admin/help", "/admin/approvals"]
+collections: [theme, club]
+admin: "Nothing to set up: the admin follows Site look (colours, display font, crest) and Club details (club name); Site look also shows a readability check for the admin"
+owner: "The committee (everyday use) and the site admin (Site look)"
+related: [committee-admin, club-and-site-settings, approvals-inbox, admin-notifications]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A volunteer secretary who wants the admin to look like her club.** She opens the admin on her phone at the ground and sees the club's crest, name and colours, large buttons and a menu grouped by what she does, not Payload's developer screens.
+- **The site admin who changes colours in Site look and expects the admin to follow.** On the server instance that saved the change it shows at once; other instances can lag by up to a minute (the same cache the first paint uses, see [Simple committee admin](./committee-admin.mdx)).
+- **A second club** that reuses this setup: nothing in the admin names a colour or a club, so its own Site look is all it needs.
+
+## Why it was built
+
+The owner's walk of the live preview found the admin hard to scan, inconsistent between screens and unlike the public site. Wave G (spec `2026-10-13-wave-g-admin-redesign-design.md`, work package 1) gives the whole admin one calm look and one set of building blocks, so each screen built after it is a short sentence plus one obvious next step.
+
+## What it does
+
+- **The club's colours, derived and checked.** `lib/theme/admin-tokens.ts` turns the resolved Site look into the admin's own colours (page background, card surface, ink, body and help text, borders, accent, a highlighted tint, button label, keyboard focus ring, input borders) plus fixed green, amber and red for statuses, so a status never depends on a club palette. They are set on the page next to the `--brand-*` colours and `payload/components/admin-theme.css` maps them onto Payload's own variables (backgrounds, the grey ramp, radii, fonts). The admin stylesheets contain no colour of their own (`tests/admin-contrast.test.ts` fails if they gain a hex value).
+- **Readable for any palette.** Help text, accent text, the focus ring and input borders are the colours most likely to be too pale in a club palette; when one misses its contrast requirement it is darkened step by step until it passes (`clamped` in the result). `tests/admin-contrast.test.ts` checks every required pair (text 4.5 to 1, focus ring and input borders 3 to 1) for Lang Lang's colours, the neutral template club, the sample blue club and two deliberately bad palettes. The Site look form shows the same pairs under "Readability in the admin" and says which colours the admin darkened. The website itself is never changed by this.
+- **Type, shape and motion.** The club's display font (from Site look) is used for page titles and the Home greeting only; body text is Inter at 16px or more on every input. Corners are 6, 10 and 16 px, cards have a hairline border (one soft shadow only on raised cards, no yellow side borders), controls are 40px tall on a desktop and 44px on a phone, motion is 150 ms and stops completely for people who ask their device for reduced motion. Keyboard focus is a 2px ring on every control, and the first Tab stop is "Skip to main content".
+- **Task-first sidebar** (`AdminNav`, `NavLinks`, `AdminNavUser`). A crest header with the club's name, headings over the existing entries (Today, Club website, People, Running the club, Support), an icon on every entry, the active entry shown with a tint and a 3px accent bar, the waiting-for-approval count as a pill, a closed "Advanced" section for people who have it (the player data screens sit together under "Player data"), and at the bottom the signed-in person's name, their role in plain words ("Site admin" or "Committee") and a labelled "Sign out". A 4px gradient rule tops the sidebar as it does the public site's header. Headings are labels, not entries: the menu is exactly as long as before and no entry moved between the everyday and Advanced lists.
+- **Phone menu.** Payload's slide-over menu is kept; its button gets the word "Menu" and a 44px target, Escape closes it and returns focus to the button, and Tab stays inside the menu while it is open.
+- **Branded sign-in.** The crest and club name, "Sign in to look after the website", and one line about forgotten passwords that matches whether the site can send email.
+- **One kit of building blocks** (`payload/components/ui/`): `PageHeader`, `Card` and `Section`, `Button` and `LinkButton`, `StatusPill` (always words, optionally a count), `EmptyState`, `Skeleton` and `SkeletonRows`, `Disclosure` and `Icon` (one registry of Hugeicons, `icons.ts`). A component is added only when two real screens use it. This work package moved Home, Help, Waiting for approval, the sign-in notices and the loading skeleton onto them; other screens move across in the next work packages. `AdminShell` is the frame custom views sit in (page gutter, the one `main` landmark); `AdminPage` still exists and adds the timing log.
+- **Plain words.** `tests/admin-microcopy.test.ts` scans the committee-facing text (menu, headings, Home tiles, the Home and Help wording, the labels, help text and options of the collections the committee can open, and files marked `// @committee-facing`) for developer words such as "slug", "field", "collection" and "derived". "Document" is allowed where it means the Documents feature. Two labels were fixed on the way: "Slug" is now "Web address" and "Is Active Derived" is now "Playing now (worked out by the stats update)".
+
+## How to use it
+
+Nothing to learn: sign in and the admin looks like the club. To change the look, a site admin opens Advanced > **Site look (colours and fonts)**, changes the colours or font, and watches the sample and the readability checks; after saving, refresh the admin. For a new club, enter its colours and crest there; no code change is needed. A developer adding a screen builds it from `payload/components/ui/` and the `--admin-*` colours, and adds any new menu entry to `payload/admin/navigation.ts` with a group and an icon key.
+
+## Not included / deferred
+
+- Dark mode (the tokens are set up so it is a later swap of the colour inputs).
+- The remaining screens (lists, edit forms, Home's attention list and season card, the Social composer, Club office, Selectors and the rest) move onto the kit in the next work packages; until then they use the same colours through older class names. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Components with no second call site yet (Tabs, Segmented, SearchPicker, StickyActionBar, Field, Avatar) are not built.
+- No menu search box and no recent-items list (about fifteen entries do not need a filter, and a "/" shortcut would clash with typing).

@@ -101,6 +101,7 @@ export const Players: CollectionConfig = {
     },
     {
       name: 'slug',
+      label: 'Web address',
       type: 'text',
       unique: true,
       index: true,
@@ -175,6 +176,7 @@ export const Players: CollectionConfig = {
     },
     {
       name: 'isActiveDerived',
+      label: 'Playing now (worked out by the stats update)',
       type: 'checkbox',
       defaultValue: false,
       access: syncOwned,

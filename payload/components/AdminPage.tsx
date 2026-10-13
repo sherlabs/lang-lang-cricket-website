@@ -1,5 +1,3 @@
-import { DefaultTemplate } from '@payloadcms/next/templates'
-import { Gutter } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -8,29 +6,18 @@ import { loginRedirectUrl, adminReturnPath, queryKeysFor } from '@/lib/admin/red
 import { renderLogLine, requestTimings, type RenderLog } from '@/lib/admin/timing'
 import { classifySession } from '../admin/classify-session'
 import { AuthTroubleNotice, NoAccessNotice } from './AdminNotices'
+import { AdminShell } from './AdminShell'
 
 /**
- * Custom admin views are not wrapped in Payload's template automatically: this adds the
- * sidebar, header and page gutter so Help / Waiting for approval look like every other page.
+ * Custom admin views are not wrapped in Payload's template automatically: this adds the sidebar, header and page gutter (through
+ * `AdminShell`) and writes the one timing log line for the render, so Help / Waiting for approval look like every other page.
  */
 export function AdminPage({ view, children, className = '' }: { view: AdminViewServerProps; children: ReactNode; className?: string }) {
-  const { initPageResult, params, searchParams } = view
   logRender(view)
   return (
-    <DefaultTemplate
-      i18n={initPageResult.req.i18n}
-      locale={initPageResult.locale}
-      params={params}
-      payload={initPageResult.req.payload}
-      permissions={initPageResult.permissions}
-      searchParams={searchParams}
-      user={initPageResult.req.user || undefined}
-      visibleEntities={initPageResult.visibleEntities}
-    >
-      <Gutter>
-        <div className={`club-page ${className}`.trim()}>{children}</div>
-      </Gutter>
-    </DefaultTemplate>
+    <AdminShell view={view} className={className}>
+      {children}
+    </AdminShell>
   )
 }
 

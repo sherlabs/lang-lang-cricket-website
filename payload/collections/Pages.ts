@@ -57,6 +57,7 @@ export const Pages: CollectionConfig = {
     { name: 'title', label: 'Page title', type: 'text', required: true, validate: maxChars(200, { required: true }), admin: { placeholder: 'e.g. Join the club' } },
     {
       name: 'slug',
+      label: 'Web address',
       type: 'text',
       unique: true,
       index: true,

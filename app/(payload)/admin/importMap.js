@@ -34,6 +34,7 @@ import { SignInPanel as SignInPanel_3aee8e48a3675b66deec5345a5ccaf4d } from '../
 import { ThemeContrast as ThemeContrast_f54b9521d639809a058a047c647eb38a } from '../../../payload/components/ThemeContrast'
 import { Icon as Icon_25a5cf3faf5e08eebe54818d469bcd19 } from '../../../payload/components/Icon'
 import { Logo as Logo_c7b97bbbec2f12a09b3a4e5bba180831 } from '../../../payload/components/Logo'
+import { AdminNavUser as AdminNavUser_c1b16aa097c6c7473c2b972611f15cfb } from '../../../payload/components/AdminNavUser'
 import { LoginIntro as LoginIntro_e78f7e4878ddd85367b447d01b9b5799 } from '../../../payload/components/LoginIntro'
 import { AdminNav as AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0 } from '../../../payload/components/AdminNav'
 import { Dashboard as Dashboard_85b72bc5c0d30238d51de444df4399a6 } from '../../../payload/components/Dashboard'
@@ -104,6 +105,7 @@ export const importMap = {
   "/payload/components/ThemeContrast#ThemeContrast": ThemeContrast_f54b9521d639809a058a047c647eb38a,
   "/payload/components/Icon#Icon": Icon_25a5cf3faf5e08eebe54818d469bcd19,
   "/payload/components/Logo#Logo": Logo_c7b97bbbec2f12a09b3a4e5bba180831,
+  "/payload/components/AdminNavUser#AdminNavUser": AdminNavUser_c1b16aa097c6c7473c2b972611f15cfb,
   "/payload/components/LoginIntro#LoginIntro": LoginIntro_e78f7e4878ddd85367b447d01b9b5799,
   "/payload/components/AdminNav#AdminNav": AdminNav_d75d6f53ddc8c45ae1d1a1f42b3751a0,
   "/payload/components/Dashboard#Dashboard": Dashboard_85b72bc5c0d30238d51de444df4399a6,

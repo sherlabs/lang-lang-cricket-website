@@ -1,4 +1,6 @@
+// @committee-facing
 import { Gutter } from '@payloadcms/ui'
+import { Suspense } from 'react'
 import { getClub } from '@/lib/club'
 import type { BeforeListServerProps, Payload } from 'payload'
 import { jobTiles } from '../admin/navigation'
@@ -8,6 +10,10 @@ import { MilestonesWidget } from './MilestonesWidget'
 import { NotificationCentre } from './NotificationCentre'
 import { PlayerSyncPanel } from './PlayerSyncPanel'
 import { PlayHQRefreshButton } from './PlayHQRefreshButton'
+import { Disclosure } from './ui/Disclosure'
+import { Icon } from './ui/Icon'
+import { PageHeader } from './ui/PageHeader'
+import { SkeletonRows } from './ui/Skeleton'
 
 type User = { role?: string | null; name?: string | null; email?: string | null } | null | undefined
 
@@ -28,15 +34,17 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
   const admin = isAdminUser(user)
 
   return (
-    <Gutter><section className="club-home" aria-label={`${club.name} website admin`}>
-      <h1 className="club-home__title">{name ? `Hello, ${name}` : 'Hello'}</h1>
-      <p className="club-home__lead">What would you like to do today?</p>
+    <Gutter><main id="admin-main" className="club-home" aria-label={`${club.name} website admin`}>
+      <PageHeader title={name ? `Hello, ${name}` : 'Hello'} lead="What would you like to do today?" />
 
       <ul className="club-tiles">
         {jobTiles.map((tile) => (
           <li key={tile.key}>
             <a className="club-tile" href={`${adminRoute}${tile.path}`}>
-              <span className="club-tile__title">{tile.title}</span>
+              <span className="club-tile__title">
+                <Icon name={tile.icon} size={22} />
+                {tile.title}
+              </span>
               <span className="club-tile__hint">{tile.hint}</span>
             </a>
           </li>
@@ -45,11 +53,12 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
 
       <NotificationCentre payload={payload} isAdmin={admin} user={user} />
 
-      <MilestonesWidget payload={payload} />
+      <Suspense fallback={<SkeletonRows rows={3} label="Loading milestones" />}>
+        <MilestonesWidget payload={payload} />
+      </Suspense>
 
       {admin && (
-        <details className="club-advanced">
-          <summary>Advanced (site administrators)</summary>
+        <Disclosure summary="Advanced (site administrators)" className="club-advanced">
           <ul className="club-dashboard__cards">
             {dashboardCards.map((card) => (
               <li key={`${card.collection}-${card.label}`}>
@@ -79,8 +88,8 @@ export async function Dashboard({ payload, user }: { payload: Payload; user?: Us
             </div>
           </div>
           <PlayerSyncPanel {...({ payload } as BeforeListServerProps)} />
-        </details>
+        </Disclosure>
       )}
-    </section></Gutter>
+    </main></Gutter>
   )
 }
