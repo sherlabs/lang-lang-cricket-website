@@ -11,9 +11,13 @@ import {
 import type { AdminData } from '@/lib/fantasy/admin-view'
 import { credits, RULE_NUMBER_KEYS, SCORING_KEYS, SCORING_LABELS } from '@/lib/fantasy/rules'
 
+/** Stored as tenths of a credit, typed and shown as credits with one decimal. */
+const CREDIT_KEYS: readonly string[] = ['salaryCapTenths', 'minPriceTenths', 'maxPriceTenths']
+const toTenths = (v: string): number => Math.round(Number(v) * 10)
+
 const RULE_LABELS: Record<(typeof RULE_NUMBER_KEYS)[number], string> = {
-  maxEntries: 'Most teams', squadSize: 'Players in a squad', salaryCapTenths: 'Salary cap (tenths of a credit, 1000 = 100.0)', captainMultiplier: 'Captain counts this many times',
-  transfersPerRound: 'Players that can change each round (0 = any number)', minPriceTenths: 'Lowest price (tenths)', maxPriceTenths: 'Highest price (tenths)',
+  maxEntries: 'Most teams', squadSize: 'Players in a squad', salaryCapTenths: 'Salary cap (credits, for example 100)', captainMultiplier: 'Captain counts this many times',
+  transfersPerRound: 'Players that can change each round (0 = any number)', minPriceTenths: 'Lowest price (credits, for example 4)', maxPriceTenths: 'Highest price (credits, for example 14)',
   priceSeasonsBack: 'Past seasons used for prices', priorGames: 'Weight of the average when a player has few games', minGamesForPrice: 'Games before a price is fully trusted',
 }
 
@@ -130,7 +134,9 @@ export function FantasyPanel({ data, csvHref }: { data: AdminData; csvHref: stri
             <div className="club-actions">
               {RULE_NUMBER_KEYS.map((k) => (
                 <label key={k}><span className="club-muted">{RULE_LABELS[k]}</span><br />
-                  <input type="number" value={rules[k]} disabled={!draft} onChange={(e) => setRules({ ...rules, [k]: Number(e.target.value) })} /></label>
+                  {CREDIT_KEYS.includes(k)
+                    ? <input type="number" step={0.1} min={0} defaultValue={(rules[k] / 10).toFixed(1)} disabled={!draft} onChange={(e) => { if (Number.isFinite(Number(e.target.value))) setRules({ ...rules, [k]: toTenths(e.target.value) }) }} />
+                    : <input type="number" value={rules[k]} disabled={!draft} onChange={(e) => setRules({ ...rules, [k]: Number(e.target.value) })} />}</label>
               ))}
             </div>
             <div className="club-actions">
@@ -163,7 +169,7 @@ export function FantasyPanel({ data, csvHref }: { data: AdminData; csvHref: stri
                 <tr key={p.playerId}>
                   <td><p className="club-table__strong">{p.name}</p><p className="club-muted">{p.perGame !== null ? `${p.perGame} pts/game` : 'no games'}{p.thin ? ', thin data' : ''}{p.overridden ? `, set by hand (auto ${credits(p.autoPriceTenths)})` : ''}</p></td>
                   <td>
-                    <input type="number" step={5} aria-label={`Price for ${p.name} in tenths`} value={draftPrice[p.playerId] ?? String(p.priceTenths)} onChange={(e) => setDraftPrice({ ...draftPrice, [p.playerId]: e.target.value })} style={{ width: '5rem' }} />
+                    <input type="number" step={0.1} min={0} aria-label={`Price for ${p.name} in credits`} defaultValue={(p.priceTenths / 10).toFixed(1)} key={`${p.playerId}-${p.priceTenths}`} onChange={(e) => setDraftPrice({ ...draftPrice, [p.playerId]: String(toTenths(e.target.value)) })} style={{ width: '5rem' }} />
                     <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => void run(() => setPriceAction({ playerId: p.playerId, tenths: Number(draftPrice[p.playerId] ?? p.priceTenths) }), 'Price saved.')}>Save</Button>
                     {p.overridden && <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => void run(() => setPriceAction({ playerId: p.playerId, tenths: null }), 'Back to the worked-out price.')}>Reset</Button>}
                   </td>
@@ -195,7 +201,7 @@ export function FantasyPanel({ data, csvHref }: { data: AdminData; csvHref: stri
       {season && (
         <details className="club-panel">
           <summary className="club-field__title">Teams ({data.managers})</summary>
-          <p className="club-muted">Find a team by name. You see the name and the join date only. A forgotten PIN is fixed by Reset PIN: it makes a temporary PIN that you read out once; the team must then choose its own.</p>
+          <p className="club-muted">Find a team by name. You see the name and the join date only. A forgotten PIN is fixed by an administrator with Reset PIN: it makes a temporary PIN that you read out once; the team must then choose its own.</p>
           <label><span className="club-muted">Search by team name</span><br /><input type="search" value={q} onChange={(e) => void search(e.target.value)} autoComplete="off" /></label>
           {reset && (
             <div className="club-panel" role="status">
@@ -213,7 +219,7 @@ export function FantasyPanel({ data, csvHref }: { data: AdminData; csvHref: stri
                   <tr key={m.id}>
                     <td>{m.teamName}{m.disabled ? ' (hidden)' : ''}</td><td>{m.joined}</td>
                     <td><div className="club-actions">
-                      <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => { if (window.confirm(`Reset the PIN for ${m.teamName}?`)) void run(async () => { const r = await resetPinAction({ entryId: m.id }); if (r.ok) setReset({ teamName: r.teamName, pin: r.tempPin }); return r }, '') }}>Reset PIN</Button>
+                      {data.isAdmin && <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => { if (window.confirm(`Reset the PIN for ${m.teamName}?`)) void run(async () => { const r = await resetPinAction({ entryId: m.id }); if (r.ok) setReset({ teamName: r.teamName, pin: r.tempPin }); return r }, '') }}>Reset PIN</Button>}
                       <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => void run(() => setDisabledAction({ entryId: m.id, disabled: !m.disabled }), m.disabled ? 'Shown again.' : 'Hidden from the leaderboard.').then(() => search(q))}>{m.disabled ? 'Show again' : 'Hide'}</Button>
                       <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => { const n = window.prompt('New team name', m.teamName); if (n) void run(() => renameEntryAction({ entryId: m.id, name: n }), 'Renamed.').then(() => search(q)) }}>Rename</Button>
                       <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => { if (window.confirm(`Remove ${m.teamName} and its squads? This cannot be undone.`)) void run(() => removeEntryAction({ entryId: m.id }), 'Removed.').then(() => search(q)) }}>Remove</Button>

@@ -298,6 +298,7 @@ export async function runBootstrap(payload: Payload, profile: ClubProfile, opts:
     'Set these variables on the host for Production and Preview (Vercel > Settings > Environment Variables), then run pnpm check:template:',
     ...report.envLines.map((l) => `  ${l}`),
     `Register this site in the shared sign-in broker's CLUBS list as "<club-id>": ${JSON.stringify(brokerEntryFor(profile))}, then set AUTH_BROKER_ORIGIN and AUTH_BROKER_CLUB_ID.`,
+    ...(['logo', 'ogImage', 'favicon'] as const).filter((k) => !profile.assets[k]).map((k) => `BLOCKING: the profile has no assets.${k}, so the site would show the template's own artwork. Add the file and name it in the profile.`),
     'Cron schedules come from vercel.json; set CRON_SECRET on the host. Point your DNS at the host and add the apex/www redirect.',
     'Do not run pnpm seed:demo against a live club: it fills the site with example people and results.',
   ]

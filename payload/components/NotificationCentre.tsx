@@ -45,12 +45,12 @@ async function signInFacts(payload: Payload) {
   }
 }
 
-/** Admin only: the committee actions of the last week on the fantasy game (a PIN reset, a disabled team). No PIN is ever in them. */
+/** Admin only: the newest committee action of the last week on the fantasy game (a PIN reset, a disabled team). No PIN is ever in them. */
 async function fantasyFacts(payload: Payload) {
   try {
     const res = await payload.find({ collection: 'fantasy-seasons', sort: '-seasonStartYear', limit: 1, depth: 0, overrideAccess: true })
     const log = ((res.docs[0] as unknown as { adminLog?: { at: string; text: string }[] | null } | undefined)?.adminLog ?? []).filter((l) => Date.now() - new Date(l.at).getTime() < 7 * 86_400_000)
-    return log.length ? { lines: log.slice(-3).reverse() } : null
+    return log.length ? { lines: log.slice(-1) } : null
   } catch {
     return null
   }

@@ -2,12 +2,14 @@
  * Read-only readiness check for a club deployment (wave F spec 5.5): every variable of config/env-manifest.ts as set, missing or
  * invalid (names and statuses only, never a value), plus any file under public/ that is still one of Lang Lang's originals.
  *   pnpm check:template
- * Exits 1 when a required variable is missing or any set variable is invalid.
+ * Exits 1 when a required variable is missing, any set variable is invalid, or (off Lang Lang) the favicon, apple-touch-icon,
+ * share image or logo is still Lang Lang's.
  */
 import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { checkEnv, envProblems } from '../config/env-manifest'
+import { isLangLangDeployment } from '../config/site'
 import { LANG_LANG_ARTWORK } from '../config/lang-lang-artwork'
 
 const root = path.resolve(import.meta.dirname, '..')
@@ -42,6 +44,12 @@ if (leftovers.length) {
   for (const [dir, n] of byDir) console.log(`  !! ${dir}  ${n} file(s) still match Lang Lang's originals (replace or delete them in your copy)`)
 } else console.log('  ok  none')
 
+// The four files a visitor sees first. On a club that is not Lang Lang they must not still be Lang Lang's: that is a failure, not a hint.
+const KEY_FILES = ['public/favicon.ico', 'public/apple-touch-icon.png', 'public/og-image.jpg', 'public/assets/branding/logo.png']
+const keyLeftovers = isLangLangDeployment(process.env) ? [] : KEY_FILES.filter((f) => leftovers.includes(f))
+for (const f of keyLeftovers) console.log(`  FAIL ${f} is still Lang Lang's picture; replace it with your club's.`)
+
 const problems = envProblems(reports)
-console.log(`\n${problems.length ? `${problems.length} problem(s): ${problems.map((p) => p.name).join(', ')}` : 'Environment looks ready.'}`)
-process.exit(problems.length ? 1 : 0)
+const failures = problems.length + keyLeftovers.length
+console.log(`\n${failures ? `${failures} problem(s): ${[...problems.map((p) => p.name), ...keyLeftovers].join(', ')}` : 'Environment looks ready.'}`)
+process.exit(failures ? 1 : 0)

@@ -10,14 +10,14 @@ import { checkNameShape, NAME_UNAVAILABLE } from './names'
 import { temporaryPin } from './pin'
 import { hashPin } from '@/lib/selection/pin'
 import { addMissing, computePrices, type PriceInput, type PriceResult } from './pricing'
-import { DEFAULT_RULES, RULE_NUMBER_KEYS, SCORING_KEYS, resolveRules, type FantasyRules } from './rules'
+import { DEFAULT_RULES, RULE_NUMBER_KEYS, SCORING_KEYS, cheapestSquadCost, resolveRules, rulesProblem, type FantasyRules } from './rules'
 import { pointsForMatches, scoringMatchIds } from './score'
 import { FANTASY_TAG, getSeasonById, idOf, toSeason, type FantasySeason } from './store'
 
 /**
  * The committee's operations on the fantasy competition (wave F spec 4.7). Each takes the acting user and RE-CHECKS the role here, so
  * the server action in front of it is not the only guard: staff (admin or editor) for the day-to-day, admin only for rules, prices,
- * opening, rotating the link and exports. Never a selector. Nothing here logs or returns a PIN except `resetPin`, which returns the
+ * opening, rotating the link, PIN resets (a reset lets the person sign in as that team and read its saved squad) and exports. Never a selector. Nothing here logs or returns a PIN except `resetPin`, which returns the
  * temporary one once, to the person who pressed the button.
  */
 export type Outcome<T = object> = ({ ok: true } & T) | { ok: false; message: string }
@@ -35,7 +35,7 @@ async function touch(): Promise<void> {
   await revalidatePaths(['/fantasy', '/fantasy/leaderboard'], undefined, [FANTASY_TAG])
 }
 
-/** Add a plain line (never a PIN) to the log administrators see on the Home page. Keeps the last 20. */
+/** Add a plain line (never a PIN) to the log administrators see on the Home page. Keeps the last 20. Read-modify-write: two actions in the same instant can lose one line, which is accepted for a note that is only a courtesy to the administrators. */
 export async function addAdminLog(payload: Payload, seasonId: number, text: string, now: Date = new Date()): Promise<void> {
   const doc = (await payload.findByID({ collection: 'fantasy-seasons', id: seasonId, depth: 0, overrideAccess: true })) as unknown as { adminLog?: { at: string; text: string }[] | null }
   const log = [...(Array.isArray(doc.adminLog) ? doc.adminLog : []), { at: now.toISOString(), text }].slice(-20)
@@ -168,8 +168,13 @@ function ruleData(r: FantasyRules): Record<string, unknown> {
 export async function updateRules(payload: Payload, user: unknown, season: FantasySeason, patch: Partial<Omit<FantasyRules, 'scoring'>> & { scoring?: Partial<FantasyRules['scoring']> }): Promise<Outcome<{ season: FantasySeason }>> {
   if (!requireAdmin(user)) return DENIED
   if (season.status !== 'draft') return { ok: false, message: 'The rules are fixed once the season has opened.' }
-  const merged = resolveRules({ ...season.rules, ...patch, scoring: { ...season.rules.scoring, ...(patch.scoring ?? {}) } })
   for (const k of SCORING_KEYS) if (patch.scoring && k in patch.scoring && !Number.isFinite(patch.scoring[k])) return { ok: false, message: 'Scores must be whole numbers.' }
+  const wanted = { ...season.rules, ...patch }
+  const unworkable = rulesProblem(wanted)
+  if (unworkable) return { ok: false, message: unworkable }
+  const merged = resolveRules({ ...wanted, scoring: { ...season.rules.scoring, ...(patch.scoring ?? {}) } })
+  const clamped = rulesProblem(merged)
+  if (clamped) return { ok: false, message: clamped }
   const doc = await payload.update({ collection: 'fantasy-seasons', id: season.id, data: ruleData(merged) as never, overrideAccess: true, context: CTX })
   await touch()
   return { ok: true, season: toSeason(doc as never) }
@@ -187,8 +192,12 @@ export async function openSeason(payload: Payload, user: unknown, season: Fantas
   if (season.status !== 'draft') return { ok: false, message: 'Only a draft season can be opened.' }
   const other = await payload.find({ collection: 'fantasy-seasons', where: { status: { equals: 'open' } }, limit: 1, depth: 0, overrideAccess: true })
   if (other.docs[0]) return { ok: false, message: 'Another season is open. Close it first.' }
-  const priced = (await priceRows(payload, season.id)).length
-  if (priced < season.rules.squadSize) return { ok: false, message: `Only ${priced} players are priced. A squad needs ${season.rules.squadSize}.` }
+  const problem = rulesProblem(season.rules)
+  if (problem) return { ok: false, message: problem }
+  const rows = (await payload.find({ collection: 'fantasy-prices', where: { and: [{ season: { equals: season.id } }, { available: { not_equals: false } }] }, limit: 10000, pagination: false, depth: 0, overrideAccess: true })).docs as unknown as { priceTenths: number }[]
+  const cheapest = cheapestSquadCost(rows.map((r) => r.priceTenths), season.rules.squadSize)
+  if (cheapest === null) return { ok: false, message: `Only ${rows.length} players are priced and available. A squad needs ${season.rules.squadSize}.` }
+  if (cheapest > season.rules.salaryCapTenths) return { ok: false, message: `The cheapest squad of ${season.rules.squadSize} costs ${cheapest / 10} credits, over the salary cap of ${season.rules.salaryCapTenths / 10}. Raise the cap or lower some prices.` }
   const doc = await payload.update({ collection: 'fantasy-seasons', id: season.id, data: { status: 'open', openedAt: new Date().toISOString() }, overrideAccess: true, context: CTX })
   await touch()
   return { ok: true, season: toSeason(doc as never) }
@@ -253,7 +262,7 @@ export async function searchManagers(payload: Payload, user: unknown, season: Fa
 
 /** The last resort for a forgotten PIN: a temporary one, shown once to the person who pressed the button. Audited without the PIN. */
 export async function resetPin(payload: Payload, user: unknown, season: FantasySeason, entryId: number, now: Date = new Date()): Promise<Outcome<{ teamName: string; tempPin: string }>> {
-  if (!requireStaff(user)) return NOT_STAFF
+  if (!requireAdmin(user)) return DENIED
   const e = await entryOf(payload, season, entryId)
   if (!e) return { ok: false, message: 'That manager was not found.' }
   const pin = temporaryPin()

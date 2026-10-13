@@ -24,6 +24,12 @@ describe('validateClubProfile', () => {
     expect(r.ok && r.warnings).toEqual([])
   })
 
+  it.each(['logo', 'ogImage', 'favicon'])('requires assets.%s so no club ships with another club\'s artwork', (k) => {
+    const p = clone()
+    delete p.assets[k]
+    expect(paths(p)).toContain(`assets.${k}`)
+  })
+
   it.each(['primary', 'surface', 'text', 'muted', 'headingFont'])('requires theme.%s (no colour is inherited from another club)', (k) => {
     const p = clone()
     delete p.theme[k]

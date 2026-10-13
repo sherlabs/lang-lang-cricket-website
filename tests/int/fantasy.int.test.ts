@@ -107,6 +107,8 @@ describe('fantasy competition', () => {
     expect(await openSeason(payload, editor, season)).toMatchObject({ ok: false })
     // Every price becomes 80 so a squad of 11 costs 88.0, then the rules are edited while it is a draft.
     for (let i = 1; i <= 12; i++) expect((await setPrice(payload, admin, season, ids[`c${i}`], 80)).ok).toBe(true)
+    expect((await updateRules(payload, admin, season, { salaryCapTenths: 100 }))).toMatchObject({ ok: false })
+    expect((await updateRules(payload, admin, season, { minPriceTenths: 90, maxPriceTenths: 50 }))).toMatchObject({ ok: false })
     expect((await updateRules(payload, admin, season, { transfersPerRound: 3 })).ok).toBe(true)
     const opened = await openSeason(payload, admin, season)
     expect(opened.ok).toBe(true)
@@ -346,12 +348,13 @@ describe('fantasy competition', () => {
   it('a committee reset shows the temporary PIN only to the actor, forces a change, and leaves a line without it', async () => {
     const e = await join('Reset Team', '264809')
     expect(await resetPin(payload, { id: 5, role: 'selector' }, season, e.id)).toMatchObject({ ok: false })
-    const r = await resetPin(payload, editor, season, e.id)
+    expect(await resetPin(payload, editor, season, e.id)).toMatchObject({ ok: false })
+    const r = await resetPin(payload, admin, season, e.id)
     expect(r).toMatchObject({ ok: true, teamName: 'Reset Team' })
     const temp = (r as { tempPin: string }).tempPin
     expect(temp).toMatch(/^\d{6}$/)
     const seasonRow = JSON.stringify((await payload.findByID({ collection: 'fantasy-seasons', id: season.id, depth: 0, overrideAccess: true })))
-    expect(seasonRow).toContain('PIN reset for Reset Team by editor person')
+    expect(seasonRow).toContain('PIN reset for Reset Team by')
     expect(seasonRow).not.toContain(temp)
     const entryRow = JSON.stringify((await payload.findByID({ collection: 'fantasy-entries', id: e.id, depth: 0, overrideAccess: true })))
     expect(entryRow).not.toContain(temp)

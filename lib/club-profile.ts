@@ -255,6 +255,9 @@ export function validateClubProfile(json: unknown, opts: ValidateOptions = {}): 
       }
     }
   }
+  for (const k of ['logo', 'ogImage', 'favicon'] as const) {
+    if (!assets[k] && !(isObj(json.assets) && json.assets[k] !== undefined)) err(`assets.${k}`, 'Required. Without it the site would show another club\'s artwork. Add the file under your clubs folder and name it here.')
+  }
   if (json.copy !== undefined) {
     if (!isObj(json.copy)) err('copy', 'Must be an object.')
     else for (const m of copyProblems(json.copy)) err(m.path, m.message)

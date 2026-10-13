@@ -83,6 +83,19 @@ export function resolveRules(raw: unknown): FantasyRules {
   return out
 }
 
+/** Why a set of rules cannot work, in plain words, or null. The cheapest possible squad must fit under the cap and the top price cannot be below the bottom one. */
+export function rulesProblem(r: Pick<FantasyRules, 'squadSize' | 'salaryCapTenths' | 'minPriceTenths' | 'maxPriceTenths'>): string | null {
+  if (r.maxPriceTenths < r.minPriceTenths) return 'The highest price cannot be lower than the lowest price.'
+  if (r.squadSize * r.minPriceTenths > r.salaryCapTenths) return `A squad of ${r.squadSize} at the lowest price (${r.squadSize * r.minPriceTenths / 10} credits) is already over the salary cap (${r.salaryCapTenths / 10}). Raise the cap or lower the lowest price.`
+  return null
+}
+
+/** The cheapest `size` prices added up, or null when fewer than `size` are priced. */
+export function cheapestSquadCost(prices: number[], size: number): number | null {
+  if (prices.length < size) return null
+  return [...prices].sort((a, b) => a - b).slice(0, size).reduce((a, b) => a + b, 0)
+}
+
 /** Credits for display: tenths as "100.0". */
 export const credits = (tenths: number): string => (tenths / 10).toFixed(1)
 

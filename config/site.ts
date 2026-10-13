@@ -110,6 +110,10 @@ export const BRANDING = { logo: '/assets/branding/logo.png' } as const
  * empty. Throws when the canonical host is Lang Lang's and `CLUB_PRESET` is not `lang-lang`. Called from next.config.ts (the build
  * fails), instrumentation.ts (startup fails) and `verify:cutover`. This file is the one allowed home of the host constant.
  */
+/** True for Lang Lang's own deployments (its host or `CLUB_PRESET=lang-lang`); the readiness check uses it to skip the artwork rule. */
+export const isLangLangDeployment = (e: Record<string, string | undefined> = process.env): boolean =>
+  (e.CANONICAL_HOST ?? '').trim().toLowerCase().replace(/^www\./, '') === LL.host || e.CLUB_PRESET?.trim() === 'lang-lang'
+
 export function assertClubPreset(e: Record<string, string | undefined> = process.env): void {
   const host = (e.CANONICAL_HOST ?? '').trim().toLowerCase().replace(/^www\./, '')
   if (host === LL.host && e.CLUB_PRESET?.trim() !== 'lang-lang') {
