@@ -120,5 +120,5 @@ async function QueueRegion({ view }: { view: AdminViewServerProps }) {
   const rows = queue.map((p) => toRow(p, { labels: NETWORK_LABELS, available, clock: (iso) => fmt.clock.format(new Date(iso)), when: (iso) => fmt.when.format(new Date(iso)) }))
   const tab = first(sp.tab)
   const initialTab: Tab = isTab(tab) ? tab : rows.some((r) => r.tab === 'attention') ? 'attention' : 'scheduled'
-  return <SocialQueue api={`${req.payload.config.routes.api}/admin/social`} rows={rows} initialTab={initialTab} heartbeat={heartbeatView({ ...beat, now })} editBase={`${req.payload.config.routes.admin}/social?post=`} />
+  return <div data-admin-region="queue"><SocialQueue api={`${req.payload.config.routes.api}/admin/social`} rows={rows} initialTab={initialTab} heartbeat={heartbeatView({ ...beat, now })} editBase={`${req.payload.config.routes.admin}/social?post=`} /></div>
 }
