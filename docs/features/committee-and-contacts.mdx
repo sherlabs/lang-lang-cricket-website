@@ -3,9 +3,9 @@ title: Committee and contacts (one place for people)
 status: shipped
 routes: ["/", "/contact", "/people", "/players", "/players/[slug]"]
 collections: [people, players]
-admin: "Committee & contacts (everyday menu, 'Update a contact' tile)"
+admin: "Committee & contacts (everyday menu, 'Update a contact' tile): photo beside the name in the list, a picture preview and shorter help"
 owner: "Committee (secretary); visitors are families who need to know whom to call"
-related: [players-directory-and-profiles, player-sponsors, home-page, uploads-and-media]
+related: [players-directory-and-profiles, player-sponsors, home-page, uploads-and-media, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -31,6 +31,7 @@ The user asked that individuals are referenced from one place: "if I add a pictu
 - `payload/scripts/link-people-players.ts` proposes links by exact normalised name (case, accents, punctuation, spacing folded). It is a dry run unless `--apply --confirm`, never guesses on ambiguous names and uses the standard database guard.
 
 - `payload/scripts/dedupe-people.ts` (`pnpm dedupe:people --target <host>/<db>`) merges people entered twice (one row per job). Rows with the same name (trim, collapsed spaces, case-insensitive) become one: the row with a photo is kept (then the most filled one, then the lowest id), its empty phone, email, photo and player link are filled from the others, the others' roles become "Other jobs", and the duplicates are deleted. If two rows hold different non-empty values for phone, email, photo or player, the group is reported and skipped unless `--prefer-primary` keeps the kept row's value. Dry run by default; `--apply --confirm` writes; the standard database guard applies; a second run reports nothing to do. Nothing else references a person's id (the player page's "Also on the committee" is a derived list), so there is nothing to repoint. The legacy ETL re-creates the legacy duplicates by id, so the cutover checklist runs this script, then `link-people-players`, after every ETL run.
+- **Admin list and form.** The list shows each person's photo beside their name, their role and phone; the form previews the picture and the help text is one short line per item.
 
 ## How to use it
 

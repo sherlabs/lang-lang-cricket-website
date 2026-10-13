@@ -3,9 +3,9 @@ title: Documents and policies
 status: shipped
 routes: ["/documents"]
 collections: [documents]
-admin: "Documents (everyday menu, 'Upload a document' tile)"
+admin: "Documents (everyday menu, 'Upload a document' tile): file type chip and last-changed date in the list"
 owner: "Committee (secretary, child safety officer); readers are parents, coaches, umpires"
-related: [uploads-and-media, committee-admin]
+related: [uploads-and-media, committee-admin, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -24,6 +24,7 @@ The club had 16 policy and safety PDFs scattered across the Wix site. The redesi
 - A document has a name (what people see), a category and the PDF. PDFs only, up to 25 MB; files go straight to Vercel Blob in production.
 - Public read; staff create, update and delete. Rows imported from the old site keep their old file URL (`legacyUrl`); replacing the file of such a row is refused until decommission, so upload a new document instead (see [uploads and media](./uploads-and-media.mdx)).
 - Saving revalidates `/documents`.
+- **Admin list.** The Documents list adds a file type chip (PDF) and when each file was last changed.
 
 ## How to use it
 

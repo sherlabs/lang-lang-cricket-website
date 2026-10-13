@@ -24,6 +24,8 @@
  * It also writes about 40 club office members (invented people, example.org addresses; 6 with no email, 9 with no phone, 3 with neither,
  * 4 juniors with a guardian) when `members` is empty, plus links for the first demo players.
  *
+ * It also gives the admin lists something to show (generated picture tiles for some players, contacts and events, one hidden and one past player).
+ *
  * It also writes demo membership fees (types, memberships, part payments, a credit, a waiver, a closed past season, a household with a split
  * payment) when there are no membership types yet.
  *
@@ -65,6 +67,7 @@ import { seedDemoMeetings } from '../seed/demo-meetings'
 import { seedDemoDiary } from '../seed/demo-diary'
 import { seedDemoStock } from '../seed/demo-stock'
 import { seedDemoHome } from '../seed/demo-home'
+import { seedDemoLists } from '../seed/demo-lists'
 import { seedDemoEmail } from '../seed/demo-email'
 import { currentClubDate } from '../../lib/selection/club-date'
 import { seedClubGlobal } from '../seed/seed-club-global'
@@ -552,6 +555,7 @@ async function main() {
     console.log(`[seed:demo] club office diary and plan: ${await seedDemoDiary(payload, currentClubDate())}`)
     console.log(`[seed:demo] club office stock: ${await seedDemoStock(payload, currentClubDate())}`)
     console.log(`[seed:demo] admin Home: ${await seedDemoHome(payload, currentClubDate())}`)
+    console.log(`[seed:demo] admin lists and forms: ${await seedDemoLists(payload)}`)
     console.log(`[seed:demo] club office email: ${await seedDemoEmail(payload)}`)
   } finally {
     await payload.destroy()

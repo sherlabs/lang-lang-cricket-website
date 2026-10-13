@@ -3,9 +3,9 @@ title: News
 status: shipped
 routes: ["/news", "/news/[slug]", "/", "/preview/news/[id]"]
 collections: [news, media, club]
-admin: "News (everyday menu, 'Post news' tile)"
+admin: "News (everyday menu, 'Post news' tile): drafts and showing posts as words, a Drafts / On the website filter, a cover preview and the web address under Details"
 owner: "Committee (secretary or president); readers are members, parents and fans"
-related: [pages, announcements, club-history-stories, home-page, seo, committee-admin]
+related: [pages, announcements, club-history-stories, home-page, seo, committee-admin, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -28,6 +28,7 @@ Issue [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22). An
 - Preview: the Preview button opens `/preview/news/<id>` for signed-in staff only (see [Info pages](./pages.mdx)); it shows drafts and scheduled posts.
 - SEO: the `news` entry in the Club details SEO tab gives the list its title and description; `/news` and each visible post are in the sitemap with their last-modified date.
 - Compared with others: [Announcements](./announcements.mdx) are short banners, [Club history stories](./club-history-stories.mdx) are long-lived history that members can send in and [Info pages](./pages.mdx) are lasting information.
+- **Admin list and form.** The News list shows the cover beside the headline and a status in words (Draft, Scheduled or Showing on the website), with Drafts and On the website filters. In the form the status and date sit with the headline, the cover has a preview and the web address is under **Details**; the save line also says whether the post is a draft.
 
 ## How to use it
 

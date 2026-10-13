@@ -28,7 +28,7 @@ export const Stories: CollectionConfig = {
     hideAPIURL: true,
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'authorName', 'createdAt'],
-    description: 'Memories and stories about the club. Members can send them in from the website; they wait here for you to approve.',
+    description: 'Club memories. Members can send them in; they wait here for you to approve.',
     listSearchableFields: ['title', 'authorName'],
     components: {
       beforeList: ['/payload/components/PendingQueueBanner#PendingQueueBanner'],

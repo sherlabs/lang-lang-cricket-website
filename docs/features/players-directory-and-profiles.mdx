@@ -3,9 +3,9 @@ title: Players directory and profiles
 status: shipped
 routes: ["/players", "/players/[slug]", "/history/players (308 to /players)"]
 collections: [players, player-seasons, player-aliases, people, player-sponsors]
-admin: "Players (everyday menu); player seasons, aliases and sync runs are admin-only"
+admin: "Players (everyday menu): a list with a thumbnail, Playing now / Past player / Hidden words, games this season and filter chips; the form keeps internal items under Details; player seasons, aliases and sync runs are admin-only"
 owner: "Committee (anyone who looks after player pages); visitors are players, families and former players"
-related: [playhq-player-sync, committee-and-contacts, player-sponsors, milestones, stat-cards, player-comparison, honour-board, match-stats]
+related: [playhq-player-sync, committee-and-contacts, player-sponsors, milestones, stat-cards, player-comparison, honour-board, match-stats, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -37,6 +37,7 @@ The club wanted a Players section with Active and Past players, each with a prof
 **Admin**
 - Fields: first and last name, an optional **Preferred name** (a nickname shown on the site instead of the PlayHQ name; the address and PlayHQ matching do not change; see [Preferred names and grade label renames](./name-and-grade-labels.mdx)), photo, bio, years played (for manual players), Show as, Hide from the website, an ordered honours list (title and years), baseline numbers, and read-only seasons, aliases and a "Merge" panel (see [PlayHQ sync and merge](./playhq-player-sync.mdx)).
 - Only manual players can be deleted; PlayHQ players would come back on the next sync. The slug is set once from the name and never changes. `compare` is a reserved slug.
+- **Admin list and form.** The Players list shows each player's photo beside their name, a status in words (Playing now, Past player or Hidden), games this season, and one-tap filters. Search says "Search by Name". The form puts the committee's choices first (photo with a preview, about, honours, Hide from the website, Show as, under-18 and social settings) and keeps the web address, where the player came from and the nightly flag in a closed **Details** area.
 
 ## How to use it
 

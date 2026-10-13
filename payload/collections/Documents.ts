@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { DOCUMENT_CATEGORIES } from '../../lib/documents'
 import { anyone, isStaff } from '../access'
+import { cell, saveState } from '../admin/formKit'
 import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
 import { sharedLegacyUrlField, legacyUrlWinsOnRead, maxFileSize, refuseLegacyFileReplace } from '../hooks/legacyUrl'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
@@ -17,8 +18,10 @@ export const Documents: CollectionConfig = {
     group: false,
     hideAPIURL: true,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category'],
-    description: 'Forms, policies and newsletters that people can download from the Documents page. PDF files only.',
+    defaultColumns: ['title', 'category', 'fileType', 'updatedAt'],
+    custom: { committeeFacing: true },
+    description: 'Forms, policies and newsletters people can download. PDF files only.',
+    components: saveState(),
   },
   defaultSort: 'title',
   // Duplicate is noise for the committee (and would copy tokens/files).
@@ -48,7 +51,7 @@ export const Documents: CollectionConfig = {
       label: 'Document name',
       type: 'text',
       required: true,
-      admin: { description: 'What people will see on the Documents page.', placeholder: 'e.g. Junior registration form 2026' },
+      admin: { description: 'What people see on the Documents page.', placeholder: 'e.g. Junior registration form 2026' },
     },
     {
       name: 'category',
@@ -56,8 +59,9 @@ export const Documents: CollectionConfig = {
       type: 'select',
       required: true,
       options: [...DOCUMENT_CATEGORIES],
-      admin: { description: 'Where on the Documents page this file is listed.' },
+      admin: { description: 'Where on the Documents page it is listed.' },
     },
+    { name: 'fileType', type: 'ui', label: 'Type', admin: { components: { Cell: cell('FileTypeCell') } } },
     sharedLegacyUrlField,
   ],
 }

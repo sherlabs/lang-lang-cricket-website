@@ -1,6 +1,7 @@
 import type { CollectionConfig, RequestContext } from 'payload'
 import { DEFAULT_SECTION, PEOPLE_SECTIONS } from '../../lib/people'
 import { anyone, isStaff } from '../access'
+import { cell, IMAGE_HINT, saveState, uploadPreview } from '../admin/formKit'
 import { sortOrderField } from '../fields/sortOrderField'
 import { emailOrEmpty } from '../fields/validators'
 import { revalidatePlayerProfiles } from '../../lib/players/revalidate'
@@ -34,9 +35,11 @@ export const People: CollectionConfig = {
     group: false,
     hideAPIURL: true,
     useAsTitle: 'name',
-    defaultColumns: ['name', 'role', 'phone', 'email'],
+    defaultColumns: ['name', 'role', 'phone'],
     listSearchableFields: ['name', 'role'],
-    description: 'Committee members, coaches and the people families can contact. They appear on the Contact and People pages.',
+    custom: { committeeFacing: true },
+    description: 'Committee members, coaches and contacts shown on the Contact and People pages.',
+    components: saveState(),
   },
   defaultSort: 'sortOrder',
   // Duplicate is noise for the committee (and would copy tokens/files).
@@ -60,13 +63,13 @@ export const People: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'name', label: 'Full name', type: 'text', required: true, admin: { placeholder: 'e.g. Sam Taylor' } },
+    { name: 'name', label: 'Full name', type: 'text', required: true, admin: { placeholder: 'e.g. Sam Taylor', components: { Cell: cell('NamedPhotoCell', { imageField: 'photo' }) } } },
     {
       name: 'role',
       label: 'Job or role',
       type: 'text',
       required: true,
-      admin: { description: `For example: ${ROLE_SUGGESTIONS.join(', ')}.` },
+      admin: { description: `For example: ${ROLE_SUGGESTIONS.slice(0, 4).join(', ')}.` },
     },
     {
       name: 'section',
@@ -74,7 +77,7 @@ export const People: CollectionConfig = {
       type: 'select',
       defaultValue: DEFAULT_SECTION,
       options: PEOPLE_SECTIONS.map((s) => ({ label: s.label, value: s.key })),
-      admin: { description: 'Which group of people this person is shown with on the website.' },
+      admin: { description: 'The group they are shown with on the website.' },
     },
     {
       name: 'moreRoles',
@@ -83,8 +86,7 @@ export const People: CollectionConfig = {
       labels: { singular: 'Other job', plural: 'Other jobs' },
       admin: {
         initCollapsed: true,
-        description:
-          'Does this person hold another job? Add it here instead of adding them twice. They are then shown under each group with the same picture, phone and email.',
+        description: 'Another job? Add it here instead of adding them twice.',
       },
       fields: [
         { name: 'role', label: 'Job or role', type: 'text', required: true, admin: { placeholder: 'e.g. First Aid Officer' } },
@@ -104,8 +106,8 @@ export const People: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       admin: {
-        description:
-          'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. This is the one place to change their picture: it shows on the home page, Contact, Our People and, if they are also a player, on the Players pages.',
+        description: `${IMAGE_HINT} Shown square, and also on their player page if they play.`,
+        components: uploadPreview(),
       },
     },
     {
@@ -115,15 +117,13 @@ export const People: CollectionConfig = {
       relationTo: 'players',
       index: true,
       admin: {
-        position: 'sidebar',
-        description:
-          'Optional. Pick the player if this person also plays. Their picture added here is then used on the Players pages whenever the player has no picture of their own, so you only ever update it in one place.',
+        description: 'Optional. Pick the player if this person also plays.',
       },
     },
     {
       ...sortOrderField(),
       label: 'Order on the page',
-      admin: { step: 1, description: 'Leave as 0 unless the order matters. Smaller numbers show first (1 is at the top).' },
+      admin: { step: 1, description: 'Leave as 0 unless order matters. Smaller shows first.' },
     },
   ],
 }

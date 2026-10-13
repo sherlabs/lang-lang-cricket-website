@@ -36,7 +36,7 @@ export const Pages: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'showInNavigation', 'updatedAt'],
     listSearchableFields: ['title', 'slug'],
-    description: 'Information pages such as About the club or Join us. Add text, pictures and buttons, then choose where the link goes in the menu. For dated news use News; for short banners use Announcements.',
+    description: 'Information pages such as About the club or Join us. For dated news use News.',
     preview: (doc) => `/preview/pages/${doc.id}`,
   },
   defaultSort: 'title',
@@ -65,7 +65,7 @@ export const Pages: CollectionConfig = {
       access: { create: nobodyField, update: isAdminField },
       validate: slugValidator,
       hooks: { beforeChange: [editableSlug('pages', PAGE_RESERVED_SLUGS)] },
-      admin: { position: 'sidebar', condition: adminOnlyCondition(), description: 'The page address, /info/<this>. Set from the title when the page is created. Changing it breaks links to the old address.' },
+      admin: { position: 'sidebar', condition: adminOnlyCondition(), description: 'Made from the title. Changing it breaks links to the old address.' },
     },
     {
       name: 'status',

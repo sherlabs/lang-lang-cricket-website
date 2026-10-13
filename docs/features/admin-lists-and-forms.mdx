@@ -1,0 +1,44 @@
+---
+title: Admin lists and forms
+status: shipped
+routes: ["/admin/collections/players", "/admin/collections/sponsors", "/admin/collections/events", "/admin/collections/news", "/admin/collections/announcements", "/admin/collections/people", "/admin/collections/documents", "/admin/collections/player-sponsors", "/admin/collections/gallery-photos"]
+collections: [players, sponsors, events, news, announcements, people, documents, player-sponsors, gallery-photos, media]
+admin: "Nothing to set up: the everyday lists and forms (Players, Sponsors, Events, News, Announcements, Committee & contacts, Documents, Player sponsors, Photo gallery) use the club's colours from Site look"
+owner: "The committee (everyday use)"
+related: [admin-design-system, committee-admin, players-directory-and-profiles, sponsors, events-and-rsvps, news, announcements, gallery, committee-and-contacts, documents, player-sponsors]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A volunteer secretary on her phone at the ground.** She opens Players and sees faces and plain words ("Playing now", "Hidden") instead of a table of settings, finds a player by typing a name, and saves from a button that stays on screen.
+- **A treasurer who edits a sponsor once a season.** She sees the logo she uploaded before she saves, and the fiddly settings are tucked away where she will not change them by accident.
+- **A second club** that reuses this setup: every word and colour comes from the shared configuration and the club's own Site look, never from the club's name.
+
+## Why it was built
+
+The owner's walk of the admin found lists that showed `true` and `false`, search boxes that said "Search by Display Name Or Web address", forms that mixed everyday choices with internal fields (the web address, where a player came from, a flag the nightly update works out), long paragraphs of help under every box, no picture preview and a small save button in a corner. Wave G (spec `2026-10-13-wave-g-admin-redesign-design.md`, work package 4) makes the everyday lists and forms calm and obvious on a desktop and a phone, without changing any data, access rule or database table.
+
+## What it does
+
+- **Lists in plain words.** Players (photo beside the name, Playing now / Past player / Hidden, games this season), Sponsors (logo beside the name, level label), Events (a date tile or "Every Tuesday", Coming up / Finished / Every week, going count and photos to approve), News (cover beside the headline, Draft / Scheduled / Showing on the website), Announcements and Player sponsors (Showing on the website or Hidden, never true or false), Committee & contacts (photo beside the name) and Documents (file type chip and last changed). The photo or date tile and the name are one big link to the record.
+- **Plain search.** The search box names the fields it searches by their plain labels ("Search by Name") and no longer searches the web address.
+- **Filter chips.** Players (Playing now, Past players, Hidden), News (Drafts, On the website) and Announcements (Showing, Hidden) have chips above the list. They are ordinary links that set the same filter Payload's own Filters button sets, so the button (and anything more specific) is still there.
+- **Cards on a phone.** Under 768px a list row becomes a card: picture, name, a status line, a 44px tap target. Events counts say what they count.
+- **Simpler forms.** The committee's choices come first. The internal items (web address, where a player came from, the nightly "Playing now" flag, a sponsor's ordering tweak) are in a closed **Details** area at the end, together with when the record was added and last changed. The side column is gone from these forms, so a phone and a desktop see the same order. "Show as" reads "Let the site decide" instead of "Select a value".
+- **Shorter help.** Each line of help is one sentence of 110 characters or fewer (checked by a test); long explanations were removed or moved to the page lead.
+- **A picture you can see.** Picture fields (player and contact photos, sponsor logos, news and event covers) show a preview of the chosen picture and the hint "JPG, PNG or WebP, at least 800px wide". Choose, Replace and Remove are Payload's own.
+- **A save bar.** Beside Payload's own Save button: a "Back to Players" link and one status line, "Saving...", "Unsaved changes" or "Saved just now" (and, for News, "Draft: not on the website yet"). On a phone the bar is fixed to the bottom of the screen. Cmd/Ctrl+S, validation and the leave-page warning are Payload's, unchanged. Inside a picture-choosing drawer the bar is not added.
+- **Reusable.** The pieces are `lib/admin/list-status.ts` (words and rules), `payload/components/ListCells.tsx` (list columns), `ListFilterChips`, `SaveState`, `UploadPreview`, `DocMeta` and the `Avatar` kit component, wired in by `payload/admin/formKit.ts`. A page of rows costs one lookup per kind (pictures, games), not one per row. No schema change, no migration, no access change.
+- **Demo data.** `pnpm seed:demo` adds generated picture tiles (abstract silhouettes, no real people) for some players, contacts and events, plus one hidden and one past player, so every status shows. It is safe to run twice.
+
+## How to use it
+
+Nothing to learn. Open **Players** and use the chips or the search box; open a player to edit them; press **Save** (it stays in view). To add a picture, press **Add new** or **Choose from existing** in the Photo box and watch the preview appear. To see the web address or when a record changed, open **Details**. A developer adding a collection uses the helpers in `payload/admin/formKit.ts` (`cell`, `uploadPreview`, `detailsGroup`, `saveState`, `filterChips`) and tags the collection `admin.custom.committeeFacing`.
+
+## Not included / deferred
+
+- A photo-bearing people and player picker (the optional stretch item): relationship boxes keep Payload's own picker. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- A gallery thumbnail-grid list view and bespoke columns for the admin-only Advanced collections (users, aliases, seasons, sync runs, Media library).
+- Page-size changes: Payload already offers 10, 25, 50 and 100 rows per page, and no default was changed.
+- Hiding Payload's own Filters button from non-admins.

@@ -38,7 +38,7 @@ export const imageBlock: Block = {
       type: 'text',
       required: true,
       validate: maxChars(250, { required: true }),
-      admin: { description: 'A few words for people who cannot see it, for example "Under 12s with the premiership cup". Filled in from the picture’s own description when it has one.' },
+      admin: { description: 'A few words for people who cannot see it, such as "Under 12s with the cup".' },
       hooks: {
         beforeValidate: [
           async ({ value, siblingData, req }) => {

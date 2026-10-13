@@ -3,9 +3,9 @@ title: Player sponsors
 status: shipped
 routes: ["/players", "/players/[slug]", "/sponsors"]
 collections: [player-sponsors, sponsors, players, people]
-admin: "Player sponsors (everyday menu, 'Add a player sponsor' tile)"
+admin: "Player sponsors (everyday menu, 'Add a player sponsor' tile): the player and the business shown with their picture, Showing on the website / Hidden in words"
 owner: "Committee (sponsorship lead); visitors are fans, families and the sponsors themselves"
-related: [sponsors, players-directory-and-profiles, committee-and-contacts, committee-admin]
+related: [sponsors, players-directory-and-profiles, committee-and-contacts, committee-admin, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -27,6 +27,7 @@ The user asked for "a special place for player sponsors with the player image an
 - The player photo uses the shared identity rule: a linked committee person's photo, else the player's own photo, else initials (see [committee and contacts](./committee-and-contacts.mdx)).
 - Visibility: public API reads only active rows whose player is not hidden. The Local API ignores access rules, so `lib/player-sponsors-queries.ts` repeats both filters and skips rows whose player or sponsor was deleted. Staff see all rows.
 - Deleting a player deletes their sponsorship rows; deleting a sponsor deletes its sponsorship rows; merging players repoints sponsorships to the surviving player.
+- **Admin list.** The list shows the player's photo and name, the business logo and name, and Showing on the website or Hidden in words.
 
 ## How to use it
 

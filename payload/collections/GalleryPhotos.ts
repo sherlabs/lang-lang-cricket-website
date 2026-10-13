@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { anyone, isStaff } from '../access'
+import { saveState } from '../admin/formKit'
 import { adminOnlyCondition } from '../admin/visibility'
 import { sortOrderField } from '../fields/sortOrderField'
 import { clientUploadInMemory } from '../hooks/clientUploadInMemory'
@@ -19,7 +20,9 @@ export const GalleryPhotos: CollectionConfig = {
     hideAPIURL: true,
     defaultColumns: ['filename', 'caption', 'createdAt'],
     listSearchableFields: ['filename', 'caption'],
-    description: 'Photos on the Gallery page. New photos go to the front, and the first six also show on the home page. Use "Bulk Upload" to add lots at once.',
+    custom: { committeeFacing: true },
+    description: 'Photos on the Gallery page. Newest first; the first six show on the home page.',
+    components: saveState(),
   },
   defaultSort: 'sortOrder',
   // Duplicate is noise for the committee (and would copy tokens/files).
@@ -49,7 +52,7 @@ export const GalleryPhotos: CollectionConfig = {
     {
       ...sortOrderField('Lower numbers show first. Leave empty on upload to put the photo at the front.', { withDefault: false }),
       label: 'Position',
-      admin: { step: 1, condition: adminOnlyCondition(), description: 'Lower numbers show first. Leave empty on upload to put the photo at the front.' },
+      admin: { step: 1, condition: adminOnlyCondition(), description: 'Lower shows first. Leave empty to put it at the front.' },
     },
     sharedLegacyUrlField,
   ],

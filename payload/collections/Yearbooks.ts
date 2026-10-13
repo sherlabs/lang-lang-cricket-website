@@ -62,8 +62,7 @@ export const Yearbooks: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'seasonName', 'status', 'updatedAt'],
     listSearchableFields: ['title', 'seasonName'],
-    description:
-      'One page per season, with your messages and photos beside the stats worked out automatically. Do not upload unreleased photos until you publish: files are reachable by direct link even while the yearbook is a draft.',
+    description: 'One page per season: your messages and photos beside the stats. Keep unreleased photos until you publish.',
   },
   defaultSort: '-seasonName',
   access: {
@@ -92,7 +91,7 @@ export const Yearbooks: CollectionConfig = {
       index: true,
       validate: seasonName,
       admin: {
-        description: 'The season this yearbook covers, written the way it appears on the Fixtures page, for example "Summer 2025/26". The stats and results fill in by themselves.',
+        description: 'As it appears on the Fixtures page, such as "Summer 2025/26".',
       },
     },
     {
@@ -141,7 +140,7 @@ export const Yearbooks: CollectionConfig = {
       defaultValue: '',
       validate: maxChars(MESSAGE_MAX),
       admin: {
-        description: 'A short look back at the season: the record, standout performers, turning points. Leave a blank line between paragraphs. The site administrator can ask AI for a first draft with the button below; you then read it, correct it and tick the box.',
+        description: 'A short look back at the season. Leave a blank line between paragraphs.',
       },
     },
     {

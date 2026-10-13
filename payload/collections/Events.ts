@@ -3,6 +3,7 @@ import { getOneTimeEventDateTime, nowAsEventClock } from '../../lib/event-occurr
 import { isValidPaymentUrl } from '../../lib/events-meal'
 import { DAYS } from '../../lib/events-format'
 import { anyone, isStaff } from '../access'
+import { cell, IMAGE_HINT, saveState, uploadPreview } from '../admin/formKit'
 import { timeOrEmpty } from '../fields/validators'
 import { cascadeDelete } from '../hooks/cascadeDelete'
 import { eventDates } from '../hooks/eventDates'
@@ -41,9 +42,11 @@ export const Events: CollectionConfig = {
     group: false,
     hideAPIURL: true,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'eventDate', 'goingCount', 'pendingCount'],
+    defaultColumns: ['title', 'eventDate', 'listStatus', 'goingCount', 'pendingCount'],
     listSearchableFields: ['title', 'location'],
-    description: 'Dinners, working bees and presentation days. People can RSVP from the event page on the website.',
+    custom: { committeeFacing: true },
+    description: 'Dinners, working bees and presentation days. People can RSVP on the website.',
+    components: saveState(),
   },
   defaultSort: '-createdAt',
   // Duplicate is noise for the committee (and would copy tokens/files).
@@ -75,7 +78,7 @@ export const Events: CollectionConfig = {
       ],
       admin: { layout: 'horizontal' },
     },
-    { name: 'title', label: 'Event name', type: 'text', required: true, admin: { placeholder: 'e.g. Season presentation night' } },
+    { name: 'title', label: 'Event name', type: 'text', required: true, admin: { placeholder: 'e.g. Season presentation night', components: { Cell: cell('NamedPhotoCell', { imageField: 'cover' }) } } },
     {
       name: 'eventDate',
       label: 'Date',
@@ -84,6 +87,7 @@ export const Events: CollectionConfig = {
         condition: (data) => isOneTime(data),
         date: { pickerAppearance: 'dayOnly', displayFormat: DATE_DISPLAY },
         description: 'The day of the event.',
+        components: { Cell: cell('EventWhenCell') },
         placeholder: 'Pick the day',
       },
     },
@@ -118,7 +122,7 @@ export const Events: CollectionConfig = {
       type: 'text',
       defaultValue: '',
       validate: timeOrEmpty,
-      admin: { description: 'Type the time using the 24-hour clock, for example 18:00 for 6pm.', placeholder: '18:00' },
+      admin: { description: 'Use the 24-hour clock, such as 18:00 for 6pm.', placeholder: '18:00' },
     },
     { name: 'location', label: 'Where', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. the clubrooms' } },
     {
@@ -126,26 +130,26 @@ export const Events: CollectionConfig = {
       label: 'What is happening',
       type: 'textarea',
       defaultValue: '',
-      admin: { description: 'A few lines for people deciding whether to come.', placeholder: 'Tell people what to expect, what to bring and who it is for.' },
+      admin: { description: 'A few lines for people deciding whether to come.', placeholder: 'What to expect, what to bring and who it is for.' },
     },
     {
       name: 'cover',
       label: 'Picture (optional)',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'Shown on the event card and page. Click the button, then drop the picture in.' },
+      admin: { description: `${IMAGE_HINT} Shown on the event card and page.`, components: uploadPreview() },
     },
     {
       type: 'collapsible',
       label: 'Dinner and tickets (optional)',
-      admin: { initCollapsed: true, description: 'Only needed if people choose a meal or pay online.' },
+      admin: { initCollapsed: true, description: 'Only needed if people pick a meal or pay online.' },
       fields: [
         {
           name: 'mealOptions',
           label: 'Dinner choices',
           type: 'array',
           labels: { singular: 'Dinner choice', plural: 'Dinner choices' },
-          admin: { description: 'The meals people can pick when they RSVP (e.g. Beef, Chicken, Veg). Leave empty if there is no dinner.' },
+          admin: { description: 'Meals people can pick when they RSVP, such as Beef or Veg. Leave empty if none.' },
           fields: [{ name: 'label', label: 'Meal', type: 'text', required: true }],
         },
         { name: 'paymentLinkLabel', label: 'Payment button wording', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. Buy tickets' } },
@@ -155,7 +159,7 @@ export const Events: CollectionConfig = {
           type: 'text',
           defaultValue: '',
           validate: paymentUrl,
-          admin: { description: 'Where people pay, starting with https://. Leave empty if there is nothing to pay.', placeholder: 'https://' },
+          admin: { description: 'Where people pay, starting with https://. Leave empty if nothing to pay.', placeholder: 'https://' },
         },
       ],
     },
@@ -188,6 +192,12 @@ export const Events: CollectionConfig = {
     },
     // RSVPs are shown by the summary above; the raw join is kept for completeness only.
     { name: 'rsvps', type: 'join', collection: 'event-rsvps', on: 'event', admin: { hidden: true } },
+    {
+      name: 'listStatus',
+      type: 'ui',
+      label: 'Status',
+      admin: { components: { Cell: cell('EventStatusCell') } },
+    },
     {
       name: 'goingCount',
       type: 'ui',

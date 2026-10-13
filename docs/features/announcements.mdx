@@ -3,9 +3,9 @@ title: Announcements
 status: shipped
 routes: ["/announcements", "/"]
 collections: [announcements]
-admin: "Announcements (everyday menu, 'Post an announcement' tile)"
+admin: "Announcements (everyday menu, 'Post an announcement' tile): Showing on the website / Hidden in the list with filters"
 owner: "Committee (secretary or president); readers are members and parents"
-related: [home-page, committee-admin, news, pages, team-selection-and-announce]
+related: [home-page, committee-admin, news, pages, team-selection-and-announce, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -27,6 +27,7 @@ Notices were spread across Facebook posts and group chats. The site gains one co
 - **Announcements, news, stories and pages**: an announcement is a short banner for something urgent. For a dated article with a picture use [News](./news.mdx); for lasting information such as About or Join us use [Info pages](./pages.mdx); [Club history stories](./club-history-stories.mdx) are long-lived history. The Help page and the collection descriptions in the admin say the same.
 - Publishing the teams from the selector area creates or updates one announcement per weekend (see [Team selection and announcing the teams](./team-selection-and-announce.mdx)); it is an ordinary announcement the committee can switch off, and a hidden internal key stops a second one being made for the same weekend.
 - Anonymous API reads only see `published = true`; staff see all. Saving revalidates the home page and the list.
+- **Admin list and form.** The list says "Showing on the website" or "Hidden" instead of true and false and has Showing and Hidden filters.
 
 ## How to use it
 

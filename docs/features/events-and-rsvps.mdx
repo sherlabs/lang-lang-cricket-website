@@ -3,9 +3,9 @@ title: Events and RSVPs
 status: shipped
 routes: ["/events", "/events/[id]", "/events/[id]/rsvp", "/events/rsvp/[token]"]
 collections: [events, event-rsvps]
-admin: "Events (everyday menu); RSVPs collection is admin-only, committee sees 'Who is coming' on each event"
+admin: "Events (everyday menu): a date tile, Coming up / Finished / Every week and going counts in the list, a cover preview in the form; RSVPs collection is admin-only, committee sees 'Who is coming' on each event"
 owner: "Committee (event organiser); public users are parents and members"
-related: [event-photos, committee-admin, seo, home-page]
+related: [event-photos, committee-admin, seo, home-page, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -36,6 +36,7 @@ The old site had no way to count attendance for dinners and working bees; organi
 - Saving or deleting revalidates `/events`, `/events/[id]` and `/`. Deleting an event also deletes its RSVPs and photos. Editing an RSVP through its public link revalidates the event pages; cancelling skips revalidation (the pages are dynamic).
 
 **Data**: reads `events`, `event-rsvps`, `event-photos`; writes `event-rsvps` through the Local API with an allowlist of fields. Token writes find the row by token with `limit: 1` and write by id, never by `where`.
+- **Admin list and form.** The Events list leads with the event name (with its cover picture; the link to the event), then a date tile (or "Every Tuesday"), a plain status and the going and photo counts; on a phone each event is a card. The form previews the cover picture and has the sticky save bar.
 
 ## How to use it
 

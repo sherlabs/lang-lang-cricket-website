@@ -3,9 +3,9 @@ title: Sponsors and home carousel
 status: shipped
 routes: ["/sponsors", "/"]
 collections: [sponsors, site-settings]
-admin: "Sponsors (everyday menu); carousel tiers under Site settings (admin only)"
+admin: "Sponsors (everyday menu): logo beside the name, level label, a logo preview in the form and a closed Details area; carousel tiers under Site settings (admin only)"
 owner: "Committee (treasurer or sponsorship lead); visitors are fans and local businesses"
-related: [player-sponsors, home-page, club-and-site-settings, season-yearbooks]
+related: [player-sponsors, home-page, club-and-site-settings, season-yearbooks, admin-lists-and-forms]
 added: feat/payload-cms
 ---
 
@@ -26,6 +26,7 @@ The Wix site showed Platinum, Gold and Silver logos as a static image grid. The 
 - The home page has a scrolling logo carousel under the hero. Which tiers scroll is chosen in Site settings (default Platinum and Gold). Only sponsors with a logo are included, each business once at its highest selected tier; an empty selection hides the carousel (`selectCarouselSponsors`). The home page also shows a sponsor logo strip lower down.
 - Deleting a sponsor first deletes the player sponsorships that reference it. Saving revalidates `/sponsors` and `/`.
 - Season yearbooks can feature a chosen set of sponsors.
+- **Admin list and form.** The Sponsors list shows the logo (whole, never cropped) beside the name with the level as a label. The form previews the chosen logo and keeps the ordering tweak under **Details**.
 
 ## How to use it
 

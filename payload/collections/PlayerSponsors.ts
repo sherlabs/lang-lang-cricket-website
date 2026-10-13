@@ -1,6 +1,7 @@
 import type { CollectionConfig, RequestContext } from 'payload'
 import { revalidatePlayerProfiles } from '../../lib/players/revalidate'
 import { isStaff, staffOr } from '../access'
+import { cell, saveState } from '../admin/formKit'
 import { sortOrderField } from '../fields/sortOrderField'
 import { maxChars } from '../fields/validators'
 import { revalidatePaths } from '../hooks/revalidate'
@@ -28,8 +29,9 @@ export const PlayerSponsors: CollectionConfig = {
     hideAPIURL: true,
     useAsTitle: 'id',
     defaultColumns: ['player', 'sponsor', 'active'],
-    description:
-      'A business that sponsors a particular player. They are shown on the Players page and on that player’s own page. Add the business under Sponsors first (level "Player"), then link it here.',
+    custom: { committeeFacing: true },
+    description: 'A business backing one player. Add it under Sponsors first, then link it here.',
+    components: saveState(),
   },
   defaultSort: 'sortOrder',
   disableDuplicate: true,
@@ -53,7 +55,7 @@ export const PlayerSponsors: CollectionConfig = {
       relationTo: 'players',
       required: true,
       index: true,
-      admin: { description: 'The player being sponsored. Their picture and name are shown automatically.' },
+      admin: { description: 'The player being sponsored.', components: { Cell: cell('RelatedCell', { collection: 'players' }) } },
     },
     {
       name: 'sponsor',
@@ -62,7 +64,7 @@ export const PlayerSponsors: CollectionConfig = {
       relationTo: 'sponsors',
       required: true,
       index: true,
-      admin: { description: 'The business. Its logo and website come from the Sponsors list, so change those there.' },
+      admin: { description: 'The business. Its logo and website come from Sponsors.', components: { Cell: cell('RelatedCell', { collection: 'sponsors' }) } },
     },
     { name: 'season', label: 'Season (optional)', type: 'text', defaultValue: '', admin: { placeholder: 'e.g. 2025/26' } },
     {
@@ -78,7 +80,7 @@ export const PlayerSponsors: CollectionConfig = {
       label: 'Show first',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'Tick to show this one at the front of the Player sponsors band.' },
+      admin: { description: 'Tick to show this one first.' },
     },
     {
       ...sortOrderField(),
@@ -91,7 +93,7 @@ export const PlayerSponsors: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       index: true,
-      admin: { position: 'sidebar', description: 'Switch off to hide this sponsorship without deleting it.' },
+      admin: { description: 'Switch off to hide it without deleting it.', components: { Cell: cell('OnOffCell', { on: 'Showing on the website', off: 'Hidden' }) } },
     },
   ],
 }

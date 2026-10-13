@@ -1,6 +1,16 @@
+import { FileTypeCell as FileTypeCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { SaveState as SaveState_c595b520d31d75e0f1c7f88b2fe97ec4 } from '../../../payload/components/SaveState'
+import { NamedPhotoCell as NamedPhotoCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { SponsorLevelCell as SponsorLevelCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { UploadPreview as UploadPreview_5e0df192d9beb8c9397e646b7522ea5e } from '../../../payload/components/UploadPreview'
+import { DocMeta as DocMeta_c9aabd9c6cb67ffa6d4b71b5a6be3250 } from '../../../payload/components/DocMeta'
+import { OnOffCell as OnOffCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { ListFilterChips as ListFilterChips_c2c3205751cd8da9943a1a1dd8c0e0f3 } from '../../../payload/components/ListFilterChips'
+import { EventWhenCell as EventWhenCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { RsvpSummaryField as RsvpSummaryField_8a0ba965dd149529d82ae93944982c59 } from '../../../payload/components/RsvpSummaryField'
 import { PendingPhotosField as PendingPhotosField_93497b3a0a16fa2c2dbecfecbb4cbd1a } from '../../../payload/components/PendingPhotosField'
 import { RecapPhotosField as RecapPhotosField_1f1ab61c67929f22ec15625b01fd4274 } from '../../../payload/components/RecapPhotosField'
+import { EventStatusCell as EventStatusCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { RsvpCountCell as RsvpCountCell_a88d5af1936b5d044ab02ced7c877d6a } from '../../../payload/components/EventCountCells'
 import { PendingCountCell as PendingCountCell_a88d5af1936b5d044ab02ced7c877d6a } from '../../../payload/components/EventCountCells'
 import { OccurrenceDateCell as OccurrenceDateCell_25abc8dee57b7932d6f41e230975ea4b } from '../../../payload/components/OccurrenceDate'
@@ -27,7 +37,11 @@ import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997e
 import { StoryLinksField as StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4 } from '../../../payload/components/StoryLinksField'
 import { StoryModerationControls as StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad } from '../../../payload/components/StoryModerationControls'
 import { MergePlayerField as MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb } from '../../../payload/components/MergePlayerField'
+import { PlayerStatusCell as PlayerStatusCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { PlayerGamesCell as PlayerGamesCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
+import { RelatedCell as RelatedCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { YearbookDraftButton as YearbookDraftButton_9f1156433eb3a130abcc2da347fd4a1d } from '../../../payload/components/YearbookDraftButton'
+import { NewsStatusCell as NewsStatusCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { MemberRemoveDetailsField as MemberRemoveDetailsField_b31c9d0c216bc541ce62460a5ddf0758 } from '../../../payload/components/MemberRemoveDetailsField'
 import { LabelRenamesHelp as LabelRenamesHelp_f28533af17fbe76ff67314cd71cf7bc4 } from '../../../payload/components/LabelRenamesHelp'
 import { SignInPanel as SignInPanel_3aee8e48a3675b66deec5345a5ccaf4d } from '../../../payload/components/SignInPanel'
@@ -69,9 +83,19 @@ import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "/payload/components/ListCells#FileTypeCell": FileTypeCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/SaveState#SaveState": SaveState_c595b520d31d75e0f1c7f88b2fe97ec4,
+  "/payload/components/ListCells#NamedPhotoCell": NamedPhotoCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/ListCells#SponsorLevelCell": SponsorLevelCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/UploadPreview#UploadPreview": UploadPreview_5e0df192d9beb8c9397e646b7522ea5e,
+  "/payload/components/DocMeta#DocMeta": DocMeta_c9aabd9c6cb67ffa6d4b71b5a6be3250,
+  "/payload/components/ListCells#OnOffCell": OnOffCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/ListFilterChips#ListFilterChips": ListFilterChips_c2c3205751cd8da9943a1a1dd8c0e0f3,
+  "/payload/components/ListCells#EventWhenCell": EventWhenCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/RsvpSummaryField#RsvpSummaryField": RsvpSummaryField_8a0ba965dd149529d82ae93944982c59,
   "/payload/components/PendingPhotosField#PendingPhotosField": PendingPhotosField_93497b3a0a16fa2c2dbecfecbb4cbd1a,
   "/payload/components/RecapPhotosField#RecapPhotosField": RecapPhotosField_1f1ab61c67929f22ec15625b01fd4274,
+  "/payload/components/ListCells#EventStatusCell": EventStatusCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/EventCountCells#RsvpCountCell": RsvpCountCell_a88d5af1936b5d044ab02ced7c877d6a,
   "/payload/components/EventCountCells#PendingCountCell": PendingCountCell_a88d5af1936b5d044ab02ced7c877d6a,
   "/payload/components/OccurrenceDate#OccurrenceDateCell": OccurrenceDateCell_25abc8dee57b7932d6f41e230975ea4b,
@@ -98,7 +122,11 @@ export const importMap = {
   "/payload/components/StoryLinksField#StoryLinksField": StoryLinksField_6fafd6a1b98f565d75a9b1d1f11692c4,
   "/payload/components/StoryModerationControls#StoryModerationControls": StoryModerationControls_318e7b89d2a30bbb19bdeab7c45f70ad,
   "/payload/components/MergePlayerField#MergePlayerField": MergePlayerField_3b62fe881fa2f7735d1219c5d70e9ccb,
+  "/payload/components/ListCells#PlayerStatusCell": PlayerStatusCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/ListCells#PlayerGamesCell": PlayerGamesCell_8127e26e9c5ccdee68ce25658527dd79,
+  "/payload/components/ListCells#RelatedCell": RelatedCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/YearbookDraftButton#YearbookDraftButton": YearbookDraftButton_9f1156433eb3a130abcc2da347fd4a1d,
+  "/payload/components/ListCells#NewsStatusCell": NewsStatusCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/MemberRemoveDetailsField#MemberRemoveDetailsField": MemberRemoveDetailsField_b31c9d0c216bc541ce62460a5ddf0758,
   "/payload/components/LabelRenamesHelp#LabelRenamesHelp": LabelRenamesHelp_f28533af17fbe76ff67314cd71cf7bc4,
   "/payload/components/SignInPanel#SignInPanel": SignInPanel_3aee8e48a3675b66deec5345a5ccaf4d,

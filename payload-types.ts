@@ -373,7 +373,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * Forms, policies and newsletters that people can download from the Documents page. PDF files only.
+ * Forms, policies and newsletters people can download. PDF files only.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "documents".
@@ -381,11 +381,11 @@ export interface Media {
 export interface Document {
   id: number;
   /**
-   * What people will see on the Documents page.
+   * What people see on the Documents page.
    */
   title: string;
   /**
-   * Where on the Documents page this file is listed.
+   * Where on the Documents page it is listed.
    */
   category: 'Codes of Conduct' | 'Policies' | 'Child Safety' | 'Game Day' | 'Association directory';
   legacyUrl?: string | null;
@@ -404,7 +404,7 @@ export interface Document {
   focalY?: number | null;
 }
 /**
- * Photos on the Gallery page. New photos go to the front, and the first six also show on the home page. Use "Bulk Upload" to add lots at once.
+ * Photos on the Gallery page. Newest first; the first six show on the home page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gallery-photos".
@@ -416,7 +416,7 @@ export interface GalleryPhoto {
    */
   caption?: string | null;
   /**
-   * Lower numbers show first. Leave empty on upload to put the photo at the front.
+   * Lower shows first. Leave empty to put it at the front.
    */
   sortOrder?: number | null;
   legacyUrl?: string | null;
@@ -435,7 +435,7 @@ export interface GalleryPhoto {
   focalY?: number | null;
 }
 /**
- * Businesses that support the club. They appear on the Sponsors page, grouped by level.
+ * Businesses that support the club, shown on the Sponsors page by level.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sponsors".
@@ -444,26 +444,26 @@ export interface Sponsor {
   id: number;
   name: string;
   /**
-   * Higher levels are shown first and bigger. If unsure, leave it as it is.
+   * Higher levels show first and bigger.
    */
   tier: 'Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Player';
   /**
-   * Optional. Click the button, then drop the logo picture in. Without a logo the sponsor name is shown as text.
+   * JPG, PNG or WebP, at least 800px wide. Without a logo the name is shown as text.
    */
   logo?: (number | null) | Media;
   /**
-   * Optional. Where the logo should take people when clicked.
+   * Optional. Where the logo takes people.
    */
   linkUrl?: string | null;
   /**
-   * Leave as 0. A smaller number (such as -1) shows this sponsor before others at the same level.
+   * Leave as 0. A smaller number, such as -1, shows first at its level.
    */
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Committee members, coaches and the people families can contact. They appear on the Contact and People pages.
+ * Committee members, coaches and contacts shown on the Contact and People pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "people".
@@ -472,15 +472,15 @@ export interface Person {
   id: number;
   name: string;
   /**
-   * For example: President, Vice President, Secretary, Treasurer, Child Safety Officer, Junior Coordinator, Senior Captain, Coach.
+   * For example: President, Vice President, Secretary, Treasurer.
    */
   role: string;
   /**
-   * Which group of people this person is shown with on the website.
+   * The group they are shown with on the website.
    */
   section?: ('leadership' | 'committee' | 'coach') | null;
   /**
-   * Does this person hold another job? Add it here instead of adding them twice. They are then shown under each group with the same picture, phone and email.
+   * Another job? Add it here instead of adding them twice.
    */
   moreRoles?:
     | {
@@ -492,22 +492,22 @@ export interface Person {
   phone?: string | null;
   email?: string | null;
   /**
-   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. This is the one place to change their picture: it shows on the home page, Contact, Our People and, if they are also a player, on the Players pages.
+   * JPG, PNG or WebP, at least 800px wide. Shown square, and also on their player page if they play.
    */
   photo?: (number | null) | Media;
   /**
-   * Optional. Pick the player if this person also plays. Their picture added here is then used on the Players pages whenever the player has no picture of their own, so you only ever update it in one place.
+   * Optional. Pick the player if this person also plays.
    */
   player?: (number | null) | Player;
   /**
-   * Leave as 0 unless the order matters. Smaller numbers show first (1 is at the top).
+   * Leave as 0 unless order matters. Smaller shows first.
    */
   sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".
+ * Current players appear by themselves every night. To add someone from years ago, use "Add new".
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "players".
@@ -517,24 +517,16 @@ export interface Player {
   firstName: string;
   lastName?: string | null;
   /**
-   * Shown on the site instead of the PlayHQ name, for example a nickname. Leave empty to use the first and last name above. The address of the player page and the PlayHQ matching do not change.
+   * Shown on the site instead of their PlayHQ name, such as a nickname. Optional.
    */
   preferredName?: string | null;
   displayName?: string | null;
   /**
-   * Set from the name when the player is created; never changes.
-   */
-  slug?: string | null;
-  /**
-   * PlayHQ players come in automatically and cannot be deleted.
-   */
-  source?: ('playhq' | 'manual') | null;
-  /**
-   * Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, the picture on that entry always wins, so change it there. This one is only used when the player has no entry there.
+   * JPG, PNG or WebP, at least 800px wide. Shown square, so keep the face in the middle.
    */
   photo?: (number | null) | Media;
   /**
-   * Shown if someone under Committee & contacts is linked to this player. To change their picture, edit it there.
+   * If they are also on the committee, their picture is changed there.
    */
   committeeRoles?: {
     docs?: (number | Person)[];
@@ -546,31 +538,27 @@ export interface Player {
    */
   bio?: string | null;
   /**
-   * For example 1978–1992. Shown when the player has no seasons recorded automatically.
+   * For example 1978–1992. Shown when no seasons are recorded.
    */
   manualYears?: string | null;
   /**
-   * Leave empty and the site decides (played this season or last = current player).
+   * Leave it on "Let the site decide" unless it gets this wrong.
    */
   activeOverride?: ('active' | 'past') | null;
   /**
-   * Set by the sync: played in the latest two seasons.
-   */
-  isActiveDerived?: boolean | null;
-  /**
-   * Tick to keep this player off the public website.
+   * Tick to keep this player off the website.
    */
   hidden?: boolean | null;
   /**
-   * Tick for a player under 18. Juniors are kept off pictures for Facebook, Instagram and X unless the box below is ticked.
+   * Under-18s stay off social media pictures unless the box below is ticked.
    */
   isJunior?: boolean | null;
   /**
-   * Tick only with a parent or guardian's OK to post this child's name and stats on Facebook, Instagram and X.
+   * Tick only with a parent or guardian's OK.
    */
   socialOptIn?: boolean | null;
   /**
-   * Awards and roles, e.g. "Club champion". Drag to change the order.
+   * Awards and roles, such as "Club champion". Drag to reorder.
    */
   honours?:
     | {
@@ -584,7 +572,7 @@ export interface Player {
   baselineWickets?: number | null;
   baselineCatches?: number | null;
   /**
-   * Written by the PlayHQ sync.
+   * Filled in by the nightly update.
    */
   seasons?: {
     docs?: (number | PlayerSeason)[];
@@ -592,13 +580,25 @@ export interface Player {
     totalDocs?: number;
   };
   /**
-   * PlayHQ names that map to this player. Merging moves them.
+   * PlayHQ names that match this player.
    */
   aliases?: {
     docs?: (number | PlayerAlias)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  /**
+   * Made from the name when the player is added. It never changes.
+   */
+  slug?: string | null;
+  /**
+   * Players from PlayHQ come in by themselves and cannot be deleted.
+   */
+  source?: ('playhq' | 'manual') | null;
+  /**
+   * Worked out each night: played in the latest two seasons.
+   */
+  isActiveDerived?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -665,7 +665,7 @@ export interface PlayerAlias {
   createdAt: string;
 }
 /**
- * News for members. The newest one that is switched on shows as a banner at the top of the home page.
+ * The newest one that is switched on shows as a banner on the home page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "announcements".
@@ -674,19 +674,19 @@ export interface Announcement {
   id: number;
   title: string;
   /**
-   * Leave a blank line between paragraphs. The first line shows in the banner on the home page.
+   * Leave a blank line between paragraphs. The first line is the banner.
    */
   body?: string | null;
   /**
-   * Nothing shows on the website until this is switched on. Switch it off later to take the announcement down without deleting it.
+   * Switch off to take it down without deleting it.
    */
   published?: boolean | null;
   /**
-   * Optional. A page on this site (starting with /, for example /teams) or a link starting with https://. Adds a button to the banner.
+   * Optional. A page here (such as /teams) or a full https:// link.
    */
   link?: string | null;
   /**
-   * Optional. Defaults to "Read more".
+   * Optional. Says "Read more" if empty.
    */
   linkLabel?: string | null;
   autoKey?: string | null;
@@ -694,7 +694,7 @@ export interface Announcement {
   createdAt: string;
 }
 /**
- * Dinners, working bees and presentation days. People can RSVP from the event page on the website.
+ * Dinners, working bees and presentation days. People can RSVP on the website.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
@@ -711,7 +711,7 @@ export interface Event {
   startDate?: string | null;
   endDate?: string | null;
   /**
-   * Type the time using the 24-hour clock, for example 18:00 for 6pm.
+   * Use the 24-hour clock, such as 18:00 for 6pm.
    */
   eventTime?: string | null;
   location?: string | null;
@@ -720,11 +720,11 @@ export interface Event {
    */
   description?: string | null;
   /**
-   * Shown on the event card and page. Click the button, then drop the picture in.
+   * JPG, PNG or WebP, at least 800px wide. Shown on the event card and page.
    */
   cover?: (number | null) | Media;
   /**
-   * The meals people can pick when they RSVP (e.g. Beef, Chicken, Veg). Leave empty if there is no dinner.
+   * Meals people can pick when they RSVP, such as Beef or Veg. Leave empty if none.
    */
   mealOptions?:
     | {
@@ -734,7 +734,7 @@ export interface Event {
     | null;
   paymentLinkLabel?: string | null;
   /**
-   * Where people pay, starting with https://. Leave empty if there is nothing to pay.
+   * Where people pay, starting with https://. Leave empty if nothing to pay.
    */
   paymentLinkUrl?: string | null;
   photos?: {
@@ -812,7 +812,7 @@ export interface EventRsvp {
   createdAt: string;
 }
 /**
- * Memories and stories about the club. Members can send them in from the website; they wait here for you to approve.
+ * Club memories. Members can send them in; they wait here for you to approve.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stories".
@@ -902,7 +902,7 @@ export interface PlayerSyncRun {
   createdAt: string;
 }
 /**
- * A business that sponsors a particular player. They are shown on the Players page and on that player’s own page. Add the business under Sponsors first (level "Player"), then link it here.
+ * A business backing one player. Add it under Sponsors first, then link it here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "player-sponsors".
@@ -910,11 +910,11 @@ export interface PlayerSyncRun {
 export interface PlayerSponsor {
   id: number;
   /**
-   * The player being sponsored. Their picture and name are shown automatically.
+   * The player being sponsored.
    */
   player: number | Player;
   /**
-   * The business. Its logo and website come from the Sponsors list, so change those there.
+   * The business. Its logo and website come from Sponsors.
    */
   sponsor: number | Sponsor;
   season?: string | null;
@@ -923,7 +923,7 @@ export interface PlayerSponsor {
    */
   message?: string | null;
   /**
-   * Tick to show this one at the front of the Player sponsors band.
+   * Tick to show this one first.
    */
   featured?: boolean | null;
   /**
@@ -931,14 +931,14 @@ export interface PlayerSponsor {
    */
   sortOrder?: number | null;
   /**
-   * Switch off to hide this sponsorship without deleting it.
+   * Switch off to hide it without deleting it.
    */
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * One page per season, with your messages and photos beside the stats worked out automatically. Do not upload unreleased photos until you publish: files are reachable by direct link even while the yearbook is a draft.
+ * One page per season: your messages and photos beside the stats. Keep unreleased photos until you publish.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "yearbooks".
@@ -950,7 +950,7 @@ export interface Yearbook {
    */
   title: string;
   /**
-   * The season this yearbook covers, written the way it appears on the Fixtures page, for example "Summer 2025/26". The stats and results fill in by themselves.
+   * As it appears on the Fixtures page, such as "Summer 2025/26".
    */
   seasonName: string;
   /**
@@ -977,7 +977,7 @@ export interface Yearbook {
    */
   sponsorMessage?: string | null;
   /**
-   * A short look back at the season: the record, standout performers, turning points. Leave a blank line between paragraphs. The site administrator can ask AI for a first draft with the button below; you then read it, correct it and tick the box.
+   * A short look back at the season. Leave a blank line between paragraphs.
    */
   seasonSummary?: string | null;
   /**
@@ -998,7 +998,7 @@ export interface Yearbook {
   createdAt: string;
 }
 /**
- * Information pages such as About the club or Join us. Add text, pictures and buttons, then choose where the link goes in the menu. For dated news use News; for short banners use Announcements.
+ * Information pages such as About the club or Join us. For dated news use News.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
@@ -1007,7 +1007,7 @@ export interface Page {
   id: number;
   title: string;
   /**
-   * The page address, /info/<this>. Set from the title when the page is created. Changing it breaks links to the old address.
+   * Made from the title. Changing it breaks links to the old address.
    */
   slug?: string | null;
   /**
@@ -1061,7 +1061,7 @@ export interface Page {
              */
             image?: (number | null) | Media;
             /**
-             * A few words for people who cannot see it, for example "Under 12s with the premiership cup". Filled in from the picture’s own description when it has one.
+             * A few words for people who cannot see it, such as "Under 12s with the cup".
              */
             alt: string;
             caption?: string | null;
@@ -1100,7 +1100,7 @@ export interface Page {
   createdAt: string;
 }
 /**
- * Dated club news with a picture, such as a result, a signing or a thank-you. For a short banner on the home page use Announcements; for the club’s long-lived history use Club history stories.
+ * Dated club news with a picture. For a short home page banner use Announcements.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "news".
@@ -1109,23 +1109,19 @@ export interface News {
   id: number;
   title: string;
   /**
-   * The post address, /news/<this>. Set from the headline when the post is created.
-   */
-  slug?: string | null;
-  /**
-   * Keep it as Draft while you work. Use the Preview button to see it first.
+   * Keep it as Draft while you work. Use Preview to see it first.
    */
   status: 'draft' | 'published';
   /**
-   * Filled in with now when you publish. Pick a later date and time to schedule the post: it appears on the website by itself (it can take up to five minutes after that time).
+   * Filled in when you publish. Pick a later time to schedule it (up to 5 minutes late).
    */
   publishedAt?: string | null;
   /**
-   * Shown at the top of the post and on the news list. Click the button, then drop the picture in.
+   * JPG, PNG or WebP, at least 800px wide. Shown at the top of the post and in the list.
    */
   cover?: (number | null) | Media;
   /**
-   * Up to 280 characters, shown on the news list. Leave empty and the start of the post is used.
+   * Up to 280 characters. Leave empty to use the start of the post.
    */
   excerpt?: string | null;
   body: {
@@ -1155,6 +1151,10 @@ export interface News {
    * Up to 160 characters. Leave empty to use the summary.
    */
   seoDescription?: string | null;
+  /**
+   * The post address. Made from the headline when the post is created.
+   */
+  slug?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3406,14 +3406,11 @@ export interface PlayersSelect<T extends boolean = true> {
   lastName?: T;
   preferredName?: T;
   displayName?: T;
-  slug?: T;
-  source?: T;
   photo?: T;
   committeeRoles?: T;
   bio?: T;
   manualYears?: T;
   activeOverride?: T;
-  isActiveDerived?: T;
   hidden?: T;
   isJunior?: T;
   socialOptIn?: T;
@@ -3430,6 +3427,9 @@ export interface PlayersSelect<T extends boolean = true> {
   baselineCatches?: T;
   seasons?: T;
   aliases?: T;
+  slug?: T;
+  source?: T;
+  isActiveDerived?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3589,7 +3589,6 @@ export interface PagesSelect<T extends boolean = true> {
  */
 export interface NewsSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
   status?: T;
   publishedAt?: T;
   cover?: T;
@@ -3598,6 +3597,7 @@ export interface NewsSelect<T extends boolean = true> {
   author?: T;
   seoTitle?: T;
   seoDescription?: T;
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
 }

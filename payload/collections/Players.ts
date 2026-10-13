@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdminField, isStaff, isStaffField, nobodyField, staffOr } from '../access'
+import { cell, detailsGroup, filterChips, IMAGE_HINT, saveState, uploadPreview } from '../admin/formKit'
 import { adminOnlyCondition } from '../admin/visibility'
 import { dismissDuplicateEndpoint, mergePlayersEndpoint, undoMergeEndpoint } from '../endpoints/mergePlayers'
 import { TEAMS_TAG } from '../../lib/selection/tags'
@@ -43,10 +44,39 @@ export const Players: CollectionConfig = {
     group: false,
     hideAPIURL: true,
     useAsTitle: 'displayName',
-    defaultColumns: ['displayName', 'source', 'hidden'],
-    listSearchableFields: ['displayName', 'slug'],
-    description:
-      'Current players appear here by themselves every night. Add a photo, a short bio and honours to a player. To add someone from years ago, click "Add new".',
+    defaultColumns: ['displayName', 'listStatus', 'games'],
+    listSearchableFields: ['displayName'],
+    custom: { committeeFacing: true },
+    description: 'Current players appear by themselves every night. To add someone from years ago, use "Add new".',
+    components: {
+      ...filterChips(
+        [
+          {
+            key: 'playing',
+            label: 'Playing now',
+            params: {
+              'where[and][0][hidden][equals]': 'false',
+              'where[and][1][or][0][activeOverride][equals]': 'active',
+              'where[and][1][or][1][and][0][activeOverride][exists]': 'false',
+              'where[and][1][or][1][and][1][isActiveDerived][equals]': 'true',
+            },
+          },
+          {
+            key: 'past',
+            label: 'Past players',
+            params: {
+              'where[and][0][hidden][equals]': 'false',
+              'where[and][1][or][0][activeOverride][equals]': 'past',
+              'where[and][1][or][1][and][0][activeOverride][exists]': 'false',
+              'where[and][1][or][1][and][1][isActiveDerived][equals]': 'false',
+            },
+          },
+          { key: 'hidden', label: 'Hidden', params: { 'where[hidden][equals]': 'true' } },
+        ],
+        { label: 'Show players', allLabel: 'All players' },
+      ),
+      ...saveState(),
+    },
   },
   defaultSort: 'displayName',
   // Duplicate is noise for the committee (and would copy tokens/files).
@@ -90,45 +120,23 @@ export const Players: CollectionConfig = {
       label: 'Preferred name',
       type: 'text',
       validate: maxChars(100),
-      admin: { description: 'Shown on the site instead of the PlayHQ name, for example a nickname. Leave empty to use the first and last name above. The address of the player page and the PlayHQ matching do not change.' },
+      admin: { description: 'Shown on the site instead of their PlayHQ name, such as a nickname. Optional.' },
     },
     {
       name: 'displayName',
+      label: 'Name',
       type: 'text',
       access: syncOwned,
       hooks: { beforeChange: [displayName] },
-      admin: { hidden: true, readOnly: true },
-    },
-    {
-      name: 'slug',
-      label: 'Web address',
-      type: 'text',
-      unique: true,
-      index: true,
-      access: syncOwned,
-      hooks: { beforeChange: [uniqueSlug('players', (d) => fullName(d.firstName, d.lastName))] },
-      admin: { position: 'sidebar', readOnly: true, condition: adminOnlyCondition(), description: 'Set from the name when the player is created; never changes.' },
-    },
-    {
-      name: 'source',
-      label: 'Where they came from',
-      type: 'select',
-      defaultValue: 'manual',
-      options: [
-        { label: 'PlayHQ', value: 'playhq' },
-        { label: 'Added here', value: 'manual' },
-      ],
-      access: syncOwned,
-      hooks: { beforeChange: [playerSource] },
-      admin: { position: 'sidebar', readOnly: true, description: 'PlayHQ players come in automatically and cannot be deleted.' },
+      admin: { hidden: true, readOnly: true, components: { Cell: cell('NamedPhotoCell', { imageField: 'photo' }) } },
     },
     {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
       admin: {
-        description:
-          'Optional. Click the button, then drop the picture in. It is shown square, so choose one where the face is in the middle. If this player is also under Committee & contacts, the picture on that entry always wins, so change it there. This one is only used when the player has no entry there.',
+        description: `${IMAGE_HINT} Shown square, so keep the face in the middle.`,
+        components: uploadPreview(),
       },
     },
     {
@@ -140,7 +148,7 @@ export const Players: CollectionConfig = {
       admin: {
         allowCreate: false,
         defaultColumns: ['name', 'role'],
-        description: 'Shown if someone under Committee & contacts is linked to this player. To change their picture, edit it there.',
+        description: 'If they are also on the committee, their picture is changed there.',
       },
     },
     {
@@ -157,7 +165,7 @@ export const Players: CollectionConfig = {
       defaultValue: '',
       admin: {
         condition: (data) => data?.source !== 'playhq',
-        description: 'For example 1978–1992. Shown when the player has no seasons recorded automatically.',
+        description: 'For example 1978–1992. Shown when no seasons are recorded.',
         placeholder: '1978–1992',
       },
     },
@@ -166,22 +174,13 @@ export const Players: CollectionConfig = {
       label: 'Show as',
       type: 'select',
       options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Past', value: 'past' },
+        { label: 'Playing now', value: 'active' },
+        { label: 'Past player', value: 'past' },
       ],
       admin: {
-        position: 'sidebar',
-        description: 'Leave empty and the site decides (played this season or last = current player).',
+        placeholder: 'Let the site decide',
+        description: 'Leave it on "Let the site decide" unless it gets this wrong.',
       },
-    },
-    {
-      name: 'isActiveDerived',
-      label: 'Playing now (worked out by the stats update)',
-      type: 'checkbox',
-      defaultValue: false,
-      access: syncOwned,
-      hooks: { beforeChange: [keepStored(false)] },
-      admin: { position: 'sidebar', readOnly: true, condition: adminOnlyCondition(), description: 'Set by the sync: played in the latest two seasons.' },
     },
     {
       name: 'hidden',
@@ -189,15 +188,15 @@ export const Players: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       index: true,
-      admin: { position: 'sidebar', description: 'Tick to keep this player off the public website.' },
+      admin: { description: 'Tick to keep this player off the website.' },
     },
     {
       name: 'isJunior',
-      label: 'Is a junior (under 18)',
+      label: 'Under 18',
       type: 'checkbox',
       defaultValue: false,
       access: { read: isStaffField, create: isStaffField, update: isStaffField },
-      admin: { position: 'sidebar', description: 'Tick for a player under 18. Juniors are kept off pictures for Facebook, Instagram and X unless the box below is ticked.' },
+      admin: { description: 'Under-18s stay off social media pictures unless the box below is ticked.' },
     },
     {
       name: 'socialOptIn',
@@ -205,13 +204,13 @@ export const Players: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       access: { read: isStaffField, create: isStaffField, update: isStaffField },
-      admin: { position: 'sidebar', description: "Tick only with a parent or guardian's OK to post this child's name and stats on Facebook, Instagram and X." },
+      admin: { description: "Tick only with a parent or guardian's OK." },
     },
     {
       name: 'honours',
       type: 'array',
       labels: { singular: 'Honour', plural: 'Honours & roles' },
-      admin: { description: 'Awards and roles, e.g. "Club champion". Drag to change the order.' },
+      admin: { description: 'Awards and roles, such as "Club champion". Drag to reorder.' },
       fields: [
         {
           type: 'row',
@@ -227,8 +226,7 @@ export const Players: CollectionConfig = {
       label: 'Before PlayHQ (milestones)',
       admin: {
         initCollapsed: true,
-        description:
-          'Optional. Games, runs, wickets and catches from before the seasons the database holds (2023/24 onwards). They are added to the stored totals for milestones only, so a long-serving player is not shown as "approaching" a milestone they passed years ago. Leave at 0 when unknown.',
+        description: 'Optional. Totals from before 2023/24, used only for milestones. Leave at 0 if unknown.',
       },
       fields: BASELINE_FIELDS.map(({ name, label }) => ({
         name,
@@ -253,7 +251,7 @@ export const Players: CollectionConfig = {
         allowCreate: false,
         condition: adminOnlyCondition(),
         defaultColumns: ['seasonName', 'teamName', 'games', 'batRuns', 'bowlWickets', 'catches'],
-        description: 'Written by the PlayHQ sync.',
+        description: 'Filled in by the nightly update.',
       },
     },
     {
@@ -265,7 +263,7 @@ export const Players: CollectionConfig = {
         allowCreate: false,
         condition: adminOnlyCondition(),
         defaultColumns: ['nameKey'],
-        description: 'PlayHQ names that map to this player. Merging moves them.',
+        description: 'PlayHQ names that match this player.',
       },
     },
     {
@@ -273,5 +271,51 @@ export const Players: CollectionConfig = {
       type: 'ui',
       admin: { condition: adminOnlyCondition(), components: { Field: '/payload/components/MergePlayerField#MergePlayerField' } },
     },
+    {
+      name: 'listStatus',
+      type: 'ui',
+      label: 'Status',
+      admin: { components: { Cell: cell('PlayerStatusCell') } },
+    },
+    {
+      name: 'games',
+      type: 'ui',
+      label: 'Games this season',
+      admin: { components: { Cell: cell('PlayerGamesCell') } },
+    },
+    detailsGroup([
+    {
+      name: 'slug',
+      label: 'Web address',
+      type: 'text',
+      unique: true,
+      index: true,
+      access: syncOwned,
+      hooks: { beforeChange: [uniqueSlug('players', (d) => fullName(d.firstName, d.lastName))] },
+      admin: { readOnly: true, condition: adminOnlyCondition(), description: 'Made from the name when the player is added. It never changes.' },
+    },
+    {
+      name: 'source',
+      label: 'Where they came from',
+      type: 'select',
+      defaultValue: 'manual',
+      options: [
+        { label: 'PlayHQ', value: 'playhq' },
+        { label: 'Added here', value: 'manual' },
+      ],
+      access: syncOwned,
+      hooks: { beforeChange: [playerSource] },
+      admin: { readOnly: true, description: 'Players from PlayHQ come in by themselves and cannot be deleted.' },
+    },
+    {
+      name: 'isActiveDerived',
+      label: 'Playing now (worked out each night)',
+      type: 'checkbox',
+      defaultValue: false,
+      access: syncOwned,
+      hooks: { beforeChange: [keepStored(false)] },
+      admin: { readOnly: true, condition: adminOnlyCondition(), description: 'Worked out each night: played in the latest two seasons.' },
+    },
+    ]),
   ],
 }

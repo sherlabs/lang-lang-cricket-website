@@ -1,3 +1,4 @@
+export { Avatar } from './Avatar'
 export { Button, LinkButton, type ButtonVariant } from './Button'
 export { Card, Section } from './Card'
 export { Disclosure } from './Disclosure'
