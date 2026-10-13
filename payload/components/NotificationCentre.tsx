@@ -8,6 +8,7 @@ import { stockFigures } from '@/lib/stock-office-queries'
 import { meetingStats } from '@/lib/meetings-office-queries'
 import { listImportBatches } from '@/lib/history-import/server'
 import { getDuplicateSuggestions } from '@/lib/players/duplicate-queries'
+import { computeSignIn } from '@/lib/signin/mode'
 import { readSignInState } from '@/lib/signin/state'
 import { socialCounts } from '@/lib/social-queries'
 import { readHeartbeat } from '@/lib/social/heartbeat'
@@ -38,7 +39,7 @@ async function signInFacts(payload: Payload) {
   try {
     const s = await readSignInState(payload)
     const recent = s.lastEvent.at && Date.now() - new Date(s.lastEvent.at).getTime() < 7 * 86_400_000
-    return { testFailedAt: s.lastTest.at && !s.lastTest.ok ? s.lastTest.at : null, unlinked: recent ? s.lastEvent.unlinked : 0 }
+    return { testFailedAt: computeSignIn({ stored: s.mode, serverURL: payload.config.serverURL }).kind === 'broker' && s.lastTest.at && !s.lastTest.ok && Date.now() - new Date(s.lastTest.at).getTime() < 3 * 86_400_000 ? s.lastTest.at : null, unlinked: recent ? s.lastEvent.unlinked : 0 }
   } catch {
     return null
   }

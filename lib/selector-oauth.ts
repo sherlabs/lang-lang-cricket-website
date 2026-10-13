@@ -1,7 +1,7 @@
 import type { Payload, Where } from 'payload'
 import { selectorPaths } from '@/config/site'
 import { clientIp } from '@/lib/client-ip'
-import { dialogUrl, exchangeCode, facebookConfig, fetchProfile, redirectUri, verifySignedRequest, type FetchLike } from '@/lib/facebook-login'
+import { dialogUrl, exchangeCode, facebookConfig, fetchProfile, hostSupportsFacebook, redirectUri, verifySignedRequest, type FetchLike } from '@/lib/facebook-login'
 import { newNonce, oauthCookieName, readCookie, serializeOAuthCookie, signOAuthCookie, stateFor, stateMatches, verifyOAuthCookie } from '@/lib/oauth-cookie'
 import { safeNext } from '@/lib/safe-next'
 import { consumeInvite, findInvitee, looksLikeInviteToken } from '@/lib/selector-invite'
@@ -243,13 +243,15 @@ const EVENT_BODY_MAX = 8 * 1024
 
 /**
  * POST /api/websport-auth/events. The broker tells the club that someone removed the app or asked for their data to be deleted.
- * 404 unless the mode is `broker`. The signature is checked first; only a valid event unlinks (rows bound through the broker,
+ * 404 only without a broker config or on a host that is not the site address (whatever mode is chosen). The signature is checked first; only a valid event unlinks (rows bound through the broker,
  * never the club's own-app ones). A valid event always answers 200 `{}` (no one can ask who is a member), and a redelivery just
  * unlinks nothing. Only FAILED requests count towards the flood ceiling, so a flood of junk can never starve a real deletion.
  */
 export async function handleBrokerEvent(request: Request, deps: OAuthDeps): Promise<Response> {
-  if ((await modeFor(request, deps)).kind !== 'broker') return notFound()
-  const cfg = brokerConfig(deps.env)!
+  // The stored mode is ignored: rows bound through the broker must stay unlinkable (and a data-deletion event honoured) after the
+  // admin switches to off or own-app. Only a missing broker config or a wrong host answers 404.
+  const cfg = brokerConfig(deps.env)
+  if (!cfg || !hostSupportsFacebook(deps.payload.config.serverURL, requestHost(request))) return notFound()
   const bad = async (why: string): Promise<Response> => {
     const gate = await hit(deps.payload, 'broker-events:bad', BROKER_BAD_RULE)
     const ip = await ipHit(deps.payload, 'broker-bad', clientIp(request.headers))

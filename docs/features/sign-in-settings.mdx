@@ -35,13 +35,13 @@ Facebook sign-in for selectors first needed every club to register and maintain 
 
 **Id spaces.** A Facebook id is app-scoped: the same person has a different id in the broker's Meta app and in a club's own app, and two different people could share digits across them. Each linked row records which one it was bound under (`facebookIdVia`), lookups only match inside that space, and the unique rule is on the id and the space together. Switching between "broker" and "own app" therefore does not move anyone: people linked under the other option link again from My account. Passwords keep working throughout.
 
-**Events from the broker.** When someone removes the app or asks Facebook to delete their data, the broker posts a signed event to `/api/websport-auth/events`. A valid event unlinks the Facebook id of the matching broker-bound rows (the club stores only the id, so unlinking is the deletion) and always answers 200 with `{}`, whether or not a row matched, so nobody can ask who is a member. The same event delivered twice just unlinks nothing the second time. Only requests that fail verification count against a flood limit of 120 per hour (a limit that real events never touch), so junk traffic cannot block a real deletion. The direct data-deletion and deauthorize callbacks of the own-app mode only touch rows bound through the own app.
+**Events from the broker.** When someone removes the app or asks Facebook to delete their data, the broker posts a signed event to `/api/websport-auth/events`. The events route works whatever mode is chosen (it answers 404 only when the broker is not set up on the server or the host is not the site address), so rows linked through the broker can still be unlinked, and a data-deletion request still honoured, after the admin switches Facebook off. A valid event unlinks the Facebook id of the matching broker-bound rows (the club stores only the id, so unlinking is the deletion) and always answers 200 with `{}`, whether or not a row matched, so nobody can ask who is a member. The same event delivered twice just unlinks nothing the second time. Only requests that fail verification count against a flood limit of 120 per hour (a limit that real events never touch), so junk traffic cannot block a real deletion. The direct data-deletion and deauthorize callbacks of the own-app mode only touch rows bound through the own app.
 
 **The Sign-in tab** (admin only, no new menu entry: the group lives on the existing Site settings page, and every field in it is admin-only over REST too) shows:
 
 - whether Facebook sign-in is on, and why or why not, in plain words;
 - which server settings are present (yes or no, never their values);
-- the values to give the broker's operator for this club (`id`, `origins`, `returnPath`, `eventsPath`), copy-ready;
+- the values to give the broker's operator for this club (`id`, `name`, `origins`, `returnPath`, `eventsPath`), copy-ready;
 - the three addresses to enter in the Meta console for the own-app mode;
 - the trust statement below;
 - a **Test connection** button and the last result.

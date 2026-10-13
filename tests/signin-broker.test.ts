@@ -45,7 +45,7 @@ describe('brokerConfig', () => {
     for (const id of ['', 'Upper', 'has space', 'a'.repeat(65), 'under_score']) expect(c(ORIGIN, id)).toBeNull()
   })
   it('states the registration this site needs', () => {
-    expect(brokerRegistration(CFG, `${OWN}/`)).toEqual({ id: 'demo-club', origins: [OWN], returnPath: '/selector/facebook/broker-callback', eventsPath: '/api/websport-auth/events' })
+    expect(brokerRegistration(CFG, `${OWN}/`, 'Demo CC')).toEqual({ id: 'demo-club', name: 'Demo CC', origins: [OWN], returnPath: '/selector/facebook/broker-callback', eventsPath: '/api/websport-auth/events' })
   })
 })
 

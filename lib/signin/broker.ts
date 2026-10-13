@@ -50,8 +50,9 @@ export function brokerStartUrl(cfg: BrokerConfig, o: { ownOrigin: string; nonce:
 }
 
 /** What this site registers in the broker's CLUBS list (shown to the operator, copy-ready). */
-export const brokerRegistration = (cfg: BrokerConfig | null, ownOrigin: string) => ({
+export const brokerRegistration = (cfg: BrokerConfig | null, ownOrigin: string, clubName: string) => ({
   id: cfg?.clubId ?? '<club id>',
+  name: clubName,
   origins: [ownOrigin.replace(/\/+$/, '')],
   returnPath: selectorPaths.facebookBrokerCallback,
   eventsPath: BROKER_EVENTS_PATH,

@@ -2,6 +2,7 @@ import type { UIFieldServerProps } from 'payload'
 import { CLUB_LOCALE, CLUB_TIMEZONE, BROKER_EVENTS_PATH, selectorPaths } from '@/config/site'
 import { brokerConfig, brokerRegistration, parseBrokerConfig } from '@/lib/signin/broker'
 import { computeSignIn } from '@/lib/signin/mode'
+import { getClub } from '@/lib/club'
 import { readSignInState } from '@/lib/signin/state'
 import { facebookConfig } from '@/lib/facebook-login'
 import { isAdminUser } from '../admin/visibility'
@@ -22,6 +23,7 @@ export async function SignInPanel({ payload, user }: UIFieldServerProps) {
   const origin = payload.config.serverURL.replace(/\/+$/, '')
   const mode = computeSignIn({ stored: state.mode, env, serverURL: origin })
   const broker = brokerConfig(env)
+  const club = await getClub()
   const brokerProblem = parseBrokerConfig(env).reason
   const status =
     mode.kind === 'broker' ? 'Facebook sign-in is on through the shared broker.'
@@ -43,7 +45,7 @@ export async function SignInPanel({ payload, user }: UIFieldServerProps) {
 
       <h3 className="club-field__title">Through the shared broker</h3>
       <p className="club-muted">Ask the broker&apos;s operator to add this club with these values, and to give you the broker address and the club id.</p>
-      <pre className="club-signin__pre" tabIndex={0}>{JSON.stringify(brokerRegistration(broker, origin), null, 2)}</pre>
+      <pre className="club-signin__pre" tabIndex={0}>{JSON.stringify(brokerRegistration(broker, origin, club.name), null, 2)}</pre>
       <p className="club-muted">
         <strong>Who is trusted.</strong> In this mode the club trusts the shared broker to say which Facebook person is signing in. A compromised broker could sign in as any selector who has linked Facebook through it. The risk is small on purpose: only selectors can be signed in this way (never an editor or an admin), only people who were invited are linked (nothing is created from Facebook alone), and a selector can only reach the selector area. If the club does not accept this, choose its own Facebook app or turn Facebook off.
       </p>

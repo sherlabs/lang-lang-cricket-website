@@ -214,7 +214,6 @@ describe('shared broker sign-in', () => {
         await setMode(mode)
         const env = mode === 'own-app' ? { ...ENV, FACEBOOK_APP_ID: '1', FACEBOOK_APP_SECRET: 's' } : ENV
         expect((await handleBrokerCallback(get('/selector/facebook/broker-callback?state=x', { cookie: s.cookie }), deps({ env }))).status).toBe(404)
-        expect((await handleBrokerEvent(eventReq({ event: 'x' }), deps({ env }))).status).toBe(404)
         if (mode === 'off') expect((await handleStart(get('/selector/facebook/start'), deps({ env }))).status).toBe(404)
       }
     })
@@ -307,6 +306,14 @@ describe('shared broker sign-in', () => {
         expect(await row(ids.sel)).toEqual({ facebook_id: null, facebook_id_via: null })
         expect(await row(ids.sel2)).toEqual({ facebook_id: '7001', facebook_id_via: 'own' })
       }
+    })
+    it('still unlinks broker-bound rows after the admin switches to off, but answers 404 without the broker env', async () => {
+      await bindDirect(ids.sel, '7010', 'broker')
+      await setMode('off')
+      expect((await sendEvent('facebook.data_deletion', '7010')).status).toBe(200)
+      expect(await row(ids.sel)).toEqual({ facebook_id: null, facebook_id_via: null })
+      expect((await handleBrokerEvent(eventReq({ event: 'x' }), deps({ env: {} }))).status).toBe(404)
+      await setMode('broker')
     })
     it("a non-selector row's broker link is also removed (and it was never signable)", async () => {
       await bindDirect(ids.editor, '7002', 'broker')
