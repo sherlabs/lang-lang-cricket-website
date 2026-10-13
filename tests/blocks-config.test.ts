@@ -4,7 +4,17 @@ import { Pages } from '../payload/collections/Pages'
 import { News } from '../payload/collections/News'
 import { httpUrlOrPath } from '../payload/fields/validators'
 
-const field = (fields: readonly { name?: string }[], name: string) => fields.find((f) => f.name === name) as Record<string, unknown>
+// Looks inside layout-only collapsibles too (the News web address now sits in its closed Details area).
+type FieldLike = { name?: string; fields?: readonly FieldLike[] }
+const findField = (fields: readonly FieldLike[], name: string): FieldLike | undefined => {
+  for (const f of fields) {
+    if (f.name === name) return f
+    const inner = f.fields ? findField(f.fields, name) : undefined
+    if (inner) return inner
+  }
+  return undefined
+}
+const field = (fields: readonly { name?: string }[], name: string) => findField(fields as readonly FieldLike[], name) as Record<string, unknown>
 
 describe('page blocks', () => {
   it('are exactly three: text, image, cta (a new block updates this test with its component and renderer)', () => {

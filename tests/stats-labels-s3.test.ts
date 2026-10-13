@@ -131,7 +131,7 @@ describe('single source for names and labels', () => {
         // Selection: the grade names of PlayHQ fixtures and of squads made from them (shown as PlayHQ names them). The one place stored
         // season rows are matched to them, squad-seed.ts, goes through the label map (`canonical`).
         'app/(frontend)/selector/(area)/availability/page.tsx', 'app/(frontend)/selector/(area)/squads/page.tsx', 'components/availability/answer-list.tsx',
-        'components/selector/publish-all.tsx', 'components/selector/squad-grade.tsx', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
+        'components/selector/publish-all.tsx', 'components/selector/squad-grade.tsx', 'lib/admin/season-glance.ts', 'lib/availability-public.ts', 'lib/selection-fixtures.ts', 'lib/selection/fixtures-plan.ts',
         'lib/selection/squad-seed.ts', 'lib/selection/store.ts', 'lib/selector-availability-queries.ts', 'lib/selector-squad-queries.ts', 'lib/selector-xi-queries.ts',
         // Best-player votes: the PlayHQ grade name of the stored fixture, as for availability and team sheets.
         'app/(frontend)/selector/(area)/votes/[fixtureId]/page.tsx', 'app/(frontend)/selector/(area)/votes/page.tsx', 'app/(frontend)/votes/page.tsx', 'app/(frontend)/availability/[token]/vote/[fixtureId]/page.tsx', 'lib/selector-votes-queries.ts', 'lib/votes-queries.ts',

@@ -42,15 +42,6 @@ export function fileTypeChip(filename?: string | null, mimeType?: string | null)
   return sub ? sub.toUpperCase() : 'File'
 }
 
-/** Up to two initials for an avatar with no picture. */
-export function initials(name: string | null | undefined): string {
-  const parts = (name ?? '').replace(/[^\p{L}\p{N}\s'-]/gu, ' ').trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  const first = Array.from(parts[0])[0] ?? '?'
-  const last = parts.length > 1 ? (Array.from(parts[parts.length - 1])[0] ?? '') : ''
-  return (first + last).toUpperCase()
-}
-
 /** Where the saving-state line says. Pure so the wording is tested. */
 export function saveStateLabel(s: { processing: boolean; modified: boolean; lastSavedAt: number | null; now: number; isNew: boolean; docUpdatedAt?: number | null }): string {
   if (s.processing) return 'Saving...'

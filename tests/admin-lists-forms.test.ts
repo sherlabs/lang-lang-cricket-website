@@ -2,7 +2,7 @@ import { createElement, type ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { activeChip, chipHref, isWhereKey, type FilterChip } from '@/lib/admin/filter-chips'
-import { adminMediaSrc, createBatchLoader, dateTile, fileTypeChip, initials, newsStatus, onOff, playerStatus, saveStateLabel } from '@/lib/admin/list-status'
+import { adminMediaSrc, createBatchLoader, dateTile, fileTypeChip, newsStatus, onOff, playerStatus, saveStateLabel } from '@/lib/admin/list-status'
 import { EventStatusCell, EventWhenCell, FileTypeCell, NewsStatusCell, OnOffCell, PlayerStatusCell, SponsorLevelCell } from '@/payload/components/ListCells'
 import { Avatar } from '@/payload/components/ui/Avatar'
 import { loadSanitizedConfig } from './helpers/sanitized-config'
@@ -41,14 +41,10 @@ describe('list statuses', () => {
     expect(dateTile(null)).toBeNull()
   })
 
-  it('file chips and initials', () => {
+  it('file type chips', () => {
     expect(fileTypeChip('policy.final.pdf')).toBe('PDF')
     expect(fileTypeChip(null, 'application/pdf')).toBe('PDF')
     expect(fileTypeChip(null, null)).toBe('File')
-    expect(initials('Sam Taylor')).toBe('ST')
-    expect(initials('Cher')).toBe('C')
-    expect(initials('')).toBe('?')
-    expect(initials('  Mary-Jane  O\'Neil ')).toBe('MO')
   })
 })
 
@@ -158,6 +154,7 @@ describe('list cells draw words, never raw booleans', () => {
     const none = html(h(Avatar, { name: 'Sam Taylor' }))
     expect(none).not.toContain('<img')
     expect(none).toContain('>ST<')
+    expect(html(h(Avatar, { name: '' }))).toContain('>?<')
     expect(html(h(Avatar, { src: '/l.png', name: 'X', fit: 'contain' }))).toContain('ui-avatar--contain')
   })
 })
