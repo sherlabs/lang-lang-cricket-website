@@ -6,7 +6,7 @@ Work through this in order. Every step has a check at the end so you know it wor
 
 - Create a repository from this template (or fork it) and keep an `upstream` remote: `git remote add upstream <template repository url>`. See [upstream updates](./upstream-updates.md).
 - Copy `clubs/example-fc/` to `clubs/<your-slug>/` and edit `profile.json` ([field reference](./club-profile.md)). Add your crest, hero picture, share image and favicon under `clubs/<your-slug>/assets/`.
-- In your copy, delete the Lang Lang files under `public/assets/documents`, `public/assets/gallery` and `public/assets/sponsors` and replace `app/favicon.ico`, `public/apple-touch-icon.png`, `public/og-image.jpg` and `public/assets/branding/*`. `pnpm check:template` lists any file that is still one of Lang Lang's.
+- In your copy, delete the Lang Lang files under `public/assets/documents`, `public/assets/gallery` and `public/assets/sponsors` and replace `public/favicon.ico`, `public/apple-touch-icon.png`, `public/og-image.jpg` and `public/assets/branding/*`. `pnpm check:template` lists any file that is still one of Lang Lang's.
 
 ## 2. Create the hosting
 
@@ -26,10 +26,12 @@ Set these for **Production and Preview**. Run `pnpm check:template` with them in
 | `PROD_DATABASE_HOST` | Database and secrets | Required | The production database host name (not a secret); the build refuses to deploy when it is empty. | `scripts/vercel-build.mjs` | none |
 | `CRON_SECRET` | Database and secrets | Required | Shared secret the scheduled jobs present to the cron routes. | `app/api/cron/*` | none |
 | `BLOB_READ_WRITE_TOKEN` | Database and secrets | Required | Vercel Blob token for uploaded files (set by the Blob store on Vercel; never set locally). | `payload.config.ts, payload/env.ts` | files go to ./media |
+| `NEXT_PUBLIC_SERVER_URL` | Database and secrets | Optional | The public https address of the site (for example https://riverbend-cc.example). Admin links and email links use it; previews derive it from the Vercel branch URL. | `payload.config.ts, payload/env.ts` | none (set it for production; previews derive it) |
+| `TRUSTED_IP_HEADER` | Database and secrets | Optional | Only when not hosting on Vercel: the header your reverse proxy overwrites with the real client address (for example x-real-ip). Rate limits need a trusted source. | `lib/client-ip.ts, instrumentation.ts` | Vercel forwarding header only (a warning is logged elsewhere) |
 | `CLUB_PRESET` | Template | Optional | Which built-in copy set applies: "template" (neutral, the default outside development) or "lang-lang". | `payload/seed/club-defaults.ts` | template |
 | `CANONICAL_HOST` | Club identity | Required | The club site host, for example riverbend-cc.example (no https://). Canonical links, redirects and the sitemap use it. | `config/site.ts, next.config.ts` | none (production) |
 | `REDIRECT_HOSTS` | Club identity | Optional | Comma separated hosts that 308 to the canonical host (www and the vercel.app alias). | `next.config.ts` | www.<CANONICAL_HOST> |
-| `COOKIE_PREFIX` | Club identity | Required | Short prefix for visitor cookie names (letters and digits). | `config/site.ts` | club (production), none required in development |
+| `COOKIE_PREFIX` | Club identity | Required | Short prefix for visitor cookie names (letters and digits). | `config/site.ts` | none (production); llcc in development |
 | `EXPORT_FILENAME_PREFIX` | Club identity | Optional | Prefix of downloaded CSV file names. | `config/site.ts` | derived from the club short name |
 | `VOTE_LABEL` | Club identity | Optional | The name of the best-player award in the UI. | `config/site.ts` | Best player |
 | `AGENCY_CREDIT` | Template | Optional | Set to "off" to hide the operator credit in the footer. | `config/site.ts` | shown |
@@ -52,8 +54,13 @@ Set these for **Production and Preview**. Run `pnpm check:template` with them in
 | `FACEBOOK_APP_SECRET` | Sign-in | Optional | The club's own Meta app secret. | `lib/facebook-login.ts` | off |
 | `EMAIL_PROVIDER` | Email | Optional | "resend" for real mail ("mock" for demos). Email is off while empty. | `lib/email/env.ts` | off |
 | `EMAIL_FROM_ADDRESS` | Email | Optional | The sender address (its domain needs SPF, DKIM and DMARC records). | `lib/email/env.ts` | off |
+| `EMAIL_FROM_NAME` | Email | Optional | The sender name shown in inboxes. | `lib/email/env.ts` | the club name |
+| `EMAIL_REPLY_TO` | Email | Optional | Where replies go. | `lib/email/env.ts` | the club email address |
+| `EMAIL_MAX_RECIPIENTS` | Email | Optional | Most people one send may reach. | `lib/email/env.ts` | built-in cap |
 | `RESEND_API_KEY` | Email | Optional | Resend API key. | `lib/email/env.ts` | off |
 | `AI_GATEWAY_API_KEY` | Optional services | Optional | Vercel AI Gateway key for the yearbook draft helper; drafting is off while empty. | `lib/yearbooks/ai` | off |
+| `YEARBOOK_AI_MODEL` | Optional services | Optional | AI Gateway model used for yearbook drafts. | `lib/ai/yearbook-draft.ts` | the default in config/site.ts |
+| `SELECTOR_INVITE_DAYS` | Optional services | Optional | How many days a selector invite link works (1 to 90). | `config/site.ts` | 14 |
 | `FACEBOOK_PAGE_ID` | Optional services | Optional | Facebook Page for social posting. | `lib/social/adapters` | off |
 | `FACEBOOK_PAGE_ACCESS_TOKEN` | Optional services | Optional | Page access token for social posting. | `lib/social/adapters` | off |
 

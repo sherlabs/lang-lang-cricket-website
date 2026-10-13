@@ -1,5 +1,6 @@
 import 'server-only'
 import { getPayloadClient } from '@/lib/payload/client'
+import { clubDefaults } from '@/payload/seed/club-defaults'
 import { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, withClubHonourKeywords, withRenamedGradeRules, type StatsSettings } from './site-settings-core'
 
 export { DEFAULT_SPONSOR_CAROUSEL_TIERS, DEFAULT_STATS_SETTINGS, normaliseTiers, resolveStatsSettings, selectCarouselSponsors } from './site-settings-core'
@@ -39,7 +40,9 @@ export async function getStatsSettings(): Promise<StatsSettings> {
       payload.findGlobal({ slug: 'site-settings', depth: 0 }),
       payload.findGlobal({ slug: 'club', depth: 0 }).catch(() => null),
     ])
-    const keywords = (club as unknown as { honourKeywords?: unknown } | null)?.honourKeywords
+    // The saved keywords plus the active preset's: a club row saved before the keywords existed still classifies association honours.
+    const saved = (club as unknown as { honourKeywords?: unknown } | null)?.honourKeywords
+    const keywords = [...clubDefaults.honourKeywords, ...(Array.isArray(saved) ? saved : [])]
     if (!settings?.updatedAt) return withClubHonourKeywords(DEFAULT_STATS_SETTINGS, keywords)
     return withClubHonourKeywords(withRenamedGradeRules(resolveStatsSettings((settings as unknown as { stats?: unknown }).stats)), keywords)
   } catch (err) {

@@ -19,6 +19,39 @@ describe('validateClubProfile', () => {
     expect(r.ok).toBe(true)
   })
 
+  it('passes the example without advisory notes', () => {
+    const r = validateClubProfile(example)
+    expect(r.ok && r.warnings).toEqual([])
+  })
+
+  it.each(['primary', 'surface', 'text', 'muted', 'headingFont'])('requires theme.%s (no colour is inherited from another club)', (k) => {
+    const p = clone()
+    delete p.theme[k]
+    expect(paths(p)).toContain(`theme.${k}`)
+  })
+
+  it.each([
+    ['copy.pages', { pages: 'oops' }],
+    ['copy.pages.home.title', { pages: { home: { title: 5 } } }],
+    ['copy.name', { name: 'Other FC' }],
+    ['copy.siteUrl', { siteUrl: 'http://evil' }],
+    ['copy.email', { email: 'x@evil.example' }],
+    ['copy.address', { address: { locality: 'x' } }],
+    ['copy.nope', { nope: 'x' }],
+    ['copy.history.narrativ', { history: { narrativ: 'x' } }],
+    ['copy.honourKeywords[0]', { honourKeywords: [3] }],
+  ])('rejects bad copy at %s', (at, copy) => {
+    const p = clone()
+    p.copy = copy
+    expect(paths(p)).toContain(at)
+  })
+
+  it('accepts well-formed copy overrides', () => {
+    const p = clone()
+    p.copy = { _comment: 'x', history: { pullQuote: 'We play on.' }, honourKeywords: ['rcca'], pages: { contact: { title: 'Contact us' } } }
+    expect(validateClubProfile(p).ok).toBe(true)
+  })
+
   it('ignores _comment keys', () => {
     expect(validateClubProfile(example).ok).toBe(true)
     expect(JSON.stringify(example)).toContain('_comment')
@@ -64,7 +97,7 @@ describe('validateClubProfile', () => {
   })
 
   it('derives the shades and keeps the derived deep accent readable', () => {
-    const t = resolveProfileTheme({ accent: example.theme.accent, primary: example.theme.primary, surface: example.theme.surface, text: example.theme.text, muted: example.theme.muted })
+    const t = resolveProfileTheme({ accent: example.theme.accent, primary: example.theme.primary, surface: example.theme.surface, text: example.theme.text, muted: example.theme.muted, headingFont: example.theme.headingFont })
     expect(t.contrast.filter((c) => c.level === 'error' && !c.pass)).toEqual([])
     expect(t.shades.accentDeep).toMatch(/^#[0-9A-F]{6}$/)
   })

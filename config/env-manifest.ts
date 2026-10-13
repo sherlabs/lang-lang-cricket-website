@@ -65,10 +65,13 @@ export const ENV_MANIFEST: readonly EnvEntry[] = [
   { name: 'CRON_SECRET', group: 'Database and secrets', required: true, what: 'Shared secret the scheduled jobs present to the cron routes.', where: 'app/api/cron/*', fallback: 'none', secret: true, valid: longSecret },
   { name: 'BLOB_READ_WRITE_TOKEN', group: 'Database and secrets', required: true, what: 'Vercel Blob token for uploaded files (set by the Blob store on Vercel; never set locally).', where: 'payload.config.ts, payload/env.ts', fallback: 'files go to ./media', secret: true },
 
+  { name: 'NEXT_PUBLIC_SERVER_URL', group: 'Database and secrets', required: false, what: 'The public https address of the site (for example https://riverbend-cc.example). Admin links and email links use it; previews derive it from the Vercel branch URL.', where: 'payload.config.ts, payload/env.ts', fallback: 'none (set it for production; previews derive it)', valid: httpsOrigin },
+  { name: 'TRUSTED_IP_HEADER', group: 'Database and secrets', required: false, what: 'Only when not hosting on Vercel: the header your reverse proxy overwrites with the real client address (for example x-real-ip). Rate limits need a trusted source.', where: 'lib/client-ip.ts, instrumentation.ts', fallback: 'Vercel forwarding header only (a warning is logged elsewhere)' },
+
   { name: 'CLUB_PRESET', group: 'Template', required: false, what: 'Which built-in copy set applies: "template" (neutral, the default outside development) or "lang-lang".', where: 'payload/seed/club-defaults.ts', fallback: 'template', valid: oneOf('template', 'lang-lang') },
   { name: 'CANONICAL_HOST', group: 'Club identity', required: true, what: 'The club site host, for example riverbend-cc.example (no https://). Canonical links, redirects and the sitemap use it.', where: 'config/site.ts, next.config.ts', fallback: 'none (production)', valid: host },
   { name: 'REDIRECT_HOSTS', group: 'Club identity', required: false, what: 'Comma separated hosts that 308 to the canonical host (www and the vercel.app alias).', where: 'next.config.ts', fallback: 'www.<CANONICAL_HOST>', valid: hostList },
-  { name: 'COOKIE_PREFIX', group: 'Club identity', required: true, what: 'Short prefix for visitor cookie names (letters and digits).', where: 'config/site.ts', fallback: 'club (production), none required in development', valid: cookiePrefix },
+  { name: 'COOKIE_PREFIX', group: 'Club identity', required: true, what: 'Short prefix for visitor cookie names (letters and digits).', where: 'config/site.ts', fallback: 'none (production); llcc in development', valid: cookiePrefix },
   { name: 'EXPORT_FILENAME_PREFIX', group: 'Club identity', required: false, what: 'Prefix of downloaded CSV file names.', where: 'config/site.ts', fallback: 'derived from the club short name', valid: (v) => /^[a-z0-9-]{1,30}$/i.test(v) },
   { name: 'VOTE_LABEL', group: 'Club identity', required: false, what: 'The name of the best-player award in the UI.', where: 'config/site.ts', fallback: 'Best player' },
   { name: 'AGENCY_CREDIT', group: 'Template', required: false, what: 'Set to "off" to hide the operator credit in the footer.', where: 'config/site.ts', fallback: 'shown', valid: oneOf('on', 'off') },
@@ -95,9 +98,14 @@ export const ENV_MANIFEST: readonly EnvEntry[] = [
 
   { name: 'EMAIL_PROVIDER', group: 'Email', required: false, what: '"resend" for real mail ("mock" for demos). Email is off while empty.', where: 'lib/email/env.ts', fallback: 'off', valid: oneOf('resend', 'mock') },
   { name: 'EMAIL_FROM_ADDRESS', group: 'Email', required: false, what: 'The sender address (its domain needs SPF, DKIM and DMARC records).', where: 'lib/email/env.ts', fallback: 'off', valid: (v) => /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/.test(v) },
+  { name: 'EMAIL_FROM_NAME', group: 'Email', required: false, what: 'The sender name shown in inboxes.', where: 'lib/email/env.ts', fallback: 'the club name' },
+  { name: 'EMAIL_REPLY_TO', group: 'Email', required: false, what: 'Where replies go.', where: 'lib/email/env.ts', fallback: 'the club email address' },
+  { name: 'EMAIL_MAX_RECIPIENTS', group: 'Email', required: false, what: 'Most people one send may reach.', where: 'lib/email/env.ts', fallback: 'built-in cap', valid: (v) => /^[1-9]\d{0,5}$/.test(v) },
   { name: 'RESEND_API_KEY', group: 'Email', required: false, what: 'Resend API key.', where: 'lib/email/env.ts', fallback: 'off', secret: true },
 
   { name: 'AI_GATEWAY_API_KEY', group: 'Optional services', required: false, what: 'Vercel AI Gateway key for the yearbook draft helper; drafting is off while empty.', where: 'lib/yearbooks/ai', fallback: 'off', secret: true },
+  { name: 'YEARBOOK_AI_MODEL', group: 'Optional services', required: false, what: 'AI Gateway model used for yearbook drafts.', where: 'lib/ai/yearbook-draft.ts', fallback: 'the default in config/site.ts' },
+  { name: 'SELECTOR_INVITE_DAYS', group: 'Optional services', required: false, what: 'How many days a selector invite link works (1 to 90).', where: 'config/site.ts', fallback: '14', valid: (v) => /^(?:[1-9]|[1-8]\d|90)$/.test(v) },
   { name: 'FACEBOOK_PAGE_ID', group: 'Optional services', required: false, what: 'Facebook Page for social posting.', where: 'lib/social/adapters', fallback: 'off' },
   { name: 'FACEBOOK_PAGE_ACCESS_TOKEN', group: 'Optional services', required: false, what: 'Page access token for social posting.', where: 'lib/social/adapters', fallback: 'off', secret: true },
 ]

@@ -30,7 +30,7 @@ Classes: **A** allowed (comment, preset, migration history, test fixture, develo
 
 ## Class C: shipped assets
 
-`app/favicon.ico`, `public/apple-touch-icon.png`, `public/og-image.jpg`, `public/assets/branding/*`, `public/assets/documents`, `public/assets/gallery`, `public/assets/sponsors` are Lang Lang's own files and stay in this repository as its fallbacks. A new club's profile uploads its own logo, hero, share image and favicon (Club details); `pnpm check:template` lists every file under `public/` that still matches a Lang Lang original by content, and `tests/branding-files.test.ts` blocks reuse on another host. Remaining static icons (`app/favicon.ico`, `apple-touch-icon.png`) have no admin upload: replace the files in your copy.
+`public/favicon.ico`, `public/apple-touch-icon.png`, `public/og-image.jpg`, `public/assets/branding/*`, `public/assets/documents`, `public/assets/gallery`, `public/assets/sponsors` are Lang Lang's own files and stay in this repository as its fallbacks. A new club's profile uploads its own logo, hero, share image and favicon (Club details); `pnpm check:template` lists every file under `public/` that still matches a Lang Lang original by content, and `tests/branding-files.test.ts` blocks reuse on another host. Remaining static icons (`public/favicon.ico`, `apple-touch-icon.png`) have no admin upload: replace the files in your copy.
 
 ## Class D: documentation
 

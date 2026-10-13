@@ -12,8 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s",
     },
     description: club.defaultDescription,
-    // An uploaded favicon (Club details) wins; with none the built-in app/favicon.ico applies.
-    ...(club.faviconUrl ? { icons: { icon: club.faviconUrl } } : {}),
+    // The one icon link: the uploaded favicon (Club details) or the built-in public/favicon.ico. It is not an app/ file
+    // convention, because that would add a second icon link beside the upload and leave the browser to choose.
+    icons: { icon: club.faviconUrl || "/favicon.ico" },
     openGraph: baseOpenGraph(club),
     twitter: {
       card: "summary_large_image",

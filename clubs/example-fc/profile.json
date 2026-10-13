@@ -21,9 +21,9 @@
     "seasonNameFormat": "split"
   },
   "theme": {
-    "_comment": "Only the accent is required. Missing colours use the neutral defaults and the shades are derived from the accent; every text and background pair is checked for contrast.",
-    "accent": "#F59E0B",
-    "primary": "#0B3B3A",
+    "_comment": "All five colours and the heading font are required (no club inherits another club's look). The shades are derived from the accent; every text and background pair is checked for contrast.",
+    "accent": "#D4780A",
+    "primary": "#031817",
     "surface": "#F1F8F6",
     "text": "#1F2D2C",
     "muted": "#4B5E5C",

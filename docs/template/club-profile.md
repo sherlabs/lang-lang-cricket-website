@@ -27,7 +27,7 @@
 
 ## `theme`
 
-`accent` is the only required colour. Optional: `primary`, `surface`, `text`, `muted` (six digit hex) and `headingFont` (one of barlow-condensed, oswald, bebas-neue, anton, playfair-display). Missing colours use the neutral defaults; the extra shades are derived from the accent. **Every text and background pair is checked for contrast** (the same rules as the admin Site look page); a pair that fails is an error naming the pair and its ratio. Advisory pairs (captions, the focus ring) are printed as notes.
+All of `accent`, `primary`, `surface`, `text`, `muted` (six digit hex) and `headingFont` (one of barlow-condensed, oswald, bebas-neue, anton, playfair-display). Every role is required so no club inherits another club's look; the extra shades are derived from the accent. **Every text and background pair is checked for contrast** (the same rules as the admin Site look page); a pair that fails is an error naming the pair and its ratio. Advisory pairs (captions, the focus ring) are printed as notes.
 
 ## `playhq`
 
@@ -47,4 +47,4 @@ Only `currency` is supported. Fees, volunteer jobs and the rest are edited in th
 
 ## `copy`
 
-Optional overrides of the neutral wording, in the same shape as the club defaults. Only the fields editable in Club details (search text, history, contact) are saved; the home page, page headings and menus are built from the saved club identity and cannot be overridden from the profile.
+Optional overrides of the neutral wording, in the same shape as the club defaults. Keys and value types are checked against that shape (a typo or a number where text belongs is an error), and identity keys (`name`, `shortName`, `siteUrl`, `email`, `address`, `locale` and similar) are rejected: set those in `club` and `region`. Only the fields editable in Club details (search text, history, contact) are saved; the home page, page headings and menus are built from the saved club identity and cannot be overridden from the profile.

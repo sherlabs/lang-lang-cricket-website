@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseBootstrapArgs } from '../payload/bootstrap/args'
-import { assetDecision } from '../payload/bootstrap/run-bootstrap'
+import { assetDecision, envLinesFor } from '../payload/bootstrap/run-bootstrap'
 
 const LOCAL = { DATABASE_URI: 'postgres://u:p@127.0.0.1:54329/langlang_dev' }
 const base = ['--profile', 'clubs/example-fc/profile.json', '--target', '127.0.0.1/langlang_dev']
@@ -47,5 +47,18 @@ describe('assetDecision', () => {
   it('skips when a Blob token is set without ALLOW_REMOTE_BLOB=yes, and plans the upload with it', () => {
     expect(assetDecision({ ...o, blobToken: true }).action).toBe('skipped')
     expect(assetDecision({ ...o, blobToken: true, allowRemoteBlob: true }).action).toBe('upload')
+  })
+})
+
+describe('envLinesFor', () => {
+  const prof = (shortName: string, siteUrl: string) => ({ club: { shortName, siteUrl }, playhq: { orgId: 'o', teamPrefix: 'p' }, region: { timezone: 't', locale: 'l', currency: 'c', seasonStartMonth: 7, seasonNameFormat: 'split' } }) as never
+  it('never suggests another club\'s reserved cookie prefix', () => {
+    const lines = envLinesFor(prof('LLCC CC', 'https://riverbend-cc.example'))
+    expect(lines).not.toContain('COOKIE_PREFIX=llcc')
+    expect(lines.find((l) => l.startsWith('COOKIE_PREFIX='))).toMatch(/^COOKIE_PREFIX=[a-z0-9]{2,12}$/)
+  })
+  it('redirects the www host to the apex, and the apex to www, never www.www', () => {
+    expect(envLinesFor(prof('Riverbend CC', 'https://www.riverbend-cc.example'))).toContain('REDIRECT_HOSTS=riverbend-cc.example')
+    expect(envLinesFor(prof('Riverbend CC', 'https://riverbend-cc.example'))).toContain('REDIRECT_HOSTS=www.riverbend-cc.example')
   })
 })

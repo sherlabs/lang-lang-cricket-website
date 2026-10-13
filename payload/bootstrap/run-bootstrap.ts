@@ -116,11 +116,14 @@ export function envProblemsFor(profile: ClubProfile, env: Record<string, string 
 
 export function envLinesFor(profile: ClubProfile): string[] {
   const host = new URL(profile.club.siteUrl).host
-  const prefix = profile.club.shortName.toLowerCase().replace(/\bcc\b|\bcricket club\b/g, '').replace(/[^a-z0-9]/g, '').slice(0, 12) || 'club'
+  const base = profile.club.shortName.toLowerCase().replace(/\bcc\b|\bcricket club\b/g, '').replace(/[^a-z0-9]/g, '').slice(0, 12) || 'club'
+  // A name that reduces to another club's reserved prefix gets a suffix, so the printed line never fails the env check.
+  const prefix = RESERVED_COOKIE_PREFIXES.includes(base) ? `${base.slice(0, 10)}cc` : base
+  const redirect = host.startsWith('www.') ? host.slice(4) : `www.${host}`
   return [
     `CLUB_PRESET=template`,
     `CANONICAL_HOST=${host}`,
-    `REDIRECT_HOSTS=www.${host}`,
+    `REDIRECT_HOSTS=${redirect}`,
     `COOKIE_PREFIX=${prefix}`,
     `PLAYHQ_ORG_ID=${profile.playhq.orgId}`,
     `PLAYHQ_TEAM_PREFIX=${profile.playhq.teamPrefix}`,

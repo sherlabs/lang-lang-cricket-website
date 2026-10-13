@@ -85,6 +85,9 @@ describe('stats queries', () => {
 
   it('getStatsSettings returns defaults before the global is saved', async () => {
     const { getStatsSettings } = await import('@/lib/site-settings')
-    expect(await getStatsSettings()).toEqual(DEFAULT_STATS_SETTINGS)
+    // The active preset's association keywords apply even with no saved club row (unsaved dev, test and preview databases).
+    const { clubDefaults } = await import('@/payload/seed/club-defaults')
+    const { withClubHonourKeywords } = await import('@/lib/site-settings-core')
+    expect(await getStatsSettings()).toEqual(withClubHonourKeywords(DEFAULT_STATS_SETTINGS, clubDefaults.honourKeywords))
   })
 })

@@ -40,7 +40,7 @@ Other clubs asked for the same site. The earlier groundwork kept club values in 
 ## Not included / deferred
 
 - No multi-tenancy: one deployment, database and Blob store per club, by design (`docs/template/deployment-model.md`). The only shared service is the sign-in broker.
-- Static artwork (`app/favicon.ico`, `public/apple-touch-icon.png`, `public/assets/...`) stays Lang Lang's in this repository; a new club replaces the files in its own copy (`pnpm check:template` finds the leftovers). The uploaded favicon is added alongside the static one.
+- Static artwork (`public/favicon.ico`, `public/apple-touch-icon.png`, `public/assets/...`) stays Lang Lang's in this repository; a new club replaces the files in its own copy (`pnpm check:template` finds the leftovers). The uploaded favicon is added alongside the static one.
 - The profile cannot override the home, page-heading and menu wording (they follow the club's name and place); only the fields in Club details are saved. Fees, volunteer jobs and other office settings are edited in the admin.
 - The template is not yet published as a GitHub template repository, and releases are not yet tagged `template-vX.Y`; both are the owner's call. The bootstrap needs a PlayHQ organisation, a Vercel project, a domain, an email provider and a broker entry, which the club must supply.
 - Tracking issues: [#37](https://github.com/sherlabs/lang-lang-cricket-website/issues/37), [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

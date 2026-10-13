@@ -37,7 +37,7 @@ export type ClubProfile = {
     supportedBy?: string
   }
   region: { locale: string; timezone: string; currency: string; seasonStartMonth: number; seasonNameFormat: 'split' | 'single' }
-  theme: { accent: string; primary?: string; surface?: string; text?: string; muted?: string; headingFont?: FontKey }
+  theme: { accent: string; primary: string; surface: string; text: string; muted: string; headingFont: FontKey }
   playhq: { orgId: string; teamPrefix: string; clubUrl?: string }
   office?: { currency?: string }
   admin: { email: string; name: string }
@@ -85,6 +85,41 @@ export function assetPathProblem(p: string): string | null {
   if (p.includes('\\') || p.includes('\0')) return 'must not contain backslashes'
   if (p.split('/').some((seg) => seg === '..' || seg === '')) return 'must stay inside the club folder (no "..")'
   return null
+}
+
+/** Identity values come from the `club` and `region` sections (they feed the https check, the host cross-check and the env lines), so `copy` may not restate them. */
+const COPY_IDENTITY_KEYS = new Set(['name', 'shortName', 'familiarName', 'tagline', 'sport', 'siteUrl', 'locale', 'ogLocale', 'email', 'address', 'teamNamePrefix', 'socials', 'assets'])
+const typeOf = (v: unknown): string => (Array.isArray(v) ? 'array' : v === null ? 'null' : typeof v)
+
+/** Walks `value` against the shape of `ref` (the neutral defaults): unknown keys and wrong types are problems. Arrays are checked per item against the first reference item. */
+function shapeProblems(value: unknown, ref: unknown, at: string, out: ProfileError[]): void {
+  const want = typeOf(ref)
+  if (typeOf(value) !== want) return void out.push({ path: at, message: `Must be ${want === 'array' ? 'a list' : `a ${want}`}.` })
+  if (Array.isArray(value) && Array.isArray(ref)) {
+    // An empty reference list (honourKeywords) holds plain text.
+    value.forEach((v, i) => shapeProblems(v, ref[0] ?? '', `${at}[${i}]`, out))
+  } else if (isObj(value) && isObj(ref)) {
+    for (const [k, v] of Object.entries(value)) {
+      if (!(k in ref)) out.push({ path: `${at}.${k}`, message: 'Not a copy field. See docs/template/club-profile.md.' })
+      else shapeProblems(v, ref[k], `${at}.${k}`, out)
+    }
+  }
+}
+
+/** Problems with the profile's `copy` overrides: identity keys, unknown keys and wrong types. */
+export function copyProblems(copy: Record<string, unknown>): ProfileError[] {
+  const out: ProfileError[] = []
+  const reference = buildClubDefaults({
+    name: 'N', shortName: 'N', location: 'L', sport: 'Cricket', siteUrl: 'https://example.org', locale: 'en-AU', ogLocale: 'en_AU', email: 'a@example.org',
+    address: { locality: 'L', region: 'R', regionName: 'R', country: 'AU', countryName: 'Australia' }, teamNamePrefix: '',
+  }) as unknown as Record<string, unknown>
+  for (const [k, v] of Object.entries(copy)) {
+    if (k === '_comment') continue
+    if (COPY_IDENTITY_KEYS.has(k)) out.push({ path: `copy.${k}`, message: 'Identity is set in the club and region sections, not in copy.' })
+    else if (!(k in reference)) out.push({ path: `copy.${k}`, message: 'Not a copy field. See docs/template/club-profile.md.' })
+    else shapeProblems(v, reference[k], `copy.${k}`, out)
+  }
+  return out
 }
 
 export function validateClubProfile(json: unknown, opts: ValidateOptions = {}): ProfileResult {
@@ -150,16 +185,15 @@ export function validateClubProfile(json: unknown, opts: ValidateOptions = {}): 
     }
     return v.toUpperCase()
   }
-  const theme: ClubProfile['theme'] = { accent: hex('accent', true) ?? '' }
+  const theme: ClubProfile['theme'] = { accent: hex('accent', true) ?? '', primary: '', surface: '', text: '', muted: '', headingFont: FONT_KEYS[0] }
+  // Every colour role is required: a missing one would silently take Lang Lang's value from the seed defaults.
   for (const k of ['primary', 'surface', 'text', 'muted'] as const) {
-    const v = hex(k, false)
-    if (v) theme[k] = v
+    theme[k] = hex(k, true) ?? ''
   }
   const font = str(t.headingFont)
-  if (font !== undefined) {
-    if (FONT_KEYS.includes(font as FontKey)) theme.headingFont = font as FontKey
-    else err('theme.headingFont', `One of ${FONT_KEYS.join(', ')}.`)
-  }
+  if (font === undefined) err('theme.headingFont', `Required: one of ${FONT_KEYS.join(', ')}.`)
+  else if (FONT_KEYS.includes(font as FontKey)) theme.headingFont = font as FontKey
+  else err('theme.headingFont', `One of ${FONT_KEYS.join(', ')}.`)
   if (theme.accent && !errors.some((e) => e.path.startsWith('theme.'))) {
     const resolved = resolveProfileTheme(theme)
     for (const f of resolved.contrast.filter((x) => !x.pass && x.level === 'error')) {
@@ -221,7 +255,10 @@ export function validateClubProfile(json: unknown, opts: ValidateOptions = {}): 
       }
     }
   }
-  if (json.copy !== undefined && !isObj(json.copy)) err('copy', 'Must be an object.')
+  if (json.copy !== undefined) {
+    if (!isObj(json.copy)) err('copy', 'Must be an object.')
+    else for (const m of copyProblems(json.copy)) err(m.path, m.message)
+  }
 
   if (errors.length) return { ok: false, errors }
   return {
@@ -253,14 +290,14 @@ export function validateClubProfile(json: unknown, opts: ValidateOptions = {}): 
   }
 }
 
-/** The theme global's values for a profile: missing roles come from the neutral seed, the shades are derived from the accent. */
+/** The theme global's values for a profile: missing roles come from the shades are derived from the accent. */
 export function resolveProfileTheme(theme: ClubProfile['theme']) {
   const palette = {
-    primary: theme.primary ?? THEME_DEFAULTS.palette.primary,
+    primary: theme.primary,
     accent: theme.accent,
-    surface: theme.surface ?? THEME_DEFAULTS.palette.surface,
-    text: theme.text ?? THEME_DEFAULTS.palette.text,
-    muted: theme.muted ?? THEME_DEFAULTS.palette.muted,
+    surface: theme.surface,
+    text: theme.text,
+    muted: theme.muted,
   }
   const derived = suggestShades(palette.accent, palette.primary, palette.surface) ?? {}
   const shades = {
@@ -273,7 +310,7 @@ export function resolveProfileTheme(theme: ClubProfile['theme']) {
     mutedLight: palette.muted,
   }
   const contrast = checkTheme(colorsFromForm({ palette, shades }, seedColors()))
-  return { palette, shades, headingFont: theme.headingFont ?? THEME_DEFAULTS.headingFont, contrast }
+  return { palette, shades, headingFont: theme.headingFont, contrast }
 }
 
 /** `en-AU` gives `en_AU`. */
