@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button, StatusPill } from './ui'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -33,7 +34,7 @@ export function SignInTestButton() {
 
   return (
     <div className="club-signin__test">
-      <Button buttonStyle="secondary" disabled={pending} onClick={run} type="button">
+      <Button variant="secondary" disabled={pending} onClick={run} type="button">
         {pending ? 'Checking…' : 'Test connection'}
       </Button>
       <div aria-live="polite">
@@ -41,7 +42,7 @@ export function SignInTestButton() {
           <ul className="club-signin__checks">
             {result.checks.map((c) => (
               <li key={c.name}>
-                <span className={`club-pill club-pill--${c.ok ? 'ok' : 'error'}`}>{c.ok ? 'OK' : 'Problem'}</span> {c.text}
+                <StatusPill tone={c.ok ? 'ok' : 'danger'}>{c.ok ? 'OK' : 'Problem'}</StatusPill> {c.text}
               </li>
             ))}
             {result.checks.length === 0 && <li>{result.summary}</li>}

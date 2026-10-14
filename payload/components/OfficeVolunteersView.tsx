@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { gameDayLabel } from '@/lib/office/game-day'
@@ -5,6 +6,7 @@ import { isVolunteerError, isVolunteerNotice, VOLUNTEER_ERROR_TEXT, VOLUNTEER_NO
 import { getVolunteersPage } from '@/lib/volunteers-office-queries'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS = { draft: 'Draft', open: 'Open for answers', confirmed: 'Confirmed' } as const
@@ -34,8 +36,7 @@ export async function OfficeVolunteersView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Volunteers' }]} />
-      <h1 className="club-page__title">Volunteers</h1>
-      <p className="club-page__lead">Who is helping on each game day in {season}. Pick a game day to roster people, then confirm it afterwards to add the hours.</p>
+      <PageHeader title="Volunteers" lead={<>Who is helping on each game day in {season}. Pick a game day to roster people, then confirm it afterwards to add the hours.</>} />
 
       <div role="status" aria-live="polite">
         {isVolunteerNotice(notice) ? <p className="office-flash office-flash--ok">{VOLUNTEER_NOTICE_TEXT[notice]}{first(sp.n) ? ` (${first(sp.n)})` : ''}</p> : null}
@@ -51,16 +52,16 @@ export async function OfficeVolunteersView(view: AdminViewServerProps) {
             ))}
           </select>
         </label>
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Show season</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Show season</button>
       </form>
 
       <p className="office-actions">
-        <a className="btn btn--style-secondary btn--size-medium" href={`${base}/hours`}>Hours report</a>
+        <a className="ui-btn ui-btn--secondary" href={`${base}/hours`}>Hours report</a>
         {page.isAdmin ? <a href={`${admin}/collections/volunteer-weeks`}>Advanced edit</a> : null}
       </p>
 
       {page.weeks.length === 0 ? (
-        <p className="club-attention__none">No game days for {season} yet. Create them from the home games below, or add one by hand.</p>
+        <EmptyState>No game days for {season} yet. Create them from the home games below, or add one by hand.</EmptyState>
       ) : (
         <table className="club-table office-table" role="table">
           <caption className="club-muted">Cancelled people and people who did not turn up are not counted as filling a place.</caption>
@@ -79,7 +80,7 @@ export async function OfficeVolunteersView(view: AdminViewServerProps) {
                   {w.label ? <span className="club-muted"> {w.label}</span> : null}
                   {w.date < today && w.status !== 'confirmed' ? <span className="club-muted"> (past, not confirmed yet)</span> : null}
                 </th>
-                <td role="cell" data-label="Status"><span className="office-badge">{STATUS[w.status]}</span></td>
+                <td role="cell" data-label="Status"><span className="ui-pill ui-pill--neutral">{STATUS[w.status]}</span></td>
                 <td role="cell" data-label="Places">
                   <span className="office-status">
                     {w.slots === 0 ? 'No jobs added yet' : w.empty > 0 ? `! ${w.empty} of ${w.slots} places empty` : `✓ All ${w.slots} places filled`}
@@ -96,13 +97,13 @@ export async function OfficeVolunteersView(view: AdminViewServerProps) {
         <form method="post" action={`${api}/volunteers/weeks-create`} className="office-form">
           {hidden}{seasonField}
           <p>{page.newDates.length === 0 ? `Every home game day in ${season} already has a week.` : `${page.newDates.length} home ${page.newDates.length === 1 ? 'game day has' : 'game days have'} no week yet.`}</p>
-          <button type="submit" className="btn btn--style-primary btn--size-medium" disabled={page.newDates.length === 0}>Create weeks from the home games</button>
+          <button type="submit" className="ui-btn ui-btn--primary" disabled={page.newDates.length === 0}>Create weeks from the home games</button>
         </form>
         <form method="post" action={`${api}/volunteers/week-add`} className="office-form">
           {hidden}{seasonField}
           <label>Game day<input name="date" type="date" required /></label>
           <label>Label (optional)<input name="label" maxLength={80} autoComplete="off" /></label>
-          <button type="submit" className="btn btn--style-secondary btn--size-medium">Add a week</button>
+          <button type="submit" className="ui-btn ui-btn--secondary">Add a week</button>
         </form>
       </details>
 
@@ -121,7 +122,7 @@ export async function OfficeVolunteersView(view: AdminViewServerProps) {
                 <form method="post" action={`${api}/volunteers/link-rotate`} className="office-inline">
                   {hidden}
                   <input type="hidden" name="memberId" value={l.id} />
-                  <button type="submit" className="btn btn--style-secondary btn--size-medium">New link for {l.name}</button>
+                  <button type="submit" className="ui-btn ui-btn--secondary">New link for {l.name}</button>
                 </form>
               </li>
             ))}

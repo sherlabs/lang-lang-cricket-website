@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button, EmptyState } from './ui'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -83,10 +84,11 @@ export function DuplicatePlayersPanel({ api, adminRoute, pairs, merges }: { api:
       {pairs === null ? (
         <p className="club-muted">The list could not be worked out just now. Try again in a minute.</p>
       ) : pairs.length === 0 ? (
-        <p className="club-attention__none">No likely duplicates. Nothing to do.</p>
+        <EmptyState>No likely duplicates. Nothing to do.</EmptyState>
       ) : (
-        <table className="club-table">
-          <thead><tr><th>Players</th><th>Why</th><th aria-label="Actions" /></tr></thead>
+        <table className="club-table office-table">
+          <caption className="ui-sr-only">Players who may be the same person</caption>
+          <thead><tr><th scope="col">Players</th><th scope="col">Why</th><th scope="col"><span className="ui-sr-only">Actions</span></th></tr></thead>
           <tbody>
             {pairs.map((p) => {
               const targetId = keep[p.key] ?? p.keepId
@@ -97,13 +99,13 @@ export function DuplicatePlayersPanel({ api, adminRoute, pairs, merges }: { api:
               )
               return (
                 <tr key={p.key}>
-                  <td><ul>{line(p.a)}{line(p.b)}</ul></td>
-                  <td>{p.reasons.join('. ') || 'Similar names'} ({p.score})</td>
+                  <th scope="row"><ul>{line(p.a)}{line(p.b)}</ul></th>
+                  <td data-label="Why">{p.reasons.join('. ') || 'Similar names'} ({p.score})</td>
                   <td>
                     <div className="club-actions">
-                      <Button buttonStyle="primary" size="small" type="button" disabled={busy} onClick={() => merge(p)}>Merge {source.name} into {target.name}</Button>
-                      <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => setKeep((k) => ({ ...k, [p.key]: source.id }))}>Swap</Button>
-                      <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => dismiss(p)}>Not the same person</Button>
+                      <Button variant="primary" type="button" disabled={busy} onClick={() => merge(p)}>Merge {source.name} into {target.name}</Button>
+                      <Button variant="secondary" type="button" disabled={busy} onClick={() => setKeep((k) => ({ ...k, [p.key]: source.id }))}>Swap</Button>
+                      <Button variant="secondary" type="button" disabled={busy} onClick={() => dismiss(p)}>Not the same person</Button>
                     </div>
                   </td>
                 </tr>
@@ -117,15 +119,16 @@ export function DuplicatePlayersPanel({ api, adminRoute, pairs, merges }: { api:
       {merges.length === 0 ? (
         <p className="club-muted">No merges yet.</p>
       ) : (
-        <table className="club-table">
-          <thead><tr><th>Merged</th><th>When</th><th aria-label="Actions" /></tr></thead>
+        <table className="club-table office-table">
+          <caption className="ui-sr-only">Recent merges</caption>
+          <thead><tr><th scope="col">Merged</th><th scope="col">When</th><th scope="col"><span className="ui-sr-only">Actions</span></th></tr></thead>
           <tbody>
             {merges.map((m) => (
               <tr key={m.id}>
-                <td>{m.sourceName} into {m.targetName ?? 'a player who has since been merged away'}</td>
-                <td>{new Date(m.at).toLocaleString()}</td>
+                <th scope="row">{m.sourceName} into {m.targetName ?? 'a player who has since been merged away'}</th>
+                <td data-label="When">{new Date(m.at).toLocaleString()}</td>
                 <td>
-                  {m.status === 'undone' ? 'Undone' : m.undoable ? <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => undo(m)}>Undo</Button> : 'Cannot be undone (merged again)'}
+                  {m.status === 'undone' ? 'Undone' : m.undoable ? <Button variant="secondary" type="button" disabled={busy} onClick={() => undo(m)}>Undo</Button> : 'Cannot be undone (merged again)'}
                 </td>
               </tr>
             ))}

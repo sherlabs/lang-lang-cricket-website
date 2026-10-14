@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import { notFound } from 'next/navigation'
 import type { AdminViewServerProps } from 'payload'
@@ -8,6 +9,7 @@ import { isAdminUser } from '../access'
 import { AdminPage, requireStaff } from './AdminPage'
 import { ComposeFields, STATUS_WORDS } from './OfficeEmailView'
 import { EmailSendProgress } from './EmailSendProgress'
+import { EmptyState, LinkButton, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 
@@ -25,15 +27,21 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Email</h1>
-        <p className="club-page__lead">Only admins can send club emails.</p>
+        <PageHeader title="Email" lead={<>Only admins can send club emails.</>} />
       </AdminPage>
     )
   }
   const segments = (view.params?.segments as string[] | undefined) ?? []
   const id = parseCampaignId(segments[segments.length - 1])
   const page = id === null ? null : await getCampaignPage(req.user, id)
-  if (!page) notFound()
+  if (!page) {
+    return (
+      <AdminPage view={view}>
+        <PageHeader title="Email not found" lead={<>That email does not exist any more.</>} />
+        <EmptyState icon="announcements" action={<LinkButton variant="secondary" href={`${admin}/office/email`}>Back to Email</LinkButton>}>Pick one from the list of emails.</EmptyState>
+      </AdminPage>
+    )
+  }
   const api = `${apiRoot}/admin/office/email/${page.id}`
   const sp = view.searchParams ?? {}
   const notice = first(sp.notice)
@@ -47,8 +55,7 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Email', url: `${admin}/office/email` }, { label: page.subject }]} />
-      <h1 className="club-page__title">{page.subject}</h1>
-      <p className="club-page__lead"><span className="office-badge">{STATUS_WORDS[page.status]}</span></p>
+      <PageHeader title={<>{page.subject}</>} lead={<><span className="ui-pill ui-pill--neutral">{STATUS_WORDS[page.status]}</span></>} />
       <div role="status" aria-live="polite">
         {isEmailNotice(notice) ? <p className="office-flash office-flash--ok">{EMAIL_NOTICE_TEXT[notice]}</p> : null}
         {isEmailError(error) ? <p className="office-flash office-flash--error">{EMAIL_ERROR_TEXT[error]}</p> : null}
@@ -64,10 +71,10 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
             Keep this page open until it finishes: sending pauses when the tab is in the background or closed, and on a phone as soon as the screen locks. Left alone, the scheduled run sends only about {leftEstimate.perRun} a day{leftEstimate.overOneRun ? `, so the ${page.counts.queued} still waiting would take about ${leftEstimate.days} days` : ''}. Press Continue sending to carry on.
           </p>
           <form method="post" action={`${api}/continue`} className="office-inline">
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Continue sending</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Continue sending</button>
           </form>
           <form method="post" action={`${api}/stop`} className="office-inline">
-            <button type="submit" className="btn btn--style-secondary btn--size-medium">Stop sending</button>
+            <button type="submit" className="ui-btn ui-btn--secondary">Stop sending</button>
           </form>
         </section>
       ) : null}
@@ -86,7 +93,7 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
             <h2 id="edit">Write it</h2>
             <form method="post" action={`${api}/save`} className="office-form">
               <ComposeFields subject={page.subject} body={page.body} status={page.audience.status ?? 'any'} role={page.audience.role ?? ''} juniors={page.audience.juniors} segment={page.audience.segment ?? ''} />
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Save changes</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Save changes</button>
             </form>
           </section>
 
@@ -102,7 +109,7 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
             {page.sentence ? <p>{page.sentence}.</p> : null}
             {page.overCap ? <p className="office-flash office-flash--error">That is more than {page.maxRecipients} people, the most this site will send to in one go. Narrow who it goes to.</p> : null}
             <form method="post" action={`${api}/test`} className="office-inline">
-              <button type="submit" className="btn btn--style-secondary btn--size-medium">Send me a copy first</button>
+              <button type="submit" className="ui-btn ui-btn--secondary">Send me a copy first</button>
             </form>
             {will > 0 && !page.overCap ? (
               <form method="post" action={`${api}/send`} className="office-form">
@@ -118,7 +125,7 @@ export async function OfficeEmailCampaignView(view: AdminViewServerProps) {
                 <p>
                   You are about to send <strong>“{page.subject}”</strong> to <strong>{will} {will === 1 ? 'person' : 'people'}</strong>. This cannot be taken back.
                 </p>
-                <button type="submit" className="btn btn--style-primary btn--size-medium">Yes, send to {will} {will === 1 ? 'person' : 'people'}</button>
+                <button type="submit" className="ui-btn ui-btn--primary">Yes, send to {will} {will === 1 ? 'person' : 'people'}</button>
               </form>
             ) : (
               <p className="club-muted">Nobody would get this email yet. Change who it goes to.</p>

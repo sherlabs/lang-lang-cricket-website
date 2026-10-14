@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { duplicateEmailCount, duplicateEmailMemberIds, getMemberRow, listMembers, memberCompleteness } from '@/lib/members-queries'
@@ -7,6 +8,7 @@ import { MEMBER_ROLES, ROLE_LABELS } from '@/lib/office/members'
 import { isAdminUser } from '../access'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const MISSING_LABELS: Record<(typeof MISSING_KEYS)[number], string> = { email: 'No email', phone: 'No phone', both: 'No email or phone', guardian: 'Junior with no guardian' }
@@ -25,8 +27,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Members</h1>
-        <p className="club-page__lead">Only admins can see the member list.</p>
+        <PageHeader title="Members" lead={<>Only admins can see the member list.</>} />
       </AdminPage>
     )
   }
@@ -49,8 +50,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Members' }]} />
-      <h1 className="club-page__title">Members</h1>
-      <p className="club-page__lead">Everyone in the club with their contact details. Only admins can see this page. Opening one member is not logged; exports and removals are.</p>
+      <PageHeader title="Members" lead={<>Everyone in the club with their contact details. Only admins can see this page. Opening one member is not logged; exports and removals are.</>} />
 
       <div role="status" aria-live="polite">
         {isNotice(notice) ? (
@@ -104,7 +104,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
             Phone (optional)
             <input name="phone" type="tel" maxLength={40} autoComplete="off" />
           </label>
-          <button type="submit" className="btn btn--style-primary btn--size-large">Add member</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add member</button>
         </form>
       </details>
 
@@ -132,7 +132,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
             ))}
           </select>
         </label>
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Search</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Search</button>
       </form>
       <p className="office-chips" aria-label="Quick filters">
         {chip('Active', { status: 'active' }, query.status === 'active')}
@@ -152,8 +152,8 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
               <input type="checkbox" name="confirm" value="yes" required /> Yes, remove their personal details for good
             </label>
             <div className="office-actions">
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Remove personal details</button>
-              <a className="club-button-link" href={`${base}${queryString(query)}`}>Cancel</a>
+              <button type="submit" className="ui-btn ui-btn--primary">Remove personal details</button>
+              <a className="ui-btn ui-btn--secondary" href={`${base}${queryString(query)}`}>Cancel</a>
             </div>
           </form>
         </section>
@@ -161,11 +161,11 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
 
       <div className="office-actions">
         <form method="post" action={`${api}/members/link-players`}>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add members for players who have none</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add members for players who have none</button>
         </form>
       </div>
 
-      {dir && dir.rows.length === 0 ? <p className="club-attention__none">No members match. Clear the filters, or add the first member above.</p> : null}
+      {dir && dir.rows.length === 0 ? <EmptyState>No members match. Clear the filters, or add the first member above.</EmptyState> : null}
       {dir && dir.rows.length > 0 ? (
         <>
           <p className="club-muted" aria-live="polite">
@@ -187,12 +187,12 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
                   <th scope="row" role="rowheader" data-label="Name">
                     <a href={`${admin}/collections/members/${r.id}`}>{r.name}</a>
                     <span className="office-tags">
-                      {r.status === 'past' ? <span className="club-pill">Past</span> : null}
-                      {r.junior ? <span className="club-pill">Junior</span> : null}
-                      {r.junior && !r.hasGuardian ? <span className="club-pill club-pill--error">No guardian</span> : null}
-                      {r.doNotEmail ? <span className="club-pill">Do not email</span> : null}
-                      {r.status === 'active' && r.playedThisSeason ? <span className="club-pill">Played this season</span> : null}
-                      {dupeIds.has(r.id) ? <span className="club-pill club-pill--error">Shared email</span> : null}
+                      {r.status === 'past' ? <span className="ui-pill ui-pill--neutral">Past</span> : null}
+                      {r.junior ? <span className="ui-pill ui-pill--neutral">Junior</span> : null}
+                      {r.junior && !r.hasGuardian ? <span className="ui-pill ui-pill--danger">No guardian</span> : null}
+                      {r.doNotEmail ? <span className="ui-pill ui-pill--neutral">Do not email</span> : null}
+                      {r.status === 'active' && r.playedThisSeason ? <span className="ui-pill ui-pill--neutral">Played this season</span> : null}
+                      {dupeIds.has(r.id) ? <span className="ui-pill ui-pill--danger">Shared email</span> : null}
                     </span>
                   </th>
                   <td role="cell" data-label="Roles">{r.roles.map((x) => (x in ROLE_LABELS ? ROLE_LABELS[x as keyof typeof ROLE_LABELS] : x)).join(', ') || 'None'}</td>
@@ -230,7 +230,7 @@ export async function OfficeMembersView(view: AdminViewServerProps) {
           <input type="checkbox" name="sensitive" value="yes" /> Include date of birth, emergency contact and notes
         </label>
         <div className="office-actions">
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Download CSV</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Download CSV</button>
         </div>
       </form>
     </AdminPage>

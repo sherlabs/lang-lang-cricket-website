@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { gameDayLabel } from '@/lib/office/game-day'
@@ -5,6 +6,7 @@ import { isVolunteerError, isVolunteerNotice, VOLUNTEER_ERROR_TEXT, VOLUNTEER_NO
 import { AVAILABILITY_LABEL, STATE_LABEL, type AssignmentState } from '@/lib/office/volunteers'
 import { getWeekPage } from '@/lib/volunteers-office-queries'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS = { draft: 'Draft', open: 'Open for answers', confirmed: 'Confirmed' } as const
@@ -31,8 +33,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
     return (
       <AdminPage view={view}>
         <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Volunteers', url: back }, { label: 'Not found' }]} />
-        <h1 className="club-page__title">Volunteer week</h1>
-        <p className="club-page__lead">That game day could not be found. <a href={back}>Back to Volunteers</a></p>
+        <PageHeader title="Volunteer week" lead={<>That game day could not be found. <a href={back}>Back to Volunteers</a></>} />
       </AdminPage>
     )
   }
@@ -47,11 +48,8 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Volunteers', url: back }, { label: title }]} />
-      <h1 className="club-page__title">{title}</h1>
-      <p className="club-page__lead">
-        {week.label ? `${week.label}. ` : ''}<span className="office-badge">{STATUS[week.status]}</span>{' '}
-        {page.fill.slots === 0 ? 'No jobs added yet.' : page.fill.empty > 0 ? `! ${page.fill.empty} of ${page.fill.slots} places still empty.` : `✓ All ${page.fill.slots} places filled.`}
-      </p>
+      <PageHeader title={<>{title}</>} lead={<>{week.label ? `${week.label}. ` : ''}<span className="ui-pill ui-pill--neutral">{STATUS[week.status]}</span>{' '}
+        {page.fill.slots === 0 ? 'No jobs added yet.' : page.fill.empty > 0 ? `! ${page.fill.empty} of ${page.fill.slots} places still empty.` : `✓ All ${page.fill.slots} places filled.`}</>} />
 
       <div role="status" aria-live="polite">
         {isVolunteerNotice(notice) ? <p className="office-flash office-flash--ok">{VOLUNTEER_NOTICE_TEXT[notice]}</p> : null}
@@ -71,24 +69,24 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
         {frozen ? (
           <form method="post" action={`${api}/reopen`}>
             {hidden}<input type="hidden" name="id" value={week.id} />
-            <button type="submit" className="btn btn--style-secondary btn--size-medium">Reopen this week</button>
+            <button type="submit" className="ui-btn ui-btn--secondary">Reopen this week</button>
           </form>
         ) : (
           <>
             <form method="post" action={`${api}/week-status`}>
               {hidden}<input type="hidden" name="id" value={week.id} />
               <input type="hidden" name="status" value={week.status === 'open' ? 'draft' : 'open'} />
-              <button type="submit" className="btn btn--style-secondary btn--size-medium">{week.status === 'open' ? 'Stop volunteers answering (back to draft)' : 'Open for answers'}</button>
+              <button type="submit" className="ui-btn ui-btn--secondary">{week.status === 'open' ? 'Stop volunteers answering (back to draft)' : 'Open for answers'}</button>
             </form>
             <form method="post" action={`${api}/confirm`}>
               {hidden}<input type="hidden" name="id" value={week.id} />
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Confirm week and post hours</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Confirm week and post hours</button>
             </form>
           </>
         )}
       </div>
 
-      {page.shifts.length === 0 ? <p className="club-attention__none">No jobs on this game day yet. Add one below.</p> : null}
+      {page.shifts.length === 0 ? <EmptyState>No jobs on this game day yet. Add one below.</EmptyState> : null}
       {page.shifts.map((s) => (
         <section key={s.id} className="office-box" aria-labelledby={`shift-${s.id}`}>
           <h2 id={`shift-${s.id}`}>{s.labelSnapshot}</h2>
@@ -104,14 +102,14 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
                       <form method="post" action={`${api}/assignment-state`} className="office-inline">
                         {hidden}<input type="hidden" name="id" value={a.id} />
                         <input type="hidden" name="state" value={a.state === 'confirmed' ? 'no-show' : 'confirmed'} />
-                        <button type="submit" className="btn btn--style-secondary btn--size-medium">{a.state === 'confirmed' ? 'Did not turn up' : 'Turned up after all'}</button>
+                        <button type="submit" className="ui-btn ui-btn--secondary">{a.state === 'confirmed' ? 'Did not turn up' : 'Turned up after all'}</button>
                       </form>
                     ) : null
                   ) : (
                     <>
                       <form method="post" action={`${api}/unassign`} className="office-inline">
                         {hidden}<input type="hidden" name="id" value={a.id} />
-                        <button type="submit" className="btn btn--style-secondary btn--size-medium" aria-label={`Take ${a.name} off ${s.labelSnapshot}`}>Take off</button>
+                        <button type="submit" className="ui-btn ui-btn--secondary" aria-label={`Take ${a.name} off ${s.labelSnapshot}`}>Take off</button>
                       </form>
                       {page.isAdmin ? (
                         <form method="post" action={`${api}/assignment-kind`} className="office-inline">
@@ -120,7 +118,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
                             <option value="volunteer">Volunteer</option>
                             <option value="paid">Paid</option>
                           </select>
-                          <button type="submit" className="btn btn--style-secondary btn--size-medium">Change</button>
+                          <button type="submit" className="ui-btn ui-btn--secondary">Change</button>
                         </form>
                       ) : null}
                     </>
@@ -144,7 +142,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
                       ))}
                     </select>
                   </label>
-                  <button type="submit" className="btn btn--style-primary btn--size-medium">Add to roster</button>
+                  <button type="submit" className="ui-btn ui-btn--primary">Add to roster</button>
                 </form>
               ) : (
                 <p className="club-muted">Everyone with the volunteer or committee role is already on this job.</p>
@@ -152,7 +150,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
               {s.assignments.length === 0 ? (
                 <form method="post" action={`${api}/shift-remove`} className="office-inline">
                   {hidden}<input type="hidden" name="id" value={s.id} />
-                  <button type="submit" className="btn btn--style-secondary btn--size-medium">Remove this job</button>
+                  <button type="submit" className="ui-btn ui-btn--secondary">Remove this job</button>
                 </form>
               ) : null}
             </>
@@ -173,7 +171,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
             </label>
             <label>Hours each (leave blank for the usual)<input name="hours" inputMode="decimal" autoComplete="off" /></label>
             <label>People needed (leave blank for the usual)<input name="slots" inputMode="numeric" autoComplete="off" /></label>
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Add job</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Add job</button>
           </form>
           {page.isAdmin ? <p className="club-muted">New kinds of job are made in <a href={`${admin}/globals/office-settings`}>Club office settings</a>.</p> : null}
         </details>
@@ -195,7 +193,7 @@ export async function OfficeVolunteerWeekView(view: AdminViewServerProps) {
           <p>Removes the day, its jobs and the answers volunteers gave for it. It cannot be undone.</p>
           <form method="post" action={`${api}/week-delete`} className="office-form">
             {hidden}<input type="hidden" name="id" value={week.id} />
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Remove game day</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Remove game day</button>
           </form>
         </details>
       ) : null}

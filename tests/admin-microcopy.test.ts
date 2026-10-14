@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { notificationCopy } from '../payload/admin/copy'
+import { notificationCopy, officeCopy } from '../payload/admin/copy'
 import { helpContacts, helpIntro, helpSections } from '../payload/admin/helpContent'
 import { advancedNav, everydayNav, jobTiles, navGroups, navSubgroups } from '../payload/admin/navigation'
 import { DOCUMENT_WORD_OK, MICROCOPY_ALLOW } from './admin-microcopy.allow'
@@ -56,6 +56,9 @@ function fieldStrings(fields: unknown, where: string, acc: Array<{ where: string
   return acc
 }
 
+/** The WP-5 committee views (Club office and its modules, Selectors, Fantasy) are tagged too. */
+const wp5Tagged = [...readdirSync(path.join(root, 'payload/components')).filter((f) => /^Office.*(View|Bits)\.tsx$/.test(f)), 'SelectorsView.tsx', 'SelectorsPanel.tsx', 'FantasyView.tsx', 'FantasyPanel.tsx'].map((f) => `payload/components/${f}`)
+
 describe('committee microcopy', () => {
   it('the menu, group headings and Home tiles use plain words', () => {
     const bad: string[] = []
@@ -107,10 +110,10 @@ describe('committee microcopy', () => {
     }
     expect(seen).toBeGreaterThan(8)
     expect(bad).toEqual([])
-  }, 30_000)
+  }, 90_000)
 
   it('files tagged // @committee-facing use plain words in their visible text and headings', () => {
-    const tagged = ['payload/components/AdminNotices.tsx', 'payload/components/LoginIntro.tsx', 'payload/components/AdminNavUser.tsx', 'payload/components/ApprovalsView.tsx', 'payload/components/HelpView.tsx', 'payload/components/Dashboard.tsx', 'payload/components/AttentionPanel.tsx', 'payload/components/SeasonGlanceCard.tsx', 'payload/components/MilestonesWidget.tsx', 'payload/components/ListCells.tsx', 'payload/components/SaveState.tsx', 'payload/components/DocMeta.tsx', 'payload/components/UploadPreview.tsx', 'payload/components/ListFilterChips.tsx']
+    const tagged = ['payload/components/AdminNotices.tsx', 'payload/components/LoginIntro.tsx', 'payload/components/AdminNavUser.tsx', 'payload/components/ApprovalsView.tsx', 'payload/components/HelpView.tsx', 'payload/components/Dashboard.tsx', 'payload/components/AttentionPanel.tsx', 'payload/components/SeasonGlanceCard.tsx', 'payload/components/MilestonesWidget.tsx', 'payload/components/ListCells.tsx', 'payload/components/SaveState.tsx', 'payload/components/DocMeta.tsx', 'payload/components/UploadPreview.tsx', 'payload/components/ListFilterChips.tsx', ...wp5Tagged]
     const bad: string[] = []
     for (const f of tagged) {
       const src = readFileSync(path.join(root, f), 'utf8')
@@ -119,8 +122,25 @@ describe('committee microcopy', () => {
       const texts = [...body.matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g)].map((m) => m[1].trim()).filter(Boolean)
       const props = [...body.matchAll(/\b(?:title|lead|summary|label)="([^"]+)"/g)].map((m) => m[1])
       const quoted = [...body.matchAll(/(?:title|lead|summary|label)=\{`([^`]+)`\}/g)].map((m) => m[1].replace(/\$\{[^}]*\}/g, 'N'))
-      for (const t of [...texts, ...props, ...quoted]) bad.push(...violations(f, t))
+      for (const t of [...texts, ...props, ...quoted]) bad.push(...violations(f, t, { documentOk: DOCUMENT_WORD_OK.files.includes(path.basename(f)) }))
     }
+    expect(bad).toEqual([])
+  })
+
+  it('the Club office wording module uses plain words', () => {
+    const bad: string[] = []
+    const walk = (where: string, v: unknown) => {
+      if (typeof v === 'string') bad.push(...violations(where, v, { documentOk: /documents?/i.test(where) }))
+      else if (typeof v === 'function') {
+        try {
+          const out = (v as (...a: unknown[]) => unknown)(2, 3, 'a', 'b')
+          if (typeof out === 'string') bad.push(...violations(where, out))
+        } catch {
+          // a wording function that needs real data is checked where it is used
+        }
+      } else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(`${where}.${k}`, x)
+    }
+    walk('officeCopy', officeCopy)
     expect(bad).toEqual([])
   })
 

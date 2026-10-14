@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button } from './ui'
 import { useState } from 'react'
 
 /** POSTs /api/admin/playhq-refresh (spec §9); disabled while pending. */
@@ -21,7 +22,7 @@ export function PlayHQRefreshButton() {
   }
 
   return (
-    <Button buttonStyle="primary" disabled={pending} onClick={refresh} type="button">
+    <Button variant="primary" disabled={pending} onClick={refresh} type="button">
       {pending ? 'Refreshing…' : 'Refresh PlayHQ data'}
     </Button>
   )

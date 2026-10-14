@@ -1,9 +1,11 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { DIARY_ERROR_TEXT, DIARY_NOTICE_TEXT, isDiaryError, isDiaryNotice, type JobFilter, type JobStanding } from '@/lib/office/diary'
 import { getDiaryPage, type JobView } from '@/lib/diary-office-queries'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STANDING: Record<JobStanding, string> = { done: 'Done', overdue: 'Overdue', blocked: 'Blocked', 'due-soon': 'Due soon', open: '' }
@@ -54,9 +56,9 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
   const job = (j: JobView) => (
     <li key={j.id} className="diary-job">
       <p className="diary-job__title">
-        <span className="office-badge">{statusText(j)}</span>{' '}
+        <span className="ui-pill ui-pill--neutral">{statusText(j)}</span>{' '}
         <strong>{j.title}</strong>
-        {j.overBudget ? <span className="office-badge">{officeCopy.diary.overBudget}</span> : null}
+        {j.overBudget ? <span className="ui-pill ui-pill--neutral">{officeCopy.diary.overBudget}</span> : null}
       </p>
       <p className="club-muted">
         {j.categoryLabel}
@@ -71,10 +73,10 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
       <form method="post" action={`${api}/job-status`} className="office-inline">
         {hidden}
         <input type="hidden" name="id" value={j.id} />
-        {j.status !== 'done' ? <button type="submit" name="status" value="done" aria-label={`Done: ${j.title}`} className="btn btn--style-primary btn--size-medium">Done</button> : null}
-        {j.status === 'todo' || j.status === 'blocked' ? <button type="submit" name="status" value="in-progress" aria-label={`Start: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Start</button> : null}
-        {j.status === 'blocked' || j.status === 'in-progress' ? <button type="submit" name="status" value="todo" aria-label={`Move back to To do: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Move back to To do</button> : null}
-        {j.status === 'done' ? <button type="submit" name="status" value="todo" aria-label={`Reopen: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Reopen</button> : null}
+        {j.status !== 'done' ? <button type="submit" name="status" value="done" aria-label={`Done: ${j.title}`} className="ui-btn ui-btn--primary">Done</button> : null}
+        {j.status === 'todo' || j.status === 'blocked' ? <button type="submit" name="status" value="in-progress" aria-label={`Start: ${j.title}`} className="ui-btn ui-btn--secondary">Start</button> : null}
+        {j.status === 'blocked' || j.status === 'in-progress' ? <button type="submit" name="status" value="todo" aria-label={`Move back to To do: ${j.title}`} className="ui-btn ui-btn--secondary">Move back to To do</button> : null}
+        {j.status === 'done' ? <button type="submit" name="status" value="todo" aria-label={`Reopen: ${j.title}`} className="ui-btn ui-btn--secondary">Reopen</button> : null}
       </form>
       {j.status !== 'done' && j.status !== 'blocked' ? (
         <form method="post" action={`${api}/job-status`} className="office-inline">
@@ -85,7 +87,7 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
             <span className="club-muted">Stuck? Say why</span>
             <input name="reason" required maxLength={500} aria-label={`Why is it blocked: ${j.title}`} />
           </label>
-          <button type="submit" aria-label={`Mark blocked: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Mark blocked</button>
+          <button type="submit" aria-label={`Mark blocked: ${j.title}`} className="ui-btn ui-btn--secondary">Mark blocked</button>
         </form>
       ) : null}
       {j.unowned && j.status !== 'done' ? (
@@ -101,7 +103,7 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
               ))}
             </select>
           </label>
-          <button type="submit" aria-label={`Set owner: ${j.title}`} className="btn btn--style-secondary btn--size-medium">Set owner</button>
+          <button type="submit" aria-label={`Set owner: ${j.title}`} className="ui-btn ui-btn--secondary">Set owner</button>
         </form>
       ) : null}
       <p><a href={`${admin}/collections/diary-jobs/${j.id}`}>Edit all details</a></p>
@@ -111,8 +113,7 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Diary & plan' }]} />
-      <h1 className="club-page__title">Season diary</h1>
-      <p className="club-page__lead">The jobs the club does every year, who owns them and when they are due. {officeCopy.diary.excludes}</p>
+      <PageHeader title="Season diary" lead={<>The jobs the club does every year, who owns them and when they are due. {officeCopy.diary.excludes}</>} />
 
       <div role="status" aria-live="polite">
         {isDiaryNotice(notice) ? <p className="office-flash office-flash--ok">{DIARY_NOTICE_TEXT[notice]}{first(sp.n) ? ` (${first(sp.n)})` : ''}</p> : null}
@@ -130,7 +131,7 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
           </select>
         </label>
         {page.filter !== 'all' ? <input type="hidden" name="filter" value={page.filter} /> : null}
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Show season</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Show season</button>
       </form>
 
       <nav aria-label="Filter the jobs" className="office-chips">
@@ -144,17 +145,17 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
       <p className="club-muted">Jobs count as due soon when they fall due within {page.leadDays} days.</p>
 
       <div className="office-actions">
-        <a className="btn btn--style-secondary btn--size-medium" href={`${admin}/office/plan`}>Strategic plan</a>
+        <a className="ui-btn ui-btn--secondary" href={`${admin}/office/plan`}>Strategic plan</a>
         {page.canAddStandard ? (
           <form method="post" action={`${api}/starter-jobs`} className="office-inline">
             {hidden}
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Add the standard jobs for {season}</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Add the standard jobs for {season}</button>
           </form>
         ) : null}
         {page.hasRepeating && page.nextSeason ? (
           <form method="post" action={`${api}/copy-jobs`} className="office-inline">
             {hidden}
-            <button type="submit" className="btn btn--style-secondary btn--size-medium">Copy repeating jobs to {page.nextSeason}</button>
+            <button type="submit" className="ui-btn ui-btn--secondary">Copy repeating jobs to {page.nextSeason}</button>
           </form>
         ) : null}
       </div>
@@ -200,16 +201,16 @@ export async function OfficeDiaryView(view: AdminViewServerProps) {
             Budget (optional)
             <input name="budget" inputMode="decimal" placeholder="for example 250" />
           </label>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add job</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add job</button>
         </form>
       </details>
 
       {page.months.length === 0 ? (
-        <p className="club-attention__none">{page.filter === 'all' ? `No jobs for ${season === 'all' ? 'any season' : season} yet.` : 'Nothing matches that filter. Good news.'}</p>
+        <EmptyState>{page.filter === 'all' ? `No jobs for ${season === 'all' ? 'any season' : season} yet.` : 'Nothing matches that filter. Good news.'}</EmptyState>
       ) : (
         page.months.map((m) => (
           <section key={m.key} aria-labelledby={`m-${m.key}`}>
-            <h2 id={`m-${m.key}`} className="club-page__subtitle">{m.label}</h2>
+            <h2 id={`m-${m.key}`} className="ui-section__title office-subtitle">{m.label}</h2>
             <ul className="office-list">{m.jobs.map(job)}</ul>
           </section>
         ))

@@ -1,0 +1,645 @@
+/* Shared styles for the custom committee views (wave G WP-5): Club office and its modules, Selectors, Fantasy, Sign-in settings,
+   Player data tools. One set of classes on the admin tokens (no colour is named here), mobile first: tables become cards under
+   48rem, every control is 44px tall on a phone, one focus ring. The old per-view rules in admin.css are folded into this file. */
+
+/* Surfaces: panels, boxes, cards, list rows, the attendance pills. */
+.office-box,
+.office-strip,
+.office-card,
+.office-list > li,
+.office-minutes,
+.club-page .club-panel,
+.club-signin,
+.office-table tr {
+  background: rgb(var(--admin-surface));
+  border: 1px solid rgb(var(--admin-line));
+  border-radius: var(--admin-radius-m);
+  color: rgb(var(--admin-text));
+}
+.office-box,
+.office-strip,
+.club-signin {
+  max-width: var(--admin-form-max);
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+}
+.office-box--danger {
+  border-color: rgb(var(--admin-danger) / 0.55);
+  background: rgb(var(--admin-danger-tint));
+}
+.office-box > summary,
+.office-quickadd summary,
+.office-void > summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--admin-target);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: rgb(var(--admin-ink));
+  cursor: pointer;
+}
+.office-void > summary {
+  display: inline-flex;
+  font-size: 1rem;
+  text-decoration: underline;
+}
+.office-quickadd {
+  max-width: var(--admin-form-max);
+  margin: 0 0 1.25rem;
+}
+.office-strip__total {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+.office-strip ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.office-stat {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgb(var(--admin-accent-ink));
+}
+.office-footer-links {
+  margin-top: 1rem;
+}
+
+/* Notices: one calm box, tone by border and a leading word from the text itself. */
+.office-flash {
+  max-width: var(--admin-form-max);
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(var(--admin-accent) / 0.6);
+  border-radius: var(--admin-radius-m);
+  background: rgb(var(--admin-tint));
+  color: rgb(var(--admin-ink));
+}
+.office-flash--error {
+  border-color: rgb(var(--admin-danger) / 0.6);
+  background: rgb(var(--admin-danger-tint));
+}
+.office-flash--ok {
+  border-color: rgb(var(--admin-ok) / 0.6);
+  background: rgb(var(--admin-ok-tint));
+}
+
+/* Forms: labels above controls, 16px text, 44px controls, one border colour. */
+.office-form,
+.office-filters,
+.club-page .club-actions {
+  display: grid;
+  gap: 0.85rem;
+}
+.office-form {
+  margin-top: 0.75rem;
+}
+.club-page .club-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+.office-form label,
+.office-filters label,
+.club-page .club-actions label,
+.diary-job .office-inline label {
+  display: grid;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: rgb(var(--admin-ink));
+}
+.office-form input:not([type='checkbox'], [type='radio'], [type='hidden']),
+.office-form select,
+.office-form textarea,
+.office-filters input,
+.office-filters select,
+.office-inline input:not([type='checkbox'], [type='radio'], [type='hidden']),
+.office-inline select,
+.office-textarea,
+.club-page .club-actions input:not([type='checkbox'], [type='radio'], [type='hidden']),
+.club-page .club-actions select,
+.club-signin input:not([type='checkbox'], [type='radio'], [type='hidden']) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: var(--admin-target);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgb(var(--admin-ink) / 0.45);
+  border-radius: var(--admin-radius-s);
+  background: rgb(var(--admin-surface));
+  color: rgb(var(--admin-ink));
+  font: inherit;
+  font-size: 1rem;
+}
+.office-textarea,
+.office-form textarea {
+  width: 100%;
+  min-height: 6rem;
+}
+.office-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border: 1px solid rgb(var(--admin-line));
+  border-radius: var(--admin-radius-s);
+}
+.office-form legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+.office-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.25rem 0.75rem;
+}
+.office-form .office-check,
+.office-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--admin-target);
+  font-weight: 500;
+}
+.office-check input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: rgb(var(--admin-accent-ink));
+}
+.office-split {
+  display: grid;
+  gap: 0.5rem;
+}
+.office-split__row {
+  display: grid;
+  grid-template-columns: 1fr 7rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+.office-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.diary-job .office-inline {
+  margin: 0.5rem 0;
+}
+.office-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0 0 1.25rem;
+}
+.office-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+/* Filter chips and the pager. */
+.office-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+.office-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--admin-target);
+  padding: 0 1rem;
+  border: 1px solid rgb(var(--admin-ink) / 0.35);
+  border-radius: 999px;
+  background: rgb(var(--admin-surface));
+  color: rgb(var(--admin-ink));
+  font-weight: 600;
+  text-decoration: none;
+}
+.office-chip:hover {
+  background: rgb(var(--admin-tint));
+}
+.office-chip--on {
+  border-color: rgb(var(--admin-accent));
+  background: rgb(var(--admin-tint));
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-accent));
+}
+.office-pager {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0 1.5rem;
+  font-weight: 600;
+}
+.office-pager a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--admin-target);
+}
+
+/* Focus: the same gold ring as the rest of the admin. */
+.office-chip:focus-visible,
+.office-box > summary:focus-visible,
+.office-quickadd summary:focus-visible,
+.office-void > summary:focus-visible,
+.office-form :is(input, select, textarea):focus-visible,
+.office-filters :is(input, select):focus-visible,
+.club-page .club-actions :is(input, select):focus-visible {
+  outline: 2px solid rgb(var(--admin-accent));
+  outline-offset: 2px;
+}
+
+/* Tables: cards on a phone (each cell shows its data-label), a real table from 48rem. */
+.club-page .club-table,
+.office-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.club-page .club-table th,
+.club-page .club-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgb(var(--admin-line));
+  text-align: left;
+  vertical-align: top;
+}
+.club-page .club-table th,
+.office-table thead th {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+}
+.office-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.office-table,
+.office-table tbody,
+.office-table tr,
+.office-table th,
+.office-table td {
+  display: block;
+}
+.office-table tr {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+}
+.office-table caption {
+  display: block;
+  margin: 0 0 0.5rem;
+  text-align: left;
+}
+.office-table th[scope='row'],
+.office-table td {
+  padding: 0.2rem 0;
+  border: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.office-table td::before {
+  content: attr(data-label) ': ';
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+}
+.office-table td[data-label='']::before,
+.office-table td:not([data-label])::before {
+  content: none;
+}
+.club-page .club-table__strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.club-page .club-table tbody th,
+.office-table th[scope='row'] {
+  font-size: 1rem;
+  color: rgb(var(--admin-ink));
+}
+.office-num {
+  font-variant-numeric: tabular-nums;
+}
+.office-status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.club-table__strong {
+  margin: 0;
+  font-weight: 600;
+  color: rgb(var(--admin-ink));
+}
+.club-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+@media (min-width: 48rem) {
+  .office-filters {
+    grid-template-columns: 2fr 1fr 1fr auto;
+  }
+  .office-table {
+    display: table;
+  }
+  .office-table caption {
+    display: table-caption;
+  }
+  .office-table thead {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    display: table-header-group;
+  }
+  .office-table tbody {
+    display: table-row-group;
+  }
+  .office-table tr {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .office-table th,
+  .office-table td {
+    display: table-cell;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid rgb(var(--admin-line));
+  }
+  .office-table td::before {
+    content: none;
+  }
+  .office-num {
+    text-align: right;
+  }
+}
+
+/* Totals cards and list rows. */
+.office-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+  max-width: 56rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+.office-card {
+  padding: 0.85rem 1rem;
+}
+.office-card__label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+}
+.office-card__value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(var(--admin-ink));
+}
+.office-card__hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: rgb(var(--admin-muted));
+}
+.office-list {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 56rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+.office-list > li {
+  padding: 0.75rem 1rem;
+}
+.office-list > li > .office-inline {
+  display: flex;
+  max-width: 100%;
+  margin-top: 0.5rem;
+}
+.office-list--voided {
+  opacity: 0.75;
+  text-decoration: line-through;
+}
+.office-minutes {
+  max-width: 48rem;
+  padding: 1rem 1.25rem;
+  font: inherit;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.office-attendance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.office-attendance form {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgb(var(--admin-line));
+  border-radius: 999px;
+  background: rgb(var(--admin-surface));
+}
+.plan-progress {
+  width: 100%;
+  max-width: 28rem;
+  height: 0.9rem;
+  accent-color: rgb(var(--admin-accent-ink));
+}
+.plan-jobs {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+/* Panels used by Selectors, Fantasy, Player data tools. */
+.club-stack {
+  display: grid;
+  gap: 1rem;
+  max-width: var(--admin-page-max);
+}
+.club-page .club-panel {
+  padding: 1rem;
+}
+.club-page .club-field__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgb(var(--admin-ink));
+}
+.club-signin .club-field__title {
+  margin: 1.25rem 0 0.25rem;
+  font-size: 1rem;
+}
+.club-signin .club-field__title:first-child {
+  margin-top: 0;
+}
+.club-signin p {
+  margin: 0.25rem 0;
+}
+.club-signin__list {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+}
+.club-signin__pre {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  background: rgb(var(--admin-bg));
+  border-radius: var(--admin-radius-s);
+}
+.club-signin__test {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  margin: 1rem 0 0.5rem;
+}
+.club-signin__checks {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+/* Phone: buttons inside tables and panels are full-size tap targets. */
+@media (max-width: 47.99rem) {
+  .club-page .club-table .ui-btn,
+  .club-page .club-actions .ui-btn,
+  .office-table .ui-btn,
+  .office-inline .ui-btn {
+    min-height: var(--admin-target);
+  }
+}
+
+@media (max-width: 30rem) {
+  .office-attendance form strong {
+    flex-basis: 100%;
+  }
+}
+@media print {
+  .office-noprint,
+  .nav,
+  .app-header,
+  .template-default__nav-wrap,
+  .template-default__nav-overlay {
+    display: none !important;
+  }
+  .office-minutes {
+    border: 0;
+    padding: 0;
+  }
+  .plan-pillar {
+    break-inside: avoid;
+  }
+}
+
+.club-page .club-actions label.office-check {
+  display: flex;
+  font-weight: 500;
+}
+.club-page details.club-panel > summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--admin-target);
+  margin: 0;
+  cursor: pointer;
+}
+.club-page details.club-panel > summary:focus-visible {
+  outline: 2px solid rgb(var(--admin-accent));
+  outline-offset: 2px;
+}
+.office-table input[type='checkbox'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: rgb(var(--admin-accent-ink));
+}
+.office-subtitle {
+  margin: 1.5rem 0 0.75rem;
+}
+
+/* Breadcrumbs in the header: long names (a meeting title) shrink and cut off instead of widening the page on a phone. */
+.step-nav {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.step-nav > * {
+  min-width: 0;
+}
+.step-nav a,
+.step-nav span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-header__controls-wrapper,
+.app-header__wrapper,
+.app-header__content {
+  min-width: 0;
+}
+
+/* Touch targets and text size for every control a committee view draws (a phone gets 44px, a desktop 40px; 16px text stops iOS zooming). */
+.club-page :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], [type='range']), select, textarea) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 2.5rem;
+  font-size: 1rem;
+}
+.club-page input[type='file'] {
+  max-width: 100%;
+  font-size: 1rem;
+}
+.club-page input[type='checkbox'],
+.club-page input[type='radio'] {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: rgb(var(--admin-accent-ink));
+}
+.club-page summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  cursor: pointer;
+}
+@media (max-width: 47.99rem) {
+  .club-page :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], [type='range']), select, textarea),
+  .club-page summary {
+    min-height: var(--admin-target);
+  }
+}
+.club-page .club-field,
+.club-page .club-field label,
+.club-page .club-panel,
+.club-page .club-stack > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.club-page select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+}

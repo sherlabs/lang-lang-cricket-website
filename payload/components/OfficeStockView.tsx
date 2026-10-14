@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { STOCK_CATEGORIES, CATEGORY_LABEL } from '@/lib/office/stock'
@@ -5,6 +6,7 @@ import { getStockPage } from '@/lib/stock-office-queries'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
 import { LowBadge, Nonce, StatusBadge, StockFlash, first } from './OfficeStockBits'
+import { EmptyState, PageHeader } from './ui'
 
 /**
  * `/admin/office/stock` (committee): the items with how many are on hand, and a tab for what people still owe back. Low stock and
@@ -26,8 +28,7 @@ export async function OfficeStockView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Stock' }]} />
-      <h1 className="club-page__title">Stock</h1>
-      <p className="club-page__lead">What the club holds, who has borrowed what, and what is still owed back. {officeCopy.stock.excludes}</p>
+      <PageHeader title="Stock" lead={<>What the club holds, who has borrowed what, and what is still owed back. {officeCopy.stock.excludes}</>} />
       <StockFlash notice={first(sp.notice)} error={first(sp.error)} n={first(sp.n)} />
 
       <nav aria-label="Stock sections" className="office-chips">
@@ -46,7 +47,7 @@ export async function OfficeStockView(view: AdminViewServerProps) {
               <input name="q" defaultValue={page.q} maxLength={80} placeholder="for example helmet or large" />
             </label>
             {page.show !== 'all' ? <input type="hidden" name="show" value={page.show} /> : null}
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Search</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Search</button>
           </form>
           <nav aria-label="Filter the items" className="office-chips">
             <a href={chip('all')} className={`office-chip${page.show === 'all' ? ' office-chip--on' : ''}`} aria-current={page.show === 'all' ? 'true' : undefined}>Everything</a>
@@ -76,7 +77,7 @@ export async function OfficeStockView(view: AdminViewServerProps) {
                 Note (optional)
                 <input name="note" maxLength={300} />
               </label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Add to stock</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Add to stock</button>
             </form>
           </details>
 
@@ -120,16 +121,16 @@ export async function OfficeStockView(view: AdminViewServerProps) {
                   <option value="no">No, it is given away</option>
                 </select>
               </label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Add item</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Add item</button>
             </form>
           </details>
 
           {page.groups.length === 0 ? (
-            <p className="club-attention__none">{page.show === 'low' ? 'Nothing is low. Good news.' : page.show === 'switched-off' ? 'No items are switched off.' : page.q ? 'Nothing matches that search.' : 'No items yet. Use "Add an item" to start.'}</p>
+            <EmptyState>{page.show === 'low' ? 'Nothing is low. Good news.' : page.show === 'switched-off' ? 'No items are switched off.' : page.q ? 'Nothing matches that search.' : 'No items yet. Use "Add an item" to start.'}</EmptyState>
           ) : (
             page.groups.map((g) => (
               <section key={g.category} aria-labelledby={`c-${g.category}`}>
-                <h2 id={`c-${g.category}`} className="club-page__subtitle">{g.label}</h2>
+                <h2 id={`c-${g.category}`} className="ui-section__title office-subtitle">{g.label}</h2>
                 <ul className="office-list">
                   {g.items.map((i, idx) => (
                     <li key={i.id}>
@@ -156,14 +157,14 @@ export async function OfficeStockView(view: AdminViewServerProps) {
           <p className="club-muted">Kit that people have borrowed and not yet brought back, oldest first. Things given away are not listed.</p>
           {page.isAdmin && page.owed.length > 0 ? (
             <form method="post" action={`${apiRoot}/export/stock-owed`} className="office-actions">
-              <button type="submit" className="btn btn--style-secondary btn--size-medium">Download who owes kit (names, admins only)</button>
+              <button type="submit" className="ui-btn ui-btn--secondary">Download who owes kit (names, admins only)</button>
             </form>
           ) : null}
           {page.owed.length === 0 ? (
-            <p className="club-attention__none">Nobody owes the club anything. Good news.</p>
+            <EmptyState>Nobody owes the club anything. Good news.</EmptyState>
           ) : (
             <>
-              <h2 className="club-page__subtitle">By person</h2>
+              <h2 className="ui-section__title office-subtitle">By person</h2>
               <ul className="office-list">
                 {page.byPerson.map((p) => (
                   <li key={p.memberId ?? 'none'}>
@@ -173,7 +174,7 @@ export async function OfficeStockView(view: AdminViewServerProps) {
                   </li>
                 ))}
               </ul>
-              <h2 className="club-page__subtitle">Everything out</h2>
+              <h2 className="ui-section__title office-subtitle">Everything out</h2>
               <table className="club-table office-table" role="table">
                 <caption className="club-muted">Open loans, oldest first</caption>
                 <thead role="rowgroup">

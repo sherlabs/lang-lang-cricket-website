@@ -7,6 +7,7 @@ import { readSignInState } from '@/lib/signin/state'
 import { facebookConfig } from '@/lib/facebook-login'
 import { isAdminUser } from '../admin/visibility'
 import { SignInTestButton } from './SignInTestButton'
+import { StatusPill } from './ui'
 
 const when = new Intl.DateTimeFormat(CLUB_LOCALE, { timeZone: CLUB_TIMEZONE, day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 const SET = (v: boolean) => (v ? 'set' : 'not set')
@@ -33,7 +34,7 @@ export async function SignInPanel({ payload, user }: UIFieldServerProps) {
     <section className="club-signin" aria-label="Facebook sign-in status">
       <h3 className="club-field__title">Status</h3>
       <p>
-        <span className={`club-pill club-pill--${mode.kind === 'off' ? 'none' : 'ok'}`}>{mode.kind === 'off' ? 'Off' : 'On'}</span> {status}
+        <StatusPill tone={mode.kind === 'off' ? 'neutral' : 'ok'}>{mode.kind === 'off' ? 'Off' : 'On'}</StatusPill> {status}
       </p>
       <p className="club-muted">Changes to the choice above apply after you press Save. Password sign-in always keeps working.</p>
 
@@ -52,7 +53,7 @@ export async function SignInPanel({ payload, user }: UIFieldServerProps) {
       <SignInTestButton />
       {state.lastTest.at && (
         <p className="club-muted">
-          Last check {when.format(new Date(state.lastTest.at))}: <span className={`club-pill club-pill--${state.lastTest.ok ? 'ok' : 'error'}`}>{state.lastTest.ok ? 'OK' : 'Problem'}</span> {state.lastTest.summary}
+          Last check {when.format(new Date(state.lastTest.at))}: <StatusPill tone={state.lastTest.ok ? 'ok' : 'danger'}>{state.lastTest.ok ? 'OK' : 'Problem'}</StatusPill> {state.lastTest.summary}
         </p>
       )}
 

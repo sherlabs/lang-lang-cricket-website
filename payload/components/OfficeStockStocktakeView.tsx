@@ -1,9 +1,11 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { parseWholeQty } from '@/lib/office/stock'
 import { getStocktakePage } from '@/lib/stock-office-queries'
 import { AdminPage, requireStaff } from './AdminPage'
 import { Nonce, StockFlash, first } from './OfficeStockBits'
+import { EmptyState, PageHeader } from './ui'
 
 /**
  * `/admin/office/stock/stocktake` (committee): type what you counted, see the differences, then post them as adjustments. The
@@ -31,12 +33,11 @@ export async function OfficeStockStocktakeView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Stock', url: base }, { label: 'Stocktake' }]} />
-      <h1 className="club-page__title">Stocktake</h1>
-      <p className="club-page__lead">Count what is on the shelf and type it in. Leave an item blank if you did not count it. You will see the differences before anything is saved.</p>
+      <PageHeader title="Stocktake" lead={<>Count what is on the shelf and type it in. Leave an item blank if you did not count it. You will see the differences before anything is saved.</>} />
       <StockFlash notice={first(sp.notice)} error={first(sp.error)} n={first(sp.n)} />
 
       <form method="get" action={`${base}/stocktake`} className="office-form">
-        {page.rows.length === 0 ? <p className="club-attention__none">No items yet.</p> : null}
+        {page.rows.length === 0 ? <EmptyState>No items yet.</EmptyState> : null}
         <table className="club-table office-table" role="table">
           <caption className="club-muted">Items in use</caption>
           <thead role="rowgroup">
@@ -60,14 +61,14 @@ export async function OfficeStockStocktakeView(view: AdminViewServerProps) {
             ))}
           </tbody>
         </table>
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Show the differences</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Show the differences</button>
       </form>
 
       {page.review ? (
         <section aria-labelledby="diff">
-          <h2 id="diff" className="club-page__subtitle">Differences</h2>
+          <h2 id="diff" className="ui-section__title office-subtitle">Differences</h2>
           {changed.length === 0 ? (
-            <p className="club-attention__none">Every count matches, so there is nothing to change.</p>
+            <EmptyState>Every count matches, so there is nothing to change.</EmptyState>
           ) : (
             <form method="post" action={`${api}/stocktake`} className="office-form">
               <Nonce />
@@ -86,7 +87,7 @@ export async function OfficeStockStocktakeView(view: AdminViewServerProps) {
                   <input type="hidden" name={`expected_${r.id}`} value={r.expected} />
                 </span>
               ))}
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Save these {changed.length} {changed.length === 1 ? 'change' : 'changes'}</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Save these {changed.length} {changed.length === 1 ? 'change' : 'changes'}</button>
             </form>
           )}
         </section>

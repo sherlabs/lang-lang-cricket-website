@@ -13,4 +13,6 @@ export const DOCUMENT_WORD_OK = {
   collections: ['documents'],
   navKeys: ['documents'],
   tileKeys: ['document'],
+  /** Views about office-bearer documents (a real committee concept). */
+  files: ['OfficeMeetingDocumentsView.tsx', 'OfficeMeetingsView.tsx'],
 }

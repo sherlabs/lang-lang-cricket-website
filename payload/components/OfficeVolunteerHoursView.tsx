@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { isVolunteerError, isVolunteerNotice, VOLUNTEER_ERROR_TEXT, VOLUNTEER_NOTICE_TEXT } from '@/lib/office/volunteer-input'
@@ -6,6 +7,7 @@ import { getHoursReport } from '@/lib/volunteers-office-queries'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
+import { PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const KIND_TITLE = { volunteer: 'Volunteer hours', paid: 'Paid hours' } as const
@@ -83,8 +85,7 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Volunteers', url: back }, { label: 'Hours' }]} />
-      <h1 className="club-page__title">Volunteer hours</h1>
-      <p className="club-page__lead">{report.label}. {officeCopy.volunteers.excludes}</p>
+      <PageHeader title="Volunteer hours" lead={<>{report.label}. {officeCopy.volunteers.excludes}</>} />
 
       <div role="status" aria-live="polite">
         {isVolunteerNotice(notice) ? <p className="office-flash office-flash--ok">{VOLUNTEER_NOTICE_TEXT[notice]}</p> : null}
@@ -103,7 +104,7 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
             <label>to<input name="to" type="date" defaultValue={report.season ? '' : report.to} /></label>
           </>
         ) : null}
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Show hours</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Show hours</button>
       </form>
 
       {report.aggregate.map((k) => <KindBlock key={k.kind} k={k} labels={report.shiftLabels} />)}
@@ -157,7 +158,7 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
                 </select>
               </label>
               <label>Note (optional)<input name="note" maxLength={300} autoComplete="off" /></label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Add hours</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Add hours</button>
             </form>
           </details>
 
@@ -173,7 +174,7 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
                       <form method="post" action={`${api}/volunteers/hours-void`} className="office-form">
                         {hidden}<input type="hidden" name="id" value={r.id} />
                         <label>Why?<input name="reason" required maxLength={300} autoComplete="off" /></label>
-                        <button type="submit" className="btn btn--style-secondary btn--size-medium">Void</button>
+                        <button type="submit" className="ui-btn ui-btn--secondary">Void</button>
                       </form>
                     </details>
                   </li>
@@ -188,11 +189,11 @@ export async function OfficeVolunteerHoursView(view: AdminViewServerProps) {
             <div className="office-actions">
               <form method="post" action={`${api}/export/volunteer-hours`}>
                 {period}<input type="hidden" name="scope" value="aggregate" />
-                <button type="submit" className="btn btn--style-primary btn--size-medium">Totals without names (small groups hidden)</button>
+                <button type="submit" className="ui-btn ui-btn--primary">Totals without names (small groups hidden)</button>
               </form>
               <form method="post" action={`${api}/export/volunteer-hours`}>
                 {period}<input type="hidden" name="scope" value="person" />
-                <button type="submit" className="btn btn--style-secondary btn--size-medium">Hours by person</button>
+                <button type="submit" className="ui-btn ui-btn--secondary">Hours by person</button>
               </form>
             </div>
           </section>

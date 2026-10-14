@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { CLUB_LOCALE, SELECTOR_INVITE_DAYS, VOTES, votePaths } from '@/config/site'
@@ -6,6 +7,7 @@ import { selectorStatus, STATUS_LABEL } from '@/lib/selector-status'
 import { isStaffUser } from '../access'
 import { AdminPage, requireStaff } from './AdminPage'
 import { SelectorsPanel, type SelectorRow } from './SelectorsPanel'
+import { PageHeader } from './ui'
 
 const when = new Intl.DateTimeFormat(CLUB_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -21,8 +23,7 @@ export async function SelectorsView(view: AdminViewServerProps) {
   if (!isStaffUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Selectors</h1>
-        <p className="club-page__lead">Only the committee can manage selector logins.</p>
+        <PageHeader title="Selectors" lead={<>Only the committee can manage selector logins.</>} />
       </AdminPage>
     )
   }
@@ -50,8 +51,7 @@ export async function SelectorsView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Selectors' }]} />
-      <h1 className="club-page__title">Selectors</h1>
-      <p className="club-page__lead">Selectors pick the team for each grade and announce it. They sign in on the website, never here. Add a name and email, then send them the link.</p>
+      <PageHeader title="Selectors" lead={<>Selectors pick the team for each grade and announce it. They sign in on the website, never here. Add a name and email, then send them the link.</>} />
       <p className="club-page__lead">
         Run the player votes, see who has voted and open the leaderboard: <a href={votePaths.selector}>{VOTES.label} votes</a> (opens the selector area).
       </p>

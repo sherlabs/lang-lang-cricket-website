@@ -32,6 +32,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), summary, input, select, text
  */
 export function NavSlideOver() {
   const { navOpen, setNavOpen } = useNav()
+  useLandmarkLabels()
   useEffect(() => {
     if (!navOpen || !window.matchMedia(NARROW).matches) return
     const menu = document.querySelector<HTMLElement>('aside.nav')
@@ -65,4 +66,27 @@ export function NavSlideOver() {
     return () => document.removeEventListener('keydown', onKey)
   }, [navOpen, setNavOpen])
   return null
+}
+
+/**
+ * Payload renders its sidebar and breadcrumb as bare `<nav>` elements. Two unlabelled navigation landmarks are hard to tell apart with a
+ * screen reader, so name them ("Main", "Breadcrumb"). Re-applied when the page content changes, because the breadcrumb is re-rendered on
+ * every client navigation.
+ */
+const LANDMARKS: Array<[selector: string, label: string]> = [
+  ['nav.nav__wrap', 'Main'],
+  ['nav.step-nav', 'Breadcrumb'],
+]
+function useLandmarkLabels() {
+  useEffect(() => {
+    const apply = () => {
+      // Payload's own list and edit pages have no `main`; give the content wrapper that role so every page has one.
+      if (!document.querySelector('main, [role="main"]')) document.querySelector('.template-default__wrap')?.setAttribute('role', 'main')
+      for (const [selector, label] of LANDMARKS) document.querySelectorAll(selector).forEach((el) => { if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', label) })
+    }
+    apply()
+    const observer = new MutationObserver(apply)
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [])
 }

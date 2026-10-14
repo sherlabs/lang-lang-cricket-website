@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { landingStats } from '@/lib/office/landing'
@@ -5,6 +6,7 @@ import { modulesFor } from '@/lib/office/modules'
 import { officeCopy } from '../admin/copy'
 import { isStaffUser } from '../access'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 /**
  * `/admin/office` (custom view, admin and editor): the landing page of the club back office. One tile per module the signed-in
@@ -22,10 +24,9 @@ export async function OfficeView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office' }]} />
-      <h1 className="club-page__title">Club office</h1>
-      <p className="club-page__lead">The club&rsquo;s back office in one place. Pick a tile to get started.</p>
+      <PageHeader title="Club office" lead={<>The club&rsquo;s back office in one place. Pick a tile to get started.</>} />
       {modules.length === 0 ? (
-        <p className="club-attention__none">{officeCopy.landing.empty}</p>
+        <EmptyState>{officeCopy.landing.empty}</EmptyState>
       ) : (
         <ul className="club-tiles">
           {modules.map((m) => (

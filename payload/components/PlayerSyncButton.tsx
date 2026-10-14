@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button } from './ui'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -40,7 +41,7 @@ export function PlayerSyncButton() {
   }
 
   return (
-    <Button buttonStyle="primary" disabled={pending} onClick={run} type="button">
+    <Button variant="primary" disabled={pending} onClick={run} type="button">
       {pending ? (
         <>
           <span className="club-spinner" aria-hidden /> Syncing… (can take a minute)

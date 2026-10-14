@@ -6,6 +6,7 @@ import { isAdminUser } from '../admin/visibility'
 import { AdminPage, requireStaff } from './AdminPage'
 import { DuplicatePlayersPanel, type PairView } from './DuplicatePlayersPanel'
 import { HistoryImportPanel } from './HistoryImportPanel'
+import { PageHeader } from './ui'
 
 /**
  * `/admin/player-data-tools` (custom view, admins only; W2 spec 6.1 and 6.2): import and export of historical player data,
@@ -19,8 +20,7 @@ export async function PlayerDataToolsView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Player data tools</h1>
-        <p className="club-page__lead">Only the person who looks after the site can use these tools.</p>
+        <PageHeader title="Player data tools" lead={<>Only the person who looks after the site can use these tools.</>} />
       </AdminPage>
     )
   }
@@ -43,8 +43,7 @@ export async function PlayerDataToolsView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Player data tools' }]} />
-      <h1 className="club-page__title">Player data tools</h1>
-      <p className="club-page__lead">Bring in older seasons from spreadsheets, and tidy up players who appear twice.</p>
+      <PageHeader title="Player data tools" lead={<>Bring in older seasons from spreadsheets, and tidy up players who appear twice.</>} />
       <section id="import" aria-labelledby="pdt-import" className="club-field">
         <h2 id="pdt-import" className="club-field__title">Import and export history</h2>
         <HistoryImportPanel api={api} batches={batches} />

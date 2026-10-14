@@ -1,5 +1,6 @@
 import type { BeforeListServerProps } from 'payload'
 import { PlayerSyncButton } from './PlayerSyncButton'
+import { StatusPill } from './ui'
 import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 
 const clubDate = new Intl.DateTimeFormat(CLUB_LOCALE, {
@@ -34,7 +35,7 @@ export async function PlayerSyncPanel({ payload }: BeforeListServerProps) {
         <h3 className="club-field__title">PlayHQ sync</h3>
         {run ? (
           <p className="club-muted">
-            <span className={`club-pill club-pill--${status || 'none'}`}>{STATUS_LABEL[status] ?? 'Unknown'}</span>{' '}
+            <StatusPill tone={status === 'ok' ? 'ok' : status === 'error' ? 'danger' : 'neutral'}>{STATUS_LABEL[status] ?? 'Unknown'}</StatusPill>{' '}
             {run.finishedAt ? (
               <>Finished {clubDate.format(new Date(run.finishedAt))}</>
             ) : run.startedAt ? (

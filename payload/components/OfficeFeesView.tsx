@@ -1,3 +1,4 @@
+// @committee-facing
 import { randomUUID } from 'node:crypto'
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
@@ -7,6 +8,7 @@ import { formatMoney } from '@/lib/office/money'
 import { isAdminUser } from '../access'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const KINDS = { upfront: 'Fixed fee for the season', 'per-match': 'Per game played', free: 'Free' } as const
@@ -25,8 +27,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Fees</h1>
-        <p className="club-page__lead">Only admins can see the fees.</p>
+        <PageHeader title="Fees" lead={<>Only admins can see the fees.</>} />
       </AdminPage>
     )
   }
@@ -55,10 +56,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Fees' }]} />
-      <h1 className="club-page__title">Fees</h1>
-      <p className="club-page__lead">
-        Membership and match fees for {season}. <span className="office-badge">{report.closed ? 'Closed' : 'Open'}</span> Only admins can see this page. Payments are recorded by hand; no card details are ever stored.
-      </p>
+      <PageHeader title="Fees" lead={<>Membership and match fees for {season}. <span className="ui-pill ui-pill--neutral">{report.closed ? 'Closed' : 'Open'}</span> Only admins can see this page. Payments are recorded by hand; no card details are ever stored.</>} />
 
       <div role="status" aria-live="polite">
         {isFeeNotice(notice) ? <p className="office-flash office-flash--ok">{FEE_NOTICE_TEXT[notice]}{first(sp.n) ? ` (${first(sp.n)})` : ''}</p> : null}
@@ -74,7 +72,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
             ))}
           </select>
         </label>
-        <button type="submit" className="btn btn--style-primary btn--size-medium">Show season</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Show season</button>
       </form>
 
       {!report.closed ? <p className="office-flash">{officeCopy.fees.openNote}</p> : null}
@@ -96,7 +94,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
       </p>
 
       {report.rows.length === 0 ? (
-        <p className="club-attention__none">No one is in {season} yet. Set up a membership type and add members below.</p>
+        <EmptyState>No one is in {season} yet. Set up a membership type and add members below.</EmptyState>
       ) : (
         <table className="club-table office-table" role="table">
           <caption className="club-muted">{officeCopy.fees.paidLabel}. {officeCopy.fees.paidSpecificLabel} counts only payments aimed at this season.</caption>
@@ -171,11 +169,11 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
               </label>
               <label>Season fee (leave blank for none)<input name="upfront" inputMode="decimal" autoComplete="off" /></label>
               <label>Fee per game (leave blank for none)<input name="perMatch" inputMode="decimal" autoComplete="off" /></label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Add membership type</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Add membership type</button>
             </form>
             <form method="post" action={`${api}/fees/tiers-copy`} className="office-actions">
               {hidden}{seasonField}
-              <button type="submit" className="btn btn--style-secondary btn--size-medium">Copy last season&rsquo;s types</button>
+              <button type="submit" className="ui-btn ui-btn--secondary">Copy last season&rsquo;s types</button>
             </form>
           </>
         )}
@@ -198,7 +196,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
                   <select name="tierId" required>{activeTiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
                 </label>
                 <label>Joined on (optional)<input name="joinedOn" type="date" /></label>
-                <button type="submit" className="btn btn--style-primary btn--size-medium">Add member</button>
+                <button type="submit" className="ui-btn ui-btn--primary">Add member</button>
               </form>
               <form method="post" action={`${api}/fees/membership`} className="office-form">
                 {hidden}{seasonField}
@@ -206,7 +204,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
                 <label>Add every player who is not in yet ({page.unjoined.filter((m) => m.isPlayer).length}) as
                   <select name="tierId" required>{activeTiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
                 </label>
-                <button type="submit" className="btn btn--style-secondary btn--size-medium" disabled={page.unjoined.every((m) => !m.isPlayer)}>Add all players</button>
+                <button type="submit" className="ui-btn ui-btn--secondary" disabled={page.unjoined.every((m) => !m.isPlayer)}>Add all players</button>
               </form>
             </>
           )}
@@ -224,7 +222,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
               <label className="office-check"><input type="checkbox" name="closeAnyway" value="yes" /> {report.unmatchedAppearances} {report.unmatchedAppearances === 1 ? 'game' : 'games'} could not be matched to a member. Close anyway</label>
             ) : null}
             <label className="office-check"><input type="checkbox" name="confirm" value="yes" required /> Yes, close {season} and freeze its figures</label>
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Close season</button>
+            <button type="submit" className="ui-btn ui-btn--danger">Close season</button>
           </form>
         </details>
       )}
@@ -234,7 +232,7 @@ export async function OfficeFeesView(view: AdminViewServerProps) {
         <p>One row per member for {season}. The download is logged. Date of birth, emergency contact and notes are never included.</p>
         {seasonField}
         <label className="office-check"><input type="checkbox" name="detail" value="yes" /> Also include one row per charge</label>
-        <div className="office-actions"><button type="submit" className="btn btn--style-primary btn--size-medium">Download CSV</button></div>
+        <div className="office-actions"><button type="submit" className="ui-btn ui-btn--primary">Download CSV</button></div>
       </form>
     </AdminPage>
   )

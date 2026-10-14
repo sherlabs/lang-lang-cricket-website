@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button } from './ui'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
@@ -122,8 +123,8 @@ export function HistoryImportPanel({ api, batches }: { api: string; batches: Bat
         </label>
       </div>
       <div className="club-actions">
-        <Button buttonStyle="primary" type="button" disabled={busy || !csv} onClick={runPreview}>{busy ? 'Working…' : 'Preview (nothing is saved)'}</Button>
-        <Button buttonStyle="secondary" type="button" disabled={busy || !clean} onClick={apply}>Import {fileName ? `"${fileName}"` : ''}</Button>
+        <Button variant="primary" type="button" disabled={busy || !csv} onClick={runPreview}>{busy ? 'Working…' : 'Preview (nothing is saved)'}</Button>
+        <Button variant="secondary" type="button" disabled={busy || !clean} onClick={apply}>Import {fileName ? `"${fileName}"` : ''}</Button>
       </div>
 
       {preview && s && (
@@ -145,15 +146,16 @@ export function HistoryImportPanel({ api, batches }: { api: string; batches: Bat
       {batches.length === 0 ? (
         <p className="club-muted">Nothing has been imported yet.</p>
       ) : (
-        <table className="club-table">
-          <thead><tr><th>When</th><th>Season rows</th><th>Games</th><th aria-label="Actions" /></tr></thead>
+        <table className="club-table office-table">
+          <caption className="ui-sr-only">Imports that can be undone</caption>
+          <thead><tr><th scope="col">When</th><th scope="col">Season rows</th><th scope="col">Games</th><th scope="col"><span className="ui-sr-only">Actions</span></th></tr></thead>
           <tbody>
             {batches.map((b) => (
               <tr key={b.batch}>
-                <td>{new Date(b.at).toLocaleString()}</td>
-                <td>{b.seasons}</td>
-                <td>{b.matches}</td>
-                <td><Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => undo(b)}>Undo this import</Button></td>
+                <th scope="row">{new Date(b.at).toLocaleString()}</th>
+                <td data-label="Season rows">{b.seasons}</td>
+                <td data-label="Games">{b.matches}</td>
+                <td><Button variant="secondary" type="button" disabled={busy} onClick={() => undo(b)}>Undo this import</Button></td>
               </tr>
             ))}
           </tbody>
@@ -168,9 +170,10 @@ function IssueTable({ title, issues }: { title: string; issues: Issue[] }) {
   return (
     <>
       <h4>{title}</h4>
-      <table className="club-table">
-        <thead><tr><th>Row</th><th>Column</th><th>What to fix</th></tr></thead>
-        <tbody>{shown.map((i, n) => <tr key={`${i.row}-${i.column}-${n}`}><td>{i.row}</td><td>{i.column ?? ''}</td><td>{i.message}</td></tr>)}</tbody>
+      <table className="club-table office-table">
+        <caption className="ui-sr-only">{title}</caption>
+        <thead><tr><th scope="col">Row</th><th scope="col">Column</th><th scope="col">What to fix</th></tr></thead>
+        <tbody>{shown.map((i, n) => <tr key={`${i.row}-${i.column}-${n}`}><th scope="row">{i.row}</th><td data-label="Column">{i.column ?? ''}</td><td data-label="What to fix">{i.message}</td></tr>)}</tbody>
       </table>
       {issues.length > shown.length && <p className="club-muted">And {issues.length - shown.length} more.</p>}
     </>

@@ -1,3 +1,4 @@
+// @committee-facing
 import { randomUUID } from 'node:crypto'
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
@@ -8,6 +9,7 @@ import { formatMoney, parseMoney } from '@/lib/office/money'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { isAdminUser } from '../access'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const targetText = (t: PaymentTarget | null | undefined): string => (!t ? 'General (oldest debt first)' : t.kind === 'season' ? `Season ${t.season}` : 'One game or charge')
@@ -26,8 +28,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Member fees</h1>
-        <p className="club-page__lead">Only admins can see fees.</p>
+        <PageHeader title="Member fees" lead={<>Only admins can see fees.</>} />
       </AdminPage>
     )
   }
@@ -43,8 +44,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
     return (
       <AdminPage view={view}>
         <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Fees', url: backTo }, { label: 'Not found' }]} />
-        <h1 className="club-page__title">Member fees</h1>
-        <p className="club-page__lead">That member could not be found. <a href={backTo}>Back to Fees</a></p>
+        <PageHeader title="Member fees" lead={<>That member could not be found. <a href={backTo}>Back to Fees</a></>} />
       </AdminPage>
     )
   }
@@ -69,11 +69,8 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Fees', url: backTo }, { label: member.name }]} />
-      <h1 className="club-page__title">{member.name}</h1>
-      <p className="club-page__lead">
-        {owedTotal > 0 ? `! Owes ${money(owedTotal)}` : '✓ Nothing owing'}. {allocation.creditCents > 0 ? `Credit held: ${money(allocation.creditCents)}. ` : ''}
-        <a href={backTo}>Back to Fees</a> &middot; <a href={`${admin}/collections/members/${member.id}`}>Open member</a>
-      </p>
+      <PageHeader title={<>{member.name}</>} lead={<>{owedTotal > 0 ? `! Owes ${money(owedTotal)}` : '✓ Nothing owing'}. {allocation.creditCents > 0 ? `Credit held: ${money(allocation.creditCents)}. ` : ''}
+        <a href={backTo}>Back to Fees</a> &middot; <a href={`${admin}/collections/members/${member.id}`}>Open member</a></>} />
 
       <div role="status" aria-live="polite">
         {isFeeNotice(notice) ? <p className="office-flash office-flash--ok">{FEE_NOTICE_TEXT[notice]}</p> : null}
@@ -89,7 +86,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
       ) : null}
 
       <h2>Charges</h2>
-      {allocation.lines.length === 0 ? <p className="club-attention__none">No charges yet. Add this member to a season from the Fees page.</p> : [...bySeason.entries()].map(([season, lines]) => (
+      {allocation.lines.length === 0 ? <EmptyState>No charges yet. Add this member to a season from the Fees page.</EmptyState> : [...bySeason.entries()].map(([season, lines]) => (
         <section key={season} aria-label={`Charges for ${season}`}>
           <h3>{season} {closed.includes(season) ? '(closed)' : '(open)'}</h3>
           <table className="club-table office-table" role="table">
@@ -127,7 +124,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
         <label>Aimed at
           <select name="ptarget" defaultValue={first(sp.ptarget)}>{targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
         </label>
-        <button type="submit" className="btn btn--style-secondary btn--size-medium">Show what this will settle</button>
+        <button type="submit" className="ui-btn ui-btn--secondary">Show what this will settle</button>
         {ledger.preview ? (
           <div role="status" aria-live="polite">
             <p><strong>{pAmount ? `${money(pAmount)}, ${targetText(pTarget).toLowerCase()}:` : ''}</strong></p>
@@ -169,11 +166,11 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
             </div>
           </fieldset>
         ) : null}
-        <button type="submit" className="btn btn--style-primary btn--size-large">Record payment</button>
+        <button type="submit" className="ui-btn ui-btn--primary">Record payment</button>
       </form>
 
       <h2>Payments</h2>
-      {ledger.payments.length === 0 ? <p className="club-attention__none">No payments yet.</p> : (
+      {ledger.payments.length === 0 ? <EmptyState>No payments yet.</EmptyState> : (
         <ul className="office-list">
           {ledger.payments.map((p) => (
             <li key={p.id}>
@@ -186,7 +183,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
                     <input type="hidden" name="id" value={p.id} />
                     <label>Why is it being voided?<input name="reason" required maxLength={300} autoComplete="off" /></label>
                     {p.splitGroup ? <label className="office-check"><input type="checkbox" name="wholeGroup" value="yes" /> Void every part of this split payment</label> : null}
-                    <button type="submit" className="btn btn--style-secondary btn--size-medium">Void payment</button>
+                    <button type="submit" className="ui-btn ui-btn--secondary">Void payment</button>
                   </form>
                 </details>
               )}
@@ -196,7 +193,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
       )}
 
       <h2>Waivers</h2>
-      {ledger.waivers.length === 0 ? <p className="club-attention__none">No waivers.</p> : (
+      {ledger.waivers.length === 0 ? <EmptyState>No waivers.</EmptyState> : (
         <ul className="office-list">
           {ledger.waivers.map((w) => (
             <li key={w.id}>
@@ -208,7 +205,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
                     {hidden}
                     <input type="hidden" name="id" value={Number(w.id)} />
                     <label>Why is it being voided?<input name="reason" required maxLength={300} autoComplete="off" /></label>
-                    <button type="submit" className="btn btn--style-secondary btn--size-medium">Void waiver</button>
+                    <button type="submit" className="ui-btn ui-btn--secondary">Void waiver</button>
                   </form>
                 </details>
               )}
@@ -244,7 +241,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
           </label>
           <label>Amount (for an amount)<input name="amount" inputMode="decimal" autoComplete="off" /></label>
           <label>Reason (required)<input name="note" required maxLength={500} autoComplete="off" /></label>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add waiver</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add waiver</button>
         </form>
       </details>
 
@@ -264,7 +261,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
                         {hidden}
                         <input type="hidden" name="id" value={Number(c.id)} />
                         <label>Why is it being voided?<input name="reason" required maxLength={300} autoComplete="off" /></label>
-                        <button type="submit" className="btn btn--style-secondary btn--size-medium">Void charge</button>
+                        <button type="submit" className="ui-btn ui-btn--secondary">Void charge</button>
                       </form>
                     </details>
                   )}
@@ -280,7 +277,7 @@ export async function OfficeFeeMemberView(view: AdminViewServerProps) {
             <label>Amount charged<input name="amount" required inputMode="decimal" autoComplete="off" /></label>
             <label>Date<input name="date" type="date" defaultValue={today} /></label>
             <label>What it is for (required)<input name="note" required maxLength={300} autoComplete="off" /></label>
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Add adjustment</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Add adjustment</button>
           </form>
         </details>
       ) : null}

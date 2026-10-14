@@ -1,3 +1,4 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import { notFound } from 'next/navigation'
 import type { AdminViewServerProps } from 'payload'
@@ -9,6 +10,7 @@ import { EMAIL_ERROR_TEXT, EMAIL_NOTICE_TEXT, isEmailError, isEmailNotice } from
 import { MEMBER_ROLES, ROLE_LABELS } from '@/lib/office/members'
 import { isAdminUser } from '../access'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, LinkButton, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 export const STATUS_WORDS = { draft: 'Draft', sending: 'Sending', sent: 'Sent', cancelled: 'Stopped' } as const
@@ -81,13 +83,19 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
   if (!isAdminUser(req.user)) {
     return (
       <AdminPage view={view}>
-        <h1 className="club-page__title">Email</h1>
-        <p className="club-page__lead">Only admins can send club emails.</p>
+        <PageHeader title="Email" lead={<>Only admins can send club emails.</>} />
       </AdminPage>
     )
   }
   const overview = await getEmailOverview(req.user, { query: first(view.searchParams?.q), page: Number(first(view.searchParams?.page)) || 1 })
-  if (!overview) notFound()
+  if (!overview) {
+    return (
+      <AdminPage view={view}>
+        <PageHeader title="Email" lead={<>Email could not be loaded just now.</>} />
+        <EmptyState icon="announcements" action={<LinkButton variant="secondary" href={`${admin}/office`}>Back to the club office</LinkButton>}>Reload the page. If it keeps happening, tell the person who looks after the site.</EmptyState>
+      </AdminPage>
+    )
+  }
   const sp = view.searchParams ?? {}
   const notice = first(sp.notice)
   const error = first(sp.error)
@@ -95,8 +103,7 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Email' }]} />
-      <h1 className="club-page__title">Email</h1>
-      <p className="club-page__lead">Write to your members. Each person gets their own copy with a link to unsubscribe. Emails are sent from {overview.fromAddress}.</p>
+      <PageHeader title="Email" lead={<>Write to your members. Each person gets their own copy with a link to unsubscribe. Emails are sent from {overview.fromAddress}.</>} />
       {!overview.providerLive ? <p className="office-flash">Test mode: nothing is delivered. Each email is printed in the server log instead.</p> : null}
       <div role="status" aria-live="polite">
         {isEmailNotice(notice) ? <p className="office-flash office-flash--ok">{EMAIL_NOTICE_TEXT[notice]}</p> : null}
@@ -107,7 +114,7 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
         <summary>Write a new email</summary>
         <form method="post" action={`${api}/new`} className="office-form">
           <ComposeFields />
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Save draft and check it</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Save draft and check it</button>
         </form>
       </details>
 
@@ -119,7 +126,7 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
           {overview.campaigns.map((c) => (
             <li key={c.id} className="diary-job">
               <p className="diary-job__title">
-                <span className="office-badge">{STATUS_WORDS[c.status]}</span> <a href={`${admin}/office/email/${c.id}`}><strong>{c.subject}</strong></a>
+                <span className="ui-pill ui-pill--neutral">{STATUS_WORDS[c.status]}</span> <a href={`${admin}/office/email/${c.id}`}><strong>{c.subject}</strong></a>
               </p>
               <p className="club-muted">
                 {c.status === 'draft' ? `Written ${when(c.createdAt)}` : `${c.sent} sent, ${c.queued} waiting, ${c.failed} failed, ${c.skipped} skipped`}
@@ -137,14 +144,14 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
           <span className="club-muted">Add an address</span>
           <input name="email" type="email" required maxLength={254} autoComplete="off" />
         </label>
-        <button type="submit" className="btn btn--style-secondary btn--size-medium">Do not email this address</button>
+        <button type="submit" className="ui-btn ui-btn--secondary">Do not email this address</button>
       </form>
       <form method="get" className="office-inline" role="search">
         <label>
           <span className="club-muted">Find an address</span>
           <input name="q" type="search" defaultValue={overview.suppressionQuery} maxLength={100} autoComplete="off" />
         </label>
-        <button type="submit" className="btn btn--style-secondary btn--size-medium">Search</button>
+        <button type="submit" className="ui-btn ui-btn--secondary">Search</button>
       </form>
       {overview.suppressions.length === 0 && overview.suppressionQuery ? <p className="club-muted">No address on the list matches that.</p> : null}
       {overview.suppressions.length > 0 ? (
@@ -152,12 +159,12 @@ export async function OfficeEmailView(view: AdminViewServerProps) {
           {overview.suppressions.map((s) => (
             <li key={s.id} className="diary-job">
               <p className="diary-job__title">
-                <strong>{s.email ?? 'Address no longer kept'}</strong> <span className="office-badge">{REASON_WORDS[s.reason] ?? s.reason}</span>
+                <strong>{s.email ?? 'Address no longer kept'}</strong> <span className="ui-pill ui-pill--neutral">{REASON_WORDS[s.reason] ?? s.reason}</span>
               </p>
               <p className="club-muted">{when(s.at)}</p>
               <form method="post" action={`${api}/suppression/remove`} className="office-inline">
                 <input type="hidden" name="id" value={s.id} />
-                <button type="submit" aria-label={`Allow emails to ${s.email ?? 'this address'} again`} className="btn btn--style-secondary btn--size-medium">Allow emails again</button>
+                <button type="submit" aria-label={`Allow emails to ${s.email ?? 'this address'} again`} className="ui-btn ui-btn--secondary">Allow emails again</button>
               </form>
             </li>
           ))}

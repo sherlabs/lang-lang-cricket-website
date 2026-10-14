@@ -1,9 +1,11 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { DIARY_ERROR_TEXT, DIARY_NOTICE_TEXT, isDiaryError, isDiaryNotice, OBJECTIVE_STATUSES } from '@/lib/office/diary'
 import { getPlanPage } from '@/lib/diary-office-queries'
 import { officeCopy } from '../admin/copy'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const STATUS_TEXT: Record<(typeof OBJECTIVE_STATUSES)[number], string> = { 'not-started': 'Not started', 'on-track': 'On track', 'at-risk': 'At risk', done: 'Done', dropped: 'Dropped' }
@@ -29,8 +31,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Diary & plan', url: `${admin}/office/diary` }, { label: 'Strategic plan' }]} />
-      <h1 className="club-page__title">Strategic plan</h1>
-      <p className="club-page__lead">What the club wants to achieve, in themes (pillars) and objectives. Link season diary jobs to an objective and its progress fills in by itself.</p>
+      <PageHeader title="Strategic plan" lead={<>What the club wants to achieve, in themes (pillars) and objectives. Link season diary jobs to an objective and its progress fills in by itself.</>} />
 
       <div role="status" aria-live="polite">
         {isDiaryNotice(notice) ? <p className="office-flash office-flash--ok">{DIARY_NOTICE_TEXT[notice]}{first(sp.n) ? ` (${first(sp.n)})` : ''}</p> : null}
@@ -38,28 +39,28 @@ export async function OfficePlanView(view: AdminViewServerProps) {
       </div>
 
       <div className="office-actions office-noprint">
-        <a className="btn btn--style-secondary btn--size-medium" href={`${admin}/office/diary`}>Season diary</a>
+        <a className="ui-btn ui-btn--secondary" href={`${admin}/office/diary`}>Season diary</a>
         {page.canAddStarter ? (
           <form method="post" action={`${api}/starter-plan`} className="office-inline">
             {hidden}
-            <button type="submit" className="btn btn--style-primary btn--size-medium">Add a starter plan</button>
+            <button type="submit" className="ui-btn ui-btn--primary">Add a starter plan</button>
           </form>
         ) : null}
         <span className="club-muted">Use your browser&rsquo;s Print, then Save as PDF, for a copy to share.</span>
       </div>
 
-      {page.pillars.length === 0 ? <p className="club-attention__none">No plan yet. Add a starter plan to begin, or add your own pillar below.</p> : null}
+      {page.pillars.length === 0 ? <EmptyState>No plan yet. Add a starter plan to begin, or add your own pillar below.</EmptyState> : null}
 
       {page.pillars.map((p) => (
         <section key={p.id} className="plan-pillar" aria-labelledby={`p-${p.id}`}>
-          <h2 id={`p-${p.id}`} className="club-page__subtitle">{p.title}</h2>
+          <h2 id={`p-${p.id}`} className="ui-section__title office-subtitle">{p.title}</h2>
           {p.summary ? <p className="club-muted">{p.summary}</p> : null}
           {p.objectives.length === 0 ? <p className="club-muted">No objectives under this pillar yet.</p> : null}
           <ul className="office-list">
             {p.objectives.map((o) => (
               <li key={o.id}>
                 <p>
-                  <span className="office-badge">{STATUS_TEXT[o.status]}</span> <strong>{o.title}</strong>
+                  <span className="ui-pill ui-pill--neutral">{STATUS_TEXT[o.status]}</span> <strong>{o.title}</strong>
                 </p>
                 <p className="club-muted">
                   {o.ownerLabel ?? 'No owner'}
@@ -68,7 +69,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
                 </p>
                 <p>
                   {o.progressText}
-                  {o.progress.budgetWarning ? <span className="office-badge">{officeCopy.diary.budgetWarning}</span> : null}
+                  {o.progress.budgetWarning ? <span className="ui-pill ui-pill--neutral">{officeCopy.diary.budgetWarning}</span> : null}
                 </p>
                 <progress value={o.progress.percent} max={100} aria-label={`${o.title}: ${o.progress.percent} percent of jobs done`} className="plan-progress" />
                 {o.progressNote ? <p>{o.progressNote}</p> : null}
@@ -104,7 +105,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
                       <input name="budget" inputMode="decimal" defaultValue={o.budgetInput} placeholder="for example 3000" />
                     </label>
                     <p className="club-muted">Empty the budget box to remove the budget.</p>
-                    <button type="submit" className="btn btn--style-primary btn--size-medium">Save</button>
+                    <button type="submit" className="ui-btn ui-btn--primary">Save</button>
                   </form>
                   <form method="post" action={`${api}/job-add`} className="office-form">
                     {hidden}
@@ -132,7 +133,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
                       Budget (optional)
                       <input name="budget" inputMode="decimal" />
                     </label>
-                    <button type="submit" className="btn btn--style-secondary btn--size-medium">Add job</button>
+                    <button type="submit" className="ui-btn ui-btn--secondary">Add job</button>
                   </form>
                 </details>
               </li>
@@ -164,7 +165,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
                 Budget (optional)
                 <input name="budget" inputMode="decimal" />
               </label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Add objective</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Add objective</button>
             </form>
           </details>
         </section>
@@ -182,7 +183,7 @@ export async function OfficePlanView(view: AdminViewServerProps) {
             What it is about (optional)
             <textarea name="summary" className="office-textarea" maxLength={600} />
           </label>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add pillar</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add pillar</button>
         </form>
       </details>
       {page.unlinked > 0 ? <p className="club-muted">{page.unlinked} diary {page.unlinked === 1 ? 'job is' : 'jobs are'} not linked to an objective, so they do not count towards the plan.</p> : null}

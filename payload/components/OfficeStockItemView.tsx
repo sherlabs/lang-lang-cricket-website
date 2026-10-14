@@ -1,9 +1,11 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { KIND_LABEL, parseStockId } from '@/lib/office/stock'
 import { getItemPage } from '@/lib/stock-office-queries'
 import { AdminPage, requireStaff } from './AdminPage'
 import { LowBadge, Nonce, StockFlash, first } from './OfficeStockBits'
+import { EmptyState, PageHeader } from './ui'
 
 /**
  * `/admin/office/stock/item/:id` (committee): one item. How many are on hand, the forms to issue it, take stock in or write it off,
@@ -24,7 +26,7 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
     return (
       <AdminPage view={view}>
         <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Stock', url: base }, { label: 'Not found' }]} />
-        <h1 className="club-page__title">Item not found</h1>
+        <PageHeader title="Item not found" />
         <p><a href={base}>Back to Stock</a></p>
       </AdminPage>
     )
@@ -37,10 +39,7 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={[{ label: 'Club office', url: `${admin}/office` }, { label: 'Stock', url: base }, { label }]} />
-      <h1 className="club-page__title">{label}</h1>
-      <p className="club-page__lead">
-        <strong>{item.onHand}</strong> on hand{item.unit && item.unit !== 'each' ? ` (${item.unit})` : ''}. {item.low ? <LowBadge onHand={item.onHand} /> : null}
-      </p>
+      <PageHeader title={<>{label}</>} lead={<><strong>{item.onHand}</strong> on hand{item.unit && item.unit !== 'each' ? ` (${item.unit})` : ''}. {item.low ? <LowBadge onHand={item.onHand} /> : null}</>} />
       <p className="club-muted">
         {item.categoryLabel}
         {item.groupName ? `. Group: ${item.groupName}` : ''}
@@ -86,7 +85,7 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
                 <input type="checkbox" name="anyway" value="yes" />
                 <span>Issue anyway, even if the count says there is not enough (fix the count with a stocktake)</span>
               </label>
-              <button type="submit" className="btn btn--style-primary btn--size-medium">Issue</button>
+              <button type="submit" className="ui-btn ui-btn--primary">Issue</button>
             </form>
           )}
         </details>
@@ -106,7 +105,7 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
             Note (optional)
             <input name="note" maxLength={300} />
           </label>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add to stock</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add to stock</button>
         </form>
       </details>
 
@@ -131,13 +130,13 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
             Note (optional)
             <input name="note" maxLength={300} />
           </label>
-          <button type="submit" className="btn btn--style-secondary btn--size-medium">Take away from stock</button>
+          <button type="submit" className="ui-btn ui-btn--secondary">Take away from stock</button>
         </form>
       </details>
 
       {page.holders.length > 0 ? (
         <section aria-labelledby="holders">
-          <h2 id="holders" className="club-page__subtitle">Who has it</h2>
+          <h2 id="holders" className="ui-section__title office-subtitle">Who has it</h2>
           <ul className="office-list">
             {page.holders.map((h) => (
               <li key={h.memberId ?? 'none'}>
@@ -151,9 +150,9 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
       ) : null}
 
       <section aria-labelledby="history">
-        <h2 id="history" className="club-page__subtitle">History</h2>
+        <h2 id="history" className="ui-section__title office-subtitle">History</h2>
         {page.movements.length === 0 ? (
-          <p className="club-attention__none">Nothing recorded yet.</p>
+          <EmptyState>Nothing recorded yet.</EmptyState>
         ) : (
           <ul className="office-list">
             {page.movements.map((m) => (
@@ -176,7 +175,7 @@ export async function OfficeStockItemView(view: AdminViewServerProps) {
                         Why (it stays in the history)
                         <input name="reason" required maxLength={300} />
                       </label>
-                      <button type="submit" className="btn btn--style-secondary btn--size-medium">Void</button>
+                      <button type="submit" className="ui-btn ui-btn--secondary">Void</button>
                     </form>
                   </details>
                 )}

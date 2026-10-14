@@ -1,8 +1,10 @@
+// @committee-facing
 import { SetStepNav } from '@payloadcms/ui'
 import type { AdminViewServerProps } from 'payload'
 import { DOCUMENT_CATEGORIES, isMeetingError, isMeetingNotice, MEETING_ERROR_TEXT, MEETING_NOTICE_TEXT, OFFICE_FILE_TOO_BIG } from '@/lib/office/meetings'
 import { getDocumentsPage } from '@/lib/meetings-office-queries'
 import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 const CATEGORY: Record<(typeof DOCUMENT_CATEGORIES)[number], string> = { governance: 'Governance', finance: 'Finance', insurance: 'Insurance', legal: 'Legal', policy: 'Policy', other: 'Other' }
@@ -26,8 +28,7 @@ export async function OfficeMeetingDocumentsView(view: AdminViewServerProps) {
     return (
       <AdminPage view={view}>
         <SetStepNav nav={crumbs} />
-        <h1 className="club-page__title">Office-bearer documents</h1>
-        <p className="club-page__lead">These documents are for office-bearers only. An admin can mark your seat as an office-bearer seat and link your login to it. <a href={base}>Back to Meetings</a></p>
+        <PageHeader title="Office-bearer documents" lead={<>These documents are for office-bearers only. An admin can mark your seat as an office-bearer seat and link your login to it. <a href={base}>Back to Meetings</a></>} />
       </AdminPage>
     )
   }
@@ -36,8 +37,7 @@ export async function OfficeMeetingDocumentsView(view: AdminViewServerProps) {
   return (
     <AdminPage view={view}>
       <SetStepNav nav={crumbs} />
-      <h1 className="club-page__title">Office-bearer documents</h1>
-      <p className="club-page__lead">Insurance, governance and finance papers that only office-bearers can open. Files must be PDF, Word, Excel or an image. {OFFICE_FILE_TOO_BIG}</p>
+      <PageHeader title="Office-bearer documents" lead={<>Insurance, governance and finance papers that only office-bearers can open. Files must be PDF, Word, Excel or an image. {OFFICE_FILE_TOO_BIG}</>} />
       <div role="status" aria-live="polite">
         {isMeetingNotice(notice) ? <p className="office-flash office-flash--ok">{MEETING_NOTICE_TEXT[notice]}</p> : null}
         {isMeetingError(error) ? <p className="office-flash office-flash--error">{MEETING_ERROR_TEXT[error]}</p> : null}
@@ -65,22 +65,22 @@ export async function OfficeMeetingDocumentsView(view: AdminViewServerProps) {
             </select>
           </label>
           <label>File<input name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" /></label>
-          <button type="submit" className="btn btn--style-primary btn--size-medium">Add the document</button>
+          <button type="submit" className="ui-btn ui-btn--primary">Add the document</button>
         </form>
       </details>
       {page.documents.length === 0 ? (
-        <p className="club-attention__none">No documents yet.</p>
+        <EmptyState>No documents yet.</EmptyState>
       ) : (
         <ul className="office-list">
           {page.documents.map((d) => (
             <li key={d.id}>
               <a href={`${page.apiBase}/office-files/file/${encodeURIComponent(d.filename)}`}>{d.title}</a>{' '}
-              <span className="office-badge">{CATEGORY[d.category]}</span> <span className="club-muted">added {d.added}{d.meetingTitle ? `, from ${d.meetingTitle}` : ''}</span>
+              <span className="ui-pill ui-pill--neutral">{CATEGORY[d.category]}</span> <span className="club-muted">added {d.added}{d.meetingTitle ? `, from ${d.meetingTitle}` : ''}</span>
               {page.isAdmin ? (
                 <form method="post" action={`${api}/document-remove`} className="office-inline">
                   <input type="hidden" name="return" value="/office/meetings/documents" />
                   <input type="hidden" name="id" value={d.id} />
-                  <button type="submit" className="btn btn--style-secondary btn--size-medium">Remove {d.title}</button>
+                  <button type="submit" className="ui-btn ui-btn--secondary">Remove {d.title}</button>
                 </form>
               ) : null}
             </li>

@@ -1,6 +1,8 @@
+// @committee-facing
 'use client'
 
-import { Button, toast } from '@payloadcms/ui'
+import { toast } from '@payloadcms/ui'
+import { Button, EmptyState } from './ui'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -96,7 +98,7 @@ export function SelectorsPanel({ api, rows, facebookOn, inviteDays }: { api: str
             <br />
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
           </label>
-          <Button buttonStyle="primary" type="submit" disabled={busy}>Add selector</Button>
+          <Button variant="primary" type="submit" disabled={busy}>Add selector</Button>
         </div>
       </form>
 
@@ -106,42 +108,43 @@ export function SelectorsPanel({ api, rows, facebookOn, inviteDays }: { api: str
           <p>Send this to {invite.name}. It opens the selector tools and lets them sign in{facebookOn ? ' with Facebook' : ''} or choose a password. It works for {invite.days} days and once. It is shown only now.</p>
           <p><input type="text" readOnly value={invite.url} onFocus={(e) => e.currentTarget.select()} style={{ width: '100%' }} aria-label="Invite link" /></p>
           <div className="club-actions">
-            <Button buttonStyle="primary" size="small" type="button" onClick={() => copy(invite.url)}>Copy link</Button>
-            <a className="club-button-link" href={`sms:?&body=${encodeURIComponent(message)}`}>Share by text message</a>
-            <a className="club-button-link" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">Share on WhatsApp</a>
-            <Button buttonStyle="secondary" size="small" type="button" onClick={() => setInvite(null)}>Done</Button>
+            <Button variant="primary" type="button" onClick={() => copy(invite.url)}>Copy link</Button>
+            <a className="ui-btn ui-btn--secondary" href={`sms:?&body=${encodeURIComponent(message)}`}>Share by text message</a>
+            <a className="ui-btn ui-btn--secondary" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">Share on WhatsApp</a>
+            <Button variant="secondary" type="button" onClick={() => setInvite(null)}>Done</Button>
           </div>
         </div>
       )}
 
       <h2 className="club-field__title">Selectors ({rows.length})</h2>
       {rows.length === 0 ? (
-        <p className="club-attention__none">No selectors yet. Add the first one above.</p>
+        <EmptyState>No selectors yet. Add the first one above.</EmptyState>
       ) : (
-        <table className="club-table">
-          <thead><tr><th>Who</th><th>Status</th><th>Last signed in</th><th aria-label="Actions" /></tr></thead>
+        <table className="club-table office-table">
+          <caption className="ui-sr-only">Selector logins</caption>
+          <thead><tr><th scope="col">Who</th><th scope="col">Status</th><th scope="col">Last signed in</th><th scope="col"><span className="ui-sr-only">Actions</span></th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td><p className="club-table__strong">{r.name || r.email}</p><p className="club-muted">{r.email}</p></td>
-                <td>{r.statusLabel}{r.facebookLinked ? ' · Facebook linked' : ''}</td>
-                <td>{r.lastSignIn ?? 'Not yet'}</td>
+                <th scope="row"><p className="club-table__strong">{r.name || r.email}</p><p className="club-muted">{r.email}</p></th>
+                <td data-label="Status">{r.statusLabel}{r.facebookLinked ? ' · Facebook linked' : ''}</td>
+                <td data-label="Last signed in">{r.lastSignIn ?? 'Not yet'}</td>
                 <td>
                   <div className="club-actions">
-                    <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => newInvite(r)}>New invite link</Button>
-                    {r.facebookLinked && <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('unlink', r, 'Facebook unlinked. Send a new invite link if they should link it again.', `Unlink Facebook for ${r.name || r.email}? If they never chose a password they will have no way in until you send a new invite link or press Set a password.`)}>Unlink Facebook</Button>}
+                    <Button variant="secondary" type="button" disabled={busy} onClick={() => newInvite(r)}>New invite link</Button>
+                    {r.facebookLinked && <Button variant="secondary" type="button" disabled={busy} onClick={() => simple('unlink', r, 'Facebook unlinked. Send a new invite link if they should link it again.', `Unlink Facebook for ${r.name || r.email}? If they never chose a password they will have no way in until you send a new invite link or press Set a password.`)}>Unlink Facebook</Button>}
                     {r.status === 'disabled' ? (
-                      <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('enable', r, 'Enabled.')}>Enable</Button>
+                      <Button variant="secondary" type="button" disabled={busy} onClick={() => simple('enable', r, 'Enabled.')}>Enable</Button>
                     ) : (
-                      <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('disable', r, 'Disabled. They are signed out.', `Disable ${r.name || r.email}? They are signed out straight away.`)}>Disable</Button>
+                      <Button variant="secondary" type="button" disabled={busy} onClick={() => simple('disable', r, 'Disabled. They are signed out.', `Disable ${r.name || r.email}? They are signed out straight away.`)}>Disable</Button>
                     )}
-                    <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => { setPasswordFor(passwordFor === r.id ? null : r.id); setPassword('') }}>Set a password</Button>
-                    <Button buttonStyle="secondary" size="small" type="button" disabled={busy} onClick={() => simple('remove', r, 'Removed.', `Remove ${r.name || r.email}? This deletes their login.`)}>Remove</Button>
+                    <Button variant="secondary" type="button" disabled={busy} onClick={() => { setPasswordFor(passwordFor === r.id ? null : r.id); setPassword('') }}>Set a password</Button>
+                    <Button variant="danger" type="button" disabled={busy} onClick={() => simple('remove', r, 'Removed.', `Remove ${r.name || r.email}? This deletes their login.`)}>Remove</Button>
                   </div>
                   {passwordFor === r.id && (
                     <form className="club-actions" onSubmit={(e) => { e.preventDefault(); void savePassword(r) }}>
                       <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} minLength={10} required placeholder="At least 10 characters" aria-label={`New password for ${r.name || r.email}`} autoComplete="off" />
-                      <Button buttonStyle="primary" size="small" type="submit" disabled={busy}>Save password</Button>
+                      <Button variant="primary" type="submit" disabled={busy}>Save password</Button>
                     </form>
                   )}
                 </td>

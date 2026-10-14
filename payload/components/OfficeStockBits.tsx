@@ -1,3 +1,4 @@
+// @committee-facing
 import { randomUUID } from 'node:crypto'
 import { ISSUE_STATUS_LABEL, STOCK_ERROR_TEXT, STOCK_NOTICE_TEXT, isStockError, isStockNotice, type IssueStatus } from '@/lib/office/stock'
 
@@ -21,7 +22,7 @@ export function Nonce() {
 /** Status in words, with a mark, never by colour alone. */
 export function StatusBadge({ status, overdue, days }: { status: IssueStatus; overdue?: boolean; days?: number }) {
   return (
-    <span className="office-badge">
+    <span className="ui-pill ui-pill--neutral">
       {overdue ? `⚠ Overdue${days ? ` by ${days} ${days === 1 ? 'day' : 'days'}` : ''}. ` : ''}
       {ISSUE_STATUS_LABEL[status]}
     </span>
@@ -29,5 +30,5 @@ export function StatusBadge({ status, overdue, days }: { status: IssueStatus; ov
 }
 
 export function LowBadge({ onHand }: { onHand: number }) {
-  return <span className="office-badge">{'⚠'} Low{onHand < 0 ? ' (count is below zero, do a stocktake)' : ''}</span>
+  return <span className="ui-pill ui-pill--neutral">{'⚠'} Low{onHand < 0 ? ' (count is below zero, do a stocktake)' : ''}</span>
 }
