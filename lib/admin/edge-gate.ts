@@ -72,3 +72,26 @@ export async function anonymousAdminRedirect(args: EdgeGateArgs): Promise<string
   const back = viewPath === '' ? adminRoute : adminReturnPath({ adminRoute, viewPath, query, keys })
   return `${adminRoute}/login?redirect=${encodeURIComponent(back)}`
 }
+
+export type ReentryArgs = Omit<EdgeGateArgs, 'search'> & { search: string; secFetchSite: string | null; secFetchMode: string | null }
+
+const escapeAttr = (s: string): string => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/**
+ * A signed-in person who opens an admin link from another site (an email, Facebook, a chat app) arrives with
+ * `Sec-Fetch-Site: cross-site`. Payload's CSRF rule then ignores the sign-in cookie, so the page sees nobody, redirects to the login
+ * page, and the login page (now same-origin) sends them back: a blank bounce, and the link's place can be lost on the way. For a
+ * top-level GET of an admin page with a valid token, this answers a tiny page that reopens the same address from this origin, so
+ * Payload sees a same-origin request and accepts the cookie. Nothing is spoofed and no unsafe method is touched; the token is still
+ * checked by Payload as usual. Returns the HTML to send, or null to carry on.
+ */
+export async function crossSiteReentryPage(args: ReentryArgs): Promise<string | null> {
+  const adminRoute = args.adminRoute ?? '/admin'
+  if (args.method !== 'GET' || args.secFetchSite !== 'cross-site' || args.secFetchMode !== 'navigate') return null
+  if (args.pathname !== adminRoute && !args.pathname.startsWith(`${adminRoute}/`)) return null
+  const viewPath = args.pathname.slice(adminRoute.length)
+  if (OPEN_PATHS.some((p) => viewPath === p || viewPath.startsWith(`${p}/`))) return null
+  if (!args.secret || !(await hasValidToken(args.cookieHeader, args.secret))) return null
+  const href = escapeAttr(`${args.pathname}${args.search}`)
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=${href}"><title>Opening the admin</title></head><body style="font-family:system-ui,sans-serif;padding:2rem"><p><a href="${href}">Opening the admin…</a></p></body></html>`
+}

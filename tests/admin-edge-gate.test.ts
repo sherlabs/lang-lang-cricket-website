@@ -3,7 +3,7 @@ import { SignJWT } from 'jose'
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { anonymousAdminRedirect } from '@/lib/admin/edge-gate'
+import { anonymousAdminRedirect, crossSiteReentryPage } from '@/lib/admin/edge-gate'
 import { SESSION_COOKIE_PREFIX } from '@/lib/admin/cookie-prefix'
 
 const SECRET = 'test-secret-for-edge-gate'
@@ -52,5 +52,31 @@ describe('cookie prefix is shared with Payload', () => {
   })
   it('the gate accepts a token under that prefix', async () => {
     expect(await run({ cookieHeader: `${SESSION_COOKIE_PREFIX}-token=${await token()}` })).toBeNull()
+  })
+})
+
+describe('cross-site admin links reopen from this origin', () => {
+  const reenter = async (over: Partial<Parameters<typeof crossSiteReentryPage>[0]> = {}) =>
+    crossSiteReentryPage({ method: 'GET', pathname: '/admin/collections/players', search: '?where=a&b="<x>"', cookieHeader: `payload-token=${await token()}`, secret: SECRET, secFetchSite: 'cross-site', secFetchMode: 'navigate', ...over })
+
+  it('answers a same-origin reopen for a signed-in cross-site navigation, with the address escaped', async () => {
+    const html = await reenter()
+    expect(html).toContain('http-equiv="refresh" content="0;url=/admin/collections/players?where=a&amp;b=&quot;&lt;x&gt;&quot;"')
+    expect(html).not.toContain('"<x>"')
+  })
+
+  it('leaves same-origin, non-navigation, non-GET, signed-out, account pages and other paths alone', async () => {
+    expect(await reenter({ secFetchSite: 'same-origin' })).toBeNull()
+    expect(await reenter({ secFetchSite: 'none' })).toBeNull()
+    expect(await reenter({ secFetchSite: null })).toBeNull()
+    expect(await reenter({ secFetchMode: 'cors' })).toBeNull()
+    expect(await reenter({ method: 'POST' })).toBeNull()
+    expect(await reenter({ method: 'HEAD' })).toBeNull()
+    expect(await reenter({ cookieHeader: null })).toBeNull()
+    expect(await reenter({ cookieHeader: 'payload-token=garbage' })).toBeNull()
+    expect(await reenter({ secret: undefined })).toBeNull()
+    expect(await reenter({ pathname: '/admin/logout' })).toBeNull()
+    expect(await reenter({ pathname: '/admin/login' })).toBeNull()
+    expect(await reenter({ pathname: '/administrator' })).toBeNull()
   })
 })

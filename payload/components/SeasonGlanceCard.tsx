@@ -3,6 +3,8 @@ import { CLUB_TIMEZONE } from '@/config/site'
 import { formatClubDate, formatClubDay } from '@/lib/admin/club-day'
 import { RECORD_RULE } from '@/lib/admin/season-glance'
 import { getClub } from '@/lib/club'
+import { displayGrade } from '@/lib/social/names'
+import { publicTeam } from '@/lib/social/sources/shared'
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Card, Section } from './ui/Card'
@@ -23,8 +25,8 @@ export async function SeasonGlanceCard({ payload }: { payload: Payload }) {
           {glances.map((g) => (
             <li key={g.grade} className="club-glance__team">
               <p className="club-glance__who">
-                <strong>{g.team}</strong>
-                <span>{g.grade}</span>
+                <strong>{publicTeam(g.team, g.grade, club.shortName || club.name)}</strong>
+                <span>{displayGrade(g.grade)}</span>
               </p>
               <dl className="club-glance__grid">
                 <div title={RECORD_RULE}>
