@@ -65,6 +65,12 @@
   font-weight: 600;
   color: rgb(var(--admin-accent-ink));
 }
+.office-stat__rule {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--admin-muted));
+}
 .office-footer-links {
   margin-top: 1rem;
 }

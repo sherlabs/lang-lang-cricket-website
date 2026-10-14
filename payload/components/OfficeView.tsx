@@ -34,7 +34,7 @@ export async function OfficeView(view: AdminViewServerProps) {
               <a className="club-tile" href={`${admin}${m.path}`}>
                 <span className="club-tile__title">{m.label}</span>
                 <span className="club-tile__hint">{m.hint}</span>
-                {stats[m.key] ? <span className="office-stat">{stats[m.key]}</span> : null}
+                {stats[m.key] ? <TileStat text={stats[m.key] as string} /> : null}
               </a>
             </li>
           ))}
@@ -48,5 +48,18 @@ export async function OfficeView(view: AdminViewServerProps) {
         <p className="club-muted">{officeCopy.landing.adminOnlyNote}</p>
       )}
     </AdminPage>
+  )
+}
+
+/** The headline in bold, and a trailing "(what is not counted)" rule as a quiet line under it, so the tile reads at a glance. */
+function TileStat({ text }: { text: string }) {
+  const m = /^(.*?)\s*\(([^()]+)\)$/.exec(text)
+  if (!m) return <span className="office-stat">{text}</span>
+  const rule = m[2].charAt(0).toUpperCase() + m[2].slice(1)
+  return (
+    <>
+      <span className="office-stat">{m[1]}</span>
+      <span className="office-stat__rule">{rule.endsWith('.') ? rule : `${rule}.`}</span>
+    </>
   )
 }
