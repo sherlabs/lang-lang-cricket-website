@@ -260,7 +260,7 @@ export function FantasyPanel({ data, csvHref }: { data: AdminData; csvHref: stri
       {season && data.leaderboardPreview.length > 0 && (
         <section className="club-panel" aria-labelledby="fx-top">
           <h2 className="club-field__title" id="fx-top">Top of the leaderboard</h2>
-          <table className="club-table"><caption className="ui-sr-only">Top of the leaderboard</caption><tbody>{data.leaderboardPreview.map((r) => <tr key={r.rank}><td>{r.rank}</td><td>{r.teamName}</td><td>{r.total}</td></tr>)}</tbody></table>
+          <table className="office-table"><caption className="ui-sr-only">Top of the leaderboard</caption><thead><tr><th scope="col">Place</th><th scope="col">Team</th><th scope="col">Points</th></tr></thead><tbody>{data.leaderboardPreview.map((r) => <tr key={r.rank}><td data-label="Place">{r.rank}</td><th scope="row" data-label="Team">{r.teamName}</th><td data-label="Points">{r.total}</td></tr>)}</tbody></table>
         </section>
       )}
     </div>

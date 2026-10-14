@@ -110,7 +110,7 @@ describe('committee microcopy', () => {
     }
     expect(seen).toBeGreaterThan(8)
     expect(bad).toEqual([])
-  }, 90_000)
+  }, 30_000)
 
   it('files tagged // @committee-facing use plain words in their visible text and headings', () => {
     const tagged = ['payload/components/AdminNotices.tsx', 'payload/components/LoginIntro.tsx', 'payload/components/AdminNavUser.tsx', 'payload/components/ApprovalsView.tsx', 'payload/components/HelpView.tsx', 'payload/components/Dashboard.tsx', 'payload/components/AttentionPanel.tsx', 'payload/components/SeasonGlanceCard.tsx', 'payload/components/MilestonesWidget.tsx', 'payload/components/ListCells.tsx', 'payload/components/SaveState.tsx', 'payload/components/DocMeta.tsx', 'payload/components/UploadPreview.tsx', 'payload/components/ListFilterChips.tsx', ...wp5Tagged]

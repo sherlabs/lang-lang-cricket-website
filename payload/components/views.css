@@ -533,6 +533,16 @@
   .office-inline .ui-btn {
     min-height: var(--admin-target);
   }
+  /* Links inside cards (row actions, member and item names) are tap targets too. */
+  .office-table td a,
+  .office-table th a,
+  .club-page .club-table td a,
+  .club-page .club-table th a,
+  .club-page .club-actions a:not(.ui-btn) {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--admin-target);
+  }
 }
 
 @media (max-width: 30rem) {

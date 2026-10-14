@@ -82,7 +82,11 @@ function useLandmarkLabels() {
     const apply = () => {
       // Payload's own list and edit pages have no `main`; give the content wrapper that role so every page has one.
       if (!document.querySelector('main, [role="main"]')) document.querySelector('.template-default__wrap')?.setAttribute('role', 'main')
-      for (const [selector, label] of LANDMARKS) document.querySelectorAll(selector).forEach((el) => { if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', label) })
+      for (const [selector, label] of LANDMARKS) {
+        // Only the first match: Payload's not-found page renders the sidebar twice, and two identical landmark names confuse a screen reader.
+        const el = document.querySelector(selector)
+        if (el && !el.hasAttribute('aria-label')) el.setAttribute('aria-label', label)
+      }
     }
     apply()
     const observer = new MutationObserver(apply)

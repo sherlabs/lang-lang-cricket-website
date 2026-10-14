@@ -5,7 +5,13 @@ import type { SanitizedConfig } from 'payload'
  * config of `htmlToLexical`). Building it never opens a database connection; the env values
  * are local placeholders so the config's env guards pass. No Blob token.
  */
-export async function loadSanitizedConfig(): Promise<SanitizedConfig> {
+let cached: Promise<SanitizedConfig> | undefined
+/** Loaded once per test file (the import is the slow part); vitest isolates modules between files. */
+export function loadSanitizedConfig(): Promise<SanitizedConfig> {
+  return (cached ??= load())
+}
+
+async function load(): Promise<SanitizedConfig> {
   process.env.DATABASE_URI ??= 'postgres://postgres:postgres@127.0.0.1:54329/unit_never_connects'
   process.env.PAYLOAD_SECRET ??= 'unit-test-secret'
   process.env.NEXT_PUBLIC_SERVER_URL ??= 'http://localhost:3000'
