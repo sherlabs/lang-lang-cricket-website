@@ -88,15 +88,13 @@ export function SelectorsPanel({ api, rows, facebookOn, inviteDays }: { api: str
         <h2 className="club-field__title">Add a selector</h2>
         <p className="club-muted">The email is only their login name. It is not used to match Facebook.</p>
         <div className="club-actions">
-          <label>
+          <label style={{ display: "grid", gap: "0.25rem", flex: "1 1 16rem" }}>
             <span className="club-muted">Name</span>
-            <br />
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="off" />
+            <input style={{ width: "100%" }} type="text" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="off" />
           </label>
-          <label>
-            <span className="club-muted">Email</span>
+          <label style={{ display: "grid", gap: "0.25rem", flex: "1 1 16rem" }}>
             <br />
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
+            <input style={{ width: "100%" }} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
           </label>
           <Button variant="primary" type="submit" disabled={busy}>Add selector</Button>
         </div>
