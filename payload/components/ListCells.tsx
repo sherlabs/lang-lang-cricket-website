@@ -129,6 +129,13 @@ export function NewsStatusCell(props: Props) {
   return pill(newsStatus(r))
 }
 
+/** Sponsors: the website as its plain address (no https://), or a dash when there is none. */
+export function WebsiteCell(props: Props) {
+  const raw = typeof props.cellData === 'string' ? props.cellData.trim() : ''
+  if (!raw) return <span className="club-count-cell">–</span>
+  return <span className="club-related__name">{raw.replace(/^https?:\/\//i, '').replace(/\/$/, '')}</span>
+}
+
 /** Sponsors: the level as a small label. */
 export function SponsorLevelCell(props: Props) {
   return <StatusPill tone={props.cellData === 'Platinum' || props.cellData === 'Gold' ? 'accent' : 'neutral'}>{String(props.cellData ?? '')}</StatusPill>

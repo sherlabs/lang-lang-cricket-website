@@ -60,7 +60,7 @@ export const Sponsors: CollectionConfig = {
       type: 'text',
       defaultValue: '',
       validate: httpUrlOrEmpty,
-      admin: { description: 'Optional. Where the logo takes people.', placeholder: 'https://www.example.com.au' },
+      admin: { description: 'Optional. Where the logo takes people.', placeholder: 'https://www.example.com.au', components: { Cell: cell('WebsiteCell') } },
     },
     detailsGroup([
       {

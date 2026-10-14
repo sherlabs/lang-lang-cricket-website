@@ -22,10 +22,20 @@ async function countFor(props: DefaultServerCellComponentProps, collection: 'eve
 
 export async function RsvpCountCell(props: DefaultServerCellComponentProps) {
   const n = await countFor(props, 'event-rsvps', 'response', 'yes')
-  return <span className="club-count-cell">{n ?? '–'}</span>
+  return (
+    <span className="club-count-cell">
+      {n ?? '–'}
+      <span className="club-count-label"> going</span>
+    </span>
+  )
 }
 
 export async function PendingCountCell(props: DefaultServerCellComponentProps) {
   const n = await countFor(props, 'event-photos', 'status', 'pending')
-  return <span className={`club-count-cell${n ? ' club-count-cell--alert' : ''}`}>{n ?? '–'}</span>
+  return (
+    <span className={`club-count-cell${n ? ' club-count-cell--alert' : ''}`}>
+      {n ?? '–'}
+      <span className="club-count-label"> photos to approve</span>
+    </span>
+  )
 }

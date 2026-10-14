@@ -49,11 +49,14 @@ export function saveStateLabel(s: { processing: boolean; modified: boolean; last
   if (s.isNew) return 'Not saved yet'
   // A save that reloads the page loses the in-memory time, so the record's own updated time (when recent) counts too.
   const recent = s.docUpdatedAt != null && Number.isFinite(s.docUpdatedAt) && s.now - s.docUpdatedAt > -5000 && s.now - s.docUpdatedAt < 3_600_000 ? s.docUpdatedAt : null
-  const at = Math.max(s.lastSavedAt ?? -Infinity, recent ?? -Infinity)
+  const watched = s.lastSavedAt != null && Number.isFinite(s.lastSavedAt) ? s.lastSavedAt : null
+  const at = Math.max(watched ?? -Infinity, recent ?? -Infinity)
   if (!Number.isFinite(at)) return 'All changes saved'
   const secs = Math.max(0, Math.round((s.now - at) / 1000))
   if (secs < 20) return 'Saved just now'
-  if (secs < 3600) return `Saved ${Math.max(1, Math.round(secs / 60))} min ago`
+  // "Saved" is only said for a save made in this session; a record merely opened a few minutes after someone changed it says "Last changed".
+  const verb = watched != null && watched >= (recent ?? -Infinity) ? 'Saved' : 'Last changed'
+  if (secs < 3600) return `${verb} ${Math.max(1, Math.round(secs / 60))} min ago`
   return 'All changes saved'
 }
 

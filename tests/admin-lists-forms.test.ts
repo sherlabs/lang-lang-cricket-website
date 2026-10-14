@@ -59,6 +59,7 @@ describe('save state wording', () => {
     expect(saveStateLabel({ ...base })).toBe('All changes saved')
     // A save that reloaded the page: the record's own updated time still says it was just saved; an old one does not.
     expect(saveStateLabel({ ...base, docUpdatedAt: 995_000 })).toBe('Saved just now')
+    expect(saveStateLabel({ ...base, docUpdatedAt: 1_000_000 - 3 * 60_000 })).toBe('Last changed 3 min ago')
     expect(saveStateLabel({ ...base, docUpdatedAt: 1_000_000 - 2 * 86_400_000 })).toBe('All changes saved')
     expect(saveStateLabel({ ...base, lastSavedAt: 1_000_000 - 3 * 3600_000 })).toBe('All changes saved')
   })

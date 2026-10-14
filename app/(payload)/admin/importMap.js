@@ -3,6 +3,7 @@ import { SaveState as SaveState_c595b520d31d75e0f1c7f88b2fe97ec4 } from '../../.
 import { NamedPhotoCell as NamedPhotoCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { SponsorLevelCell as SponsorLevelCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { UploadPreview as UploadPreview_5e0df192d9beb8c9397e646b7522ea5e } from '../../../payload/components/UploadPreview'
+import { WebsiteCell as WebsiteCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { DocMeta as DocMeta_c9aabd9c6cb67ffa6d4b71b5a6be3250 } from '../../../payload/components/DocMeta'
 import { OnOffCell as OnOffCell_8127e26e9c5ccdee68ce25658527dd79 } from '../../../payload/components/ListCells'
 import { ListFilterChips as ListFilterChips_c2c3205751cd8da9943a1a1dd8c0e0f3 } from '../../../payload/components/ListFilterChips'
@@ -88,6 +89,7 @@ export const importMap = {
   "/payload/components/ListCells#NamedPhotoCell": NamedPhotoCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/ListCells#SponsorLevelCell": SponsorLevelCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/UploadPreview#UploadPreview": UploadPreview_5e0df192d9beb8c9397e646b7522ea5e,
+  "/payload/components/ListCells#WebsiteCell": WebsiteCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/DocMeta#DocMeta": DocMeta_c9aabd9c6cb67ffa6d4b71b5a6be3250,
   "/payload/components/ListCells#OnOffCell": OnOffCell_8127e26e9c5ccdee68ce25658527dd79,
   "/payload/components/ListFilterChips#ListFilterChips": ListFilterChips_c2c3205751cd8da9943a1a1dd8c0e0f3,

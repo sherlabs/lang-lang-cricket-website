@@ -39,6 +39,7 @@ async function tileMedia(payload: Payload, name: string, i: number, w = 800, h =
  * Demo data for the redesigned lists and forms (wave G WP-4), so every status pill and every picture column can be seen.
  * Idempotent: it only adds what is missing (counts, not names, because the demo players are invented by other seeds).
  * - Pictures (generated tiles) for up to 8 players, 3 contacts and 2 events.
+ * - Players with games in the newest season marked as playing now; two or three player sponsors (one switched off).
  * - One hidden player and one "Past player" (a "Show as" choice), so the Players list shows Playing now, Past player and Hidden.
  */
 export async function seedDemoLists(payload: Payload): Promise<string> {
@@ -86,6 +87,33 @@ export async function seedDemoLists(payload: Payload): Promise<string> {
     await payload.update({ collection: 'events', id: e.id, data: { cover: await tileMedia(payload, String(e.title), i + 1, 1200, 675) }, overrideAccess: true, context: CTX })
   }
   if (events.docs.length) notes.push(`${events.docs.length} event pictures`)
+
+  // A player with games in the newest season is "Playing now" unless the committee set it otherwise: do what the nightly update does.
+  const seasonRows = await payload.find({ collection: 'player-seasons', where: { and: [{ seasonOrder: { equals: 0 } }, { games: { greater_than: 0 } }] }, depth: 0, pagination: false, select: { player: true }, overrideAccess: true })
+  const playing = [...new Set(seasonRows.docs.map((d) => (typeof d.player === 'number' ? d.player : (d.player as { id: number } | null)?.id)).filter((x): x is number => typeof x === 'number'))]
+  if (playing.length) {
+    const stale = await payload.find({ collection: 'players', where: { and: [{ id: { in: playing } }, { isActiveDerived: { equals: false } }] }, depth: 0, pagination: false, select: { displayName: true }, overrideAccess: true })
+    for (const p of stale.docs) await payload.update({ collection: 'players', id: p.id, data: { isActiveDerived: true }, overrideAccess: true, context: CTX })
+    if (stale.docs.length) notes.push(`${stale.docs.length} players marked as playing now`)
+  }
+
+  const sponsorLinks = await payload.count({ collection: 'player-sponsors', overrideAccess: true })
+  if (sponsorLinks.totalDocs === 0) {
+    const [ps, ss] = await Promise.all([
+      payload.find({ collection: 'players', where: { and: [{ hidden: { equals: false } }, { photo: { exists: true } }] }, sort: 'displayName', limit: 3, depth: 0, overrideAccess: true }),
+      payload.find({ collection: 'sponsors', sort: 'sortOrder', limit: 3, depth: 0, overrideAccess: true }),
+    ])
+    const n = Math.min(ps.docs.length, ss.docs.length)
+    for (let i = 0; i < n; i++) {
+      await payload.create({
+        collection: 'player-sponsors',
+        data: { player: ps.docs[i].id, sponsor: ss.docs[i].id, season: '2025/26', message: i === 0 ? 'Proudly backing this player all season.' : '', featured: i === 0, sortOrder: i, active: i !== 2 },
+        overrideAccess: true,
+        context: CTX,
+      })
+    }
+    if (n) notes.push(`${n} player sponsors`)
+  }
 
   return notes.length ? `added ${notes.join(', ')}` : 'already present, skipped'
 }

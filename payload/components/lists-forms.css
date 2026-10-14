@@ -179,8 +179,8 @@
 }
 
 /* The top bar of a form: the crowded "Last modified / Created" list moves into Details, the bar shows the save state. */
-.collection-edit .doc-controls__value-wrap,
-.global-edit .doc-controls__value-wrap {
+.collection-edit .doc-controls:has(.club-savestate) .doc-controls__value-wrap,
+.global-edit .doc-controls:has(.club-savestate) .doc-controls__value-wrap {
   display: none;
 }
 .club-savestate__back {
@@ -254,10 +254,10 @@
   margin: 0.5rem 0 0;
 }
 
-/* Phone: the save bar is fixed to the bottom of the screen so Save is always in reach, and the sidebar column folds into the form */
+/* Phone: on the forms that show the save state (the committee's everyday ones) the save bar is fixed to the bottom of the screen so Save is always in reach, and the sidebar column folds into the form */
 @media (max-width: 767px) {
-  .collection-edit .doc-controls,
-  .global-edit .doc-controls {
+  .collection-edit .doc-controls:has(.club-savestate),
+  .global-edit .doc-controls:has(.club-savestate) {
     position: fixed;
     top: auto;
     bottom: 0;
@@ -334,13 +334,13 @@
   font-weight: 600;
 }
 
+/* Counts have no column heading on a phone card, so the cell carries its own words there (hidden on desktop, where the heading says it) */
+.club-count-label {
+  display: none;
+}
 @media (max-width: 767px) {
-  /* Counts have no column heading on a phone card, so they say what they count */
-  .collection-list--events tbody td.cell-goingCount .club-count-cell::after {
-    content: ' going';
-  }
-  .collection-list--events tbody td.cell-pendingCount .club-count-cell::after {
-    content: ' photos to approve';
+  .club-count-label {
+    display: inline;
   }
 }
 
