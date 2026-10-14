@@ -334,12 +334,23 @@
   border-radius: var(--admin-radius-s);
 }
 .social-thumb--none {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgb(var(--admin-bg));
   font-weight: 700;
   color: rgb(var(--admin-muted));
+}
+.social-thumb__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+  background: rgb(var(--admin-surface));
 }
 .social-tag {
   flex: none;

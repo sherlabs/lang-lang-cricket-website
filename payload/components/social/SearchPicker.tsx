@@ -47,13 +47,20 @@ function DateTile({ iso, locale, upcoming }: { iso: string; locale: string; upco
 }
 
 function Thumb({ choice, api }: { choice: SourceChoice; api: string }) {
+  const [failed, setFailed] = useState(false)
   const row = choice.row
   if (row?.kind !== 'sponsor') return null
-  return row.logo === 'ok' ? (
-    // eslint-disable-next-line @next/next/no-img-element -- a staff-only same-origin PNG, not a site image
-    <img className="social-thumb" src={`${api}/logo/${choice.id}`} alt="" width={44} height={44} loading="lazy" />
-  ) : (
-    <span className="social-thumb social-thumb--none" aria-hidden="true">{row.name.slice(0, 1).toUpperCase()}</span>
+  const letter = row.name.slice(0, 1).toUpperCase()
+  // The letter sits underneath until the logo arrives (and stays if it cannot be drawn). Not lazy: lazy images inside the picker's
+  // scrolling list were never requested in Chrome, and there are only a handful, kept by the browser for an hour.
+  return (
+    <span className="social-thumb social-thumb--none" aria-hidden="true">
+      {letter}
+      {row.logo === 'ok' && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element -- a staff-only same-origin PNG, not a site image
+        <img className="social-thumb__img" src={`${api}/logo/${choice.id}`} alt="" width={44} height={44} decoding="async" onError={() => setFailed(true)} />
+      ) : null}
+    </span>
   )
 }
 
