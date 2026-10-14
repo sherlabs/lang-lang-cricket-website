@@ -93,7 +93,7 @@ export function SelectorsPanel({ api, rows, facebookOn, inviteDays }: { api: str
             <input style={{ width: "100%" }} type="text" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="off" />
           </label>
           <label style={{ display: "grid", gap: "0.25rem", flex: "1 1 16rem" }}>
-            <br />
+            <span className="club-muted">Email</span>
             <input style={{ width: "100%" }} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
           </label>
           <Button variant="primary" type="submit" disabled={busy}>Add selector</Button>
