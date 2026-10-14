@@ -1,7 +1,7 @@
 import type { Field, GlobalConfig } from 'payload'
 import { anyone, isAdmin } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
-import { invalidateAdminTheme } from '../../lib/theme/admin-cache'
+import { ADMIN_THEME_TAG, invalidateAdminTheme } from '../../lib/theme/admin-cache'
 import { revalidatePaths } from '../hooks/revalidate'
 import { clubDefaults as d, SEO_PAGES, SOCIAL_PLATFORMS, type SeoPage } from '../seed/club-defaults'
 
@@ -56,7 +56,7 @@ export const Club: GlobalConfig = {
         invalidateAdminTheme() // the admin shows the crest and name from here too
         // Every public page reads club values (nav, footer, metadata), including ISR routes
         // (/fixtures…) and the static global-not-found: revalidate the whole root layout.
-        await revalidatePaths(['/'], req.context, [], { layout: true })
+        await revalidatePaths(['/'], req.context, [ADMIN_THEME_TAG], { layout: true })
         return doc
       },
     ],

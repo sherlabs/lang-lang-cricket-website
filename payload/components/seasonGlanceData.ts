@@ -1,4 +1,4 @@
-import { buildSeasonGlance, type GlanceFixture, type GlanceMatch, type SeasonGlance } from '@/lib/admin/season-glance'
+import { buildSeasonGlances, type GlanceFixture, type GlanceMatch, type SeasonGlance } from '@/lib/admin/season-glance'
 import { DEFAULT_STATS_SETTINGS, resolveStatsSettings } from '@/lib/site-settings-core'
 import { currentClubDate } from '@/lib/selection/club-date'
 import { canonicalGrade, canonicalTeam } from '@/lib/stats/labels'
@@ -10,14 +10,14 @@ type MatchDoc = Record<string, unknown>
 const str = (v: unknown): string | null => (typeof v === 'string' && v !== '' ? v : null)
 
 /**
- * Loads the stored data the Season-at-a-glance card needs and builds it. Stored data only: no PlayHQ call. Any failure returns null, so
+ * Loads the stored data the Season-at-a-glance card needs and builds it. Stored data only: no PlayHQ call. Any failure returns no teams, so
  * the card is simply left out and the rest of Home still draws.
  */
-export async function loadSeasonGlance(payload: Payload): Promise<SeasonGlance | null> {
+export async function loadSeasonGlance(payload: Payload): Promise<SeasonGlance[]> {
   try {
     const top = await payload.find({ collection: 'matches', where: { and: [{ status: { equals: 'FINAL' } }, { seasonStartYear: { exists: true } }] }, sort: '-seasonStartYear', limit: 1, depth: 0, select: { seasonStartYear: true }, overrideAccess: true })
     const year = (top.docs[0] as MatchDoc | undefined)?.seasonStartYear
-    if (typeof year !== 'number') return null
+    if (typeof year !== 'number') return []
     const today = currentClubDate()
     const [games, upcoming, settingsDoc, labels, lastSync] = await Promise.all([
       payload.find({
@@ -44,12 +44,12 @@ export async function loadSeasonGlance(payload: Payload): Promise<SeasonGlance |
     const written = (games.docs as unknown as MatchDoc[]).map((d) => (typeof d.syncedAt === 'string' ? Date.parse(d.syncedAt) : NaN)).filter(Number.isFinite)
     const asOf = lastSync ?? (written.length ? new Date(Math.max(...written)) : null)
     const settings = settingsDoc?.updatedAt ? resolveStatsSettings((settingsDoc as unknown as { stats?: unknown }).stats) : DEFAULT_STATS_SETTINGS
-    return buildSeasonGlance({
+    return buildSeasonGlances({
       matches, fixtures, ladder: null, asOf, now: new Date(), today, rules: settings.gradeRules,
       gradeLabel: (g) => (g ? canonicalGrade(g, labels) : ''), teamLabel: (t) => (t ? canonicalTeam(t, labels) : ''),
     })
   } catch (err) {
     console.warn('[admin] season at a glance unavailable:', (err as Error).message)
-    return null
+    return []
   }
 }

@@ -7,8 +7,8 @@ import type { MatchResult } from '@/lib/playhq/match-rows'
  * it never calls PlayHQ.
  *
  * Honesty rules:
- * - It names the team and grade it describes: the leading senior grade of the season (the first in natural order, which is what the
- *   public results lead with), by the public labels the caller passes in.
+ * - It names the team and grade each row describes: every senior grade of the latest season, in natural order (what the public
+ *   results lead with), by the public labels the caller passes in.
  * - Won and lost come from `progressionByGrade`, the same helper the season yearbook uses, so a forfeit counts as the win or loss it
  *   was; "played" leaves out abandoned games. The card never does its own win/loss arithmetic.
  * - It says "as of" the last successful sync, and is left out (null) when that data is older than SEASON_CARD_MAX_AGE_DAYS.
@@ -69,15 +69,24 @@ const lineOf = (m: GlanceMatch, grade: string, team: string): ResultLine => ({
   format: m.type ?? '', result: m.result, forfeit: m.byForfeit, onFirstInnings: m.onFirstInnings, club: [], opp: [],
 })
 
-export function buildSeasonGlance(i: GlanceInput): SeasonGlance | null {
-  if (!i.asOf || i.now.getTime() - i.asOf.getTime() > SEASON_CARD_MAX_AGE_DAYS * DAY) return null
+/** One glance per senior grade of the latest season, in natural grade order. Empty when the data is old or missing. */
+export function buildSeasonGlances(i: GlanceInput): SeasonGlance[] {
+  if (!i.asOf || i.now.getTime() - i.asOf.getTime() > SEASON_CARD_MAX_AGE_DAYS * DAY) return []
   const gradeOf = i.gradeLabel ?? ((g: string | null) => g ?? '')
   const teamOf = i.teamLabel ?? ((t: string | null) => t ?? '')
   const senior = i.matches.filter((m) => m.seasonStartYear !== null && classifyGrade(gradeOf(m.gradeName), teamOf(m.clubTeamName), i.rules ?? []) === 'senior' && gradeOf(m.gradeName) !== '')
-  if (senior.length === 0) return null
+  if (senior.length === 0) return []
   const year = Math.max(...senior.map((m) => m.seasonStartYear as number))
   const inYear = senior.filter((m) => m.seasonStartYear === year)
-  const grade = [...new Set(inYear.map((m) => gradeOf(m.gradeName)))].sort(natural)[0]
+  return [...new Set(inYear.map((m) => gradeOf(m.gradeName)))].sort(natural).map((grade) => glanceFor(i, inYear, grade, year, gradeOf, teamOf))
+}
+
+/** The leading senior grade only (the first of `buildSeasonGlances`). */
+export function buildSeasonGlance(i: GlanceInput): SeasonGlance | null {
+  return buildSeasonGlances(i)[0] ?? null
+}
+
+function glanceFor(i: GlanceInput, inYear: readonly GlanceMatch[], grade: string, year: number, gradeOf: (g: string | null) => string, teamOf: (t: string | null) => string): SeasonGlance {
   const games = inYear.filter((m) => gradeOf(m.gradeName) === grade)
   const newest = [...games].sort((a, b) => (b.localDate ?? '').localeCompare(a.localDate ?? '') || b.gameId.localeCompare(a.gameId))[0]
   const team = teamOf(newest.clubTeamName)
@@ -94,7 +103,7 @@ export function buildSeasonGlance(i: GlanceInput): SeasonGlance | null {
 
   const l = i.ladder
   return {
-    team, grade, seasonStartYear: year, asOf: i.asOf,
+    team, grade, seasonStartYear: year, asOf: i.asOf as Date,
     played: finished.length, won: last?.wins ?? 0, lost: last?.losses ?? 0,
     nextGame: next ? { date: next.localDate, time: next.localTime, opponent: next.opponentName, home: next.isHome } : null,
     lastResult: resulted ? { date: resulted.date, opponent: resulted.opponent, word: resultWord(resulted), letter: resultLetter(resulted) } : null,

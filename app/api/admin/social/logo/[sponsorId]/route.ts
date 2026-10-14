@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
 
 /**
  * GET (committee only): a sponsor's logo as the PNG the pictures draw, for the thumbnails in the composer. The address takes a
- * sponsor id, never a media id, and reads that sponsor's own `logo` upload, so it cannot be used to read another file. Everything
+ * sponsor id, never a media id, and reads that sponsor's own `logo` upload, so it cannot be used to read another file. The
+ * browser keeps a thumbnail for an hour (private, never a shared cache), so the picker draws instantly on the next visit. Everything
  * that is not "a staff member asking for a sponsor whose logo can be drawn" answers with the same plain 404.
  */
 export async function GET(request: Request, ctx: { params: Promise<{ sponsorId: string }> }): Promise<Response> {
@@ -25,5 +26,5 @@ export async function GET(request: Request, ctx: { params: Promise<{ sponsorId: 
   const logo = await sponsorLogo(payload, sponsor.logo)
   if (!('dataUri' in logo)) return notFound()
   const body = Buffer.from(logo.dataUri.split(',')[1], 'base64')
-  return new Response(new Uint8Array(body), { headers: { 'Content-Type': 'image/png', 'X-Content-Type-Options': 'nosniff', ...PRIVATE_HEADERS } })
+  return new Response(new Uint8Array(body), { headers: { 'Content-Type': 'image/png', 'X-Content-Type-Options': 'nosniff', ...PRIVATE_HEADERS, 'Cache-Control': 'private, max-age=3600' } })
 }

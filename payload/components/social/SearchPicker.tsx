@@ -24,6 +24,12 @@ type Props = {
   disabled?: boolean
 }
 
+const PLACEHOLDER: Record<string, string> = {
+  game: 'Search by team, grade, date or opponent',
+  sponsor: 'Search sponsors',
+  event: 'Search events',
+}
+
 const dayParts = (iso: string, locale: string): { day: string; month: string } | null => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null
   const d = new Date(`${iso}T00:00:00Z`)
@@ -146,7 +152,7 @@ export function SearchPicker({ choices, multi, selected, onChange, api, locale, 
           aria-controls={`${uid}-list`}
           aria-activedescendant={active >= 0 ? `${uid}-o${active}` : undefined}
           aria-label={`Search: ${label}`}
-          placeholder="Search by team, grade, date or name"
+          placeholder={PLACEHOLDER[choices[0]?.row?.kind ?? ''] ?? 'Search by name'}
           autoComplete="off"
           value={query}
           disabled={disabled}

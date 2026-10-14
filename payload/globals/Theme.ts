@@ -2,7 +2,7 @@ import type { Field, GlobalConfig } from 'payload'
 import { ValidationError } from 'payload'
 import { anyone, isAdmin } from '../access'
 import { hiddenFromEditors } from '../admin/visibility'
-import { invalidateAdminTheme } from '../../lib/theme/admin-cache'
+import { ADMIN_THEME_TAG, invalidateAdminTheme } from '../../lib/theme/admin-cache'
 import { revalidatePaths } from '../hooks/revalidate'
 import { checkTheme, colorsFromForm } from '../../lib/theme/contrast'
 import { FONT_MENU } from '../../lib/theme/fonts'
@@ -66,7 +66,7 @@ export const Theme: GlobalConfig = {
       async ({ doc, req }) => {
         invalidateAdminTheme() // this instance's admin shows the new colours on its next render
         // Every page and the admin read the variables: revalidate the whole root layout, as `club` does.
-        await revalidatePaths(['/'], req.context, [], { layout: true })
+        await revalidatePaths(['/'], req.context, [ADMIN_THEME_TAG], { layout: true })
         return doc
       },
     ],

@@ -3,7 +3,7 @@ import { attentionItems, greetingLine, VOLUNTEER_LOOKAHEAD_DAYS } from '@/lib/ad
 import { clubDayKey, formatClubDate, formatClubDay } from '@/lib/admin/club-day'
 import { homeMilestoneRows } from '@/lib/admin/home-milestones'
 import type { NotificationInput } from '@/lib/admin/notifications'
-import { buildSeasonGlance, SEASON_CARD_MAX_AGE_DAYS, type GlanceFixture, type GlanceMatch } from '@/lib/admin/season-glance'
+import { buildSeasonGlance, buildSeasonGlances, SEASON_CARD_MAX_AGE_DAYS, type GlanceFixture, type GlanceMatch } from '@/lib/admin/season-glance'
 import { fillStatus } from '@/lib/office/volunteers'
 import { progressionByGrade, type ResultLine } from '@/lib/stats/match/yearbook'
 import { summariseResults } from '@/lib/stats/yearbook'
@@ -155,6 +155,13 @@ describe('season at a glance', () => {
     m({ gameId: 'j1', gradeName: 'Under 12 Blue', clubTeamName: 'Juniors', result: 'won' }),
     m({ gameId: 'old', seasonStartYear: 2025, localDate: '2026-03-01', result: 'won' }),
   ]
+
+  it('lists every senior grade of the latest season, juniors and older seasons left out', () => {
+    const all = buildSeasonGlances(input(season))
+    expect(all.map((g) => [g.grade, g.team, g.played, g.won, g.lost])).toEqual([['A Grade', 'Seniors', 3, 2, 1], ['B Grade', 'Reserves', 1, 1, 0]])
+    expect(all[1].nextGame).toBeNull() // the only fixture is A Grade's
+    expect(buildSeasonGlances(input(season, { asOf: null }))).toEqual([])
+  })
 
   it('names the leading senior grade and counts with the season helpers', () => {
     const g = buildSeasonGlance(input(season))!

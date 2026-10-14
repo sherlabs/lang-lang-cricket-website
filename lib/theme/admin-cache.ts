@@ -16,7 +16,7 @@ export type SwrCache<T> = {
 
 export function createSwrCache<T>(opts: { ttlMs?: number; budgetMs?: number; now?: () => number; onError?: (err: unknown) => void } = {}): SwrCache<T> {
   const ttl = opts.ttlMs ?? 60_000
-  const budget = opts.budgetMs ?? 500
+  const budget = opts.budgetMs ?? 1500
   const now = opts.now ?? Date.now
   let value: T | undefined
   let hasValue = false
@@ -77,6 +77,9 @@ export function adminThemeCache<T>(): SwrCache<T> {
   holder[KEY] ??= createSwrCache<unknown>()
   return holder[KEY] as SwrCache<T>
 }
+
+/** Next data-cache tag for the theme shared by every instance (`lib/theme.ts`), expired by the same hooks. */
+export const ADMIN_THEME_TAG = 'admin-theme'
 
 /** Called by the `theme` and `club` globals' afterChange hooks: the next admin render on this instance reads the new values. */
 export function invalidateAdminTheme(): void {

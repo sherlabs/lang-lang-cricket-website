@@ -488,6 +488,14 @@ body:not(:has([data-login-reset='on'])) a[href$='/forgot'] {
   color: rgb(var(--admin-accent-ink));
   font-weight: 600;
 }
+.club-glance__teams {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
 .club-glance__who {
   display: flex;
   flex-direction: column;

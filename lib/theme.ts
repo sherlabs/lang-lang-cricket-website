@@ -1,9 +1,10 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 import { getClub, type Club } from '@/lib/club'
 import { getPayloadClient } from '@/lib/payload/client'
 import { requestTimings } from '@/lib/admin/timing'
-import { adminThemeCache } from '@/lib/theme/admin-cache'
+import { ADMIN_THEME_TAG, adminThemeCache } from '@/lib/theme/admin-cache'
 import { themeReadFailureIsFatal } from '@/lib/theme/read-failure'
 import { resolveTheme, type ResolvedTheme } from '@/lib/theme/resolve'
 import { THEME_NEUTRAL } from '@/payload/seed/theme-defaults'
@@ -53,12 +54,16 @@ export const getClubWithCrest = cache(async (): Promise<Club> => {
  * The theme for the admin layout, which must never hold up the first byte (wave G WP-0). Served from a per-instance
  * stale-while-revalidate cache (`lib/theme/admin-cache.ts`): a stale value (older than 60 seconds) is served while one refresh
  * runs, the `theme` and `club` globals' afterChange hooks clear it on the instance that saved, and other instances lag by up to a
- * minute. A cold cache waits at most half a second for the read; if it is slower or fails, this render uses a neutral slate theme
+ * minute. A cold instance reads the theme from Next's shared data cache and waits at most 1.5 seconds for it; if it is slower or fails, this render uses a neutral slate theme
  * (never the seed club's colours) and the real one appears on the next. It never throws, unlike `getTheme()`, whose fatal rule for the public site is untouched.
  */
+// Shared by every instance through Next's data cache, so a cold serverless instance gets the club's colours without first
+// starting Payload. The theme and club hooks expire the tag; the time bound is a backstop.
+const sharedTheme = unstable_cache(readTheme, ['admin-theme'], { tags: [ADMIN_THEME_TAG], revalidate: 300 })
+
 export const getAdminTheme = cache(async (): Promise<ResolvedTheme> => {
   const started = performance.now()
-  const { value } = await adminThemeCache<ResolvedTheme>().get(readTheme, () => resolveTheme(THEME_NEUTRAL))
+  const { value } = await adminThemeCache<ResolvedTheme>().get(() => sharedTheme(), () => resolveTheme(THEME_NEUTRAL))
   requestTimings().themeMs = Math.round(performance.now() - started) // for the per-render log line (lib/admin/timing.ts)
   return value
 })
