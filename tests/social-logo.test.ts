@@ -122,3 +122,20 @@ describe('storedFilePath', () => {
     expect(storedFilePath('/srv/media', '')).toBeNull()
   })
 })
+
+describe('mapLimit (bounded logo decoding)', () => {
+  it('never runs more than the limit at once and keeps the order', async () => {
+    const { mapLimit } = await import('@/lib/social/limit')
+    let live = 0
+    let peak = 0
+    const out = await mapLimit([1, 2, 3, 4, 5, 6, 7], 3, async (n) => {
+      live++
+      peak = Math.max(peak, live)
+      await new Promise((r) => setTimeout(r, 5))
+      live--
+      return n * 2
+    })
+    expect(out).toEqual([2, 4, 6, 8, 10, 12, 14])
+    expect(peak).toBe(3)
+  })
+})

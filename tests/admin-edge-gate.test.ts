@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto'
 import { SignJWT } from 'jose'
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { anonymousAdminRedirect } from '@/lib/admin/edge-gate'
+import { SESSION_COOKIE_PREFIX } from '@/lib/admin/cookie-prefix'
 
 const SECRET = 'test-secret-for-edge-gate'
 const key = new TextEncoder().encode(createHash('sha256').update(SECRET).digest('hex').slice(0, 32))
@@ -37,5 +40,17 @@ describe('admin front gate (real 307 for signed-out visitors)', () => {
 
   it('keeps the admin home as a plain return path', async () => {
     expect(await run({ pathname: '/admin', search: '' })).toBe('/admin/login?redirect=' + encodeURIComponent('/admin'))
+  })
+})
+
+describe('cookie prefix is shared with Payload', () => {
+  it('payload.config.ts sets cookiePrefix from the same constant the gate reads, and nothing else', () => {
+    const config = readFileSync(path.resolve(__dirname, '../payload.config.ts'), 'utf8')
+    expect(config).toMatch(/cookiePrefix:\s*SESSION_COOKIE_PREFIX\b/)
+    expect(config).toMatch(/import \{ SESSION_COOKIE_PREFIX \} from '\.\/lib\/admin\/cookie-prefix'/)
+    expect(config.match(/cookiePrefix\s*:/g)).toHaveLength(1)
+  })
+  it('the gate accepts a token under that prefix', async () => {
+    expect(await run({ cookieHeader: `${SESSION_COOKIE_PREFIX}-token=${await token()}` })).toBeNull()
   })
 })

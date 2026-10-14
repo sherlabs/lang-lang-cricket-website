@@ -7,6 +7,7 @@ import { loadImageDataUri } from '@/lib/theme/og'
 import type { EventPromoData, EventPromoParams } from '../specs/event-promo'
 import type { SponsorThanksData, SponsorThanksParams } from '../specs/sponsor-thanks'
 import type { SourceList } from '../types'
+import { mapLimit } from '../limit'
 import { logoReason, sponsorLogo } from './logos'
 import { dayLabel, timeLabel } from './shared'
 
@@ -29,6 +30,9 @@ export async function loadEvent(p: EventPromoParams): Promise<EventPromoData | n
   }
 }
 
+/** Logo decodes run a few at a time: one large image can use over 100 MB, and a cold cache would otherwise decode every sponsor at once. */
+export const LOGO_DECODE_CONCURRENCY = 3
+
 export async function publicSponsors() {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({ collection: 'sponsors', pagination: false, depth: 1, sort: 'sortOrder', overrideAccess: true })
@@ -40,7 +44,7 @@ export async function sponsorChoices(): Promise<SourceList> {
   const docs = await publicSponsors()
   // The logo is read from the stored upload and decoded by `loadLogoDataUri` (any of PNG, JPEG, WebP, GIF, AVIF or a safe SVG). A sponsor
   // with no logo, or one that still cannot be drawn, is shown by name, and the row says which of the two it is.
-  const logos = await Promise.all(docs.map((d) => sponsorLogo(payload, d.logo)))
+  const logos = await mapLimit(docs, LOGO_DECODE_CONCURRENCY, (d) => sponsorLogo(payload, d.logo))
   return {
     version: 2,
     multi: true,
@@ -62,12 +66,10 @@ export async function loadSponsors(p: SponsorThanksParams): Promise<SponsorThank
   const payload = await getPayloadClient()
   const docs = (await publicSponsors()).filter((d) => p.ids.includes(d.id))
   if (!docs.length) return null
-  const sponsors = await Promise.all(
-    docs.map(async (d) => {
-      const s = toSponsor(d)
-      const r = await sponsorLogo(payload, d.logo)
-      return { name: s.name, tier: s.tier, logo: 'dataUri' in r ? r.dataUri : null }
-    }),
-  )
+  const sponsors = await mapLimit(docs, LOGO_DECODE_CONCURRENCY, async (d) => {
+    const s = toSponsor(d)
+    const r = await sponsorLogo(payload, d.logo)
+    return { name: s.name, tier: s.tier, logo: 'dataUri' in r ? r.dataUri : null }
+  })
   return { sponsors, line: p.text }
 }

@@ -39,7 +39,27 @@ describe('admin tokens meet their contrast requirements', () => {
   it('the label on the accent fill is black or white, whichever reads better', () => {
     const dark = deriveAdminTokens({ colors: { ...seed, gold: '#1E3A8A' } })
     expect(dark.hex['on-accent']).toBe('#ffffff')
-    expect(deriveAdminTokens({ colors: seed }).hex['on-accent']).toBe(seed.black)
+    expect(deriveAdminTokens({ colors: seed }).hex['on-accent']).toBe('#000000')
+  })
+})
+
+describe('pale palettes cannot make the admin unreadable', () => {
+  const pale = { ...seed, black: '#8A8A8A', charcoal: '#9A9A9A', stone: '#D8D8D8', gold: '#8A8A8A' }
+  it('clamps ink, body text and the page background so every required pair passes', () => {
+    const tokens = deriveAdminTokens({ colors: pale })
+    expect(adminContrastChecks(tokens).filter((c) => !c.pass)).toEqual([])
+    expect(tokens.clamped).toEqual(expect.arrayContaining(['ink', 'text']))
+  })
+  it('a dark page background is lightened until text reads on it', () => {
+    const tokens = deriveAdminTokens({ colors: { ...seed, stone: '#101010', 'gold-pale': '#202020' } })
+    expect(adminContrastChecks(tokens).filter((c) => !c.pass)).toEqual([])
+    expect(tokens.clamped).toEqual(expect.arrayContaining(['bg', 'tint']))
+  })
+  it('the label on every accent fill reaches 4.5 whatever the ink is', () => {
+    for (const gold of ['#808080', '#767676', '#777777', '#FFFFFF', '#000000', '#F5B700']) {
+      const t = deriveAdminTokens({ colors: { ...pale, gold } })
+      expect(contrastRatio(t.hex['on-accent'], t.hex.accent)).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
 

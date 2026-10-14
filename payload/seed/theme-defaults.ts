@@ -45,3 +45,13 @@ export const THEME_SAMPLE_BLUE = {
   shades: { ink: '#10294F', accentDark: '#2F7BD8', accentLight: '#A9CCFA', accentPale: '#DCEBFE', accentDeep: '#1A4F9C', surfaceMuted: '#E8EEF7', mutedLight: '#566174' },
   headingFont: 'oswald',
 } as const
+
+/**
+ * A deliberately club-neutral slate look. The admin shows it for the one render where the real theme has not loaded yet (cold
+ * start, slow read), so another club's committee never sees a flash of the seed club's colours. Not a club's identity: the public
+ * site never uses it.
+ */
+export const THEME_NEUTRAL = {
+  palette: { primary: '#1E293B', accent: '#64748B', surface: '#F8FAFC', text: '#1E293B', muted: '#475569' },
+  shades: { ink: '#0F172A', accentDark: '#475569', accentLight: '#94A3B8', accentPale: '#E2E8F0', accentDeep: '#334155', surfaceMuted: '#F1F5F9', mutedLight: '#64748B' },
+} as const

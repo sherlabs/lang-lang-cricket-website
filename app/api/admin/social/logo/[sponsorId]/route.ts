@@ -1,6 +1,6 @@
 import { getPayloadClient } from '@/lib/payload/client'
 import { sponsorLogo } from '@/lib/social/sources/logos'
-import { notFound, PRIVATE_HEADERS, staffUser } from '@/lib/social/staff'
+import { notFound, PRIVATE_HEADERS, renderAllowed, staffUser } from '@/lib/social/staff'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,7 +11,12 @@ export const dynamic = 'force-dynamic'
  * that is not "a staff member asking for a sponsor whose logo can be drawn" answers with the same plain 404.
  */
 export async function GET(request: Request, ctx: { params: Promise<{ sponsorId: string }> }): Promise<Response> {
-  if (!(await staffUser(request))) return notFound()
+  const actor = await staffUser(request)
+  if (!actor) return notFound()
+  const gate = await renderAllowed(actor.id)
+  if (!gate.allowed) {
+    return new Response('Slow down for a minute', { status: 429, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': String(Math.max(1, gate.retryAfterSeconds)), ...PRIVATE_HEADERS } })
+  }
   const { sponsorId } = await ctx.params
   if (!/^\d{1,9}$/.test(sponsorId) || Number(sponsorId) > 2147483647) return notFound()
   const payload = await getPayloadClient()

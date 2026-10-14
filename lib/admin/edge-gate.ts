@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto'
 import { jwtVerify } from 'jose'
+import { SESSION_COOKIE_PREFIX } from './cookie-prefix'
 import { adminReturnPath, queryKeysFor } from './redirect'
+
+export { SESSION_COOKIE_PREFIX }
 
 /**
  * The admin's cheap front gate (wave G WP-0). `loading.tsx` starts streaming the page before the view runs, which locks the status
@@ -11,8 +14,7 @@ import { adminReturnPath, queryKeysFor } from './redirect'
  * stream; that is the one case a real status cannot cover without a database read on every admin request.
  */
 
-/** Payload's default cookie prefix (this project does not override it) and JWT auth version. */
-export const SESSION_COOKIE_PREFIX = 'payload'
+/** Payload's JWT auth version. The cookie prefix is shared with `payload.config.ts` (`./cookie-prefix`). */
 const JWT_AUTH_VERSION = 1
 
 /** Pages a signed-out visitor must be able to open (Payload's own account routes). */

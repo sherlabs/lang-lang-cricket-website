@@ -3,8 +3,9 @@
  *
  * The admin stylesheet names no colour. Every colour it uses is one of the `--admin-*` variables produced here (set as `R G B`
  * channel triples on <html> next to the `--brand-*` ones), so a club with a weak palette still gets a readable admin: any derived
- * text or control colour that misses its contrast requirement is stepped toward ink (or white on the accent fill) until it
- * passes. The requirements are `adminContrastChecks()`; `tests/admin-contrast.test.ts` runs them against the seed theme, the
+ * text or control colour that misses its contrast requirement is stepped toward black (or white on a dark accent fill) until it
+ * passes. The base colours (page background, highlight tint, ink and body text) are clamped too, so a pale primary or text colour
+ * cannot make the admin unreadable: the background and tint are lightened toward white and the text colours darkened toward black. The requirements are `adminContrastChecks()`; `tests/admin-contrast.test.ts` runs them against the seed theme, the
  * neutral template theme and deliberately bad palettes, and the theme editor (`ThemeContrast`) shows the same pairs.
  */
 import { contrastRatio } from './contrast'
@@ -23,8 +24,9 @@ export type AdminTokens = {
   clamped: AdminTokenName[]
 }
 
-/** Neutral white (cards, text on a dark accent). Not a theme value. */
+/** Neutral white and black (cards, text on an accent fill, the clamp targets). Not theme values. */
 const WHITE: [number, number, number] = [255, 255, 255]
+const BLACK: [number, number, number] = [0, 0, 0]
 
 /**
  * State colours are the same for every club, so a status never depends on a palette: green-700 / amber-800 / red-700 text on
@@ -63,11 +65,15 @@ export function deriveAdminTokens(theme: { colors: Record<BrandKey, Hex> }): Adm
     return r.value
   }
 
-  const bg = c.stone
+  // Base surfaces first: lightened toward white until black reads strongly on them, so a dark background colour cannot sink the page.
+  const lightEnough = (x: Hex) => contrastRatio(x, toHex(BLACK)) >= 10
+  const bg = note('bg', clampToward(c.stone, toHex(WHITE), lightEnough))
+  const tint = note('tint', clampToward(c['gold-pale'], toHex(WHITE), lightEnough))
   const surface = toHex(mix(WHITE, toRgb(c.cream), 0.4))
-  const ink = c.black
-  const text = c.charcoal
-  const tint = c['gold-pale']
+  const onLight = (x: Hex) => contrastRatio(x, surface) >= 4.5 && contrastRatio(x, bg) >= 4.5 && contrastRatio(x, tint) >= 4.5
+  // Ink and body text are clamped toward pure black (not toward ink), so they recover even when the palette's own ink is pale.
+  const ink = note('ink', clampToward(c.black, toHex(BLACK), onLight))
+  const text = note('text', clampToward(c.charcoal, ink, onLight))
   const accent = c.gold
 
   const muted = note('muted', clampToward(c.grey, ink, (x) => contrastRatio(x, surface) >= 4.5 && contrastRatio(x, bg) >= 4.5 && contrastRatio(x, tint) >= 4.5))
@@ -75,8 +81,8 @@ export function deriveAdminTokens(theme: { colors: Record<BrandKey, Hex> }): Adm
   const focus = note('focus', clampToward(accent, ink, (x) => contrastRatio(x, surface) >= 3 && contrastRatio(x, bg) >= 3))
   const control = note('control', clampToward(toHex(mix(toRgb(surface), toRgb(ink), 0.5)), ink, (x) => contrastRatio(x, surface) >= 3 && contrastRatio(x, bg) >= 3))
   const line = toHex(mix(toRgb(surface), toRgb(ink), 0.1))
-  // Black or white, whichever reads better on the accent fill; one of the two always reaches 4.5.
-  const onAccent = contrastRatio(ink, accent) >= contrastRatio('#ffffff', accent) ? ink : '#ffffff'
+  // Pure black or pure white, whichever reads better on the accent fill. One of the two always reaches 4.5 (the crossover is about 4.58).
+  const onAccent = contrastRatio(toHex(BLACK), accent) >= contrastRatio(toHex(WHITE), accent) ? toHex(BLACK) : toHex(WHITE)
 
   const hex = {
     bg,

@@ -66,3 +66,17 @@ describe('admin theme cache (stale while revalidate)', () => {
     expect((await cache.get(async () => 'back', () => 'seed')).value).toBe('back')
   })
 })
+
+describe('the admin fallback theme', () => {
+  it('is neutral: passes every admin contrast pair unclamped and shares no colour with the seed club', async () => {
+    const { resolveTheme } = await import('@/lib/theme/resolve')
+    const { deriveAdminTokens, adminContrastChecks } = await import('@/lib/theme/admin-tokens')
+    const { THEME_NEUTRAL } = await import('@/payload/seed/theme-defaults')
+    const neutral = resolveTheme(THEME_NEUTRAL)
+    const seed = resolveTheme(null)
+    expect(neutral.colors.gold).not.toBe(seed.colors.gold)
+    expect(neutral.colors.black).not.toBe(seed.colors.black)
+    const tokens = deriveAdminTokens({ colors: neutral.colors })
+    expect(adminContrastChecks(tokens).filter((c) => !c.pass)).toEqual([])
+  })
+})

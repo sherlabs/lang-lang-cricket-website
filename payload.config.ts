@@ -7,6 +7,7 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { BRANDING } from './config/site'
+import { SESSION_COOKIE_PREFIX } from './lib/admin/cookie-prefix'
 import { adminTitleSuffix, adminTranslations } from './payload/admin/copy'
 import { restrictBuiltinCollections } from './payload/access/builtins'
 import { emailAdapterForPayload } from './lib/email/payload-adapter'
@@ -91,6 +92,8 @@ export default buildConfig({
   // Explicit: an empty list would disable the Origin check on cookie auth.
   csrf: csrfOrigins(serverURL),
   secret: requireEnv('PAYLOAD_SECRET'),
+  // Shared with the edge gate (lib/admin/edge-gate.ts) so the proxy reads the same cookie Payload sets.
+  cookiePrefix: SESSION_COOKIE_PREFIX,
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
