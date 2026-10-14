@@ -32,3 +32,12 @@ Walked through the deployed preview admin (feat/payload-cms @ a7d5540) in Chrome
 
 - Sidebar is a plain text list of 15 items with no icons or grouping and a collapsed "ADVANCED" toggle; active state is a yellow pill. Logout is a bare icon at the bottom left. No search, no quick switch.
 - Overall look is default Payload with cream background and yellow accents: low contrast greys for help text, inconsistent card borders (some yellow left-borders, some plain), default browser radios and checkboxes inside custom views.
+
+## Re-check on the preview after WP-0 to WP-3 (2026-10-14, 0d69965)
+
+Fixed: the shared Social link now opens the exact graphic; the composer is two columns with a live preview; the Home is clear. Still to fix:
+
+- Social sponsor picker: the thumbnail box next to each sponsor is empty, though the graphic renders the logos. Show the logo in the row.
+- Social sponsor picker: the search placeholder says "Search by team, grade, date or name" for sponsors. Use per-type copy ("Search sponsors").
+- Hard load still shows an empty screen for about 2 seconds before the shell paints (was 10 to 20).
+- Home "Season at a glance" shows one team only (B Grade). Show every current team, or say which one it is and why.
