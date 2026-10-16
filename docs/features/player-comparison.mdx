@@ -1,0 +1,35 @@
+---
+title: Player comparison
+status: shipped
+routes: ["/players/compare"]
+collections: [player-seasons, players]
+admin: "None"
+owner: "Visitors (players, selectors, families)"
+related: [players-directory-and-profiles, stats-leaderboards, stat-cards]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **Two team-mates** settling a dressing-room argument about who has more wickets.
+- **A selector** weighing two similar players.
+
+## Why it was built
+
+BetterStats feature A5: head-to-head comparison from the stored season totals, with a link people can share.
+
+## What it does
+
+- Two player pickers (native selects in a GET form, so no JavaScript is needed) and a shareable URL `/players/compare?a=<slug>&b=<slug>`.
+- Rows for career batting, bowling and fielding with the better value subtly highlighted (ties are not highlighted) and a season-by-season split on a shared season axis. `?common=1` restricts to the seasons both played.
+- Unknown or invalid slugs show the pickers with an inline error, never a server error. Hidden players cannot be compared. `compare` is a reserved slug so no player can shadow the route.
+- Pages with parameters are `noindex` and the route is disallowed in robots.txt and excluded from the sitemap. A profile links to it ("Compare with another player").
+
+## How to use it
+
+Open a player profile and press "Compare with another player", or open `/players/compare` and choose two players.
+
+## Not included / deferred
+
+- No opposition history, dismissal patterns or recent form in the comparison ([#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#4](https://github.com/sherlabs/lang-lang-cricket-website/issues/4), [#33](https://github.com/sherlabs/lang-lang-cricket-website/issues/33)).
+- Only two players at a time. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,0 +1,113 @@
+import { notificationCopy as copy } from '../../payload/admin/copy'
+import { LOCK_MS } from '../players/lock'
+
+/**
+ * The lines on the admin Home page (W2 spec 6.4, issue #11). Pure: the dashboard loads the facts, this decides the words.
+ * No new computation: it only reports what already exists (the latest sync run, the approvals queue, the duplicate
+ * suggestion count and the import log). There is deliberately no "milestones crossed" count: measuring a crossing from
+ * match rows would use the wrong baseline, and a rolling window would repeat one crossing on every nightly run.
+ */
+export type RunFacts = {
+  status: 'ok' | 'running' | 'error' | string | null
+  startedAt: string | null
+  finishedAt: string | null
+  matchesUpserted: number
+  matchError: number
+  matchMismatches: number
+  error: string | null
+}
+export type NotificationInput = {
+  latestRun: RunFacts | null
+  pending: { stories: number; photos: number }
+  /** Admin only; null when not loaded or unavailable. */
+  duplicateCount: number | null
+  imports: { count: number; latest: { at: string; seasons: number; matches: number } | null } | null
+  /** Counts for the social posting queue (wave C spec 4.8); null when unavailable. Committee-visible. */
+  social?: { failed: number; dueSoon: number; overdue: number } | null
+  /** Admin only: members owing match fees in the open season, with the sentence already worded (club office, wave D). */
+  fees?: { members: number; text: string } | null
+  /** Committee-visible: empty volunteer places for a game day within three days, with the sentence already worded. */
+  volunteers?: { empty: number; text: string } | null
+  /** Committee-visible: items at or below their reorder level and issued items overdue back, with the sentences already worded. */
+  stock?: { low: number; overdue: number; lowText: string; overdueText: string } | null
+  /** Committee-visible: overdue, blocked and unowned season diary jobs, with the sentences already worded. */
+  diary?: { overdue: number; blocked: number; unowned: number; overdueText: string; blockedText: string; unownedText: string } | null
+  /** Committee-visible: overdue and blocked committee actions this person can see, with the sentences already worded. */
+  /** Admin only: the last Facebook sign-in broker check, and people Facebook removed recently. */
+  signIn?: { testFailedAt: string | null; unlinked: number } | null
+  /** Admin only: recent committee actions on the fantasy game (a PIN reset, a disabled team), already worded and without any PIN. */
+  fantasy?: { lines: { at: string; text: string }[] } | null
+  meetings?: { overdue: number; blocked: number; overdueText: string; blockedText: string } | null
+}
+export type NotificationLine = { key: string; tone: 'warn' | 'info'; text: string; href?: string; linkText?: string }
+
+/** A finished run counts as "last night" for a day and a half (the nightly sync, plus slack for a late run). */
+export const LAST_NIGHT_MS = 36 * 3_600_000
+
+export function notificationLines(
+  input: NotificationInput,
+  o: { isAdmin: boolean; adminRoute: string; now: Date; formatDate: (d: Date) => string },
+): NotificationLine[] {
+  const lines: NotificationLine[] = []
+  const { adminRoute: r } = o
+  const raw = input.latestRun
+  // A `running` row older than the sync lock window belongs to a run the platform killed: the next start would close it, but until
+  // then the committee must not read "being updated right now". It counts as a failed run.
+  const startedAt = raw?.startedAt ? new Date(raw.startedAt) : null
+  const stuck = !!raw && raw.status === 'running' && !!startedAt && o.now.getTime() - startedAt.getTime() > LOCK_MS
+  const run = raw && stuck ? { ...raw, status: 'error', error: raw.error ?? 'The update started but never finished.' } : raw
+  if (run) {
+    if (run.status === 'error') {
+      const when = run.finishedAt ? new Date(run.finishedAt) : startedAt
+      const old = !!when && o.now.getTime() - when.getTime() > LAST_NIGHT_MS
+      lines.push({ key: 'sync-failed', tone: 'warn', text: old && when ? copy.committee.syncFailedOlder(o.formatDate(when)) : copy.committee.syncFailed })
+      if (o.isAdmin && run.error) lines.push({ key: 'sync-error', tone: 'warn', text: copy.admin.syncError(run.error.slice(0, 300)), href: `${r}/collections/player-sync-runs`, linkText: copy.admin.syncRuns })
+    } else if (run.status === 'running') {
+      lines.push({ key: 'sync-running', tone: 'info', text: copy.committee.syncRunning })
+    } else if (run.status === 'ok') {
+      const done = run.finishedAt ? new Date(run.finishedAt) : null
+      const recent = !!done && o.now.getTime() - done.getTime() <= LAST_NIGHT_MS
+      lines.push({ key: 'sync-ok', tone: 'info', text: recent || !done ? copy.committee.syncOk : copy.committee.syncOkOlder(o.formatDate(done)) })
+    }
+    if (o.isAdmin && (run.status === 'ok' || run.status === 'error')) {
+      const bad = run.matchError > 0 || run.matchMismatches > 0
+      lines.push({
+        key: 'sync-counts', tone: bad ? 'warn' : 'info',
+        text: copy.admin.syncCounts({ matchesUpserted: run.matchesUpserted, matchError: run.matchError, matchMismatches: run.matchMismatches }),
+        href: `${r}/collections/player-sync-runs`, linkText: copy.admin.syncRuns,
+      })
+    }
+  }
+  if (input.pending.stories > 0) lines.push({ key: 'stories', tone: 'warn', text: copy.committee.stories(input.pending.stories), href: `${r}/collections/stories?where[status][equals]=pending` })
+  if (input.pending.photos > 0) lines.push({ key: 'photos', tone: 'warn', text: copy.committee.photos(input.pending.photos), href: `${r}/approvals` })
+  const social = input.social
+  if (social) {
+    if (social.overdue > 0) lines.push({ key: 'social-overdue', tone: 'warn', text: copy.committee.socialOverdue(social.overdue), href: `${r}/social?tab=scheduled` })
+    if (social.failed > 0) lines.push({ key: 'social-failed', tone: 'warn', text: copy.committee.socialFailed(social.failed), href: `${r}/social?tab=attention` })
+    if (social.dueSoon > 0) lines.push({ key: 'social-today', tone: 'info', text: copy.committee.socialToday(social.dueSoon), href: `${r}/social?tab=scheduled` })
+  }
+  if (input.volunteers && input.volunteers.empty > 0) lines.push({ key: 'volunteers-empty', tone: 'warn', text: input.volunteers.text, href: `${r}/office/volunteers`, linkText: 'Open Volunteers' })
+  if (input.diary && input.diary.overdue > 0) lines.push({ key: 'jobs-overdue', tone: 'warn', text: input.diary.overdueText, href: `${r}/office/diary?filter=overdue`, linkText: 'Open the season diary' })
+  if (input.diary && input.diary.blocked > 0) lines.push({ key: 'jobs-blocked', tone: 'warn', text: input.diary.blockedText, href: `${r}/office/diary?filter=blocked`, linkText: 'Open the season diary' })
+  if (input.diary && input.diary.unowned > 0) lines.push({ key: 'jobs-unowned', tone: 'info', text: input.diary.unownedText, href: `${r}/office/diary?filter=unowned`, linkText: 'Open the season diary' })
+  if (input.stock && input.stock.low > 0) lines.push({ key: 'stock-low', tone: 'warn', text: input.stock.lowText, href: `${r}/office/stock?show=low`, linkText: 'Open Stock' })
+  if (input.stock && input.stock.overdue > 0) lines.push({ key: 'stock-overdue', tone: 'warn', text: input.stock.overdueText, href: `${r}/office/stock?tab=owed`, linkText: 'Open what is owed back' })
+  if (input.meetings && input.meetings.overdue > 0) lines.push({ key: 'actions-overdue', tone: 'warn', text: input.meetings.overdueText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
+  if (input.meetings && input.meetings.blocked > 0) lines.push({ key: 'actions-blocked', tone: 'warn', text: input.meetings.blockedText, href: `${r}/office/meetings/actions`, linkText: 'Open committee actions' })
+  if (o.isAdmin) {
+    if (input.signIn?.testFailedAt) lines.push({ key: 'signin-unreachable', tone: 'warn', text: copy.admin.signInUnreachable(o.formatDate(new Date(input.signIn.testFailedAt))), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
+    if (input.signIn && input.signIn.unlinked > 0) lines.push({ key: 'signin-unlinked', tone: 'info', text: copy.admin.signInUnlinked(input.signIn.unlinked), href: `${r}/globals/site-settings`, linkText: copy.admin.signInOpen })
+    for (const [i, l] of (input.fantasy?.lines ?? []).entries()) lines.push({ key: `fantasy-${i}`, tone: 'info', text: l.text, href: `${r}/fantasy`, linkText: copy.admin.fantasyOpen })
+    if (input.fees && input.fees.members > 0) lines.push({ key: 'fees-owing', tone: 'info', text: input.fees.text, href: `${r}/office/fees`, linkText: 'Open Fees' })
+    if (input.duplicateCount && input.duplicateCount > 0) lines.push({ key: 'duplicates', tone: 'warn', text: copy.admin.duplicates(input.duplicateCount), href: `${r}/player-data-tools#duplicates`, linkText: copy.admin.importsOpen })
+    if (input.imports && input.imports.count > 0 && input.imports.latest) {
+      const l = input.imports.latest
+      lines.push({ key: 'imports', tone: 'info', text: copy.admin.imports(input.imports.count, o.formatDate(new Date(l.at)), l.seasons, l.matches), href: `${r}/player-data-tools#import`, linkText: copy.admin.importsOpen })
+    }
+  }
+  // Problems first, then information; stable within each group.
+  return [...lines.filter((l) => l.tone === 'warn'), ...lines.filter((l) => l.tone === 'info')]
+}
+
+/** "Nothing is waiting" is true only when no line asks for attention (information lines do not). */
+export const allCaughtUp = (lines: readonly NotificationLine[]): boolean => !lines.some((l) => l.tone === 'warn')

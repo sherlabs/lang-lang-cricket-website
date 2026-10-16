@@ -1,0 +1,453 @@
+/**
+ * Media import: the 3-way branch (spec §12.4, §7.4).
+ *
+ * | class        | rule                                              | action                                  |
+ * |--------------|---------------------------------------------------|-----------------------------------------|
+ * | empty        | '' / null                                         | relation null                            |
+ * | own-blob     | https://<storeId>.public.blob.vercel-storage.com/… | REGISTER the existing blob (no bytes)    |
+ * | local-asset  | starts with /assets/                              | UPLOAD public${url} through Payload      |
+ * | other        | anything else                                     | FLAG: relation null, reported            |
+ *
+ * Registration never sends `url` and always sends focalX/focalY 50 (spike). A filename
+ * collision in the target collection, or a documents/gallery/event-photos path outside the
+ * collection prefix (it would be nested, spec §1), falls back to download + re-upload through
+ * Payload — only possible with a Blob token. Without one (local rehearsal), the row is
+ * registered the way the re-upload would store it (collection prefix, disambiguated filename);
+ * its `legacyUrl` keeps rendering the original through the read rule. Every fallback is reported.
+ *
+ * Duplicate URLs (documents / gallery photos only; `legacyUrl` is non-unique there): the first
+ * row owns the original blob (registered in place as above). Each later row with the same URL
+ * keeps its own data and `legacyUrl` but gets its own file: a copy of the original, stored under
+ * the collection prefix as `<stem>-dup<legacyId><ext>` (deterministic, so a re-run finds the row
+ * and writes nothing). The copy is a download + re-upload (a /assets/ file is read from disk);
+ * without a Blob token the row is registered under the copy's name without bytes. The original is
+ * only ever read. Every row with a `legacyUrl` keeps the delete guard, so no blob is deleted
+ * before decommission.
+ */
+import { head } from '@vercel/blob'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import path from 'node:path'
+import { APIError, type CollectionSlug, type Payload } from 'payload'
+import type { EtlReport } from './report'
+import type { LegacySource } from './source'
+
+export const ETL_CONTEXT = { etl: true, disableRevalidate: true } as const
+
+export type EtlContext = {
+  payload: Payload
+  source: LegacySource
+  report: EtlReport
+  dryRun: boolean
+  /** Update existing rows in place instead of skipping them (spec §12.3). */
+  update: boolean
+  /**
+   * The legacy (own) Blob store id: the store the legacy URLs live in. `--blob-store-id` when
+   * given, otherwise the token's store (see `legacyStoreId`).
+   */
+  storeId: string | null
+  /** The Blob token (blobToken()); undefined locally. */
+  token: string | undefined
+  /** Absolute path of the app's public/ directory. */
+  publicDir: string
+}
+
+export type UploadCollection = 'media' | 'documents' | 'gallery-photos' | 'event-photos'
+
+/** Storage collection prefixes (payload.config.ts). */
+export const COLLECTION_PREFIX: Record<UploadCollection, string> = {
+  media: '',
+  documents: 'documents',
+  'gallery-photos': 'gallery',
+  'event-photos': 'events',
+}
+
+const MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  avif: 'image/avif',
+  svg: 'image/svg+xml',
+  pdf: 'application/pdf',
+}
+
+export function mimeFromName(name: string): string {
+  return MIME[name.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream'
+}
+
+export type Classified =
+  | { kind: 'empty' }
+  | { kind: 'own-blob'; prefix: string; filename: string; pathname: string }
+  | { kind: 'local-asset'; file: string }
+  | { kind: 'other' }
+
+export function storeIdFromToken(token: string | undefined): string | null {
+  return token?.match(/^vercel_blob_rw_([a-z\d]+)_/i)?.[1]?.toLowerCase() ?? null
+}
+
+/**
+ * The store whose URLs count as own-blob (registered in place). An explicit `--blob-store-id`
+ * wins over the token's store: a preview rehearsal (cutover checklist) writes with the
+ * preview store's token while the legacy rows point at the production store. In production
+ * both are the same store and the flag is omitted.
+ */
+export function legacyStoreId(token: string | undefined, explicit: string | undefined): string | null {
+  return explicit?.trim().toLowerCase() || storeIdFromToken(token)
+}
+
+/**
+ * The CLI form of `legacyStoreId` for the ETL and verify scripts. A `--blob-store-id` that
+ * differs from the token's store is refused unless `--preview-rehearsal` is given: in the
+ * production window the token's store is the legacy store, and a mistyped id would flag every
+ * legacy blob. `--preview-rehearsal` in turn requires a token and a differing explicit store
+ * id, so it cannot be left on by accident against production.
+ */
+export function resolveLegacyStore(
+  token: string | undefined,
+  explicit: string | undefined,
+  previewRehearsal: boolean,
+): { storeId: string | null; writeStoreId: string | null } {
+  const storeId = legacyStoreId(token, explicit)
+  const writeStoreId = storeIdFromToken(token)
+  const differs = Boolean(storeId && writeStoreId && storeId !== writeStoreId)
+  if (differs && !previewRehearsal) {
+    throw new Error(
+      `--blob-store-id "${storeId}" differs from the token's store "${writeStoreId}". In production omit the flag (or pass the token's store); a preview rehearsal must also pass --preview-rehearsal.`,
+    )
+  }
+  if (previewRehearsal && !differs) {
+    throw new Error(
+      '--preview-rehearsal needs a Blob token (the preview store) and a different --blob-store-id (the production store)',
+    )
+  }
+  return { storeId, writeStoreId }
+}
+
+export function classify(url: unknown, storeId: string | null): Classified {
+  if (typeof url !== 'string' || url.trim() === '') return { kind: 'empty' }
+  if (url.startsWith('/assets/')) return { kind: 'local-asset', file: decodeURIComponent(url.split(/[?#]/)[0]) }
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return { kind: 'other' }
+  }
+  if (storeId && u.protocol === 'https:' && u.hostname === `${storeId}.public.blob.vercel-storage.com` && !u.search && !u.hash) {
+    const pathname = u.pathname.replace(/^\/+/, '')
+    const slash = pathname.lastIndexOf('/')
+    const prefix = slash >= 0 ? pathname.slice(0, slash) : ''
+    const filename = decodeURIComponent(slash >= 0 ? pathname.slice(slash + 1) : pathname)
+    if (filename) return { kind: 'own-blob', prefix, filename, pathname }
+  }
+  return { kind: 'other' }
+}
+
+export const isUnderPrefix = (prefix: string, collectionPrefix: string) =>
+  collectionPrefix === '' || prefix === collectionPrefix || prefix.startsWith(`${collectionPrefix}/`)
+
+type Where = { step: string; table: string; id: number | string; field: string }
+
+type FileResult = { id: number | null; action: string }
+
+async function findOne(payload: Payload, collection: UploadCollection, field: 'legacyUrl' | 'filename', value: string) {
+  const { docs } = await payload.find({
+    collection: collection as CollectionSlug,
+    where: { [field]: { equals: value } },
+    limit: 1,
+    sort: 'id',
+    depth: 0,
+    overrideAccess: true,
+  })
+  return (docs[0] as { id: number; legacyUrl?: string | null } | undefined) ?? null
+}
+
+/** The stored filename of the copy a duplicate-URL row gets: `<stem>-dup<legacyId><ext>`. */
+export function dupCopyName(filename: string, id: number | string): string {
+  const ext = path.extname(filename)
+  return `${filename.slice(0, filename.length - ext.length)}-dup${id}${ext}`
+}
+
+/** True when `actual` is the copy name for `id` (Payload may append `-<n>` against a name clash). */
+export function isDupCopyName(actual: unknown, filename: string, id: number | string): boolean {
+  if (typeof actual !== 'string') return false
+  const want = dupCopyName(filename, id)
+  const ext = path.extname(want)
+  return actual === want || new RegExp(`^${want.slice(0, want.length - ext.length).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-\\d+${ext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`).test(actual)
+}
+
+/** The filename a classified importable URL is stored under (the basis of its copies' names). */
+export const sourceFilename = (c: Classified): string | null =>
+  c.kind === 'own-blob' ? c.filename : c.kind === 'local-asset' ? path.basename(c.file) : null
+
+/** `<prefix with / → ->-<filename>`: unique per legacy path, used only for the local (no-token) fallback. */
+const disambiguate = (prefix: string, filename: string) => (prefix ? `${prefix.replace(/\//g, '-')}-${filename}` : filename)
+
+/**
+ * Write one upload doc for `url` into `collection`, with `data` merged in (the row's own
+ * fields and, for id-preserving collections, `id`). Returns the doc id (null when nothing was
+ * written: empty/other/missing, or a dry run).
+ *
+ * `relation: true` (media used as a relation) dedupes on `legacyUrl` and writes nothing for
+ * an empty/other URL. `relation: false` (documents, gallery rows) always writes the row,
+ * file-less when the URL cannot be imported.
+ */
+export async function importFile(
+  ctx: EtlContext,
+  opts: { collection: UploadCollection; url: unknown; data?: Record<string, unknown>; relation: boolean; where: Where },
+): Promise<FileResult> {
+  const { payload, report, dryRun } = ctx
+  const { collection, url, relation, where } = opts
+  const data = { ...(opts.data ?? {}) }
+  const c = classify(url, ctx.storeId)
+  const note = (kind: string, detail?: string) =>
+    report.add({ step: where.step, table: where.table, id: where.id, field: where.field, url: typeof url === 'string' ? url : undefined, kind, detail })
+
+  const create = async (args: { data: Record<string, unknown>; filePath?: string; file?: { data: Buffer; mimetype: string; name: string; size: number } }) => {
+    const doc = await payload.create({
+      collection: collection as CollectionSlug,
+      data: args.data,
+      ...(args.filePath ? { filePath: args.filePath } : {}),
+      ...(args.file ? { file: args.file } : {}),
+      overrideAccess: true,
+      depth: 0,
+      context: { ...ETL_CONTEXT },
+    } as Parameters<Payload['create']>[0])
+    return (doc as { id: number }).id
+  }
+
+  /** The row without a file (documents/gallery only). */
+  const fileless = async (action: string): Promise<FileResult> => {
+    report.mediaAction(action)
+    if (relation) return { id: null, action }
+    if (dryRun) return { id: null, action }
+    return { id: await create({ data }), action }
+  }
+
+  if (c.kind === 'empty') return fileless('empty')
+  if (c.kind === 'other') {
+    note('media-flagged', 'not an own-store Blob URL or /assets/ path; relation left empty')
+    return fileless('flagged')
+  }
+
+  const legacyUrl = url as string
+  // A dry run writes nothing, so it tracks what a real run would have claimed by now: without
+  // that, within-run duplicates and filename collisions only surface on the real run.
+  const claimKey = (v: string) => `${collection} ${v}`
+  const claim = (action: string, filename: string) => {
+    report.files.set(claimKey(legacyUrl), action)
+    if (dryRun) {
+      report.claimed.urls.add(claimKey(legacyUrl))
+      report.claimed.filenames.add(claimKey(filename))
+    }
+  }
+  const existing = dryRun
+    ? report.claimed.urls.has(claimKey(legacyUrl))
+      ? { id: null }
+      : null
+    : await findOne(payload, collection, 'legacyUrl', legacyUrl)
+  if (existing && relation) {
+    report.mediaAction('reused')
+    return { id: existing.id, action: 'reused' }
+  }
+  // An earlier (lower-id) row has this file: this row gets a copy. (A higher-id holder means this
+  // row is the true first one, re-imported by --update after its file conflicted; it registers.)
+  if (existing && (existing.id === null || existing.id < Number(where.id))) {
+    const srcName = sourceFilename(c)!
+    const copyName = dupCopyName(srcName, where.id)
+    const collectionPrefix = COLLECTION_PREFIX[collection]
+    const real = c.kind === 'local-asset' || Boolean(ctx.token)
+    const action = real ? 'duplicate-copy' : 'duplicate-copy-local'
+    let mimeType = mimeFromName(srcName)
+    let bytes: Buffer | null = null
+    let localFile: string | null = null
+    if (c.kind === 'local-asset') {
+      localFile = path.join(ctx.publicDir, c.file)
+      if (!localFile.startsWith(ctx.publicDir + path.sep) || !existsSync(localFile) || !statSync(localFile).isFile()) {
+        note('media-missing', `public${c.file} does not exist; relation left empty`)
+        return fileless('missing')
+      }
+    }
+    note(
+      'media-duplicate-url',
+      `already imported${existing.id ? ` as ${collection}#${existing.id}` : ' by an earlier row'}; this row gets its own copy "${collectionPrefix ? `${collectionPrefix}/` : ''}${copyName}"${real ? '' : ' (no Blob token — registered without bytes; a real run copies)'}`,
+    )
+    if (dryRun) {
+      report.mediaAction(action)
+      report.claimed.filenames.add(claimKey(copyName))
+      return { id: null, action }
+    }
+    if (localFile) {
+      bytes = readFileSync(localFile)
+    } else if (ctx.token) {
+      const res = await fetch(legacyUrl)
+      if (!res.ok) {
+        note('media-download-failed', `HTTP ${res.status}; the duplicate row is left without a file`)
+        return fileless('duplicate-copy-failed')
+      }
+      bytes = Buffer.from(await res.arrayBuffer())
+      const served = res.headers?.get?.('content-type')?.split(';')[0].trim()
+      if (served) mimeType = served
+    }
+    if (bytes) {
+      try {
+        const id = await create({
+          data: { ...data, legacyUrl },
+          file: { data: bytes, mimetype: mimeType, name: copyName, size: bytes.length },
+        })
+        report.mediaAction(action)
+        return { id, action }
+      } catch (err) {
+        if (!(err instanceof APIError)) throw err
+        note('media-fallback-failed', `copy upload rejected (${(err as Error).message}); the duplicate row is left without a file`)
+        return fileless('duplicate-copy-failed')
+      }
+    }
+    // No token, own-store blob: nothing to download. Registered the way the copy would be stored.
+    report.mediaAction(action)
+    const id = await create({
+      data: { ...data, filename: copyName, prefix: collectionPrefix, mimeType, focalX: 50, focalY: 50, legacyUrl },
+    })
+    return { id, action }
+  }
+
+  if (c.kind === 'local-asset') {
+    const filePath = path.join(ctx.publicDir, c.file)
+    if (!filePath.startsWith(ctx.publicDir + path.sep) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      note('media-missing', `public${c.file} does not exist; relation left empty`)
+      return fileless('missing')
+    }
+    report.mediaAction('upload-local-asset')
+    claim('upload-local-asset', path.basename(filePath))
+    if (dryRun) return { id: null, action: 'upload-local-asset' }
+    return { id: await create({ data: { ...data, legacyUrl }, filePath }), action: 'upload-local-asset' }
+  }
+
+  // own-blob
+  const collectionPrefix = COLLECTION_PREFIX[collection]
+  const prefixOk = isUnderPrefix(c.prefix, collectionPrefix)
+  const collision = dryRun ? report.claimed.filenames.has(claimKey(c.filename)) : Boolean(await findOne(payload, collection, 'filename', c.filename))
+  let mimeType = mimeFromName(c.filename)
+  let filesize: number | undefined
+  // head() needs the token of the store that holds the blob; on a preview rehearsal the token is
+  // the preview store's, so skip it there (filesize stays null, as on a token-less run).
+  if (ctx.token && !dryRun && storeIdFromToken(ctx.token) === ctx.storeId) {
+    try {
+      const meta = await head(legacyUrl, { token: ctx.token })
+      filesize = meta.size
+      if (meta.contentType) mimeType = meta.contentType
+    } catch (err) {
+      note('media-head-failed', (err as Error).message)
+    }
+  }
+
+  if (prefixOk && !collision) {
+    report.mediaAction('register')
+    claim('register', c.filename)
+    if (dryRun) return { id: null, action: 'register' }
+    const id = await create({
+      data: {
+        ...data,
+        filename: c.filename,
+        prefix: c.prefix,
+        mimeType,
+        ...(filesize !== undefined ? { filesize } : {}),
+        focalX: 50,
+        focalY: 50,
+        legacyUrl,
+      },
+    })
+    return { id, action: 'register' }
+  }
+
+  const why = !prefixOk
+    ? `path is outside the "${collectionPrefix}/" prefix (would be nested)`
+    : `filename "${c.filename}" already exists in ${collection}`
+
+  if (ctx.token) {
+    note('media-fallback-reupload', `${why}; downloaded and re-uploaded through Payload (renamed)`)
+    report.mediaAction('fallback-reupload')
+    claim('fallback-reupload', c.filename)
+    if (dryRun) return { id: null, action: 'fallback-reupload' }
+    const res = await fetch(legacyUrl)
+    // Nothing was uploaded after all: take the row back out of the fallback-reupload count
+    // (writes() sums it), and out of the actions verify reads.
+    const unclaim = (action: string) => {
+      report.media['fallback-reupload'] -= 1
+      report.files.set(claimKey(legacyUrl), action)
+    }
+    if (!res.ok) {
+      note('media-download-failed', `HTTP ${res.status}; relation left empty`)
+      unclaim('download-failed')
+      return fileless('download-failed')
+    }
+    const bytes = Buffer.from(await res.arrayBuffer())
+    // On a two-store run head() was skipped, so mimeType is only the extension's guess; the
+    // download's Content-Type is the stored blob's, as head() reports it in production.
+    if (storeIdFromToken(ctx.token) !== ctx.storeId) {
+      const served = res.headers?.get?.('content-type')?.split(';')[0].trim()
+      if (served) mimeType = served
+    }
+    try {
+      const id = await create({
+        data: { ...data, legacyUrl },
+        file: { data: bytes, mimetype: mimeType, name: c.filename, size: bytes.length },
+      })
+      return { id, action: 'fallback-reupload' }
+    } catch (err) {
+      // One unacceptable file (Payload's upload restrictions) must not abort the whole run:
+      // report it and leave the relation empty; verify then fails that row for the operator.
+      if (!(err instanceof APIError)) throw err // ValidationError and FileUploadError are APIErrors; a DB failure is not
+      note('media-fallback-failed', `re-upload rejected (${(err as Error).message}); relation left empty`)
+      unclaim('fallback-failed')
+      return fileless('fallback-failed')
+    }
+  }
+
+  // No token (local rehearsal): nothing can be downloaded. Store the row the way the re-upload
+  // would (collection prefix, unique name); the legacyUrl read rule keeps the original URL on
+  // every page, and verify recognises it as a fallback (stored prefix = collection prefix).
+  const filename = collision ? disambiguate(c.prefix, c.filename) : c.filename
+  note('media-fallback-local', `${why}; registered as "${collectionPrefix ? `${collectionPrefix}/` : ''}${filename}" (no Blob token — a real run re-uploads)`)
+  report.mediaAction('fallback-local')
+  claim('fallback-local', filename)
+  if (dryRun) return { id: null, action: 'fallback-local' }
+  const id = await create({
+    data: { ...data, filename, prefix: collectionPrefix, mimeType, focalX: 50, focalY: 50, legacyUrl },
+  })
+  return { id, action: 'fallback-local' }
+}
+
+/**
+ * The `legacyUrl` the ETL stores for a legacy file URL: the URL itself when it is importable
+ * (own-store Blob, or an `/assets/` file that exists), else null.
+ */
+export function importableUrl(url: unknown, storeId: string | null, publicDir: string): string | null {
+  const c = classify(url, storeId)
+  if (c.kind === 'own-blob') return url as string
+  if (c.kind !== 'local-asset') return null
+  const file = path.join(publicDir, c.file)
+  return file.startsWith(publicDir + path.sep) && existsSync(file) ? (url as string) : null
+}
+
+/**
+ * `--update` on documents / gallery-photos / event-photos keeps the existing file. That is only
+ * right when the file belongs to this legacy row: after a rollback (§13.4) the legacy app reuses
+ * ids that Payload-native rows of the failed window hold. Returns why the existing row's file
+ * is not the legacy row's, or null when it is.
+ */
+export async function fileConflict(
+  ctx: EtlContext,
+  collection: Exclude<UploadCollection, 'media'>,
+  existing: Record<string, unknown>,
+  url: unknown,
+): Promise<string | null> {
+  const want = importableUrl(url, ctx.storeId, ctx.publicDir)
+  const have = (existing.legacyUrl as string | null | undefined) ?? null
+  if (have === want && (want !== null || !existing.filename)) return null
+  return have !== null
+    ? `stored legacyUrl ${JSON.stringify(have)} ≠ legacy ${JSON.stringify(want)}`
+    : existing.filename
+      ? `row has a file of its own (${JSON.stringify(existing.filename)}), not legacy ${JSON.stringify(want)}`
+      : `row has no file, legacy has ${JSON.stringify(want)}`
+}

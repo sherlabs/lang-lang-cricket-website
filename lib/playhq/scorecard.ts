@@ -5,6 +5,17 @@ type Event = RawPeriod['sharedStatistics'][number]
 
 const stat = (stats: RawStat[], type: string, fallback = 0) => stats.find((s) => s.type === type)?.value ?? fallback
 
+/**
+ * A period with no appearances at all, no statistics, no fall of wickets and no events: an empty twin PlayHQ can send beside a real
+ * innings. A two-day placeholder lists its players as did-not-bat appearances, so it is not empty.
+ */
+export function isEmptyPeriod(p: RawPeriod): boolean {
+  return (
+    (p.sharedStatistics ?? []).length === 0 &&
+    (p.teams ?? []).every((t) => (t.appearances ?? []).length === 0 && (t.statistics ?? []).length === 0 && (t.fallOfWickets ?? []).length === 0)
+  )
+}
+
 export function dismissalText(event: Event | undefined, status: string | null, name: (id: string) => string): string {
   if (status === 'NOT_OUT') return 'not out'
   if (!event) return status === 'OUT' ? 'out' : ''
@@ -37,7 +48,7 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
   const teamName = (id: string) => raw.teams.find((t) => t.id === id)?.name ?? 'Unknown'
 
   const inningsCount = new Map<string, number>()
-  const innings: Innings[] = [...raw.periods].sort((a, b) => a.sequenceNo - b.sequenceNo).map((p) => {
+  const innings: Innings[] = [...raw.periods].filter((p) => !isEmptyPeriod(p)).sort((a, b) => a.sequenceNo - b.sequenceNo).map((p) => {
     const bat = p.teams.find((t) => t.discipline === 'BATTING') as RawPeriodTeam
     const bowl = p.teams.find((t) => t.discipline === 'BOWLING') as RawPeriodTeam
     const n = (inningsCount.get(bat.id) ?? 0) + 1
@@ -53,6 +64,7 @@ export function mapScorecard(raw: RawGameSummary, clubOrgId: string, isJunior: b
         runs: stat(a.statistics, 'TOTAL_RUNS'), balls: stat(a.statistics, 'BALLS_FACED'),
         fours: stat(a.statistics, 'FOURS'), sixes: stat(a.statistics, 'SIXES'),
         strikeRate: stat(a.statistics, 'STRIKE_RATE'), notOut: a.status === 'NOT_OUT',
+        unballed: !a.statistics.some((s) => s.type === 'BALLS_FACED'),
       })
     }
     const bowling: BowlingLine[] = bowl.appearances
@@ -102,6 +114,7 @@ export function clubWickets(sc: Scorecard, clubTeamId: string) {
  * PlayHQ returns placeholder 2nd innings for two-day games that never went there
  * (0 overs, 0 runs, two openers "not out 0"). Treat those as not played.
  */
-export function isInningsPlayed(i: Innings): boolean {
+export type PlayedCheck = { total: { overs: number; runs: number; wickets: number }; batting: { balls: number; runs: number }[] }
+export function isInningsPlayed(i: PlayedCheck): boolean {
   return i.total.overs > 0 || i.total.runs > 0 || i.total.wickets > 0 || i.batting.some((b) => b.balls > 0 || b.runs > 0)
 }

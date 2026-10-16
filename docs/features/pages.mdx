@@ -1,0 +1,43 @@
+---
+title: Info pages
+status: shipped
+routes: ["/info/[slug]", "/preview/pages/[id]"]
+collections: [pages, media]
+admin: "Pages (everyday menu, 'Add a page' tile)"
+owner: "Committee (secretary or president); readers are families, new members and sponsors"
+related: [news, announcements, club-history-stories, committee-admin, seo]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary** who wants an "About the club" or "Join us" page, or the ground directions, without asking a developer.
+- **A new family** looking for how to join, where to park and who to contact.
+
+## Why it was built
+
+Issue [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22). Everything that was not a fixture, a story or an announcement needed a code change. The committee can now add an information page and decide where its link appears in the menu.
+
+## What it does
+
+- Collection `pages`: title, status (draft or published, default draft), "Published on" (stamped the first time a page is published, editable), menu placement, optional menu wording and order, search-engine title, description and share picture, and the content. Every field has a plain label and helper text.
+- Content is a list of blocks (at most 40), dragged into order. Three block types exist: **Text** (headings, bold, italic, links, lists, quotes, a divider; no pictures, no raw HTML), **Picture** (an upload, required alt text that fills in from the picture's own description, optional caption, narrow, wide or full width) and **Button** (a label, a link that must be `http(s)` or a path on this site such as `/contact`, a solid or outline look, optional small print).
+- Public address: `/info/<slug>`. The slug is made from the title when the page is created and never changes when the title is edited; only an admin sees and can change it (a change breaks links to the old address; there is no redirect). Slugs allow lowercase letters, digits and single hyphens, and `index` is refused (a title of "Index" becomes `index-2`). A title that repeats an existing page gets `-2`, `-3`.
+- Menu placement: **Clubhouse** (default), **main menu** (at most two pages share the top bar; further ones fall into Clubhouse in order, so the bar cannot overflow), **footer only** (second footer column) or **nowhere**. A draft page never appears. With no pages the menu is exactly what it was. The list of pages is cached and refreshed when a page is saved or deleted, with a five-minute backstop, and if the database cannot be read the default menu is shown, because the same shell renders the not-found page.
+- Reads: `getPublishedPage` states `status = published` itself because the Local API ignores access rules; anonymous REST reads see published pages only and a draft by id is not found. The route is statically cached and refreshed on save (and at most every five minutes).
+- Preview: the page's Preview button opens `/preview/pages/<id>`, which needs a signed-in admin or editor (anyone else, or a collection other than pages or news, or a non-numeric id, gets not-found), is never cached, is `noindex` and is disallowed in `robots.txt`. It shows drafts with a banner.
+- SEO: a canonical URL, title with the club suffix, description (its own, else the start of the first text block), share picture, `WebPage` structured data, and a sitemap entry (published pages only, with the last-modified date).
+- Rich text is rendered by the same safe renderer as club history stories: no stored HTML, unsafe link addresses become plain text.
+- Which to use: **Pages** for lasting information, [News](./news.mdx) for dated articles, [Announcements](./announcements.mdx) for short home-page banners and [Club history stories](./club-history-stories.mdx) for long-lived history that members can send in.
+
+## How to use it
+
+1. Admin: click **Add a page** on Home (or **Pages**, **Create new**).
+2. Type the title. Under **Page content** add text, pictures and buttons. Choose **Where should a link to this page appear?**.
+3. Leave it as Draft and use **Preview** to look at it. Set the status to **Published** and save; the link shows in the menu within a few minutes.
+4. To hide it again, set it back to Draft. The menu entry goes with it.
+
+## Not included / deferred
+
+- Blocks for gallery, documents, people and sponsors, a separate navigation editor (drag-and-drop ordering of every menu link, renaming built-in links), redirects when a slug changes, page versions or autosave, and live preview while typing. These stay open under issue [#22](https://github.com/sherlabs/lang-lang-cricket-website/issues/22). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Pages placed in the menu (not the footer) are not repeated in the footer; only "footer only" pages and the News link are.

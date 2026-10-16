@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { createPayloadFake, type PayloadFake } from './helpers/payload-fake'
 
 let eventRows: unknown[] = []
 let photoRows: unknown[] = []
@@ -12,69 +13,32 @@ vi.mock('@/lib/event-occurrences', async (importOriginal) => {
   }
 })
 
-// eq/and are replaced with plain tagged objects (instead of real SQL builders)
-// so the `@/db` mock below can actually evaluate a `.where(...)` condition
-// against the fixture rows, rather than ignoring it — needed to genuinely
-// test that getEventPhotosPublic's status filter excludes pending photos.
-vi.mock('drizzle-orm', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('drizzle-orm')>()
-  return {
-    ...actual,
-    eq: (column: unknown, value: unknown) => ({ __op: 'eq' as const, column, value }),
-    and: (...conditions: unknown[]) => ({ __op: 'and' as const, conditions }),
-  }
-})
+let fake: PayloadFake
+vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => fake }))
 
-// `from(table)` branches on the real `eventPhotos`/`events` table objects
-// (imported normally, not mocked) so this one mock can serve both queries
-// with their own fixture rows, and `where(...)` actually filters using the
-// tagged eq/and objects above.
-vi.mock('@/db', async () => {
-  const schema = await import('@/db/schema')
-  const rowsFor = (table: unknown) => (table === schema.eventPhotos ? photoRows : eventRows)
-  // Maps a real Drizzle column object to the camelCase key used on fixture rows.
-  const columnKey = new Map<unknown, string>([
-    [schema.eventPhotos.eventId, 'eventId'],
-    [schema.eventPhotos.status, 'status'],
-    [schema.eventPhotos.url, 'url'],
-    [schema.events.type, 'type'],
-  ])
-  function matches(row: Record<string, unknown>, cond: unknown): boolean {
-    const c = cond as { __op: string; column?: unknown; value?: unknown; conditions?: unknown[] }
-    if (c.__op === 'and') return (c.conditions ?? []).every((sub) => matches(row, sub))
-    if (c.__op === 'eq') return row[columnKey.get(c.column) ?? ''] === c.value
-    return true
-  }
-  function project(rows: Record<string, unknown>[], projection?: Record<string, unknown>) {
-    if (!projection) return rows
-    return rows.map((r) => Object.fromEntries(Object.keys(projection).map((outKey) => [outKey, r[columnKey.get(projection[outKey]) ?? outKey]])))
-  }
-  return {
-    db: {
-      select: (projection?: Record<string, unknown>) => ({
-        from: (table: unknown) => {
-          // Filtering happens on the raw (unprojected) rows so `where`
-          // conditions can reference columns the projection later drops.
-          const rows = rowsFor(table) as Record<string, unknown>[]
-          const finalize = (rs: Record<string, unknown>[]) => project(rs, projection)
-          return Object.assign(Promise.resolve(finalize(rows)), {
-            where: (cond: unknown) => {
-              const filtered = rows.filter((r) => matches(r, cond))
-              return Object.assign(Promise.resolve(finalize(filtered)), {
-                orderBy: () => Promise.resolve(finalize(filtered)),
-              })
-            },
-            orderBy: () => Promise.resolve(finalize(rows)),
-          })
-        },
-      }),
-    },
-  }
-})
+/** Fixture rows are written domain-style (Dates); store them Payload-style (ISO strings). */
+const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : v)
+function load() {
+  fake = createPayloadFake({
+    events: (eventRows as Record<string, unknown>[]).map((e) => ({
+      title: 'E',
+      mealOptions: [],
+      ...e,
+      eventDate: iso(e.eventDate),
+      startDate: iso(e.startDate),
+      endDate: iso(e.endDate),
+      dayOfWeek: e.dayOfWeek == null ? null : String(e.dayOfWeek),
+    })) as never,
+    'event-photos': photoRows as never,
+    'event-rsvps': rsvpRows as never,
+  })
+}
+let rsvpRows: unknown[] = []
 
 beforeEach(() => {
   fixedNow = null
   photoRows = []
+  rsvpRows = []
 })
 
 describe('listUpcomingItems', () => {
@@ -83,6 +47,7 @@ describe('listUpcomingItems', () => {
     eventRows = [
       { id: 1, type: 'one_time', eventDate: future, eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
     ]
+    load()
     const { listUpcomingItems } = await import('@/lib/events-queries')
     const items = await listUpcomingItems()
     expect(items).toHaveLength(1)
@@ -94,6 +59,7 @@ describe('listUpcomingItems', () => {
     eventRows = [
       { id: 2, type: 'one_time', eventDate: past, eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
     ]
+    load()
     const { listUpcomingItems } = await import('@/lib/events-queries')
     expect(await listUpcomingItems()).toEqual([])
   })
@@ -104,6 +70,7 @@ describe('listUpcomingItems', () => {
     eventRows = [
       { id: 3, type: 'recurring', eventDate: null, eventTime: '18:00', dayOfWeek: new Date().getUTCDay(), startDate: start, endDate: end },
     ]
+    load()
     const { listUpcomingItems } = await import('@/lib/events-queries')
     const items = await listUpcomingItems()
     expect(items).toHaveLength(1)
@@ -122,7 +89,8 @@ describe('listUpcomingItems', () => {
       eventRows = [
         { id: 10, type: 'one_time', eventDate: new Date('2026-11-05T00:00:00.000Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
       ]
-      const { listUpcomingItems } = await import('@/lib/events-queries')
+      load()
+    const { listUpcomingItems } = await import('@/lib/events-queries')
       const items = await listUpcomingItems()
       expect(items).toHaveLength(1)
       expect(items[0].event.id).toBe(10)
@@ -133,7 +101,8 @@ describe('listUpcomingItems', () => {
       eventRows = [
         { id: 11, type: 'one_time', eventDate: new Date('2026-11-05T00:00:00.000Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
       ]
-      const { listUpcomingItems } = await import('@/lib/events-queries')
+      load()
+    const { listUpcomingItems } = await import('@/lib/events-queries')
       expect(await listUpcomingItems()).toEqual([])
     })
 
@@ -152,7 +121,8 @@ describe('listUpcomingItems', () => {
           endDate: new Date('2026-12-31T00:00:00.000Z'),
         },
       ]
-      const { listUpcomingItems } = await import('@/lib/events-queries')
+      load()
+    const { listUpcomingItems } = await import('@/lib/events-queries')
       const items = await listUpcomingItems()
       // The filter must actually remove today's already-started session, not just
       // happen to return nothing — assert the series still has future occurrences,
@@ -179,7 +149,8 @@ describe('listUpcomingItems', () => {
       eventRows = [
         { id: 20, type: 'one_time', eventDate: new Date('2026-11-05T00:00:00.000Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
       ]
-      const { listUpcomingItems } = await import('@/lib/events-queries')
+      load()
+    const { listUpcomingItems } = await import('@/lib/events-queries')
       expect(await listUpcomingItems()).toEqual([])
     })
 
@@ -189,7 +160,8 @@ describe('listUpcomingItems', () => {
       eventRows = [
         { id: 21, type: 'one_time', eventDate: new Date('2026-11-05T00:00:00.000Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null },
       ]
-      const { listUpcomingItems } = await import('@/lib/events-queries')
+      load()
+    const { listUpcomingItems } = await import('@/lib/events-queries')
       const items = await listUpcomingItems()
       expect(items).toHaveLength(1)
       expect(items[0].event.id).toBe(21)
@@ -200,11 +172,87 @@ describe('listUpcomingItems', () => {
 describe('getEventPhotosPublic', () => {
   it('returns only approved photos, excluding pending submissions', async () => {
     photoRows = [
-      { id: 1, eventId: 5, url: 'https://x.public.blob.vercel-storage.com/approved.jpg', status: 'approved', sortOrder: 0 },
-      { id: 2, eventId: 5, url: 'https://x.public.blob.vercel-storage.com/pending.jpg', status: 'pending', sortOrder: 1 },
+      { id: 1, event: 5, url: 'https://x.public.blob.vercel-storage.com/approved.jpg', status: 'approved', sortOrder: 0 },
+      { id: 2, event: 5, url: 'https://x.public.blob.vercel-storage.com/pending.jpg', status: 'pending', sortOrder: 1 },
+      { id: 3, event: 6, url: 'https://x.public.blob.vercel-storage.com/other.jpg', status: 'approved', sortOrder: 0 },
+      { id: 4, event: 5, url: 'https://x.public.blob.vercel-storage.com/first.jpg', status: 'approved', sortOrder: -1 },
     ]
+    eventRows = []
+    load()
     const { getEventPhotosPublic } = await import('@/lib/events-queries')
     const photos = await getEventPhotosPublic(5)
-    expect(photos).toEqual([{ url: 'https://x.public.blob.vercel-storage.com/approved.jpg' }])
+    expect(photos).toEqual([{ url: 'https://x.public.blob.vercel-storage.com/first.jpg' }, { url: 'https://x.public.blob.vercel-storage.com/approved.jpg' }])
+    expect(fake.callsTo('find', 'event-photos')[0].args).toMatchObject({
+      where: { and: [{ event: { equals: 5 } }, { status: { equals: 'approved' } }] },
+      sort: ['sortOrder', 'id'],
+    })
+  })
+})
+
+describe('public query shape (spec §2, §14)', () => {
+  it('every events read passes joins:false (the joins would load RSVP tokens/emails and pending photos)', async () => {
+    eventRows = [{ id: 1, type: 'one_time', eventDate: new Date('2026-11-05T00:00:00.000Z'), eventTime: '18:00', dayOfWeek: null, startDate: null, endDate: null }]
+    load()
+    const q = await import('@/lib/events-queries')
+    await q.listUpcomingItems()
+    await q.listPastOneTimeEvents()
+    await q.getEventById(1)
+    const finds = fake.callsTo('find', 'events')
+    expect(finds).toHaveLength(3)
+    for (const f of finds) expect(f.args).toMatchObject({ joins: false })
+    expect(finds[1].args.where).toEqual({ type: { equals: 'one_time' } })
+    expect(finds[2].args.where).toEqual({ id: { equals: 1 } })
+  })
+
+  it('getEventById maps the doc to the domain shape and returns null for a bad or missing id', async () => {
+    eventRows = [{ id: 1, type: 'recurring', eventDate: null, eventTime: '17:30', dayOfWeek: 2, startDate: new Date('2026-09-01T00:00:00.000Z'), endDate: new Date('2026-12-15T00:00:00.000Z'), mealOptions: [{ label: 'Parma' }, { label: 'Parma' }], cover: { id: 9, url: 'https://x/c.jpg' } }]
+    load()
+    const { getEventById } = await import('@/lib/events-queries')
+    const e = await getEventById(1)
+    expect(e).toMatchObject({ id: 1, type: 'recurring', dayOfWeek: 2, mealOptions: ['Parma', 'Parma'], coverImageUrl: 'https://x/c.jpg', eventDate: null })
+    expect(e!.startDate!.toISOString()).toBe('2026-09-01T00:00:00.000Z')
+    expect(await getEventById(2)).toBeNull()
+    expect(await getEventById(Number.NaN)).toBeNull()
+  })
+
+  it('getRsvpTally counts each answer for exactly one occurrence (ms precision)', async () => {
+    rsvpRows = [
+      { id: 1, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes' },
+      { id: 2, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'no' },
+      { id: 3, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes' },
+      { id: 4, event: 5, occurrenceDate: '2026-11-12T18:00:00.000Z', response: 'yes' },
+      { id: 5, event: 6, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes' },
+    ]
+    eventRows = []
+    load()
+    const { getRsvpTally } = await import('@/lib/events-queries')
+    expect(await getRsvpTally(5, new Date('2026-11-05T18:00:00.000Z'))).toEqual({ yes: 2, no: 1 })
+    expect(fake.callsTo('count', 'event-rsvps')).toHaveLength(2)
+  })
+
+  it('listGoingCounts groups future "yes" answers by event + occurrence', async () => {
+    fixedNow = new Date('2026-11-01T00:00:00.000Z')
+    rsvpRows = [
+      { id: 1, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes' },
+      { id: 2, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes' },
+      { id: 3, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'no' },
+      { id: 4, event: 5, occurrenceDate: '2026-10-01T18:00:00.000Z', response: 'yes' },
+    ]
+    eventRows = []
+    load()
+    const { listGoingCounts } = await import('@/lib/events-queries')
+    const counts = await listGoingCounts()
+    expect([...counts.entries()]).toEqual([['5:2026-11-05T18:00:00.000Z', 2]])
+    expect(fake.callsTo('find', 'event-rsvps')[0].args).toMatchObject({ select: { event: true, occurrenceDate: true }, pagination: false })
+  })
+
+  it('getRsvpByToken refuses a non-UUID-shaped token without querying', async () => {
+    rsvpRows = [{ id: 1, event: 5, occurrenceDate: '2026-11-05T18:00:00.000Z', response: 'yes', name: 'P', editToken: '' }]
+    eventRows = []
+    load()
+    const { getRsvpByToken } = await import('@/lib/events-queries')
+    expect(await getRsvpByToken('')).toBeNull()
+    expect(await getRsvpByToken('short')).toBeNull()
+    expect(fake.callsTo('find', 'event-rsvps')).toHaveLength(0)
   })
 })

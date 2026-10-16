@@ -1,0 +1,39 @@
+---
+title: Legacy data ETL and cutover tooling
+status: shipped
+routes: []
+collections: [events, event-rsvps, event-photos, stories, players, player-aliases, player-seasons, player-sync-runs, documents, gallery-photos, sponsors, people, announcements, club, site-settings]
+admin: "None; run by an operator from the command line (pnpm etl, pnpm verify:cutover, pnpm export:since, pnpm reset:payload-schema)"
+owner: "Site operator (a developer), never the committee"
+related: [safety-guards, uploads-and-media, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The operator** who moves the live club site from the old Drizzle/Neon app to Payload without losing a single RSVP, story or file, and who needs a way back if it goes wrong.
+
+## Why it was built
+
+The Payload migration replaces the data layer of a live site. Fifteen legacy tables, the Blob files they point to, ids and secret tokens (people have saved RSVP and story links) must carry across exactly. The design (sections 12 and 13 of `2026-10-03-payload-cms-migration-design.md`) specifies an idempotent ETL, an independent verifier and a human-run runbook.
+
+## What it does
+
+- `pnpm etl --target <host>/<db>` (`payload/scripts/etl-legacy.ts`) copies the legacy `public.*` tables into Payload in foreign-key order. Legacy ids, slugs, tokens and timestamps are kept; id sequences are bumped. It reads `LEGACY_DATABASE_URL` read-only (unpooled host, read-only transactions, asserted before the first read).
+- Idempotent: re-running writes nothing because each step skips existing rows. `--update` updates in place; `--update --reconcile-deletes` first removes target rows that have gone from legacy; `--only` limits the steps; `--dry-run` writes nothing; `--report` writes JSON.
+- Media: Blob files that already exist are registered in place (no bytes move), `/assets/...` files are uploaded, other URLs are flagged in the report. Duplicate-URL documents and gallery photos are copied automatically.
+- Every real run ends with the same checks as `pnpm verify:cutover`: ids and counts, preserved fields, story text and images, each upload row's file, the plugin URL of every registered upload, sequences and a sample of Blob HEAD requests. Any failure exits 1.
+- `pnpm export:since --since <ISO>` prints a CSV of rows created or updated in Payload since a time, so they can be re-entered by hand after an Instant Rollback. Secrets are never exported.
+- `pnpm reset:payload-schema` runs `DROP SCHEMA payload CASCADE` and nothing else, for a second cutover attempt; `public.*` is never touched.
+- `pnpm seed:admin`, `seed:club` and `seed:demo` create the first admin, seed the club global, and fill a fresh database with demo content from `public/assets`. `fixture:legacy` loads a deterministic legacy fixture for rehearsals; `fixture:stats` seeds stats data.
+- Every script imports the shared guard (see [safety guards](./safety-guards.mdx)). The production runbook is `docs/superpowers/plans/2026-10-03-payload-cutover-checklist.md`; agents prepare it and never run it.
+- The build script (`pnpm vercel-build`) migrates production over `DATABASE_URI_UNPOOLED`, and previews refuse the production database host unless explicitly allowed.
+
+## How to use it
+
+Follow the cutover checklist and the README section "Legacy ETL and cutover". In short: rehearse locally with `--dry-run` then `--confirm`, run `verify:cutover`, then run the production window as written. A new club never runs the ETL.
+
+## Not included / deferred
+
+- The ETL is one-way; there is no two-way sync with the old app (rollback uses `export:since`).
+- Legacy tables and the old Drizzle code are decommissioned in a separate PR at least 30 days after a stable cutover. `feat/payload-cms` is not merged to `main` until the cutover. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

@@ -1,0 +1,9 @@
+season,team,grade,first_name,last_name,games,bat_innings,bat_not_outs,bat_runs,bat_high_score,bat_high_score_not_out,bat_balls,bat_fours,bat_sixes,bowl_overs,bowl_maidens,bowl_runs,bowl_wickets,best_wickets,best_runs,catches
+2012-13,Demo A Grade,Demo A Grade,Alex,Demoson,14,13,2,412,88,no,530,40,6,61.3,9,240,11,3,18,5
+2012/13,Demo A Grade,Demo A Grade,Sam,Tester,10,9,1,50,80,no,,,,,,,,,,
+2012/13,Demo A Grade,Demo A Grade,Jo,Newplayer,10,3,5,50,20,no,,,,,,,,,,
+2012/13,Demo Under 14 Girls,Under 14 Girls,Kim,Junior,10,9,1,50,20,no,,,,,,,,,,
+2012/13,Demo A Grade,Demo A Grade,Example,Player,10,9,1,50,20,no,,,,,,,,,,
+2012/13,=HYPERLINK("http://example.invalid"),Demo A Grade,Lee,Formula,10,9,1,50,20,no,,,,,,,,,,
+2012/13,Demo A Grade,Demo A Grade,Ray,Overs,10,9,1,50,20,no,,,,12.7,,,,,,
+2012/13,Demo A Grade,Demo A Grade,Pat,Wickets,10,9,1,50,20,no,,,,10,,50,0,2,20,

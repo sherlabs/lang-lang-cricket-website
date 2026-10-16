@@ -1,0 +1,360 @@
+/* Lists and edit forms (wave G WP-4). Colours come only from the --admin-* tokens; nothing here names a colour. */
+
+/* ---------- Avatar (photo or initials; logos use --contain) ---------- */
+.ui-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--admin-radius-s);
+  background: rgb(var(--admin-tint));
+  color: rgb(var(--admin-accent-ink));
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-line));
+}
+.ui-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ui-avatar--contain {
+  background: rgb(var(--admin-surface));
+}
+.ui-avatar--contain img {
+  object-fit: contain;
+  padding: 3px;
+}
+
+/* ---------- List cells ---------- */
+.club-date-tile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--admin-radius-s);
+  background: rgb(var(--admin-tint));
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-line));
+  line-height: 1.15;
+  color: rgb(var(--admin-ink));
+}
+.club-date-tile__month,
+.club-date-tile__weekday {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(var(--admin-accent-ink));
+}
+.club-date-tile__day {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.club-date-weekly {
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+}
+.club-related {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Friendly filter chips above a list */
+.club-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding-inline: var(--gutter-h, 1rem);
+}
+.club-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--admin-control));
+  background: rgb(var(--admin-surface));
+  color: rgb(var(--admin-text));
+  font-weight: 600;
+  text-decoration: none;
+}
+.club-chip:hover {
+  background: rgb(var(--admin-tint));
+}
+.club-chip[data-on='true'] {
+  background: rgb(var(--admin-accent));
+  border-color: rgb(var(--admin-accent));
+  color: rgb(var(--admin-on-accent));
+}
+.club-chips__custom {
+  font-size: 0.875rem;
+  color: rgb(var(--admin-muted));
+}
+
+.collection-list td .club-count-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phone: each row becomes a card (picture, title, status), with a 44px tap target on the title link */
+@media (max-width: 767px) {
+  .collection-list .table-wrap thead,
+  .collection-list table thead {
+    display: none;
+  }
+  .collection-list .table > table {
+    width: calc(100% - var(--gutter-h, 1rem));
+  }
+  .collection-list table,
+  .collection-list tbody {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .collection-list tbody tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.75rem;
+    row-gap: 0.25rem;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    box-sizing: border-box;
+    max-width: 100%;
+    background: rgb(var(--admin-surface));
+    border: 1px solid rgb(var(--admin-line));
+    border-radius: var(--admin-radius-m);
+  }
+  .collection-list tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    grid-column: 2;
+    min-width: 0;
+  }
+  .collection-list tbody td:empty {
+    display: none;
+  }
+  .collection-list tbody td.cell-_select {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+  .collection-list--players tbody td.cell-games {
+    display: none;
+  }
+  .collection-list tbody td a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--admin-target);
+    font-weight: 700;
+  }
+}
+
+/* ---------- Edit forms ---------- */
+
+/* Details: the closed area at the end of a form that holds the internal fields */
+.collapsible-field.club-details {
+  margin-top: 1.5rem;
+}
+.club-docmeta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0 0 1rem;
+  color: rgb(var(--admin-muted));
+  font-size: 0.875rem;
+}
+.club-docmeta dt {
+  font-weight: 600;
+}
+.club-docmeta dd {
+  margin: 0;
+}
+
+/* The top bar of a form: the crowded "Last modified / Created" list moves into Details, the bar shows the save state. */
+.collection-edit .doc-controls:has(.club-savestate) .doc-controls__value-wrap,
+.global-edit .doc-controls:has(.club-savestate) .doc-controls__value-wrap {
+  display: none;
+}
+.club-savestate__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.5rem;
+  margin-right: auto;
+  font-weight: 600;
+  color: rgb(var(--admin-accent-ink));
+  text-decoration: none;
+  white-space: nowrap;
+}
+.club-savestate__back:hover {
+  text-decoration: underline;
+}
+.club-savestate {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--admin-muted));
+  white-space: nowrap;
+}
+.club-savestate[data-state='modified'] {
+  color: rgb(var(--admin-warn));
+}
+.club-savestate__hint {
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+/* Save is the one gold button */
+.collection-edit .doc-controls__controls .form-submit .btn,
+.global-edit .doc-controls__controls .form-submit .btn {
+  min-height: 2.5rem;
+  font-weight: 700;
+}
+
+/* Picture preview under a picture field */
+.club-uploadprev {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem;
+  border: 1px solid rgb(var(--admin-line));
+  border-radius: var(--admin-radius-m);
+  background: rgb(var(--admin-surface));
+}
+.club-uploadprev img {
+  width: 9rem;
+  height: 9rem;
+  object-fit: cover;
+  border-radius: var(--admin-radius-s);
+  background: rgb(var(--admin-tint));
+}
+.club-uploadprev[data-fit='contain'] img {
+  object-fit: contain;
+  padding: 0.5rem;
+  height: 6rem;
+}
+.club-uploadprev figcaption,
+.club-uploadprev__none {
+  font-size: 0.875rem;
+  color: rgb(var(--admin-muted));
+  overflow-wrap: anywhere;
+}
+.club-uploadprev__none {
+  margin: 0.5rem 0 0;
+}
+
+/* Phone: on the forms that show the save state (the committee's everyday ones) the save bar is fixed to the bottom of the screen so Save is always in reach, and the sidebar column folds into the form */
+@media (max-width: 767px) {
+  .collection-edit .doc-controls:has(.club-savestate),
+  .global-edit .doc-controls:has(.club-savestate) {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgb(var(--admin-surface));
+    border-top: 1px solid rgb(var(--admin-line));
+    box-shadow: 0 -4px 14px rgb(var(--admin-ink) / 0.08);
+  }
+  .collection-edit .doc-controls__wrapper,
+  .global-edit .doc-controls__wrapper {
+    height: auto;
+    min-height: 3.5rem;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .collection-edit .doc-controls__divider,
+  .global-edit .doc-controls__divider,
+  .collection-edit .doc-controls__content,
+  .global-edit .doc-controls__content {
+    display: none;
+  }
+  .collection-edit .doc-controls__controls-wrapper,
+  .global-edit .doc-controls__controls-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+  .collection-edit .doc-controls__controls,
+  .global-edit .doc-controls__controls {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+  .club-savestate {
+    white-space: normal;
+    text-align: right;
+    line-height: 1.2;
+    min-width: 0;
+    font-size: 0.8125rem;
+  }
+  .club-savestate__back {
+    min-width: 2.75rem;
+  }
+  .club-savestate__more {
+    display: none;
+  }
+  .collection-edit .doc-controls__controls,
+  .global-edit .doc-controls__controls {
+    gap: 0.75rem;
+  }
+  .collection-edit__form,
+  .global-edit__form {
+    padding-bottom: 5rem;
+  }
+  .collection-edit .document-fields--has-sidebar,
+  .global-edit .document-fields--has-sidebar {
+    display: block;
+  }
+}
+
+/* The linked first column: picture (or date tile) and name read as one tap target */
+.club-cell-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: rgb(var(--admin-ink));
+  text-decoration: none;
+}
+.club-cell-link:hover .club-related__name {
+  text-decoration: underline;
+}
+.club-related__name {
+  font-weight: 600;
+}
+
+/* Counts have no column heading on a phone card, so the cell carries its own words there (hidden on desktop, where the heading says it) */
+.club-count-label {
+  display: none;
+}
+@media (max-width: 767px) {
+  .club-count-label {
+    display: inline;
+  }
+}
+
+/* A long record name in the top breadcrumb is cut short instead of pushing the page wider than the screen */
+.app-header__step-nav-wrapper {
+  min-width: 0;
+}
+.app-header__step-nav {
+  min-width: 0;
+  max-width: 100%;
+}
+.app-header__step-nav .step-nav__last {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

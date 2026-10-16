@@ -1,0 +1,62 @@
+---
+title: Membership and match fees
+status: shipped
+routes: ["/admin/office/fees", "/admin/office/fees/member/:id", "/api/admin/office/fees/:action", "/api/admin/office/export/fees"]
+collections: [membership-tiers, memberships, fee-seasons, fee-charges, fee-payments, fee-waivers, members, match-appearances, matches, office-audit-log, office-settings]
+admin: "Club office, then Fees (admin only); the native pages for tiers and the ledger are the fallback"
+owner: "The club's treasurer (a site admin)"
+related: [club-office, member-directory, committee-admin, admin-notifications, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The treasurer** who keeps a spreadsheet of who has paid their membership and match fees, and wants to see at a glance who owes what, record a payment in a few taps and hand the committee a report.
+- **A parent** who pays one amount for two children, or pays next season's membership while last season's match fees are still owing.
+- **The committee** who occasionally waive a fee for a player who was injured, and want the reason written down.
+
+## Why it was built
+
+Match fees were tracked by hand against a game list that already exists on the site. This is issue [#25](https://github.com/sherlabs/lang-lang-cricket-website/issues/25). It works out what each member owes from the games they played, keeps a ledger of payments and waivers that can be voided but never edited, and freezes a season when the treasurer closes it. It records money; it does not take it.
+
+## What it does
+
+- **Membership types** (admin): a name, a season, and either a fixed fee for the season, a fee per game, both, or free. Amounts are whole cents in the native pages and normal amounts ("20" or "12.50") in the quick form on the Fees page. Once any member has joined on a type, its two amounts cannot change (the name and the "offered" tick still can), and the amounts are also copied onto each membership when it is created, so editing a type later can never change what a member owes. **Copy last season's types** makes new, editable rows for the new season.
+- **Memberships:** a member joins a season on a type, once per season. The Fees page can add one member, or every player who is not in the season yet. A closed season takes no new memberships. A member who has fee records cannot be deleted from the member page (archive them or remove their personal details instead).
+- **What is owed, for the open season,** is worked out each time from the games in the match store: one charge per final game a linked player played on the club side, dated the game date, plus the membership fee dated when they joined (or the season start). A player who filled in for a game pays only if they are a registered player or the setting "Charge fill-in players match fees" in Club office settings is on. A free type produces no charges. Players with no linked member, and appearances that cannot be matched to a player, are not charged.
+- **Allocation.** Charges are settled oldest first. Waivers come first (one game, a whole season, or an amount). A payment **aimed at a season or a game** settles only that target; anything beyond what it owes is held as credit and is never spent on older debts. Payments with no target form one pool that settles the oldest debt, across seasons, and what is left is credit that rolls forward. So paying next season's membership with a target leaves last season's arrears owing. Status is always a word plus a mark: Paid, Part paid, Owing, Waived, Not charged.
+- **The report** (`/admin/office/fees`): a season picker with an Open or Closed badge; cards for Payable, Paid, Waived, Outstanding and Credit held, each saying what it leaves out (archived members, appearances that could not be matched to a member, appearances in games that are not in the match store, and voided rows); a table by member or by household; "Owing only". The paid columns are labelled "all payments to date, targeted payments first", with a separate "Paid for this season" column for aimed payments. A household is the members connected through the parents or guardians field. When appearances cannot be matched, or players have more games on their season totals than the store holds (junior games may be missing), the page says the totals may be incomplete and the Outstanding card says "incomplete". That warning line is text only: it does not link to a list of the unmatched appearances or missing games.
+- **The open season changes.** A banner explains that figures for the open season come from match data and can change after a PlayHQ sync or a player merge. **Close season** stores one charge per charge, marks the season closed and freezes the figures; it refuses if appearances are still unmatched unless "close anyway" is ticked (recorded). For a closed season the page compares what match data would give today with the stored total and shows a warning if they differ; it changes nothing. A correction after closing is a void of the stored charge plus an adjustment with a note.
+- **A member's ledger** (`/admin/office/fees/member/:id`): every charge with its status, the payments (with who paid), the waivers, the memberships, and forms. **Record payment** takes an amount, date (not in the future), method (cash, bank transfer, other; no card option), reference, note, payer, optional target, and an optional **split across** the household's members (an even split by default, or typed shares that add up). A split writes one row per child in one database transaction, so it saves completely or not at all. **Show what this will settle** previews the same calculation before saving. Reference and note text that looks like a card number is refused everywhere.
+- **Voiding.** Payments, waivers and stored charges are voided with a reason (who and when are kept), never edited or deleted. Voiding one part of a split can void the whole split. The figures are worked out again straight away.
+- **Download:** one spreadsheet per season (one row per member; a tick adds one row per charge). Admins only, logged in the exports and sends log with the season's start year and whether the detail was included. It never contains contact details, date of birth, emergency contact or notes, and any cell that a spreadsheet could read as a formula is neutralised.
+- **Where it shows up:** a Fees tile on the Club office page ("N members owe $X in match fees (open season, unmatched appearances not counted)") and an information line on the admin Home page, both for admins only.
+- **Privacy:** every fee collection is admin-only; the payment, waiver, charge and season collections cannot be written over the API by anyone, so only the Fees forms (which check for an admin and validate everything) change them. Nothing here is on a public page.
+- **Demo data:** `pnpm seed:demo` adds membership types for last season and this season, memberships for the demo players, a closed last season (frozen charges), part payments, one overpayment so credit shows, one waived game, a payment aimed at this season while last season is still owing, two members who pay per game this season from games already in the store, and a household with a split payment. All invented, with example references.
+
+## How to use it
+
+1. Sign in as an admin. **Club office**, then **Fees**. Pick the season.
+2. First time: open **Set up fees**, add a type (for example "Pay as you play" with a fee per game), then **Add members to the season**.
+3. As games are played and synced, charges appear on their own. To record money: open the member, **Record payment**, check the preview, save. For a family, tick the children under **Split across**.
+4. To aim a payment at next season's membership, choose it under **Aimed at**. Leave it as General to settle the oldest debt.
+5. To waive a fee, open the member and **Waive a fee** with a reason. To undo a payment or waiver, **Void** it and say why.
+6. At the end of the season: check the unmatched appearances note, then **Close season**. After that, fix mistakes with a void and an adjustment on the member page.
+7. **Download CSV** for the committee report.
+
+## Not included / deferred
+
+- Taking payments, receipts, refunds and any card handling: none. Record money by hand; for a refund, void and re-enter. A payment provider would need its own review.
+- A separate treasurer role: only site admins reach any of this. Whether the treasurer should be an admin or have a narrower role is a decision recorded in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Changing a member's type part way through a season, pro-rata fees and per-season payment pools: not modelled.
+- Exporting to accounting software, member-facing balances and reminders: not built. An admin can email the group "Members who owe match fees" from [Bulk email](./bulk-email.mdx); amounts are not put in the message, and the fee pages send nothing themselves.
+- Junior games that are not in the match store are not charged; juniors are expected to use a season-fee type. The page counts the gap rather than guessing.
+- Adjustments only exist for closed seasons; in an open season, add a waiver or fix the match data instead.
+
+## Safeguards
+
+- Figures for every open season are worked out together, so a member's per-game charges and the payments that settle them are the same whichever season you are viewing.
+- Closed seasons are frozen: new membership types, copying types in, adding or removing a membership all say the season is closed.
+- Each Record payment, Waive a fee, Add adjustment and Close season form carries a one-shot key, so a double tap or a refresh-and-resubmit does it once. Close season also takes a database lock per season and looks again for a closed season before storing anything, so two people (or two taps at once) can never store the charges twice. A second close without the same form key says the season is already closed.
+- Money is kept in cents, so the currency in Club office settings must have two decimals (AUD, NZD, GBP, USD, EUR...). A code such as JPY or KWD is refused in the settings and the configured default is used instead.
+- Season names must match the club's format (for example 2026/27, with the second year one more than the first); anything else is refused.

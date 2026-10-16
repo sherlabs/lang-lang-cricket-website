@@ -1,8 +1,9 @@
+import { CLUB_LOCALE } from '@/config/site'
 // Event dates are UTC-midnight calendar dates with the local time-of-day merged in
 // as UTC hours (see lib/event-occurrences.ts), so every formatter here must read
 // them in UTC or a non-UTC server would shift the displayed day.
 function parts(d: Date, opts: Intl.DateTimeFormatOptions) {
-  const list = new Intl.DateTimeFormat('en-AU', { ...opts, timeZone: 'UTC' }).formatToParts(d)
+  const list = new Intl.DateTimeFormat(CLUB_LOCALE, { ...opts, timeZone: 'UTC' }).formatToParts(d)
   return (t: Intl.DateTimeFormatPartTypes) => list.find((p) => p.type === t)?.value ?? ''
 }
 
@@ -17,15 +18,6 @@ export function formatLongDate(d: Date, withYear = false): string {
 export function dateTileParts(d: Date): { day: string; month: string } {
   const get = parts(d, { day: 'numeric', month: 'short' })
   return { day: get('day'), month: get('month') }
-}
-
-/**
- * `25/10/2026`-style short date, for admin tables. Explicit 'en-AU' locale
- * (not `undefined`) so the display matches the public site regardless of
- * the server's ambient locale.
- */
-export function formatUtcDate(d: Date): string {
-  return d.toLocaleDateString('en-AU', { timeZone: 'UTC' })
 }
 
 /** Weekday names, indexed 0 (Sunday) - 6 (Saturday) to match `dayOfWeek`. */

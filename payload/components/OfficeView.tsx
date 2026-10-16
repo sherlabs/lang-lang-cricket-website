@@ -1,0 +1,65 @@
+// @committee-facing
+import { SetStepNav } from '@payloadcms/ui'
+import type { AdminViewServerProps } from 'payload'
+import { landingStats } from '@/lib/office/landing'
+import { modulesFor } from '@/lib/office/modules'
+import { officeCopy } from '../admin/copy'
+import { isStaffUser } from '../access'
+import { AdminPage, requireStaff } from './AdminPage'
+import { EmptyState, PageHeader } from './ui'
+
+/**
+ * `/admin/office` (custom view, admin and editor): the landing page of the club back office. One tile per module the signed-in
+ * role may use, each with one honest stat line. Editors see only the committee-level modules; members, the exports and sends log
+ * and the office settings are for admins.
+ */
+export async function OfficeView(view: AdminViewServerProps) {
+  const denied = await requireStaff(view, '/office')
+  if (denied !== null) return denied
+  const { req } = view.initPageResult
+  const admin = req.payload.config.routes.admin
+  const role = isStaffUser(req.user) ? (req.user as { role?: string }).role : null
+  const modules = modulesFor(role)
+  const stats = await landingStats(req.user, modules.map((m) => m.key))
+  return (
+    <AdminPage view={view}>
+      <SetStepNav nav={[{ label: 'Club office' }]} />
+      <PageHeader title="Club office" lead={<>The club&rsquo;s back office in one place. Pick a tile to get started.</>} />
+      {modules.length === 0 ? (
+        <EmptyState>{officeCopy.landing.empty}</EmptyState>
+      ) : (
+        <ul className="club-tiles">
+          {modules.map((m) => (
+            <li key={m.key}>
+              <a className="club-tile" href={`${admin}${m.path}`}>
+                <span className="club-tile__title">{m.label}</span>
+                <span className="club-tile__hint">{m.hint}</span>
+                {stats[m.key] ? <TileStat text={stats[m.key] as string} /> : null}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {role === 'admin' ? (
+        <p className="club-page__lead office-footer-links">
+          <a href={`${admin}/globals/office-settings`}>Club office settings</a> &middot; <a href={`${admin}/collections/office-audit-log`}>Exports and sends log</a>
+        </p>
+      ) : (
+        <p className="club-muted">{officeCopy.landing.adminOnlyNote}</p>
+      )}
+    </AdminPage>
+  )
+}
+
+/** The headline in bold, and a trailing "(what is not counted)" rule as a quiet line under it, so the tile reads at a glance. */
+function TileStat({ text }: { text: string }) {
+  const m = /^(.*?)\s*\(([^()]+)\)$/.exec(text)
+  if (!m) return <span className="office-stat">{text}</span>
+  const rule = m[2].charAt(0).toUpperCase() + m[2].slice(1)
+  return (
+    <>
+      <span className="office-stat">{m[1]}</span>
+      <span className="office-stat__rule">{rule.endsWith('.') ? rule : `${rule}.`}</span>
+    </>
+  )
+}

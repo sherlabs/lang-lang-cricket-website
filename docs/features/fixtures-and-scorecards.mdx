@@ -1,0 +1,40 @@
+---
+title: Fixtures, ladders and scorecards
+status: shipped
+routes: ["/fixtures", "/fixtures/[gameId]"]
+collections: []
+admin: "Home 'Refresh PlayHQ data' button (admin API /api/admin/playhq-refresh); no collection, data comes from PlayHQ"
+owner: "Committee (webmaster); visitors are players, parents and opposition clubs"
+related: [match-archive, match-data-store, playhq-player-sync, seo]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A parent** on Saturday morning looking for "where and when does the Under 14s play, and who is the opposition".
+- **A player** checking the ladder or reading last week's scorecard.
+- **The committee** who used to key fixtures in by hand.
+
+## Why it was built
+
+The original design had admin-entered fixtures because PlayHQ credentials were not available. PlayHQ then granted data partner access (`2026-09-16-playhq-integration-design.md`), so fixtures, results, ladders and scorecards are read live from the PlayHQ public API instead of being maintained by hand. The manual fixtures table was removed.
+
+## What it does
+
+- `/fixtures` has a season picker (`?season=`) and a team switcher (`?team=`). The hub shows "Next up" (upcoming games grouped by date), "Latest results", ladders for the club's graded teams with the club row highlighted, and a grid of the club's teams. Choosing a team shows that team's ladder, games and player batting and bowling tables. Team names have the club prefix stripped for display ("Lang Lang B Grade" becomes "B Grade").
+- `/fixtures/[gameId]` is the scorecard: grade, round, date, venue, toss, result sentence, a link to the PlayHQ game centre, and per innings the batting table, did-not-bat list, extras, total, fall of wickets and the bowling table. A game that is not final shows the header with "Scorecard will appear once the match is complete"; a final game with no published scorecard says so. Unknown games and games without a Lang Lang side return 404.
+- Junior names are shown as first name plus initial (for example "Jack S.") for child safety (`lib/playhq/names.ts`).
+- Data comes from `lib/playhq/` with Next.js data-cache tags and these lifetimes: seasons and team lists 6 hours, fixtures 30 minutes, ladders 1 hour, in-progress scorecards 15 minutes, final scorecards 7 days. Pages revalidate every 30 minutes (hub) and 15 minutes (scorecard). Dates are shown in the club timezone (Australia/Melbourne).
+- If PlayHQ is unreachable a section shows a "temporarily unavailable" panel linking to the club's PlayHQ page; the rest of the page still renders.
+- "Refresh PlayHQ data" on the admin Home invalidates the `playhq` tag so results show immediately.
+- Configuration: `PLAYHQ_ORG_ID`, `PLAYHQ_CLIENT_ID`, `PLAYHQ_TENANT`, optional `PLAYHQ_CLUB_URL`; defaults in `config/site.ts`.
+
+## How to use it
+
+Nothing to maintain. After entering results in PlayHQ, press **Refresh PlayHQ data** on the admin Home to see them straight away; otherwise they appear within 30 minutes.
+
+## Not included / deferred
+
+- There is no separate `/teams` page; the team view is `/fixtures?team=`.
+- The pages still read scorecards live from PlayHQ. Every finished senior game is now also stored row by row by the nightly sync ([Match data store](./match-data-store.mdx), [#2](https://github.com/sherlabs/lang-lang-cricket-website/issues/2)), but no page reads those rows yet. Opposition analysis, partnerships and phase analysis build on them ([#3](https://github.com/sherlabs/lang-lang-cricket-website/issues/3), [#5](https://github.com/sherlabs/lang-lang-cricket-website/issues/5), [#34](https://github.com/sherlabs/lang-lang-cricket-website/issues/34), [#35](https://github.com/sherlabs/lang-lang-cricket-website/issues/35)).
+- No live-score push or notifications. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

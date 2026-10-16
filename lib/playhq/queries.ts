@@ -1,4 +1,5 @@
 import { PLAYHQ_ORG_ID, mapLimit, phqFetch, phqFetchAll } from './client'
+import { JUNIOR_GRADE_RE } from './junior-rules'
 import { groupSeasons, isJuniorCompetition, pickDefaultSeason } from './seasons'
 import { dedupeGames, isFinished, mapGame } from './games'
 import { mapScorecard } from './scorecard'
@@ -44,9 +45,20 @@ export async function getClubGames(season: SeasonGroup) {
   return { teams, games: dedupeGames(games.flat()) }
 }
 
+/**
+ * The raw PlayHQ game summary. A FINAL game is cached for seven days; `fresh` skips the cache (the
+ * sync passes it when the fixture's `updatedAt` shows the scorecard was corrected, so a stale cached
+ * copy can never hash the same as the old rows).
+ */
+export async function getRawGameSummary(gameId: string, opts: { status?: string; fresh?: boolean } = {}): Promise<RawGameSummary> {
+  const res = await phqFetch<{ data: RawGameSummary }>(`/v2/games/${gameId}/summary`, {
+    revalidate: opts.status === 'FINAL' ? TTL.gameFinal : TTL.gameLive, tags: ['playhq-game'], fresh: opts.fresh,
+  })
+  return res.data
+}
+
 export async function getGameSummary(gameId: string, isJunior: boolean, status?: string): Promise<Scorecard> {
-  const res = await phqFetch<{ data: RawGameSummary }>(`/v2/games/${gameId}/summary`, { revalidate: status === 'FINAL' ? TTL.gameFinal : TTL.gameLive, tags: ['playhq-game'] })
-  return mapScorecard(res.data, PLAYHQ_ORG_ID, isJunior)
+  return mapScorecard(await getRawGameSummary(gameId, { status }), PLAYHQ_ORG_ID, isJunior)
 }
 
 export async function getLadder(gradeId: string, clubTeamIds: Set<string>): Promise<Ladder | null> {
@@ -83,7 +95,7 @@ export async function findClubTeam(teamId: string, seasonHint?: string | null) {
 }
 
 export function isJuniorGrade(gradeName: string) {
-  return isJuniorCompetition(gradeName) || /u1\d|under/i.test(gradeName)
+  return isJuniorCompetition(gradeName) || JUNIOR_GRADE_RE.test(gradeName)
 }
 export { isFinished }
 

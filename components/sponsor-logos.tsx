@@ -1,5 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { cn } from '@/lib/utils'
+import { TIER_ORDER } from '@/lib/sponsors'
+import { dedupeByHighestTier } from '@/lib/site-settings-core'
 
 export type Sponsor = {
   id: number
@@ -9,47 +11,41 @@ export type Sponsor = {
   linkUrl: string
 }
 
-export const TIER_ORDER = ['Platinum', 'Gold', 'Silver', 'Bronze', 'Player'] as const
-export const TIERS: readonly string[] = TIER_ORDER
+export { TIER_ORDER, TIERS } from '@/lib/sponsors'
 
 export const TIER_STYLES: Record<
   string,
-  { grid: string; logo: string; card: string; badge: string; blurb: string }
+  { grid: string; logo: string; card: string; badge: string }
 > = {
   Platinum: {
     grid: 'grid-cols-1 sm:grid-cols-2',
     logo: 'h-28 sm:h-36',
     card: 'p-10 rounded-3xl',
     badge: 'bg-brand-black text-white',
-    blurb: 'Our principal partner.',
   },
   Gold: {
     grid: 'grid-cols-2 md:grid-cols-3',
     logo: 'h-20 sm:h-24',
     card: 'p-8 rounded-2xl',
     badge: 'bg-brand-gold text-brand-black',
-    blurb: 'Major supporters of the club.',
   },
   Silver: {
     grid: 'grid-cols-2 md:grid-cols-4',
     logo: 'h-14 sm:h-16',
     card: 'p-6 rounded-xl',
     badge: 'bg-brand-stone text-brand-black ring-1 ring-brand-black/10',
-    blurb: 'Backing the club season to season.',
   },
   Bronze: {
     grid: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6',
     logo: 'h-10 sm:h-12',
     card: 'p-4 rounded-lg',
     badge: 'bg-brand-gold-pale text-brand-gold-deep',
-    blurb: 'Local businesses in our corner.',
   },
   Player: {
     grid: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6',
     logo: 'h-10 sm:h-12',
     card: 'p-4 rounded-lg',
     badge: 'bg-brand-ink text-white',
-    blurb: 'Getting individual players onto the park.',
   },
 }
 
@@ -78,19 +74,7 @@ export function groupByTier(rows: Sponsor[]) {
   )
 }
 
-/**
- * A business can sponsor at more than one tier; keep its first occurrence
- * (highest tier, given tier-ordered input) so its logo appears once.
- */
-export function dedupeByHighestTier(rows: Sponsor[]) {
-  const seen = new Set<string>()
-  return rows.filter((s) => {
-    const key = s.name.trim().toLowerCase()
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
+export { dedupeByHighestTier } from '@/lib/site-settings-core'
 
 export function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: string }) {
   const style = TIER_STYLES[tier] ?? TIER_STYLES.Bronze

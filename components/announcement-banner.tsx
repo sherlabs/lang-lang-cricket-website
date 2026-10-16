@@ -10,6 +10,9 @@ type Props = {
   id: number
   title: string
   excerpt: string
+  /** Optional button (a path on this site or an https address, already checked by the mapper). */
+  link?: string | null
+  linkLabel?: string | null
 }
 
 /**
@@ -18,7 +21,7 @@ type Props = {
  * the server skips rendering it on the next request (no flash) while a newer
  * announcement will still show.
  */
-export function AnnouncementBanner({ id, title, excerpt }: Props) {
+export function AnnouncementBanner({ id, title, excerpt, link, linkLabel }: Props) {
   const [hidden, setHidden] = useState(false)
   if (hidden) return null
 
@@ -52,13 +55,28 @@ export function AnnouncementBanner({ id, title, excerpt }: Props) {
               {excerpt}
             </p>
           )}
-          <Link
-            href={`/announcements#announcement-${id}`}
-            className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold underline decoration-brand-black/40 underline-offset-4 transition hover:decoration-brand-black focus-visible:outline-brand-black sm:mt-0"
-          >
-            Read more
-            <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
-          </Link>
+          {link ? (
+            // A button to the linked page (the teams page, for example). Same-site paths use the router, https links open as plain links.
+            link.startsWith('/') ? (
+              <Link href={link} className="mt-1.5 inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-md bg-brand-black px-3 text-sm font-semibold text-brand-gold transition hover:bg-brand-charcoal focus-visible:outline-brand-black sm:mt-0">
+                {linkLabel || 'Read more'}
+                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+              </Link>
+            ) : (
+              <a href={link} rel="noopener noreferrer" className="mt-1.5 inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-md bg-brand-black px-3 text-sm font-semibold text-brand-gold transition hover:bg-brand-charcoal focus-visible:outline-brand-black sm:mt-0">
+                {linkLabel || 'Read more'}
+                <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+              </a>
+            )
+          ) : (
+            <Link
+              href={`/announcements#announcement-${id}`}
+              className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold underline decoration-brand-black/40 underline-offset-4 transition hover:decoration-brand-black focus-visible:outline-brand-black sm:mt-0"
+            >
+              Read more
+              <HugeiconsIcon icon={ArrowRight01Icon} className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
         </div>
 
         <button

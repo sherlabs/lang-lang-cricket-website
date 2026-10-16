@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const syncPlayers = vi.fn(async () => ({ status: 'ok', playersCreated: 1, seasonRows: 2 }))
 vi.mock('@/lib/players/sync', () => ({ syncPlayers }))
+const refreshSelectionFixtures = vi.fn(async () => ({ created: 0 }))
+vi.mock('@/lib/selection-fixtures', () => ({ refreshSelectionFixtures }))
+const payload = { fake: 'payload' }
+vi.mock('@/lib/payload/client', () => ({ getPayloadClient: async () => payload }))
 
 beforeEach(() => { syncPlayers.mockClear(); process.env.CRON_SECRET = 's3cret' })
 
@@ -14,6 +18,13 @@ describe('GET /api/cron/players-sync', () => {
     expect((await GET(req('Bearer nope'))).status).toBe(401)
     expect(syncPlayers).not.toHaveBeenCalled()
   })
+  it('refreshes the selection fixtures after the sync, and a failure there does not fail the sync', async () => {
+    const { GET } = await import('@/app/api/cron/players-sync/route')
+    refreshSelectionFixtures.mockRejectedValueOnce(new Error('PlayHQ down'))
+    const res = await GET(req('Bearer s3cret'))
+    expect(res.status).toBe(200)
+    expect(refreshSelectionFixtures).toHaveBeenCalledWith(payload)
+  })
   it('401 when CRON_SECRET is unset', async () => {
     delete process.env.CRON_SECRET
     const { GET } = await import('@/app/api/cron/players-sync/route')
@@ -24,5 +35,13 @@ describe('GET /api/cron/players-sync', () => {
     const res = await GET(req('Bearer s3cret'))
     expect(res.status).toBe(200)
     expect(await res.json()).toMatchObject({ status: 'ok' })
+    expect(syncPlayers).toHaveBeenCalledWith(payload)
+  })
+  it('500 when the sync errors, 200 when locked', async () => {
+    const { GET } = await import('@/app/api/cron/players-sync/route')
+    syncPlayers.mockResolvedValueOnce({ status: 'error', playersCreated: 0, seasonRows: 0 })
+    expect((await GET(req('Bearer s3cret'))).status).toBe(500)
+    syncPlayers.mockResolvedValueOnce({ status: 'locked', playersCreated: 0, seasonRows: 0 })
+    expect((await GET(req('Bearer s3cret'))).status).toBe(200)
   })
 })

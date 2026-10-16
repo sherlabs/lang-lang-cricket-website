@@ -1,0 +1,58 @@
+---
+title: Committee meetings, seats and office-bearer documents
+status: shipped
+routes: ["/admin/office/meetings", "/admin/office/meetings/:id", "/admin/office/meetings/:id/minutes", "/admin/office/meetings/actions", "/admin/office/meetings/documents", "/api/admin/office/meetings/:action", "/api/office-files/file/:filename"]
+collections: [committee-seats, meeting-templates, meetings, meeting-items, meeting-attendance, meeting-motions, meeting-actions, committee-documents, office-files, office-settings, office-audit-log]
+admin: "Club office, then Meetings (the committee); restricted items and documents are for office-bearers; handing over seats is admin only"
+owner: "The club secretary (a committee member)"
+related: [club-office, volunteer-roster, admin-notifications, committee-admin, multi-club-template]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The secretary** who takes the minutes on a phone or laptop and wants the agenda, the people who came, the motions and the jobs agreed to end up in one place, with a draft of the minutes at the end.
+- **Committee members** who want to see the jobs they were given and how overdue they are.
+- **Office-bearers** (for example the president, secretary and treasurer) who deal with matters that the rest of the committee should not read in the minutes, and who keep papers such as insurance and the constitution.
+- **The admin** who hands the seats over to the new committee after the yearly general meeting.
+
+## Why it was built
+
+Minutes lived in email attachments, jobs agreed at a meeting were forgotten by the next one, and nobody was sure who could open the insurance papers after the committee changed. This is issue [#27](https://github.com/sherlabs/lang-lang-cricket-website/issues/27). It runs a meeting from an agenda, keeps the agreed jobs with the seat (so they survive a change of person), lets an item be marked restricted, and gives the office-bearers a place for papers that others cannot open.
+
+## What it does
+
+- **Agendas.** **Add the standard agendas** (once, on the Meetings page) creates a generic committee meeting, a yearly general meeting and a special meeting agenda. The wording is neutral; edit or add agendas under **Edit agendas** (admins). Each agenda has a kind (ordinary, yearly general, special) and a list of items (title, kind, starting notes, restricted). The name of the yearly meeting is a setting, "Name of the yearly meeting" in Club office settings (default "Annual general meeting"), so a club can use its own term.
+- **Starting a meeting.** Pick an agenda, a date and time (and optionally a title and a place). The meeting gets the agenda's items, everyone who holds a seat starts as present, and a **Business arising** item always exists: it lists the open committee actions from earlier meetings with Done and Blocked buttons. Times are shown exactly as typed, with no time zone conversion.
+- **Running it** (phone first). Attendance chips (Present, Apology, Absent) with a plain count of who is present; add someone from Committee &amp; contacts or a guest by name. There is no quorum figure or arithmetic: whether there was a quorum is a sentence the minute-taker writes. Each agenda item has notes and an outcome, a quick **motion** (text, for, against, abstained, result; counts only, no record of who voted how) and a quick **action** (text, the seat that owns it, a due date). The first item with nothing recorded yet is open. Chair and minute-taker are seats.
+- **Closing and minutes.** **Close the meeting and draft the minutes** writes a draft from what was recorded (attendance, notes, motions, outcomes, actions). The draft can be edited and saved. On the next meeting the item "Approve the previous minutes" offers **Mark those minutes as approved**; approved minutes are locked. The **minutes page** (`/admin/office/meetings/:id/minutes`) has print styles: use the browser's Print, then Save as PDF. There is no PDF generator.
+- **Committee actions** (`/admin/office/meetings/actions`). Every open or blocked action, overdue first, filterable by seat, with Done, Blocked and Drop buttons. Actions belong to the **seat**, so they stay put when the person changes.
+- **Restricted items.** Finance items and every item of a special meeting start restricted; an office-bearer can restrict or release any item, or restrict a whole meeting. A restricted item, its motions, its actions and its notes, and the minutes of a restricted meeting, are invisible to committee members who are not office-bearers: the rows are not returned at all (over the API or in the pages), and the page only says "N restricted items are only visible to office-bearers". The draft minutes of an ordinary meeting leave restricted items out ("N restricted items are not shown"); an office-bearer's print view adds them as a separate part.
+- **Office-bearers.** An admin is always an office-bearer. A committee member (editor) is one only while a seat marked **Office-bearer** names their login and the seat's term has not ended. A selector never is. The check runs on every request and is remembered only for that request, so a handover takes effect straight away.
+- **Handing over seats.** On a yearly general meeting an admin sees **Hand over seats after the election**: for each seat, the new holder (or vacant) and, optionally, their login. In one go, for every seat that changed: the new holder and term start are saved, the old holder's login is **always cleared**, and a login is linked only if one was picked. Seats that did not change are untouched. A new office-bearer therefore gets no access until a login is linked, which is deliberate. Each changed seat writes a line in the exports and sends log (the seat and the outgoing and incoming person as numbers, never names). The step lists the people to update on the public Committee &amp; contacts page (that page is edited by hand and can disagree with the seats until you do) and who can open office-bearer documents now, worked out from the seats.
+- **Office-bearer documents** (`/admin/office/meetings/documents`). PDF, Word, Excel or image files, up to 4 MB, with a title, category and an optional meeting. Only office-bearers can list, open or add them (a committee member without a seat sees an explanation). Downloads go through the site's own access-controlled address (`/api/office-files/file/...`), sent as an attachment with no sniffing, no caching and no search indexing. Only an admin can remove a document. Files over 4 MB are refused with "Files over 4 MB are not supported here; share a link instead." Uploads happen on the server (never straight from the browser) so the file's storage address is never handed to the uploader. The Vercel Blob plugin can only write to a public store, so the stored file name gets a random suffix (`tests/office-blob.test.ts` fails if that is turned off): the real address cannot be guessed from a document's title, a second upload with the same name never replaces the first, and the address is never sent in a page or a response. The only door is the access-controlled download address above.
+- **Where it shows up:** a **Meetings** tile on Club office ("Next meeting ...; N committee actions are overdue (done and dropped actions are not counted; restricted actions only for office-bearers)") and lines on the admin Home page for overdue and blocked committee actions.
+- **Privacy and access:** committee members (admin and editor) read seats, agendas and unrestricted meeting data; selectors and the public read nothing. Nobody writes meetings, items, attendance, motions or actions over the API, not even an admin: the Meetings pages write after their own checks, because they keep a stored copy of each row's effective restriction in step. Seats are edited by admins; agendas by admins (the Edit agendas link is shown to admins). `tests/int/office-meetings.int.test.ts` runs five personas (signed out, selector, committee member without a seat, office-bearer, admin) against these rules, including that an ex-holder loses document access on the next request with the same sign-in.
+- **Demo data:** `pnpm seed:demo` adds six invented seats, the standard agendas, two closed meetings (each with a restricted finance item; one has approved minutes, the other still a draft), a planned yearly general meeting, a few actions (one overdue) and two documents. No logins are linked: an admin links a login to a seat (Club office, Meetings, Edit seats) to try the office-bearer view.
+
+## How to use it
+
+1. Sign in as an admin or editor. **Club office**, then **Meetings**. The first time press **Add the standard agendas**. An admin checks **Edit seats**: tick Office-bearer on the seats that should open restricted items and documents, and link each of those holders' logins.
+2. **Start a new meeting**, pick the agenda and date. During the meeting mark who is here, add notes, motions and actions on each item. Use **Restrict this item to office-bearers** for anything private (office-bearers only).
+3. **Close the meeting**, edit the draft minutes, save, and print them if you need a file. At the next meeting, approve them under "Approve the previous minutes".
+4. **Committee actions** shows what is still to do. Press Done when it is finished.
+5. After the yearly general meeting, an admin opens that meeting, **Hand over seats after the election**, picks the new holders and logins, and then updates the Committee &amp; contacts page by hand.
+6. **Office-bearer documents** (office-bearers) for the insurance certificate, the constitution and similar papers.
+
+## Not included / deferred
+
+- Per-person votes, mover and seconder tracking and quorum arithmetic: not built (write them into the motion text or the minutes). Follow-up on [#27](https://github.com/sherlabs/lang-lang-cricket-website/issues/27).
+- A browsable history of past seat holders: only the exports and sends log keeps handover lines. The public Committee &amp; contacts page is not built from the seats; keeping both in step is manual ([#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
+- PDF generation of minutes, emailing minutes or agendas, public minutes and recurring meetings: not built. Meetings send no mail themselves; [Bulk email](./bulk-email.mdx) can write to members but does not attach minutes.
+- The files are not a secret-grade store. With a storage token the file lives in the site's blob store at an unguessable address that is public to anyone who learns it; the site never gives that address to a browser, but someone with database or storage-list access can read it. Do not keep anything here that must stay secret from the people who run the site. Documents over 4 MB are not supported.
+- Minutes are records the club keeps: this tool records them and does not decide retention or approval wording.
+
+- **Restricting later:** when an office-bearer restricts an item or a meeting after minutes were saved, the saved minutes are redrafted from the meeting's data so the restricted text is removed (hand edits to the saved text are replaced; approval is kept).
+- **Who can create a special meeting:** agendas that make a restricted meeting (such as the special agenda) can only be used by office-bearers, because nobody else could open the result.
+- **Counts:** "blocked" counts every blocked action, including late ones; a late blocked action is counted as overdue as well.
+- **Approve previous minutes** only approves the latest earlier closed meeting whose minutes are still a draft. A handover also clears the login of a seat left vacant, and refuses a login picked for a seat whose holder is not changing.

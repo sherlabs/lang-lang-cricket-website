@@ -1,0 +1,73 @@
+---
+title: Facebook sign-in settings and the shared broker
+status: shipped
+routes: ["/admin/globals/site-settings", "/selector/facebook/start", "/selector/facebook/broker-callback", "/api/websport-auth/events", "/api/admin/signin/test"]
+collections: [users, auth-broker-jtis, throttle-hits]
+admin: "Site settings > Sign-in tab (admin only). The screen uses the shared admin look: page header, cards, plain buttons and status words, phone-friendly tables"
+owner: "Site admin"
+related: [selector-accounts, users-and-authentication, safety-guards, committee-admin, multi-club-template, admin-committee-screens]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The site admin** who wants selectors to sign in with one tap of Facebook, without creating and looking after a Facebook developer app for the club.
+- **A club that already runs its own Facebook app** (the first version of Facebook sign-in) and wants to keep it.
+- **A committee member or selector**, who only sees a **Continue with Facebook** button on the login page, or no button at all.
+
+## Why it was built
+
+Facebook sign-in for selectors first needed every club to register and maintain its own Meta app, with its own app review, privacy page and callback addresses. Issue [#40](https://github.com/sherlabs/lang-lang-cricket-website/issues/40) adds a second way: a shared sign-in broker (the WebSport broker) holds one Meta app for many clubs. The club registers its address with the broker once and never touches Meta. This page is where the admin chooses between the two ways, sees whether it works and tests the connection. The wave plan is in tracking issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## What it does
+
+**Three modes**, chosen by the admin on Site settings > **Sign-in** (a normal select with the normal Save button):
+
+- **Off.** Passwords only. No Facebook button, and every Facebook route answers 404.
+- **Through the shared sign-in broker** (the default). The person is sent to the broker, which talks to Facebook and sends them back with a signed one-minute "assertion" naming their Facebook id for this club.
+- **Through the club's own Facebook app.** The existing direct flow, with `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` on the server.
+
+**What is really on.** The chosen mode is not always what happens, so one function (`lib/signin/mode.ts`) decides, and the login page, the invite page, My account, every Facebook route and the admin status all ask it. A stored "broker" with a valid `AUTH_BROKER_ORIGIN` and `AUTH_BROKER_CLUB_ID` is the broker. A stored "broker" where those are missing but the club's own app settings are complete is the club's own app, with the reason shown, so a club that already used the first version keeps its button after this change. A stored "own app" without its settings, or no settings at all, is off. Any non-off result is switched off on a host that is not the configured site address, because the broker and Meta both allow exact addresses only (preview deployments show the password form only).
+
+**Sign-in stays invite-only.** The broker flow shares the direct flow's rules and code (`finishFacebookSignIn`): nothing creates an account from Facebook, the broker's display name is never stored or shown, and only a `selector` row can be signed in or linked (never an editor or an admin). An invite link binds the Facebook id the first time, a signed-in selector can link from My account, and a bound selector signs in with one tap. The start route throttles by address, re-checks the invite, and sets the same single-use signed cookie (10 minutes, `__Host-` in production). The callback checks that cookie, compares the `state` in constant time, verifies the assertion, spends its one-time id and then starts a brand-new session.
+
+**How the broker's assertion is checked.** The broker publishes Ed25519 public keys at `<broker>/.well-known/jwks.json`; the site caches them for five minutes (refetching at most once every 30 seconds if it sees an unknown key id, and using an older copy for up to an hour if the broker is down, then failing closed). The token must be signed with EdDSA only (so `alg: none` and the "public key used as an HMAC secret" trick are refused), have the broker as issuer and this site's address as audience, be at most two minutes long-lived, not be dated in the future, carry this club's id, the `facebook` method and the nonce from the browser's own cookie, and a digits-only subject. Its one-time `jti` is stored in `auth-broker-jtis` in one atomic statement, so the same assertion cannot sign in twice. The address of the site used for the audience comes from the server settings, never from the request.
+
+**Id spaces.** A Facebook id is app-scoped: the same person has a different id in the broker's Meta app and in a club's own app, and two different people could share digits across them. Each linked row records which one it was bound under (`facebookIdVia`), lookups only match inside that space, and the unique rule is on the id and the space together. Switching between "broker" and "own app" therefore does not move anyone: people linked under the other option link again from My account. Passwords keep working throughout.
+
+**Events from the broker.** When someone removes the app or asks Facebook to delete their data, the broker posts a signed event to `/api/websport-auth/events`. The events route works whatever mode is chosen (it answers 404 only when the broker is not set up on the server or the host is not the site address), so rows linked through the broker can still be unlinked, and a data-deletion request still honoured, after the admin switches Facebook off. A valid event unlinks the Facebook id of the matching broker-bound rows (the club stores only the id, so unlinking is the deletion) and always answers 200 with `{}`, whether or not a row matched, so nobody can ask who is a member. The same event delivered twice just unlinks nothing the second time. Only requests that fail verification count against a flood limit of 120 per hour (a limit that real events never touch), so junk traffic cannot block a real deletion. The direct data-deletion and deauthorize callbacks of the own-app mode only touch rows bound through the own app.
+
+**The Sign-in tab** (admin only, no new menu entry: the group lives on the existing Site settings page, and every field in it is admin-only over REST too) shows:
+
+- whether Facebook sign-in is on, and why or why not, in plain words;
+- which server settings are present (yes or no, never their values);
+- the values to give the broker's operator for this club (`id`, `name`, `origins`, `returnPath`, `eventsPath`), copy-ready;
+- the three addresses to enter in the Meta console for the own-app mode;
+- the trust statement below;
+- a **Test connection** button and the last result.
+
+**Test connection** makes three read-only calls to the configured broker and nowhere else: its health page, its public keys, and a registration check that asks the broker to start a sign-in for this club and address but does not follow the redirect (so Facebook is never contacted). It reports in plain English whether the broker is up, publishes keys, and knows this club and address ("not registered in the broker", "the broker has no Facebook app yet"). Only the result sentence and the time are stored.
+
+**Who is trusted.** In broker mode the club trusts the shared broker to say which Facebook person is signing in. A compromised or malicious broker could sign in as any selector who has linked Facebook through it. The risk is small on purpose: only selectors can be signed in this way (never an editor or an admin), only people who were invited are linked (nothing is created from Facebook alone), and a selector session reaches only the selector area. Committee accounts stay password-only. A club that does not accept this trust chooses its own Facebook app or turns Facebook off.
+
+**Home page notices (admin only).** A failed Test connection adds "Facebook sign-in could not reach the broker (checked <date>)." and a broker event that unlinked people adds "Facebook removed the link for n selectors." (shown for a week). Both link to the Sign-in tab.
+
+**Housekeeping.** The nightly sync cron deletes used assertion ids older than a day. The one-time assertion table has no personal data.
+
+## How to use it
+
+1. The broker's operator adds this club to the broker (the registration block on the Sign-in tab), and gives you the broker's address and your club id.
+2. Set `AUTH_BROKER_ORIGIN` (an `https://` origin, no path) and `AUTH_BROKER_CLUB_ID` on the server (see `.env.example`), and redeploy. With either empty the broker option is off.
+3. Open Site settings > **Sign-in**. Leave the choice on "Through the shared sign-in broker", press **Test connection**, and read the three lines. Fix what it names.
+4. Send selectors their invite links as usual ([Selector accounts](./selector-accounts.mdx)); the login and invite pages show **Continue with Facebook**.
+5. To use the club's own Facebook app instead, set its two server settings, choose "Through the club's own Facebook app" and Save; the tab lists the three addresses to enter in the Meta console. After a switch, people link Facebook again from My account.
+6. After a deployment, open the tab and confirm the status line says what you expect (the cutover checklist has this as an explicit step).
+7. To try the whole flow by hand with no Facebook and no network: `pnpm dev:fake-broker` (listens on 127.0.0.1 in the 4400 to 4499 port range), then start the site with `AUTH_BROKER_ORIGIN=http://127.0.0.1:4455` and `AUTH_BROKER_CLUB_ID=demo-club` in the shell.
+
+## Not included / deferred
+
+- Running or changing the broker, its Meta app, its app review and its deletion-callback address (they live in the broker project).
+- Sign-in with Google, Apple or any other provider, and Facebook sign-in for the committee (editors and admins stay password-only on purpose).
+- Moving people's links automatically between "broker" and "own app" (their ids differ; they link again).
+- A separate page for sign-in: it is a tab on Site settings by design, to keep the committee menu short.
+- Running a second broker or failing over between brokers.

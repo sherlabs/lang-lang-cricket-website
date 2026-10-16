@@ -1,0 +1,59 @@
+---
+title: Admin notification centre
+status: shipped
+routes: ["/admin"]
+collections: [player-sync-runs, stories, event-photos, merge-log, matches, player-seasons]
+admin: "Home, Needs your attention (everyone; a few extra rows for admins); Advanced > System health (admins)"
+owner: "Committee (everyday lines); the site admin (technical lines)"
+related: [membership-fees, volunteer-roster, committee-meetings, season-diary-and-plan, stock-and-merch, social-posting-queue, committee-admin, approvals-inbox, playhq-player-sync, duplicate-players-and-undo, history-import-export, milestones]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A volunteer secretary** who should be told in plain words if the stats did not update, and what is waiting for approval.
+- **The site admin** who wants the counts and a link to the sync runs.
+
+## Why it was built
+
+Failures were only visible in the Sync runs list, which volunteers never open ([#11](https://github.com/sherlabs/lang-lang-cricket-website/issues/11)).
+
+## What it does
+
+- Replaces the "Needs your attention" block on Home with one short list built from data that already exists:
+  - **The latest PlayHQ update.** Committee: "Player stats were updated last night." (or "last updated <date>" when older than a day and a half; "being updated right now"), or, when it failed, "Last night's stats update did not finish. The site is still showing the previous numbers. Please tell the site administrator." (a failure older than a day and a half says "failed on <date> and has not worked since" instead). An update that has been "running" for more than ten minutes (the sync lock window) is treated as a failed one, not shown as in progress. Raw errors are never shown to editors.
+  - **Waiting for approval:** stories and photos, with links.
+  - **Admins also see the fantasy game's committee actions of the last week** ("PIN reset for <team> by <person>, <date>", a hidden, renamed or removed team, a round closed by hand), with a link to Fantasy cricket. No PIN is ever in them (see [Fantasy cricket](./fantasy-cricket.mdx)).
+  - **Admins also see** the error text, the counts (matches saved, matches that did not save, players whose match totals disagree with their season totals) with a link to Sync runs, the number of possible duplicate players, and the import log (how many imports are on the site and when the latest was).
+- Problems come first; "You are all caught up" shows only when nothing needs attention.
+- The wording lives in `payload/admin/copy.ts`.
+- **No "milestones crossed" line.** Counting crossings from match rows would use the wrong baseline (milestones start from season totals) and a rolling window would announce one crossing on seven nightly runs. The existing Milestones widget stays on Home.
+
+**Volunteers (the committee).** When the next game day is within three days and a volunteer place is still empty: "N volunteer places are still empty for Sat 17 Oct (cancelled and no-show people are not counted)" (a warning, links to Volunteers). See [Volunteer roster and hours](./volunteer-roster.mdx).
+
+**Club jobs (the committee).** "N club jobs are overdue (done jobs are not counted)" and "N club jobs are blocked ..." (warnings), and "N club jobs have no owner (done jobs are not counted; a seat with nobody in it counts as no owner)" (information); each links to the season diary filtered to those jobs, and shows only when the count is above zero. Jobs of every season are counted. See [Season diary and strategic plan](./season-diary-and-plan.mdx).
+
+**Stock (the committee).** "N items are low (switched-off items are not counted; items with no reorder level are not checked)" and "N issued items are overdue back (items with no due date, things given away, and anything already returned, lost or voided are not counted)" (warnings); the first links to the Stock page filtered to Low, the second to the Owed back tab. Each shows only when the count is above zero. See [Stock and merch](./stock-and-merch.mdx).
+
+**Committee actions (the committee).** "N committee actions are overdue (done and dropped actions are not counted; restricted actions only for office-bearers)" and "N committee actions are blocked ..." (warnings, link to Committee actions), shown only when the count is above zero. Restricted actions are counted only for office-bearers. See [Committee meetings](./committee-meetings.mdx).
+
+**Match fees (admins only).** When members owe match fees in the open season: "N members owe $X in match fees (open season, unmatched appearances not counted)" (information, links to Fees). Nothing is shown when no one owes, and editors never see it. See [Membership and match fees](./membership-fees.mdx).
+
+**Social posts.** When the committee uses the posting queue ([Social posting queue](./social-posting-queue.mdx)): "N social posts need your attention" (a warning, links to the queue), "N posts are scheduled for today" (information) and "N scheduled posts are overdue. The scheduler may not be running" (a warning). Counts only, from one grouped query; a failure drops these lines, never the page.
+
+## Home: plain-English attention rows (wave G)
+
+Home no longer prints every notice. `lib/admin/attention.ts` turns the same facts into **tasks**: one sentence, a count badge and one button per row, drawn only when at least one exists (no "nothing to do" box; the greeting says "You're all caught up." instead). Examples: "3 volunteer spots are still empty for Thu 15 Oct" (Open volunteers), "2 posts need a look", "1 story is waiting for approval", overdue or blocked club jobs and committee actions, low or overdue stock. Information (a good stats update, posts due today, the import log, fantasy and sign-in notes) is not a task and no longer appears.
+
+- **Volunteer spots** means required minus signed up, floored at zero for each job, added up for the next game day only (the roster's own `fillStatus` supplies the number), and only when that day is within seven days. The date is written in the club timezone and locale.
+- **A failed stats update** stays as a row. Administrators get an "Open System health" button; the committee see the sentence without a button and with a tooltip to ask the site administrator. Raw errors never reach editors.
+- **Admin-only rows** (possible duplicate players, members owing match fees, Facebook sign-in unreachable) are never given to editors.
+- **System health** (Advanced, admins only) holds what used to crowd the list: the latest update with matches saved, matches that did not save and totals that disagree, the sync controls and the count cards.
+
+## How to use it
+
+Open **Home**. Follow a link to act on an item. An admin who sees the "did not finish" line opens **Sync runs** or presses **Run sync now** in the Advanced panel on Home (or on the Players list).
+
+## Not included / deferred
+
+- No email or push notification, and no new milestone computation. A correct "new milestones" line would compare `player-seasons` totals before and after each sync, which needs a stored snapshot; it is not built. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

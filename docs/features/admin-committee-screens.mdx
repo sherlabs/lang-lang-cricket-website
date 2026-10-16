@@ -1,0 +1,41 @@
+---
+title: Admin screens on the shared look (Club office, Selectors, Fantasy, tools)
+status: shipped
+routes: ["/admin/office", "/admin/selectors", "/admin/fantasy", "/admin/player-data-tools", "/admin/globals/social-settings"]
+collections: []
+admin: "Nothing to set up: Club office and its modules, Selectors, Fantasy cricket, Sign-in settings and the Player data tools all use the same page header, cards, buttons, status words and phone layout"
+owner: "The committee (everyday use) and the site admin"
+related: [admin-design-system, admin-lists-and-forms, committee-admin, club-office, selector-accounts, fantasy-cricket, sign-in-settings, duplicate-players-and-undo, history-import-export, approvals-inbox]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A volunteer treasurer or secretary on a phone** who opens Fees or Members at the ground and expects the page to fit the screen, with big buttons and words rather than icons or colours alone.
+- **A committee member who uses the keyboard or a screen reader** and needs every page to have one heading, a labelled menu and controls with names.
+- **A site admin looking after a second club**: the screens take their colours and fonts from Site look, so nothing is redone per club.
+
+## Why it was built
+
+After the shell, Home, Social and the lists and forms were rebuilt, the screens behind them (Club office and its modules, Selectors, Fantasy cricket, Sign-in settings, Player data tools) still looked like the old admin: their own heading styles, grey default buttons, tables that ran off a phone, and a "not found" page when email was switched off. This is the last work package of wave G (spec `2026-10-13-wave-g-admin-redesign-design.md`, section 7). Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## What it does
+
+- **One page header.** Every view opens with the shared `PageHeader`: one title in the display font and one sentence under it. The old hand-built titles are gone, and a test fails if one comes back.
+- **One set of buttons and status words.** Buttons are the shared primary, secondary and danger buttons (Remove and Close season are red, the main action is the club's accent colour). Statuses such as Open or Closed, On or Off, OK or Problem are pills with words, never colour alone.
+- **Tables that work on a phone.** On a phone each table row becomes a card with labelled lines (Selectors, Fantasy prices, rounds and teams, Duplicate players, Import history, Fees, Members and the rest of the office); from tablet width they are ordinary tables. Every table has a hidden caption and column and row headings for screen readers. Long breadcrumbs (a meeting title) are cut off with an ellipsis instead of making the page scroll sideways.
+- **One stylesheet.** The roughly 140 lines of per-view rules that lived in `admin.css` are folded into one file, `payload/components/views.css`, which uses only the admin colour variables (no club colour or hex value). Inputs are 16px text and at least 40px tall (44px on a phone), a gold ring shows keyboard focus, and motion respects the reduced-motion setting.
+- **Email problems say what to do.** If the email list cannot be loaded, or an email no longer exists, the page says so and links back instead of showing Payload's "Nothing found". (With email switched off the Email screens still answer as if they do not exist, on purpose.)
+- **Menus and landmarks.** The sidebar is labelled "Main" and the breadcrumb "Breadcrumb", every page has one main area, and Payload's own list and edit pages get one too.
+- **A registry of views.** `payload/admin/views.ts` lists every custom admin view. `tests/admin-view-guard.test.ts` fails if a view is registered but not listed, and checks on the code itself that each view's function calls the staff check first and returns its answer before reading anything. Staff means admin or editor; selectors and signed-out visitors never see these screens. Nothing about who can see what changed.
+- **Plain words are checked here too.** `tests/admin-microcopy.test.ts` now also scans the Club office, Selectors and Fantasy views and the Club office wording for developer words. "Document" is allowed where it means office-bearer documents.
+
+## How to use it
+
+Nothing to learn: open any of these screens from the menu. A developer adding a screen wraps it in `AdminPage`, starts with `PageHeader`, uses the shared buttons and the `office-*` or `club-*` classes in `views.css`, adds it to `payload/admin/views.ts` and starts its function with the staff check.
+
+## Not included / deferred
+
+- Some controls Payload draws itself (dropdowns and array buttons on forms such as Sign-in settings, table select boxes) are smaller than 44px on a phone; checkboxes with no label beside them are 24px. They are Payload's, not ours, and are left as they are.
+- Empty states that mean "nothing to do" or point at a form on the same page have no button.
+- Dark mode and a separate treasurer role are not part of this work. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

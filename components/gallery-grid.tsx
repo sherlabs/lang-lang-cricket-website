@@ -12,7 +12,7 @@ export type GalleryPhoto = {
   caption: string
 }
 
-export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
+export function GalleryGrid({ photos, altFallback }: { photos: GalleryPhoto[]; altFallback: string }) {
   const [index, setIndex] = useState<number | null>(null)
   const isOpen = index !== null
 
@@ -70,7 +70,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
             >
               <img
                 src={p.url}
-                alt={p.caption || 'Lang Lang Cricket Club'}
+                alt={p.caption || altFallback}
                 loading={i < 8 ? 'eager' : 'lazy'}
                 className="aspect-square h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
               />
@@ -139,7 +139,7 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
             <img
               key={current.id}
               src={current.url}
-              alt={current.caption || 'Lang Lang Cricket Club'}
+              alt={current.caption || altFallback}
               className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
             />
             <figcaption className="mt-4 flex flex-wrap items-center justify-center gap-3 px-2 text-center text-sm text-white/85">

@@ -13,7 +13,7 @@ const COLUMNS: { key: string; label: string; format?: (v: number | string | null
 
 const num = 'tabular-nums text-right'
 
-export function LadderTable({ ladder }: { ladder: Ladder }) {
+export function LadderTable({ ladder, clubLabel }: { ladder: Ladder; clubLabel: string }) {
   const keys = new Set(ladder.headers.map((h) => h.key))
   const cols = COLUMNS.filter((c) => keys.has(c.key))
   return (
@@ -40,7 +40,7 @@ export function LadderTable({ ladder }: { ladder: Ladder }) {
               <TableCell className={cn('text-brand-grey', num)}>{r.position}</TableCell>
               <TableCell className="whitespace-normal text-brand-black">
                 {r.teamName}
-                {r.isClub && <span className="sr-only"> (Lang Lang)</span>}
+                {r.isClub && <span className="sr-only"> ({clubLabel})</span>}
               </TableCell>
               {cols.map((c) => (
                 <TableCell key={c.key} className={cn('text-brand-charcoal', num)}>

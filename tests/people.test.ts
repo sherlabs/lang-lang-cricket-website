@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PEOPLE_SECTIONS, groupPeople, sectionLabel, sectionOf } from '@/lib/people'
+import { PEOPLE_SECTIONS, expandPeople, groupPeople, rolesOf, sectionLabel, sectionOf } from '@/lib/people'
 
 const person = (name: string, section: string, sortOrder = 0) => ({ name, section, sortOrder })
 
@@ -58,5 +58,41 @@ describe('groupPeople', () => {
     const copy = [...rows]
     groupPeople(rows)
     expect(rows).toEqual(copy)
+  })
+})
+
+describe('rolesOf / expandPeople (one person, many roles)', () => {
+  const base = { id: 7, name: 'Russell Savige', sortOrder: 0 }
+
+  it('lists the main role first, drops blanks and shows one role per section', () => {
+    expect(
+      rolesOf({ role: 'Senior Leadership Team', section: 'leadership' }, [
+        { role: 'First Aid Officer', section: 'committee' },
+        { role: 'Second committee job', section: 'committee' },
+        { role: '  ', section: 'coach' },
+        { role: 'Coach', section: 'bogus' },
+      ]),
+    ).toEqual([
+      { role: 'Senior Leadership Team', section: 'leadership' },
+      { role: 'First Aid Officer', section: 'committee' },
+    ])
+  })
+
+  it('expands one record into one entry per section with the same id, in stable order', () => {
+    const rows = [
+      { ...base, role: 'Senior Leadership Team', section: 'leadership', moreRoles: [{ role: 'First Aid Officer', section: 'committee' }] },
+      { id: 8, name: 'Sam', sortOrder: 0, role: 'Treasurer', section: 'committee', moreRoles: [] },
+    ]
+    const cards = expandPeople(rows)
+    expect(cards.map((c) => [c.id, c.section, c.role])).toEqual([
+      [7, 'leadership', 'Senior Leadership Team'],
+      [7, 'committee', 'First Aid Officer'],
+      [8, 'committee', 'Treasurer'],
+    ])
+    const groups = groupPeople(cards)
+    expect(groups.map((g) => [g.key, g.people.map((p) => p.id)])).toEqual([
+      ['leadership', [7]],
+      ['committee', [8, 7].sort((a, b) => cards.find((c) => c.id === a)!.name.localeCompare(cards.find((c) => c.id === b)!.name))],
+    ])
   })
 })

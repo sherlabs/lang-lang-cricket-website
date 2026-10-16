@@ -1,0 +1,114 @@
+---
+title: Feature documentation index
+---
+
+Every user-facing feature of the Lang Lang Cricket Club site has one file in this folder. Each file says who it is for, why it was built, what it does, how the committee uses it and what is deliberately left out. Deferred work is tracked in GitHub issues #2 to #37 and summarised in issue [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+
+## For families, members and visitors
+
+| Feature | What it is |
+| --- | --- |
+| [Home page](./home-page.mdx) | The front door: announcement banner, hero, apparel strip, sponsor carousel, gallery, committee, sponsors. |
+| [Events and RSVPs](./events-and-rsvps.mdx) | One-time and weekly events, no-login RSVPs with dinner choices and private edit links. |
+| [Event photos](./event-photos.mdx) | Recap photos on past events, with public submission and approval. |
+| [Club history stories](./club-history-stories.mdx) | Rich-text stories, public submissions held for review, private draft links. |
+| [Announcements](./announcements.mdx) | Dismissible home banner and an announcements list. |
+| [News](./news.mdx) | Dated club articles with a picture, a feed, a home strip, and scheduling. |
+| [Info pages](./pages.mdx) | Committee-built pages (About, Join us) from text, picture and button blocks, with menu placement. |
+| [Fantasy cricket](./fantasy-cricket.mdx) | A free members' game: join with one link and a 6 digit PIN, pick a salary-capped squad of senior players with a captain, and score points from the stored scorecards on round and season leaderboards. Run from Advanced > Fantasy cricket. |
+| [Photo gallery](./gallery.mdx) | Grid with lightbox; newest six on the home page. |
+| [Documents and policies](./documents.mdx) | Grouped PDF downloads for policies, child safety and game day. |
+| [Sponsors and home carousel](./sponsors.mdx) | Sponsors by tier, and the scrolling logo carousel. |
+| [Player sponsors](./player-sponsors.mdx) | A business backing a player, shown on Players, the profile and Sponsors. |
+| [Committee and contacts](./committee-and-contacts.mdx) | One place for people: home, contact, people and player pages read the same record. |
+| [Club apparel link](./club-apparel-link.mdx) | Prominent link to the external club shop. |
+
+## Players, fixtures and statistics
+
+| Feature | What it is |
+| --- | --- |
+| [Players directory and profiles](./players-directory-and-profiles.mdx) | Active and past players, search, profiles with charts and honours. |
+| [Fixtures, ladders and scorecards](./fixtures-and-scorecards.mdx) | Live PlayHQ fixtures, results, ladders and scorecards. |
+| [Match archive](./match-archive.mdx) | Browse finished games across seasons by grade, opponent and result. |
+| [Match data store](./match-data-store.mdx) | Every finished senior game stored innings by innings, ready for opposition and per-player analysis (the data behind the match analysis pages). |
+| [Match analysis and match-data statistics](./match-stats.mdx) | Against each opposition, how out, how wickets came, batting position, head to head, and fifties, hundreds, ducks, five-fors, run outs and stumpings from the stored games. |
+| [Partnership records](./partnership-records.mdx) | Best stands at each wicket and per player, inferred from batting order and fall of wickets. |
+| [Stats leaderboards](./stats-leaderboards.mdx) | 26 season-total metrics plus match-data boards, filters and qualification minimums. |
+| [Club records](./club-records.mdx) | All-time and single-season bests. |
+| [Honour board](./honour-board.mdx) | Every honour by title or year. |
+| [Player comparison](./player-comparison.mdx) | Head-to-head from stored season totals, with a shareable link. |
+| [StatLab and CSV export](./statlab-and-csv-export.mdx) | Build a custom stats table (opposition, format, about 45 columns, 18 presets) and download it as CSV. |
+| [Season yearbooks](./season-yearbooks.mdx) | Editorial plus auto-filled season wrap-up, printable, with scores, progression and partnerships from match data. |
+| [Saved reports](./saved-reports.mdx) | Admin-only bookmark list of StatLab tables. |
+| [Preferred names and grade label renames](./name-and-grade-labels.mdx) | A nickname shown instead of the PlayHQ name, and club-wide renames that merge spellings of one grade. |
+| [AI-assisted season summary](./ai-season-summary.mdx) | An admin-requested draft of the season write-up, never published until someone ticks it as read. |
+| [Shareable stat cards](./stat-cards.mdx) | Player share images and link previews. |
+| [Social graphics](./social-graphics.mdx) | Results, the toss, previews, line-ups, player of the match, milestones, leaders, events, sponsors (by name when there is no usable logo) and season wraps as pictures in three sizes and three styles, drawn from the club theme, with a caption to copy. |
+| [Social posting queue](./social-posting-queue.mdx) | Schedule a picture and caption for Facebook, Instagram or X: the committee approves by scheduling, a CRON_SECRET route sends what is due (at most once per network, retries, a not-sure state), with a queue, reasons in plain English and a download-and-copy fallback. Facebook, Instagram and X are stubs for now; a Test network exercises the flow. |
+| [Milestones](./milestones.mdx) | Players approaching or reaching 100 games, 1000 runs and so on. |
+| [SEO](./seo.mdx) | Sitemap, robots, structured data and canonical hosts. |
+
+## For the committee and site admin
+
+| Feature | What it is |
+| --- | --- |
+| [Simple committee admin](./committee-admin.mdx) | The plain-English admin: roles, menu grouped by task, Home tiles, Help. |
+| [Admin design system](./admin-design-system.mdx) | The admin wears the club's colours and fonts: contrast-checked tokens, a task-first sidebar with icons, a branded sign-in and one shared set of building blocks. |
+| [Admin lists and forms](./admin-lists-and-forms.mdx) | The everyday lists and edit forms in plain words: pictures beside names, status in words, filter chips, phone cards, a Details area, picture previews and a save bar that stays in view. |
+| [Admin screens on the shared look](./admin-committee-screens.mdx) | Club office, Selectors, Fantasy, Sign-in settings and the player data tools share one page header, buttons, status words and phone-friendly tables. |
+| [Waiting for approval inbox](./approvals-inbox.mdx) | One list of member-submitted stories and photos to approve. |
+| [Admin notification centre](./admin-notifications.mdx) | Home's "Needs your attention" rows in plain English (only when there is something to do), plus Advanced > System health for admins. |
+| [Historical data import and export](./history-import-export.mdx) | CSV import of pre-PlayHQ seasons and games with a preview, undo and export. |
+| [Duplicate players and merge undo](./duplicate-players-and-undo.mdx) | Ranked likely duplicates, a same-game safeguard and undo of a merge. |
+| [PlayHQ player sync and merge](./playhq-player-sync.mdx) | Nightly sync, run now, merge duplicates, refresh PlayHQ data. |
+| [Club details and site settings](./club-and-site-settings.mdx) | Identity, SEO, carousel tiers and stats rules. |
+| [Site look (colours, crest, heading font)](./theme-editor.mdx) | Admin-only theme: five colours, seven shades, crest, heading font, live contrast check. |
+| [Users and authentication](./users-and-authentication.mdx) | Admin, editor and selector accounts, lockout, closed registration. |
+| [Facebook sign-in settings and the shared broker](./sign-in-settings.mdx) | Admin-only Sign-in tab: off, the shared sign-in broker or the club's own Facebook app, a status block, broker registration values and Test connection. |
+| [Selector accounts and Facebook sign-in](./selector-accounts.mdx) | Selector logins created from the admin, invite links, password or invite-only Facebook sign-in, and the phone-first selector area. |
+| [Uploads and media](./uploads-and-media.mdx) | Direct-to-Blob uploads, public upload routes and legacy file protection. |
+
+## Club back office
+
+| Feature | What it is |
+| --- | --- |
+| [Club office](./club-office.mdx) | One menu entry and landing page for the club back office, who may see what, the exports and sends log and the office settings. |
+| [Member directory](./member-directory.mdx) | Admin-only members with contact details, roles, juniors and guardians, filters for missing contact details, audited spreadsheet downloads and removal of personal details. |
+| [Membership and match fees](./membership-fees.mdx) | Membership types, match fees worked out from the games played, a ledger of payments and waivers, credit, households, closing a season and a treasurer report. |
+| [Volunteer roster and hours](./volunteer-roster.mdx) | A roster for each game day, personal availability links, confirming a week into an hours ledger (paid kept apart from volunteer) and a name-free report that hides small groups. |
+| [Season diary and strategic plan](./season-diary-and-plan.mdx) | The yearly club jobs by month with owners (committee seats), overdue, blocked and due-soon chips, one-click generic standard jobs, copy to next season, and a strategic plan whose progress comes from linked jobs. |
+| [Stock and merch](./stock-and-merch.mdx) | Kit, equipment and supplies by size with a counted ledger, issue to a person without handing out the last unit twice, returns, what is owed back, voiding, stocktake and an admin-only download. |
+| [Committee meetings, seats and office-bearer documents](./committee-meetings.mdx) | Meetings from an agenda with attendance, motions, actions and draft minutes, restricted items for office-bearers, committee seats that hand over at the yearly meeting, and office-bearer-only documents. |
+| [Bulk email and unsubscribes](./bulk-email.mdx) | Admin-only emails to members behind an env-gated provider, audience preview, one confirm step, paced resumable sending, one-click unsubscribe, a do-not-email list, address purging, and password reset by email. |
+
+## For selectors
+
+| Feature | What it is |
+| --- | --- |
+| [Availability link and PINs](./availability-link.mdx) | One no-login link where players answer in, maybe or out with a name and PIN, and a selector board of who has replied. |
+| [Squad boards](./squad-boards.mdx) | Who is in each grade this season: add, move and remove players, start from last season. |
+| [Best player votes](./best-player-votes.mdx) | 3-2-1 votes after each game from the availability link, a private and optional public leaderboard with a race chart, and an awards-night mode. |
+| [Net sessions](./net-sessions.mdx) | Check in who turned up at nets, a fair rotation and a timer that survives a reload, and net attendance on the player card. |
+| [Team selection and announcing the teams](./team-selection-and-announce.mdx) | Pick each grade's XI on a phone, check it against availability, publish it to a public teams page, an announcement and a lineup picture with copy-ready Facebook text. |
+| [Match-day overview and player card](./match-day-overview.mdx) | The selector home: replies, who to chase, keepers and selection status per grade, plus form and availability on the player card. |
+| [Opposition scouting report](./opposition-scouting.mdx) | Selector-only scouting sheet per opposition club: record against them, game plan from fixed rules, typical totals, toss, their danger batters and bowlers, our best against them, and a one-page print. |
+| [Insights, trends and team analysis](./insights-trends-and-team-analysis.mdx) | Public Insights entry in the Stats menu: team analysis (record, margins, batting and bowling profiles, typical winning totals), team trends, and a player's innings-by-innings trends with a season comparison. |
+| [Best XI suggester](./best-xi-suggester.mdx) | Selector-only "Suggest an XI" on the team builder: an ordered team from availability, roles and the last five games, a reason for every pick, pins and leave-outs, saved as a draft only. Balance numbers set by an admin. |
+| [Innings phases and wickets](./innings-phases.mdx) | Why powerplay, wagon wheel and radar analysis is not built (PlayHQ gives no over or ball data), and the Wickets tab in Insights: score at each wicket by side and format, and collapses with the rule shown. |
+
+## For developers and the operator
+
+| Feature | What it is |
+| --- | --- |
+| [Safety guards](./safety-guards.mdx) | Env, script, build and migration checks that keep production safe. |
+| [Legacy data ETL and cutover tooling](./legacy-etl-and-cutover.mdx) | Copy, verify and roll back the old site's data. |
+| [Multi-club template](./multi-club-template.mdx) | Stand up a new club from a profile file and a bootstrap script, with neutral copy and no code edits. |
+
+## How to add a feature doc
+
+1. Copy any existing file and change the slug (kebab-case, `docs/features/<slug>.mdx`).
+2. Fill in the frontmatter: `title`, `status: shipped`, `routes`, `collections`, `admin`, `owner`, `related`, `added`.
+3. Keep the five headings exactly: Persona, Why it was built, What it does, How to use it, Not included / deferred.
+4. Describe only what is built, checked against the code. Link deferred work to its GitHub issue.
+5. Add a row to the right table above. `tests/feature-docs.test.ts` fails if a file is missing a key or heading, if the index does not link every file, or if a `related` slug does not exist.
+6. Update the doc in the same pull request whenever the feature's behaviour changes.

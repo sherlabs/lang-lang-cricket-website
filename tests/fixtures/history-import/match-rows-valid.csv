@@ -1,0 +1,9 @@
+date,grade,team,opponent,game_ref,format,result,team_runs,team_wickets,opp_runs,opp_wickets,first_name,last_name,batted,runs,balls,fours,sixes,how_out,overs,maidens,runs_conceded,wickets
+2013-02-09,Demo A Grade,Demo A Grade,Demo Rovers,,one_day,won,201,7,188,10,Alex,Demoson,yes,54,61,6,1,caught,8.2,1,33,2
+2013-02-09,Demo A Grade,Demo A Grade,Demo Rovers,,one_day,won,201,7,188,10,Sam,Tester,yes,12,,,,not_out,,,,
+2013-02-09,Demo A Grade,Demo A Grade,Demo Rovers,,one_day,won,201,7,188,10,Jo,Newplayer,no,,,,,,6,0,28,1
+2013-02-16,Demo A Grade,Demo A Grade,Demo Rovers,R1,one_day,lost,150,10,151,3,Alex,Demoson,yes,20,30,2,0,bowled,,,,
+2013-02-16,Demo A Grade,Demo A Grade,Demo Rovers,R1,one_day,lost,150,10,151,3,Sam,Tester,yes,0,2,0,0,lbw,,,,
+2013-02-16,Demo A Grade,Demo A Grade,Demo Rovers,R2,one_day,won,99,4,98,10,Alex,Demoson,yes,41,,,,not_out,5,2,15,3
+2013-02-16,Demo A Grade,Demo A Grade,Demo Rovers,R2,one_day,won,99,4,98,10,Sam,Tester,yes,10,,,,not_out,,,,
+2012-12-01,Demo B Grade,Demo B Grade,Demo Rovers,,two_day,draw,,,,,Alex,Demoson,yes,33,,,,run_out,,,,

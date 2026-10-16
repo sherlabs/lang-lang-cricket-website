@@ -1,0 +1,89 @@
+/* Admin design tokens (wave G WP-1). The ONE place that maps the club theme onto Payload's variables.
+   Nothing here (or anywhere in the admin stylesheets) names a colour: every value is a variable from the theme.
+   - `--brand-*` (R G B triples) come from the theme global, set on <html> by app/(payload)/layout.tsx.
+   - `--admin-*` (R G B triples) are derived from them by lib/theme/admin-tokens.ts (contrast-checked, clamped when a palette is weak)
+     and set on <html> in the same place. Use them as rgb(var(--admin-ink)) or rgb(var(--admin-ink) / 0.4).
+   Dark mode is not part of this wave: the tokens are structured so it is a later swap of this file's inputs. */
+
+:root {
+  /* Shape, spacing, motion. 4px base grid; radii from DESIGN.md (6 / 10 / 16). */
+  --admin-radius-s: 6px;
+  --admin-radius-m: 10px;
+  --admin-radius-l: 16px;
+  --admin-gutter: 1rem;
+  --admin-page-max: 75rem; /* 1200px */
+  --admin-form-max: 47.5rem; /* 760px */
+  --admin-shadow-card: 0 1px 2px rgb(var(--admin-ink) / 0.06), 0 4px 14px rgb(var(--admin-ink) / 0.06);
+  --admin-ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quint */
+  --admin-motion: 150ms;
+  --admin-target: 2.75rem; /* 44px: every control on a phone */
+  --admin-display: var(--admin-font-display, var(--font-body));
+
+  /* Names the older admin rules already use, now pointing at the admin tokens. */
+  --club-gold: rgb(var(--admin-accent));
+  --club-gold-light: rgb(var(--brand-gold-light));
+  --club-black: rgb(var(--admin-ink));
+  --club-cream: rgb(var(--admin-bg));
+  --club-stone: rgb(var(--admin-bg));
+  --club-charcoal: rgb(var(--admin-text));
+  --club-grey: rgb(var(--admin-muted));
+  --club-gold-deep: rgb(var(--admin-accent-ink));
+
+  /* Payload's success ramp (used for the selected/active states): five anchors from the theme, five mixed in between. */
+  --color-success-50: rgb(var(--brand-gold-pale));
+  --color-success-100: color-mix(in srgb, rgb(var(--brand-gold-pale)) 61%, rgb(var(--brand-gold-light)) 39%);
+  --color-success-150: color-mix(in srgb, rgb(var(--brand-gold-pale)) 26%, rgb(var(--brand-gold-light)) 74%);
+  --color-success-200: rgb(var(--brand-gold-light));
+  --color-success-250: color-mix(in srgb, rgb(var(--brand-gold-light)) 52%, rgb(var(--brand-gold)) 48%);
+  --color-success-300: rgb(var(--brand-gold));
+  --color-success-350: color-mix(in srgb, rgb(var(--brand-gold)) 55%, rgb(var(--brand-gold-dark)) 45%);
+  --color-success-400: rgb(var(--brand-gold-dark));
+  --color-success-450: color-mix(in srgb, rgb(var(--brand-gold-dark)) 47%, rgb(var(--brand-gold-deep)) 53%);
+  --color-success-500: rgb(var(--brand-gold-deep));
+  --color-error-500: rgb(var(--admin-danger));
+  --color-error-50: rgb(var(--admin-danger-tint));
+}
+
+html[data-theme='light'] {
+  --theme-bg: rgb(var(--admin-bg));
+  --theme-text: rgb(var(--admin-ink));
+  --theme-input-bg: rgb(var(--admin-surface));
+  --font-body: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: var(--admin-display);
+  --style-radius-s: var(--admin-radius-s);
+  --style-radius-m: var(--admin-radius-m);
+  --style-radius-l: var(--admin-radius-l);
+
+  /* Elevation ramp, surface (0) to ink (1000). 500 is the muted text colour and 800 the body text colour, so Payload's own help
+     text and body copy follow the contrast-checked tokens; the steps between are mixes of their neighbours. */
+  --theme-elevation-0: rgb(var(--admin-surface));
+  --theme-elevation-50: color-mix(in srgb, rgb(var(--admin-ink)) 4%, rgb(var(--admin-surface)));
+  --theme-elevation-100: color-mix(in srgb, rgb(var(--admin-ink)) 8%, rgb(var(--admin-surface)));
+  --theme-elevation-150: color-mix(in srgb, rgb(var(--admin-ink)) 12%, rgb(var(--admin-surface)));
+  --theme-elevation-200: color-mix(in srgb, rgb(var(--admin-ink)) 17%, rgb(var(--admin-surface)));
+  --theme-elevation-250: color-mix(in srgb, rgb(var(--admin-ink)) 23%, rgb(var(--admin-surface)));
+  --theme-elevation-300: color-mix(in srgb, rgb(var(--admin-ink)) 30%, rgb(var(--admin-surface)));
+  --theme-elevation-350: color-mix(in srgb, rgb(var(--admin-ink)) 37%, rgb(var(--admin-surface)));
+  --theme-elevation-400: color-mix(in srgb, rgb(var(--admin-ink)) 44%, rgb(var(--admin-surface)));
+  --theme-elevation-450: color-mix(in srgb, rgb(var(--admin-muted)) 70%, rgb(var(--admin-surface)));
+  --theme-elevation-500: rgb(var(--admin-muted));
+  --theme-elevation-550: color-mix(in srgb, rgb(var(--admin-text)) 33%, rgb(var(--admin-muted)));
+  --theme-elevation-600: color-mix(in srgb, rgb(var(--admin-text)) 66%, rgb(var(--admin-muted)));
+  --theme-elevation-650: rgb(var(--admin-text));
+  --theme-elevation-700: rgb(var(--admin-text));
+  --theme-elevation-750: color-mix(in srgb, rgb(var(--admin-ink)) 50%, rgb(var(--admin-text)));
+  --theme-elevation-800: color-mix(in srgb, rgb(var(--admin-ink)) 80%, rgb(var(--admin-text)));
+  --theme-elevation-850: rgb(var(--admin-ink));
+  --theme-elevation-900: rgb(var(--admin-ink));
+  --theme-elevation-950: rgb(var(--admin-ink));
+  --theme-elevation-1000: rgb(var(--admin-ink));
+}
+
+/* Display type: page titles and the Home greeting only. The face is the theme's heading font (set on <html>). */
+.admin-display {
+  font-family: var(--admin-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: rgb(var(--admin-ink));
+}

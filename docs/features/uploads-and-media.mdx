@@ -1,0 +1,40 @@
+---
+title: Uploads and media
+status: shipped
+routes: ["/api/vercel-blob-client-upload-route", "/api/public/stories/upload", "/api/public/events/upload"]
+collections: [media, documents, gallery-photos, event-photos]
+admin: "Upload fields on each form; Media library (admin only)"
+owner: "Committee (anyone adding pictures or PDFs); public submitters; site admin for storage"
+related: [gallery, documents, event-photos, club-history-stories, safety-guards, legacy-etl-and-cutover]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A committee member** who drops a photo or PDF into a form and expects it to just work, even from a phone with a 6 MB image.
+- **A member** submitting a story or event photo from the public site.
+- **The site admin** who must never delete files the old site still uses.
+
+## Why it was built
+
+Phone photos are large and Vercel functions limit request bodies to about 4.5 MB. The Payload migration (section 7 of the migration spec) uses direct browser-to-Blob uploads for staff, which keeps uploads past that limit, and defines separate, narrow routes for anonymous submissions.
+
+## What it does
+
+- **Admin uploads**: Payload upload fields in four upload collections: `media` (pictures used by sponsors, people, covers; images only), `documents` (PDF only, under `documents/`), `gallery-photos` (under `gallery/`) and `event-photos` (under `events/`). With a Blob token (production and previews) the browser uploads straight to Vercel Blob. Limits are 15 MB for images and 25 MB for PDFs, enforced on the server. The media library shows a "Picture description" (alt text) field. Crop and focal point are available.
+- **Local development**: without a Blob token the storage plugin is off and files go to `./media`, `./documents`, `./gallery-photos` and `./event-photos` (git-ignored). A Blob token is refused off Vercel (see [safety guards](./safety-guards.mdx)).
+- **Public submissions** use their own routes, not the plugin's (so anonymous users cannot mint tokens for other collections): `/api/public/stories/upload` (pathname must start `stories/pending/`) and `/api/public/events/upload` (`events/pending/`). JPEG, PNG or WebP only, 8 MB maximum, random suffix added. Without a Blob token they answer 503. Server actions then check the URL is on the club's own Blob store, under the expected prefix, with a safe file name (`isOwnBlobUrl` in `lib/blob-url.ts`) before registering it. The browser also resizes images first (`optimiseImage`) and slugifies file names.
+- **Legacy files**: rows imported from the old site keep their original URL (`legacyUrl`) and the old files are shared with the rollback target. Replacing the file of such a row is refused, and deletion of the underlying blob is skipped unless `LEGACY_BLOBS_RELEASED=yes`; previews skip every blob delete (`BLOB_DELETE_DISABLED=1`). See `payload/plugins/guardLegacyBlobDeletes.ts`.
+- `media` read access is public except for files under `stories/pending`, which only staff can list.
+- Other files delete with their row; orphaned media are not cleaned up automatically.
+
+## How to use it
+
+1. On any form with a picture or file field, click the button and drag the file in. Wait for the preview, then save.
+2. For many gallery photos use **Bulk Upload**.
+3. An admin can browse everything under **Media library**.
+
+## Not included / deferred
+
+- No automatic server-side resizing of stored originals and no "unused media" report.
+- Replacing an imported file is not possible until decommission; upload a new picture instead. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

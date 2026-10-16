@@ -13,11 +13,13 @@ export function ballsToOvers(balls: number): string {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-export function battingAverages(b: { runs: number; innings: number; notOuts: number; balls: number }) {
+/** Strike rate uses only runs from innings with recorded balls (`runsUnballed` is excluded), so partial data never inflates it. */
+export function battingAverages(b: { runs: number; innings: number; notOuts: number; balls: number; runsUnballed?: number }) {
   const outs = b.innings - b.notOuts
+  const ballRuns = b.runs - (b.runsUnballed ?? 0)
   return {
     average: outs > 0 ? round2(b.runs / outs) : null,
-    strikeRate: b.balls > 0 ? round2((b.runs / b.balls) * 100) : null,
+    strikeRate: b.balls > 0 && ballRuns >= 0 ? round2((ballRuns / b.balls) * 100) : null,
   }
 }
 
@@ -32,7 +34,7 @@ export function bowlingAverages(b: { balls: number; runs: number; wickets: numbe
 function emptyStats(key: string, p: { firstName: string; lastName: string }, isJunior: boolean): PlayerSeasonStats {
   return {
     key, name: displayName(p, isJunior), firstName: titleCase(p.firstName ?? ''), lastName: titleCase(p.lastName ?? ''), games: 0,
-    batting: { innings: 0, notOuts: 0, runs: 0, highScore: 0, highScoreNotOut: false, balls: 0, fours: 0, sixes: 0, average: null, strikeRate: null },
+    batting: { innings: 0, notOuts: 0, runs: 0, highScore: 0, highScoreNotOut: false, balls: 0, fours: 0, sixes: 0, runsUnballed: 0, average: null, strikeRate: null },
     bowling: { balls: 0, overs: '0', maidens: 0, runs: 0, wickets: 0, bestWickets: 0, bestRuns: 0, average: null, economy: null },
     catches: 0,
   }
@@ -59,7 +61,7 @@ export function aggregatePlayers(scorecards: Scorecard[], teamId: string, isJuni
         for (const b of inn.batting) {
           const e = byAppearance.get(b.appearanceId); if (!e) continue
           e.batting.innings++; if (b.notOut) e.batting.notOuts++
-          e.batting.runs += b.runs; e.batting.balls += b.balls; e.batting.fours += b.fours; e.batting.sixes += b.sixes
+          e.batting.runs += b.runs; if (b.unballed) e.batting.runsUnballed = (e.batting.runsUnballed ?? 0) + b.runs; e.batting.balls += b.balls; e.batting.fours += b.fours; e.batting.sixes += b.sixes
           if (b.runs > e.batting.highScore || (b.runs === e.batting.highScore && b.notOut)) {
             e.batting.highScore = b.runs; e.batting.highScoreNotOut = b.notOut
           }

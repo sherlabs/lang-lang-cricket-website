@@ -1,0 +1,85 @@
+---
+title: Social graphics (pictures for Facebook, Instagram and X)
+status: shipped
+routes: ["/admin/social", "/api/admin/social/graphic", "/api/admin/social/sources", "/api/admin/social/caption", "/api/admin/social/logo/[sponsorId]"]
+collections: [social-settings, players, sponsors, matches, selection-fixtures, events, yearbooks]
+admin: "Social posts (Advanced, for the committee and admins) and a Home tile; Social graphics settings (Advanced, admin only)"
+owner: "The committee member who posts the club's results and news on social media"
+related: [social-posting-queue, theme-editor, team-selection-and-announce, stat-cards, sponsors, committee-admin, milestones, season-yearbooks, match-data-store]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **An editor on a phone after a game** who wants the result, the player of the match or next weekend's games as a picture, saved to Photos, with a caption ready to paste.
+- **An admin** who sets the club's look once (colours, crest, font, style, sponsor logos) and expects every picture to follow it.
+- **Another club** reusing the same site: its pictures take its own colours, crest, font, sponsors and wording with no code change.
+
+## Why it was built
+
+The site could only make one player card and the lineup picture. Posting a result, a milestone or an event meant redoing it by hand in a design app. This is the picture half of issue [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): every graphic type, in the sizes social networks want, in styles that all come from the club theme. Scheduling posts is described in [Social posting queue](./social-posting-queue.mdx) ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+
+## What it does
+
+**Ten kinds of picture** (a chooser lists real choices, newest first; a type with nothing to show says so):
+
+| Kind | Drawn from |
+| --- | --- |
+| Results | One stored game (score and margin), the same with the top batters and bowlers, or a whole round on one date. |
+| Weekend preview | The upcoming games of one weekend: the opponent is the main text of each row, with the grade and venue on a smaller line under it (on the wide size the grade follows on the same line and the venue is left out). |
+| Team announcement | A published team (all three sizes; the public lineup picture routes are unchanged). |
+| Best player (the club's award word, `VOTE_LABEL`) | You pick the game, then a player who was in that game. Votes are never used. The stat line is filled from that game and can be edited. |
+| Milestone | A milestone reached this season, or one a player is close to. Only real milestones from the milestone board can be drawn. |
+| Season leaders | The top 3 or 5 for runs, wickets, catches, sixes or games, for the current season or all seasons. A choice is listed only when it would show someone, so nothing in the list draws "No one has qualified". |
+| Event promo | An upcoming event, with its cover picture if it has one. |
+| Sponsor thank-you | One to four sponsors with their logos and an optional line of thanks. Logos are drawn from the stored upload whatever the format (PNG, JPG, WebP, GIF, AVIF or a safe SVG; see Wave G below) on paper tiles, laid out by count and page size. A sponsor with no usable logo is shown by name in large type, always centred and enlarged to fill the page when no sponsor has a logo, with its level beneath, never as a grey tile or an initial, and the chooser says which sponsors are name only. |
+| The toss | Who won the toss and what they chose ("X won the toss and chose to bat"), against which opponent, on which round or date, with the venue when stored. Drawn from the stored toss details of a finished game; no player names appear, so the junior rule is untouched. A game with no known toss winner is not listed, and opening one by a stale link says "Toss details are not in yet for this game." |
+| Season wrap | A published yearbook: cover, record, top run scorer and top wicket taker. The cover is left out on the wide size, and when the yearbook has none the title is drawn as text instead of an empty box. |
+
+**Three sizes**: Square 1080 x 1080, Story 1080 x 1920 and Wide 1200 x 630. **Three styles**: Bold (your main colour, big type), Classic (a light card with a coloured band carrying the crest) and Minimal (plain and airy). The picture is composed from shared building blocks, not drawn by hand per combination, so a long list is always cut at a whole row with "+ N more" and long names are shortened by length.
+
+**The club look, never the code.** Every colour is a theme colour or a mix of theme colours; the crest, the heading font, the club name, the website address and the sponsor logos come from settings and uploads. Text colour is never chosen by hand: it is picked for the surface it sits on so it reaches a 4.5:1 contrast on any saved palette, and text over a photo sits on a scrim that is checked against the worst case (white, black and greys between). A second club saves its own theme and gets its own look.
+
+**Who may appear.** Public on the website is not consent to be pushed to social networks. A junior (a player ticked "Is a junior (under 18)", or whose latest season was in a junior grade) is never named, shown with stats or listed on a picture unless staff ticked "OK to post on social media" on the player after a parent or guardian agreed. This is enforced in every chooser, the player of the match picker, every loader and every list (a junior without the tick is dropped from a lineup, a scorecard, the leaders and milestones). Hidden players never appear. A guest in a lineup has no record to check, so the name is drawn as "Guest player". The public website is not affected.
+
+**The composer** (`/admin/social`, tab **Make a post**): rebuilt in Wave G, see below. The choice lives in the address (`?type=&source=&style=&size=&text=`), so a refresh or a shared link opens the same picture; `?post=<id>` edits a saved post.
+
+**Captions.** (Saving the wording from the composer stores only wording that differs from the standard text, so later improvements to the standard reach the club.) Season leaders in the Minimal style draw larger rows (up to 35% bigger, the 3 or 5 rows you asked for are unchanged) so the plain page does not leave a blank band; Bold and Classic are unchanged. Each kind has a caption wording with `{placeholders}` (for example `{club}`, `{opponent}`, `{score}`, `{link}`) filled from the data; a line whose value is missing is left out; unknown words are left as typed and flagged. "Copy caption" adds the sign-off line and the hashtags. A milestone that is still ahead uses a plain wording instead of a congratulation. Editors change the hashtags, the sign-off and the wording from the "Captions and hashtags" panel on the same page; the standard wording applies when a box is empty.
+
+**Settings** (Advanced, admin only: Social graphics settings): the default style, the sponsor logo strip (which levels, how many; any picture format the logo pipeline can draw; the strip simply does not show if none can be drawn), whether the website address shows, and a small line under the footer.
+
+**Access and limits.** The picture, chooser and caption routes answer only the committee (admin or editor). Signed out, a selector, a disabled account, an unknown kind, a bad id and a picture nobody may see all get the same plain "Not found", never cached or indexed. A person can make 300 pictures in 10 minutes; after that "Slow down for a minute" for a minute. Logos and covers are fetched only from the site's own media host, with a 2 second limit.
+
+**Wave D additions.** These three changes finish the picture half of [#21](https://github.com/sherlabs/lang-lang-cricket-website/issues/21): the toss picture, the name-only sponsor thank-you and the Minimal leaders spacing. The toss caption wording is one more box in the "Captions and hashtags" panel.
+
+**Wave G: the composer rebuilt, and pictures that fit.** The route has two tabs, **Make a post** and **Posts** (the queue, see [Social posting queue](./social-posting-queue.mdx)), with a count of posts needing attention on Posts.
+
+- **Two columns from 1024 pixels.** The steps are on the left (1 What kind of post, 2 pick, then Options, Caption and Schedule), and the live preview is on the right and stays in view while the steps scroll. A collapsed step shows what you chose, so progress stays visible. The kind of post is a grid of cards with an icon each.
+- **One flow on a phone.** Type, Pick, Preview, Share. Options, caption, scheduling and draft sit behind one **More** control after the preview. A bar at the bottom holds the size tabs with Preview, Share and Download; it clears the iPhone home bar, rides above the on-screen keyboard, and hides while you are typing in a field.
+- **A searchable picker.** One list with a search box (it finds by opposition, grade, round, date as numbers or words, and result), arrow keys, Home, End and Enter. A game row shows a date tile, the grade and round, the opposition, the score line and a Won, Lost, Tied, Draw or No result badge, grouped by round or month. A sponsor row shows the logo, the name and the level, with a plain **name only** tag when there is no usable logo; chosen sponsors appear as chips, with a limit of four that says so.
+- **Download, Share, Schedule, Save draft.** Download saves the picture. **Share** (shown only where the phone can share files) sends the picture file only: never the caption, hashtags, schedule or any private detail, and a line says so. **Schedule...** opens the scheduling step, and **Save draft** stores type, choices, options and caption on the server (staff only, through the existing queue actions; nothing new is readable over the public API). Leaving without saving stores nothing; only the type, choices, style, size and short line survive a reload (in the address), and the browser asks before you leave only when you have edited the caption by hand.
+- **Options.** The style is chosen from three small drawings in the club colours; the one editable line sits beside it. **Caption.** The suggested caption in a box with a character count for each connected network, hashtags as chips, **Reset to suggested** and **Copy caption**.
+
+**Sponsor logos in any format.** The server reads the stored upload without making a web request to itself, works out the real type from the file's bytes (not its label), decodes with limits (at most 5 MB and 25 million pixels, first frame only), shrinks it to at most 1024 pixels on its long edge, trims empty margins and converts it to PNG, so WebP, GIF, AVIF, PNG, JPG and SVG all draw. An SVG is refused if it could reach outside itself (images, scripts, embedded objects, entities, or any link that is not inside the same file). Good results are remembered in a small bounded cache and bad ones for one minute; when a logo still cannot be used, the chooser says why in plain words. The thumbnails in the picker come from a committee-only address that takes a sponsor (never a file) and answers everyone else with the same plain "Not found".
+
+**Logos are decoded a few at a time.** Reading the sponsors' logos runs three at a time, not all at once, so a cold cache on a small server does not use all its memory, and the logo thumbnail address shares the same "slow down for a minute" limit as the other picture routes.
+
+**Pictures that fit.** Sponsor, lineup and leaders layouts follow a table by count and size (one logo large; two side by side or stacked; three as one over two, across or stacked; four as two by two, or four across on the wide page), the content under the headline is centred, and result and leader lists grow to use the page. Text is fitted, not cut: it shrinks a little, then wraps to two or three lines, and only as a last resort is cut at a word with an ellipsis. Width estimates come from glyph widths measured from the bundled fonts, and a test compares them with real renders. Results show the club's public team name (the club name and the grade label, without competition numbering) and never PlayHQ's internal team name. A test measures real renders for sponsor thank-yous, results and leaders in every size and style and fails if more of the picture is left empty than its recorded limit. A developer tool, `scripts/render-social-gallery.ts`, draws every kind in every size and style (with mock data and no network) into a folder with a contact sheet.
+
+## How to use it
+
+1. Open **Social posts** (Advanced, or the Home tile "Make a social post").
+2. Pick what to post, then the game, player, event or sponsor it is about. For The toss, only finished games with a known toss winner are listed.
+3. Check the live preview in the size you need (Square, Story or Wide); change the style under **More** if you like.
+4. On a phone, tap **Share** (the picture only) or **Download**. On a computer, **Download**. Open **Caption** and tap **Copy caption** to paste it into the post. To post later, use **Schedule...** or **Save draft**.
+5. Admins: change the look in Site look (colours, crest, font) and Social graphics settings (style, sponsor logos).
+6. To allow a junior on pictures, open the player and tick "OK to post on social media" once a parent or guardian has agreed.
+
+## Not included / deferred
+
+- Scheduling and publishing: see [Social posting queue](./social-posting-queue.mdx). Live posting to Facebook, Instagram and X is still deferred there ([#23](https://github.com/sherlabs/lang-lang-cricket-website/issues/23)).
+- AI-written captions or match summaries, video or carousel posts.
+- A fixture list that includes junior grades, and player photos on pictures.
+- The style pictures in Options are small drawings in the club colours, not live renders of the chosen game. The preview itself is a real render. Event cover photos in WebP format still do not draw (only sponsor logos use the new pipeline). Browser-width checks of the phone bar were made in Chrome at phone and desktop widths; an iPhone keyboard was not available. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Merging two players keeps the safer social-media settings: the player kept is a junior if either was, and is OK to post only if both were (an undo puts the old ticks back unless they were edited since). If the statistics cannot be read when a picture is made, no player is treated as eligible, so no names or figures are drawn.
+- A date of birth is not stored on players, so juniors are identified by the tick, a junior grade in their latest season, or both. Tracking issue: [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).

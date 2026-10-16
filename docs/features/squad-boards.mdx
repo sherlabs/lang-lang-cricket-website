@@ -1,0 +1,46 @@
+---
+title: Squad boards
+status: shipped
+routes: ["/selector/squads"]
+collections: [squads, squad-members, selection-fixtures, player-selection-profiles]
+admin: "None; managed in the selector area (/selector/squads)"
+owner: "Selectors"
+related: [availability-link, selector-accounts, name-and-grade-labels, players-directory-and-profiles, team-selection-and-announce]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **A selector** who wants to know who is in the B Grade squad this season, who has been playing, and who is likely to be available on Saturday, and to move players between grades from a phone.
+
+## Why it was built
+
+Before anyone can pick a team they need to know the pool of players for each grade (issue [#16](https://github.com/sherlabs/lang-lang-cricket-website/issues/16), part of the work tracked in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). The squad is also what decides which games a player is asked about on the [availability link](./availability-link.mdx).
+
+## What it does
+
+**A squad per grade per season.** `/selector/squads` has a tab for each grade that has an upcoming game (squads are made from the stored upcoming games, so press **Refresh fixtures** on the Availability page first on a new season). A player can be in more than one squad (a fill-in); their card then says "also in A Grade".
+
+**Each card shows** the player's name (a link to their private card), their role (as the selectors have set it), the number of games this season, a recency tag (Played this season, Played last season, Played in the last few years or Never played) and the answers they have given for the grade's next three games, each as a coloured dot **and** a word (In, Maybe, Out, No reply) so colour is never the only signal. Hidden players are marked "Hidden on the site"; they are only ever seen inside the selector area.
+
+**Moving players.** Every card has a **Move...** button that opens a bottom sheet: tap a grade to move the player there, or **Remove**. This is the only moving control (it works the same on a phone and a desktop). Each squad membership is its own row, so two selectors changing different players never overwrite each other, and the same player moved twice at once ends up in one place.
+
+**Add players.** A sheet with name search and a filter (everyone, played this season, last season, in the last few years, never played), tick as many as you like and press Add.
+
+**Start from last season.** Shows, grade by grade, the players who played at least one game in the most recent earlier season, matched to this season's grades by the same grade names the stats pages show (so a renamed grade still matches; see [Preferred names and grade label renames](./name-and-grade-labels.mdx)). It is a preview first, and applying it only ever adds players: nobody is removed and nobody already in a squad is touched.
+
+**Written as the selector.** Who added a player and when is recorded from the signed-in user, never from the request. Over the API only admins and editors can read or write squads; selectors work through the selector area.
+
+## How to use it
+
+1. Open **Squads**. If there are no grades, open Availability and press **Refresh fixtures**.
+2. Press **Start from last season**, read the preview and confirm.
+3. Use **Add players** for new people (filter to "Never played" for brand-new players) and **Move...** to shift people between grades or remove them.
+4. Tap a name to open their card (phone, PIN, role, notes).
+
+## Not included / deferred
+
+- **Drag and drop** between grades is not built; the Move sheet is the only way to move a player (deferred follow-up under [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)).
+- Form scores (the last five innings) and role suggestions now appear in the team builder and on the player card ([Team selection and announcing the teams](./team-selection-and-announce.mdx)); the "hot, steady, cold" trend scoring is not built.
+- Merging two duplicate players does not yet move their squad membership; re-add them.
+- Squads are by season only; there is no history view of past squads.

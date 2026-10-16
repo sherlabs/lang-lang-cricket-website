@@ -31,8 +31,9 @@ describe('countsFromStats', () => {
       bowling: { balls: 60, overs: '10', maidens: 1, runs: 40, wickets: 3, bestWickets: 2, bestRuns: 11, average: 13.33, economy: 4 },
       catches: 2,
     } satisfies PlayerSeasonStats
+    expect(countsFromStats({ ...s, batting: { ...s.batting, runsUnballed: 12 } }).batRunsUnballed).toBe(12)
     expect(countsFromStats(s)).toEqual({
-      games: 4, batInnings: 4, batNotOuts: 1, batRuns: 99, batHighScore: 45, batHighScoreNotOut: true, batBalls: 120, batFours: 10, batSixes: 2,
+      games: 4, batInnings: 4, batNotOuts: 1, batRuns: 99, batHighScore: 45, batHighScoreNotOut: true, batBalls: 120, batFours: 10, batSixes: 2, batRunsUnballed: 0,
       bowlBalls: 60, bowlMaidens: 1, bowlRuns: 40, bowlWickets: 3, bowlBestWickets: 2, bowlBestRuns: 11, catches: 2,
     })
   })

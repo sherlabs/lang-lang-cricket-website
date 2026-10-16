@@ -7,8 +7,9 @@
  * Pure helpers live here (no `'use server'`) so they can be unit-tested and so a
  * `'use server'` module never has to export a non-async value.
  */
+import { COOKIE_PREFIX } from '@/config/site'
 
-export const RSVP_COOKIE = 'llcc_rsvps'
+export const RSVP_COOKIE = `${COOKIE_PREFIX}_rsvps`
 
 /** Newest entries win — once past this many, the oldest are dropped. */
 export const RSVP_COOKIE_MAX_ENTRIES = 30

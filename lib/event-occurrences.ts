@@ -1,3 +1,4 @@
+import { CLUB_LOCALE, CLUB_TIMEZONE } from '@/config/site'
 function parseHHmm(t: string): { h: number; m: number } {
   const [h, m] = t.split(':').map(Number)
   return { h: Number.isFinite(h) ? h : 0, m: Number.isFinite(m) ? m : 0 }
@@ -42,19 +43,20 @@ export function getOneTimeEventDateTime(event: { eventDate: Date; eventTime: str
 
 /**
  * "Now", encoded the same wall-clock-as-UTC way as every other date/time in
- * this feature: the current Melbourne local date/time, with those local
+ * this feature: the current club-timezone local date/time, with those local
  * parts written directly into a UTC `Date` (not a real UTC instant). Use
  * this instead of `new Date()` for any comparison against event dates —
  * comparing a real UTC instant against a wall-clock-as-UTC value would be
- * off by Melbourne's UTC offset (10-11 hours depending on daylight saving).
+ * off by the club timezone UTC offset (10-11 hours depending on daylight saving).
  *
  * Takes the real "now" as an explicit, defaultable parameter (rather than
  * reading `Date.now()` internally) so it stays a pure function of its
  * input and is trivial to test with a fixed instant.
  */
 export function nowAsEventClock(now: Date = new Date()): Date {
-  const parts = new Intl.DateTimeFormat('en-AU', {
-    timeZone: 'Australia/Melbourne',
+  // A fixed locale on purpose: these parts are parsed as numbers, not displayed.
+  const parts = new Intl.DateTimeFormat(CLUB_LOCALE, {
+    timeZone: CLUB_TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

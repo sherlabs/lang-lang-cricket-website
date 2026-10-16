@@ -1,0 +1,45 @@
+{
+  "_comment": "A FICTIONAL club used to test the template. Copy this folder to clubs/<your-slug>/ and replace every value. See docs/template/club-profile.md. Secrets never belong in this file.",
+  "club": {
+    "name": "Riverbend Cricket Club",
+    "shortName": "Riverbend CC",
+    "familiarName": "Riverbend",
+    "tagline": "Riverbend, Westland",
+    "location": "Riverbend",
+    "region": "Westland",
+    "country": "AU",
+    "sport": "Cricket",
+    "email": "info@riverbend-cc.example",
+    "siteUrl": "https://riverbend-cc.example",
+    "socials": [{ "platform": "facebook", "url": "", "label": "Find us on Facebook" }]
+  },
+  "region": {
+    "locale": "en-AU",
+    "timezone": "Australia/Sydney",
+    "currency": "AUD",
+    "seasonStartMonth": 7,
+    "seasonNameFormat": "split"
+  },
+  "theme": {
+    "_comment": "All five colours and the heading font are required (no club inherits another club's look). The shades are derived from the accent; every text and background pair is checked for contrast.",
+    "accent": "#D4780A",
+    "primary": "#031817",
+    "surface": "#F1F8F6",
+    "text": "#1F2D2C",
+    "muted": "#4B5E5C",
+    "headingFont": "oswald"
+  },
+  "playhq": {
+    "_comment": "The all-zero id is a placeholder: the real organisation id comes from PlayHQ.",
+    "orgId": "00000000-0000-0000-0000-000000000000",
+    "teamPrefix": "Riverbend"
+  },
+  "office": { "currency": "AUD" },
+  "admin": { "email": "admin@riverbend-cc.example", "name": "Club admin" },
+  "assets": {
+    "logo": "assets/crest.png",
+    "hero": "assets/hero.jpg",
+    "ogImage": "assets/share.jpg",
+    "favicon": "assets/favicon.png"
+  }
+}

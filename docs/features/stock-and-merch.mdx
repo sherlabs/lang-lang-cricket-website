@@ -1,0 +1,51 @@
+---
+title: Stock and merch
+status: shipped
+routes: ["/admin/office/stock", "/admin/office/stock/item/:id", "/admin/office/stock/people/:id", "/admin/office/stock/stocktake", "/api/admin/office/stock/:action", "/api/admin/office/export/stock-owed"]
+collections: [stock-items, stock-movements, stock-issues, members, office-audit-log]
+admin: "Club office, then Stock (the committee); the download of who owes kit is admin only"
+owner: "The club's equipment or kit officer (a committee member)"
+related: [club-office, member-directory, committee-admin, admin-notifications, multi-club-template, club-apparel-link]
+added: feat/payload-cms
+---
+
+## Persona
+
+- **The kit officer** who keeps shirts, caps, helmets, bats and the ball machine in a shed and a spreadsheet, and wants to know what is left and who still has the helmet from last season.
+- **A committee member** handing out kit before a game, who needs to issue it to a person in a few taps from a phone and not hand out the last shirt twice.
+- **The treasurer or an admin** who wants a list of who owes the club kit back.
+
+## Why it was built
+
+Kit and merch stock was tracked in someone's head. Nobody knew how many shirts were left in each size, kit went home and never came back, and two people could promise the same last cap. This is issue [#30](https://github.com/sherlabs/lang-lang-cricket-website/issues/30). It keeps a simple counted ledger: what came in, what went out, who has it, and what is still owed back. It counts things only. There are no prices, sales or payments.
+
+## What it does
+
+- **Items.** Each thing in each size is one item: a name, an optional group (so sizes list together), a size, a type (Kit, Equipment, Consumables or Other), how it is counted (each, box and so on), where it is kept, a "low when this many or fewer" level, and whether it is expected back. Kit and equipment are expected back by default; consumables and other things are given away. An item can be switched off ("In use" unticked) and then cannot be issued and is not checked for low stock; its history stays. An item with any history cannot be deleted. Items can be added from the Stock page ("Add an item") or edited in full in the usual editor.
+- **How many are on hand.** The count is never typed in; it is added up from the movements ledger every time: received, returned and corrections add; issued and written off take away. Voided entries are ignored. A loss against a person's issue only settles what they owe (the item left the shelf when it was issued), while a loss from the store takes stock away. The Stock page lists items by type, with the group as a heading, the count, and a **Low** chip written as words with a warning mark (never colour alone) when the count is at or below the level. An item with no level is never flagged. A search box and Low / Switched off filters narrow the list.
+- **Stock received.** "Add stock received" on the Stock page or an item.
+- **Issue to a person.** On an item: pick a person, how many, a due-back date (optional) and a note. The person list is the committee's name list for stock: active members who are players, volunteers, committee or coaches, shown by name only, and a junior as first name and last initial ("Sam T."). The server checks the person is on that list; it does not trust the form. The count is checked while the item is locked in the database, so if two people issue the last unit at the same moment only one succeeds and the other is told there is not enough. Tick "Issue anyway" if the count is wrong; the count then shows below zero with a note to do a stocktake. Pressing a button twice records one issue.
+- **Returns and losses.** On a person's page (`Owed back`, then their name) each thing they hold has a **Returned** button with the number pre-filled (type less for a part return) and a **Lost instead** option. A return can never be more than the person still holds. A person's page opens only for people who can be given kit (active players, volunteers, committee members and coaches) or who already have a stock record; anyone else shows as not found, and juniors appear with a shortened name. Something that is not expected back (a cap) shows as Given and is never owed.
+- **What is owed back.** The **Owed back** tab lists every open loan, oldest first, one line per person, and each loan's status in words: Out, Part returned, and "Overdue by N days" when the due date has passed. Things with no due date are never overdue.
+- **Voiding.** On an item every entry has "Void this" with a reason. Nothing is edited or deleted: the entry stays in the history, struck through, and the count goes back. Voiding an issue also voids the issue, but is refused while returns or losses are recorded against it (void those first). A void that would take the count below zero is refused.
+- **Stocktake.** Type what you counted for any items (leave the rest blank); "Show the differences" lists what would change and nothing is saved yet; "Save these changes" posts one correction per item that differs. If stock moved while you were counting, the save is refused and you count again. Counts that match post nothing.
+- **Where it shows up.** A Stock tile on Club office ("N items are low; M items are out with people, K loans overdue", where M counts items, the same unit as the number on the Owed back tab, with what it leaves out: switched-off items, items with no level, things given away and voided entries), and two lines on the Home page under "Needs your attention": "N items are low" and "N issued items are overdue back". See [Admin notifications](./admin-notifications.mdx).
+- **Download (admins only).** On the Owed back tab an admin can download who owes kit as a spreadsheet file (names, item, size, number out, issued, due back, days overdue, status, which reads "Overdue, part returned" when both apply). It is logged in the exports and sends log without any names, and any cell a spreadsheet could read as a formula is neutralised. An editor cannot download it. Each form carries a one-time key: if the same form is sent again (a double tap, or the Back button then Save), nothing is recorded twice and the page says "Already saved".
+- **Privacy and access.** The committee (admin and editor) can use everything except the download. Selectors, signed-out visitors and the public cannot read or change anything here. Nobody can write the movements or issues over the API: the forms write after their own checks. Free-text notes refuse card numbers. A person whose personal details are removed stays on their issues as "Former member" and the kit is still owed. A member with stock records cannot be deleted (archive them or remove their personal details). Nothing here is on a public page.
+- **Demo data:** `pnpm seed:demo` adds shirts in four sizes, caps, helmets, a bat, a ball machine, practice balls and a first aid kit, with seven issues (two helmets overdue back, one returned, one bat part returned, caps given away) and practice balls below their level.
+
+## How to use it
+
+1. Sign in as an admin or editor. **Club office**, then **Stock**. Press **Add an item** for each thing and size; set a level if you want a low warning.
+2. When stock arrives press **Add stock received**. Hand kit out from the item page with **Issue to a person**.
+3. When it comes back open **Owed back**, click the person and press **Returned**.
+4. Check **Home** now and then for low items and overdue kit. A few times a year use **Stocktake**.
+5. Made a mistake? Open the item, **Void this** on the entry and give a reason.
+
+## Not included / deferred
+
+- Prices, costs, selling merch and taking payments: not built; there is no payment provider ([#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38)). The club's online shop link is a separate page ([Club apparel link](./club-apparel-link.mdx)).
+- Items owed *to* a member (pre-orders not yet delivered): not built. "Owed" means kit people owe the club back; this reading is recorded in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- Scanning barcodes, photos of items, reorder emails and automatic reminders to people: not built.
+- Issuing to someone who is not an active player, volunteer, committee member or coach: add them as a member with that role first. Whether editors should see even these names is a decision recorded in [#38](https://github.com/sherlabs/lang-lang-cricket-website/issues/38).
+- A very long size range makes a long list; the group heading keeps sizes together but there is no collapsing yet.

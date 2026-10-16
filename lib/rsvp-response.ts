@@ -7,3 +7,9 @@ export function isRsvpResponse(value: unknown): value is RsvpResponse {
 
 /** Public-safe counts for one occurrence — never names, emails or notes. */
 export type RsvpTally = { yes: number; no: number }
+
+/** Select options for the `event-rsvps.response` field (admin labels). */
+export const RSVP_RESPONSE_OPTIONS: { label: string; value: RsvpResponse }[] = [
+  { label: 'Going', value: 'yes' },
+  { label: 'Not going', value: 'no' },
+]

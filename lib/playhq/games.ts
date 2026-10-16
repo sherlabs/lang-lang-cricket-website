@@ -1,4 +1,5 @@
 import type { Game, GameSide, RawCompetitor, RawFixtureGame } from './types'
+import { CLUB_TIMEZONE } from '@/config/site'
 
 function side(c: RawCompetitor): GameSide {
   return { id: c.id, name: c.name, isHome: c.isHomeTeam, outcome: c.outcome ?? null, score: c.scoreTotal ?? null }
@@ -11,7 +12,7 @@ export function mapGame(raw: RawFixtureGame, clubTeamIds: Set<string>): Game | n
   const localDate = raw.schedule?.date ?? null
   const localTime = raw.schedule?.time ?? null
   return {
-    id: raw.id, status: raw.status, url: raw.url,
+    id: raw.id, status: raw.status, url: raw.url, updatedAt: raw.updatedAt ?? null,
     gradeId: raw.grade?.id ?? null, gradeName: raw.grade?.name ?? null,
     roundName: raw.round?.name ?? null, roundAbbr: raw.round?.abbreviatedName ?? null,
     isFinalRound: raw.round?.isFinalRound ?? false,
@@ -58,9 +59,9 @@ export function dedupeGames(games: Game[]): Game[] {
   return games.filter((g) => (seen.has(g.id) ? false : (seen.add(g.id), true)))
 }
 
-/** `YYYY-MM-DD` for today in Melbourne. */
-export function todayMelbourne(now = new Date()): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Melbourne' }).format(now)
+/** `YYYY-MM-DD` for today in the club's timezone ('en-CA' formats as ISO). */
+export function todayClubTime(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: CLUB_TIMEZONE }).format(now)
 }
 
 /**
