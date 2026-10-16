@@ -57,7 +57,7 @@ export default async function StatLabPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'StatLab', href: '/statlab' }], club)} />
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current="/statlab" />
 
         <div className="space-y-4">

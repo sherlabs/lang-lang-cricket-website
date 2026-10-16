@@ -73,7 +73,7 @@ export default async function WicketsPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'Insights', href: insightsPaths.team }, { name: 'Wickets', href: insightsPaths.wickets }], club)} />
       <PageHeader eyebrow="Stats" title="Wickets" intro={`The team score as each wicket fell, and the collapses, in ${club.name} games.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={insightsPaths.team} />
         <InsightsTabs current="wickets" params={params} />
         {!set || !fow || set.matches.size === 0 ? (

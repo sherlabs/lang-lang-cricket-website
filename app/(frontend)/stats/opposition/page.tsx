@@ -62,7 +62,7 @@ export default async function OppositionPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'Head to head', href: '/stats/opposition' }], club)} />
       <PageHeader eyebrow="Stats" title="Head to head" intro={`How ${club.name} has gone against every club it has met, from the stored match data.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current="/stats/opposition" />
         {rows.length === 0 ? (
           <EmptyState>No matches are stored yet, so there is no head to head to show.</EmptyState>

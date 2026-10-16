@@ -73,7 +73,7 @@ export default async function TrendsPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'Insights', href: insightsPaths.team }, { name: 'Trends', href: insightsPaths.trends }], club)} />
       <PageHeader eyebrow="Stats" title="Trends" intro={`How ${club.name} has been going over time, from the stored match data.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={insightsPaths.team} />
         <InsightsTabs current="trends" params={params} />
         {!set || set.matches.size === 0 ? (

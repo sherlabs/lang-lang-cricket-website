@@ -122,6 +122,21 @@
   .display {
     @apply font-heading font-bold uppercase leading-none tracking-wide;
   }
+  /* Stats tab rows: hide the scrollbar and fade the right edge while the row overflows (phones). */
+  .stats-tabs-scroll {
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
+  .stats-tabs-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .stats-tabs-scroll {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
   .container-site {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }

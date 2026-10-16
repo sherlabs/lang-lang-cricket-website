@@ -63,7 +63,7 @@ export default async function VotesPage({ searchParams }: Props) {
   return (
     <main>
       <PageHeader eyebrow="Stats" title={`${VOTES.label} leaderboard`} intro={`Season ${seasonLabel}. Points ${ballotValuesLabel(settings.ballotValues)} from player votes after each game.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={votePaths.publicBoard} />
         {(showGrades || board.seasons.length > 1) && (
           <div className="space-y-3">

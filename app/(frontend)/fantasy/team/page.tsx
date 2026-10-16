@@ -43,7 +43,7 @@ export default async function FantasyTeamPage() {
   return (
     <main>
       <PageHeader eyebrow="Stats" title={view.entry.teamName} intro={`${view.competitionName}, ${view.seasonName}.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={fantasyPaths.home} />
         {view.entry.mustChangePin ? (
           <>

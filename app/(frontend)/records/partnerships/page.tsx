@@ -80,7 +80,7 @@ export default async function PartnershipRecordsPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'Records', href: '/records' }, { name: 'Partnerships', href: '/records/partnerships' }], club)} />
       <PageHeader eyebrow="Records" title="Partnership records" intro="The best batting stands, inferred from batting order and fall of wickets." />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current="/records" />
         {!set || set.partnerships.length === 0 ? (
           <EmptyState>No partnerships can be worked out yet. They need stored matches with a complete fall of wickets.</EmptyState>

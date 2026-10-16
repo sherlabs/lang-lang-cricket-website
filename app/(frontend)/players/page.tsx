@@ -35,13 +35,15 @@ export default async function PlayersPage() {
       <section className="container-site py-16 lg:py-20">
         <PlayerSponsorsBand tiles={sponsorTiles} />
         {board && (
-          <MilestoneStrip
-            heading={copy.milestones.heading}
-            note={board.note}
-            approaching={board.approaching}
-            achieved={board.achievedNow}
-            windowLabel={board.windowLabel}
-          />
+          <div className="mb-12">
+            <MilestoneStrip
+              heading={copy.milestones.heading}
+              note={board.note}
+              approaching={board.approaching}
+              achieved={board.achievedNow}
+              windowLabel={board.windowLabel}
+            />
+          </div>
         )}
         {active.length + past.length === 0 ? (
           <p className="text-brand-grey">{copy.empty}</p>

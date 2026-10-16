@@ -39,7 +39,7 @@ export default async function FantasyLeaderboardPage({ searchParams }: Props) {
   return (
     <main>
       <PageHeader eyebrow="Stats" title={`${live.settings.competitionName} leaderboard`} intro={`${live.season.name}. Points from the stored scorecards; the captain counts ${live.season.rules.captainMultiplier} times.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={fantasyPaths.home} />
         {!view ? (
           <p className="rounded-xl bg-white p-5 text-sm text-brand-grey ring-1 ring-brand-black/10">The leaderboard is shared with members who have joined.</p>

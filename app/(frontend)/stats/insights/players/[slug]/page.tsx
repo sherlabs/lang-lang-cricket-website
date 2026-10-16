@@ -114,7 +114,7 @@ export default async function PlayerTrendsPage({ params, searchParams }: Props) 
   return (
     <main>
       {head}
-      <section className="container-site space-y-10 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={insightsPaths.team} />
         <p className="text-sm text-brand-grey">
           {gameCount} stored games, senior grades only: junior games are not in the match data. Seasons are compared number against number: a figure goes up or down for many reasons, and a label is shown only when enough games are behind it.{' '}

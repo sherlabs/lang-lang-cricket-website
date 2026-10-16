@@ -29,7 +29,7 @@ export default async function FantasyPage() {
   return (
     <main>
       <PageHeader eyebrow="Stats" title={overview.competitionName} intro={`Pick ${r.squadSize} club players within a ${credits(r.salaryCapTenths)} credit salary cap. They score points from real club games. It is free to play and there are no prizes.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={fantasyPaths.home} />
         <div className="grid gap-5 md:grid-cols-2">
           <article className="rounded-xl bg-white p-5 ring-1 ring-brand-black/10">

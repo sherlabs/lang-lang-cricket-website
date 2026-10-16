@@ -1,3 +1,4 @@
+import { TabScroller } from '@/components/stats/tab-scroller'
 import { CategoryChecks } from '@/components/stats/category-checks'
 import type { GradeCategory } from '@/lib/stats/categories'
 import { GROUP_LABELS, GROUPS, type MetricGroup } from '@/lib/stats/metrics'
@@ -5,9 +6,16 @@ import { ALL, boardMetricsFor, type StatsParams } from '@/lib/stats/query-string
 import { cn } from '@/lib/utils'
 
 const selectClass = 'min-h-11 w-full rounded-md border border-brand-black/15 bg-white px-3 text-sm text-brand-black'
-const pillBase = 'inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold transition'
-const pill = (active: boolean) =>
-  cn(pillBase, active ? 'bg-brand-black text-white' : 'bg-white text-brand-charcoal ring-1 ring-brand-black/10 hover:ring-brand-gold/60')
+const segment = (active: boolean) =>
+  cn(
+    'inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition',
+    active ? 'bg-white text-brand-black shadow-card ring-1 ring-brand-black/5' : 'text-brand-grey hover:text-brand-black',
+  )
+const chip = (active: boolean) =>
+  cn(
+    'inline-flex min-h-10 items-center whitespace-nowrap rounded-lg px-3 text-sm font-medium transition',
+    active ? 'bg-brand-gold-pale text-brand-gold-deep ring-1 ring-brand-gold/40' : 'text-brand-charcoal ring-1 ring-brand-black/10 hover:ring-brand-gold/60',
+  )
 
 /**
  * Leaderboard filters as ONE plain GET form, so it works without JavaScript and a stat or group
@@ -31,10 +39,10 @@ export function FilterBar({
 }) {
   const metrics = boardMetricsFor(params.group)
   return (
-    <form method="get" action="/stats" className="flex flex-col gap-5">
+    <form method="get" action="/stats" className="flex flex-col gap-4">
       {/* DOM order matters (see above); `order-*` puts them back in reading order. */}
-      <nav aria-label="Stat groups" className="order-1 -mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
-        <ul className="flex w-max gap-2">
+      <TabScroller label="Stat groups" className="order-1">
+        <ul className="flex w-max gap-1 rounded-full bg-brand-stone p-1">
           {GROUPS.map((g: MetricGroup) => (
             <li key={g}>
               <button
@@ -42,14 +50,14 @@ export function FilterBar({
                 name="metric"
                 value={boardMetricsFor(g)[0].key}
                 aria-current={g === params.group ? 'page' : undefined}
-                className={pill(g === params.group)}
+                className={segment(g === params.group)}
               >
                 {GROUP_LABELS[g]}
               </button>
             </li>
           ))}
         </ul>
-      </nav>
+      </TabScroller>
 
       {metrics.length > 1 && (
         <nav aria-label="Stat" className="order-3 hidden sm:block">
@@ -58,7 +66,7 @@ export function FilterBar({
               const active = params.metricGiven && m.key === params.metric
               return (
                 <li key={m.key}>
-                  <button type="submit" name="metric" value={m.key} aria-current={active ? 'page' : undefined} className={pill(active)}>
+                  <button type="submit" name="metric" value={m.key} aria-current={active ? 'page' : undefined} className={chip(active)}>
                     {m.label}
                     {m.source === 'match' && <span className="ml-1.5 text-[11px] font-normal opacity-70">match data</span>}
                   </button>
@@ -69,7 +77,7 @@ export function FilterBar({
         </nav>
       )}
 
-      <div className="order-2 space-y-4">
+      <div className="order-2 space-y-4 rounded-2xl bg-white p-4 shadow-card ring-1 ring-brand-black/5 sm:p-5">
         <input type="hidden" name="group" value={params.group} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
           <div>

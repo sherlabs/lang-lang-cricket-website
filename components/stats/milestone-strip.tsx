@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { describeAchieved, describeApproaching, type BoardAchieved, type BoardApproaching } from '@/lib/stats/milestones'
 
 /**
@@ -27,40 +28,54 @@ export function MilestoneStrip({
   max?: number
 }) {
   if (approaching.length === 0 && achieved.length === 0 && matchItems.length === 0) return null
-  const items = [
-    ...achieved.slice(0, Math.ceil(max / 2)).map((a) => ({ key: `a-${a.playerId}-${a.key}-${a.threshold}`, kind: 'Reached', name: a.name, slug: a.slug, text: describeAchieved(a, windowLabel) })),
-    ...approaching.slice(0, max).map((a) => ({ key: `p-${a.playerId}-${a.key}-${a.threshold}`, kind: 'Close', name: a.name, slug: a.slug, text: describeApproaching(a) })),
-  ]
+  const reached = achieved.slice(0, Math.ceil(max / 2)).map((a) => ({ key: `a-${a.playerId}-${a.key}-${a.threshold}`, name: a.name, slug: a.slug, text: describeAchieved(a, windowLabel) }))
+  const close = approaching.slice(0, max).map((a) => ({ key: `p-${a.playerId}-${a.key}-${a.threshold}`, name: a.name, slug: a.slug, text: describeApproaching(a) }))
+  const fromMatches = matchItems.slice(0, max).map((i) => ({ key: i.key, name: i.name, slug: i.slug, text: i.label }))
   return (
-    <section aria-labelledby="milestones-heading" className="mb-12">
-      <div className="flex items-center gap-3">
-        <h2 id="milestones-heading" className="display text-2xl text-brand-black sm:text-3xl">{heading}</h2>
-        <span className="h-px flex-1 bg-brand-black/10" aria-hidden />
+    <section aria-labelledby="milestones-heading" className="space-y-4">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <h2 id="milestones-heading" className="display text-2xl text-brand-black sm:text-3xl">{heading}</h2>
+          <span className="h-px flex-1 bg-brand-black/10" aria-hidden />
+        </div>
+        <p className="text-sm text-brand-grey">{note}</p>
       </div>
-      <p className="mt-2 text-sm text-brand-grey">{note}</p>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <MilestoneList title="Reached" items={reached} />
+        <MilestoneList title="Approaching" items={close} />
+        {fromMatches.length > 0 && (
+          <MilestoneList
+            title="Reached, from match data"
+            note={`${matchSince ? `Counted since ${matchSince}. ` : ''}Milestones crossed this season, not lifetime totals.`}
+            items={fromMatches}
+            className="lg:col-span-2"
+          />
+        )}
+      </div>
+    </section>
+  )
+}
+
+type MilestoneItem = { key: string; name: string; slug: string; text: string }
+
+/** One milestone group as a card of compact rows (name left, what they reached right), so a long list stays short. */
+function MilestoneList({ title, note, items, className }: { title: string; note?: string; items: MilestoneItem[]; className?: string }) {
+  if (items.length === 0) return null
+  return (
+    <div className={cn('rounded-2xl bg-white shadow-card ring-1 ring-brand-black/5', className)}>
+      <div className="flex items-baseline justify-between gap-3 border-b border-brand-black/10 px-5 py-3">
+        <h3 className="eyebrow">{title}</h3>
+        <span className="text-xs tabular-nums text-brand-grey">{items.length}</span>
+      </div>
+      {note && <p className="px-5 pt-3 text-xs text-brand-grey">{note}</p>}
+      <ul className={cn('divide-y divide-brand-black/5 px-5 py-1', className && 'sm:columns-2 sm:gap-10 sm:[&>li]:break-inside-avoid')}>
         {items.map((i) => (
-          <li key={i.key} className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-brand-black/5">
-            <p className="eyebrow">{i.kind === 'Reached' ? 'Reached' : 'Approaching'}</p>
-            <Link href={`/players/${i.slug}`} className="mt-1 block font-heading text-lg font-bold leading-tight text-brand-black hover:text-brand-gold-deep hover:underline">{i.name}</Link>
-            <p className="mt-1 text-sm text-brand-charcoal">{i.text}</p>
+          <li key={i.key} className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+            <Link href={`/players/${i.slug}`} className="font-heading text-lg font-bold leading-tight text-brand-black hover:text-brand-gold-deep hover:underline">{i.name}</Link>
+            <span className="text-sm text-brand-charcoal sm:text-right">{i.text}</span>
           </li>
         ))}
       </ul>
-      {matchItems.length > 0 && (
-        <>
-          <p className="mt-6 text-sm text-brand-grey">From match data{matchSince ? `, counted since ${matchSince}` : ''}: milestones crossed this season. These are not lifetime totals.</p>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {matchItems.slice(0, max).map((i) => (
-              <li key={i.key} className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-brand-black/5">
-                <p className="eyebrow">Reached (match data)</p>
-                <Link href={`/players/${i.slug}`} className="mt-1 block font-heading text-lg font-bold leading-tight text-brand-black hover:text-brand-gold-deep hover:underline">{i.name}</Link>
-                <p className="mt-1 text-sm text-brand-charcoal">{i.label}</p>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
+    </div>
   )
 }

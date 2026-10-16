@@ -141,7 +141,7 @@ export default async function StatsPage({ searchParams }: Props) {
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }], club)} />
       <JsonLd data={playerListJsonLd(`${boards[0]?.metric.label ?? 'Leaderboard'} leaders`, top.slice(0, 10), club)} />
       <PageHeader eyebrow={copy.header.eyebrow} title={copy.header.title} intro={copy.header.intro} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current="/stats" />
         {(board || matchItems.length > 0) && (
           <MilestoneStrip
@@ -157,7 +157,7 @@ export default async function StatsPage({ searchParams }: Props) {
           selected={cats}
         />
 
-        <div className="space-y-2">
+        <div className="space-y-2 pt-2">
           <SubHeading title={`${GROUP_LABELS[params.group]}: ${scopeText}`} />
           <p className="text-sm text-brand-grey">
             {params.season === ALL ? 'Totals across every stored season. ' : 'Single-season figures, teams combined. '}

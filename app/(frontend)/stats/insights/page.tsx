@@ -121,7 +121,7 @@ export default async function TeamAnalysisPage({ searchParams }: Props) {
     <main>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Stats', href: '/stats' }, { name: 'Insights', href: insightsPaths.team }], club)} />
       <PageHeader eyebrow="Stats" title="Insights" intro={`How ${club.name} bats, bowls and wins, from the stored match data. Every figure shows how many games or innings are behind it.`} />
-      <section className="container-site space-y-8 py-12 lg:py-16">
+      <section className="container-site space-y-10 py-10 lg:py-14">
         <StatsSubNav current={insightsPaths.team} />
         <InsightsTabs current="team" params={params} />
         {!profile || !set || set.matches.size === 0 ? (
